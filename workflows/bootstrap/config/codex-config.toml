@@ -1,7 +1,11 @@
-# SI 212 — Codex settings.
+# SI 212 - Codex settings.
 #
 # Installed to ~/.codex/config.toml during first-day bootstrap. Points the app at U-M's
 # gateway instead of the vendor's, which is what makes the U-M Toolkit key work.
+#
+# ASCII only, deliberately. Windows PowerShell does not read this file as UTF-8, so any
+# accented character or dash shows up as garbled text at the exact step where a student is
+# being asked to check the output carefully.
 #
 # `model` is a STARTING default, not a course requirement. It is set here only so all 48
 # students begin in the same known place rather than on whatever the app defaults to that
