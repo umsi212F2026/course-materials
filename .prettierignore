@@ -1,0 +1,5 @@
+node_modules/
+
+# Archived records. Reformatting them churns files nobody reads again, and the
+# wrapping they were written with is part of how they read.
+plans/completed/

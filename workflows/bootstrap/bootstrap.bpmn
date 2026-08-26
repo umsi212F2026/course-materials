@@ -1,0 +1,955 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:color="http://www.omg.org/spec/BPMN/non-normative/color/1.0" id="Definitions_boot" targetNamespace="http://si212.umich.edu/schema/bpmn">
+  <bpmn:collaboration id="C_B">
+    <bpmn:participant id="P_B" name="Bootstrapping a student&#39;s machine — one student, however many days" processRef="Proc_B" />
+  </bpmn:collaboration>
+  <bpmn:process id="Proc_B" name="Bootstrap" isExecutable="false">
+    <bpmn:laneSet id="LS_B">
+      <bpmn:lane id="LB_human" name="HUMAN operator">
+        <bpmn:flowNodeRef>Start_B</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Sub_stage1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gate_running</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gate_blocked</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_report_status</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_report_blocked</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_blocked</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_report_ok</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_ready</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="LB_agent" name="AI AGENT">
+        <bpmn:flowNodeRef>Gate_merge</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gate_fix</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_workspace</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="LB_program" name="PROGRAM">
+        <bpmn:flowNodeRef>Gate_ok</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Prog_doctor</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Start_B" name="opens the Day 1&#10;page in Canvas">
+      <bpmn:documentation>The student has a laptop, a uniqname, and nothing else. No VS Code, no git, no node, no GitHub account.</bpmn:documentation>
+      <bpmn:outgoing>b1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:subProcess id="Sub_stage1" name="Get Codex running">
+      <bpmn:documentation>Stage 1. Every step is a human clicking while U-M GPT advises. Declared in HUMAN because that is the band it mostly overlaps, and so the file agrees with what bpmn-js would assign; it is still drawn across both bands, which is the part a reader sees. Nothing in stage 1 is machine-adjudicated — that is why the drill-down has no PROGRAM lane.</bpmn:documentation>
+      <bpmn:incoming>b1</bpmn:incoming>
+      <bpmn:outgoing>b2</bpmn:outgoing>
+      <bpmn:dataInputAssociation id="a_key">
+        <bpmn:sourceRef>DOR_key</bpmn:sourceRef>
+      </bpmn:dataInputAssociation>
+      <bpmn:laneSet id="LS_S">
+        <bpmn:lane id="LS_h" name="HUMAN operator">
+          <bpmn:flowNodeRef>Start_S</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_coach</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>G_merge</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_step</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>End_S</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>G_stuck</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>G_done</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>G_keep</bpmn:flowNodeRef>
+        </bpmn:lane>
+        <bpmn:lane id="LS_a" name="AI AGENT">
+          <bpmn:flowNodeRef>S_help</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>S_status</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>End_stuck</bpmn:flowNodeRef>
+        </bpmn:lane>
+      </bpmn:laneSet>
+      <bpmn:startEvent id="Start_S" name="Day 1 page opened">
+        <bpmn:outgoing>s1</bpmn:outgoing>
+      </bpmn:startEvent>
+      <bpmn:userTask id="S_coach" name="Open U-M GPT; paste the bootstrap prompt&#10;workflows/bootstrap/guides/bootstrap-prompt.md">
+        <bpmn:documentation>U-M GPT at umgpt.umich.edu. Signed in with a uniqname, so no new account. The prompt is authoritative: it carries the exact extension name, the exact settings path for the key, and the clone command, because the coach cannot be relied on to know them.</bpmn:documentation>
+        <bpmn:incoming>s1</bpmn:incoming>
+        <bpmn:outgoing>s2</bpmn:outgoing>
+        <bpmn:dataInputAssociation id="a_prompt">
+          <bpmn:sourceRef>DOR_prompt</bpmn:sourceRef>
+        </bpmn:dataInputAssociation>
+      </bpmn:userTask>
+      <bpmn:exclusiveGateway id="G_merge">
+        <bpmn:incoming>s2</bpmn:incoming>
+        <bpmn:incoming>s8</bpmn:incoming>
+        <bpmn:incoming>s10</bpmn:incoming>
+        <bpmn:outgoing>s3</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:userTask id="S_step" name="Do the next step on the checklist">
+        <bpmn:documentation>Install VS Code, install the Codex extension, place the U-M API key. The steps are inside the bootstrap prompt and reach the student one at a time from the coach; there is no separate checklist file. Keeping them off the canvas lets the help branch be drawn once and truthfully — the student gets stuck at a step, not at the sequence.</bpmn:documentation>
+        <bpmn:incoming>s3</bpmn:incoming>
+        <bpmn:outgoing>s4</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:exclusiveGateway id="G_stuck" name="stuck?" default="s6">
+        <bpmn:incoming>s4</bpmn:incoming>
+        <bpmn:outgoing>s5</bpmn:outgoing>
+        <bpmn:outgoing>s6</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:serviceTask id="S_help" name="Provide explanations and suggestions&#10;U-M GPT">
+        <bpmn:documentation>GPT-5.6 Sol, image paste supported. The prompt tells students to paste error text as text so the coach reads it accurately and the same text can go on to the instructor; screenshots are the fallback, not the channel.</bpmn:documentation>
+        <bpmn:incoming>s5</bpmn:incoming>
+        <bpmn:outgoing>s7</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:exclusiveGateway id="G_keep" name="worth&#10;trying?" default="s11">
+        <bpmn:documentation>Asked after every round with the coach, because BPMN cannot say "after three attempts" without a loop marker. The student decides; nothing here counts attempts for them.</bpmn:documentation>
+        <bpmn:incoming>s7</bpmn:incoming>
+        <bpmn:outgoing>s10</bpmn:outgoing>
+        <bpmn:outgoing>s11</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:serviceTask id="S_status" name="Write a status report on where it stalled&#10;U-M GPT">
+        <bpmn:documentation>The coach knows the whole session — which step, which error, what was already tried — so it, not the student, writes the report the instructor will read.</bpmn:documentation>
+        <bpmn:incoming>s11</bpmn:incoming>
+        <bpmn:outgoing>s12</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:endEvent id="End_stuck" name="stuck — status report written">
+        <bpmn:incoming>s12</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:exclusiveGateway id="G_done" name="checklist&#10;done?" default="s8">
+        <bpmn:incoming>s6</bpmn:incoming>
+        <bpmn:outgoing>s8</bpmn:outgoing>
+        <bpmn:outgoing>s9</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:endEvent id="End_S" name="Codex answers&#10;with the U-M key">
+        <bpmn:incoming>s9</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:dataObjectReference id="DOR_prompt" name="bootstrap-prompt.md" dataObjectRef="DO_prompt" />
+      <bpmn:dataObject id="DO_prompt" />
+      <bpmn:sequenceFlow id="s1" sourceRef="Start_S" targetRef="S_coach" />
+      <bpmn:sequenceFlow id="s2" sourceRef="S_coach" targetRef="G_merge" />
+      <bpmn:sequenceFlow id="s3" sourceRef="G_merge" targetRef="S_step" />
+      <bpmn:sequenceFlow id="s4" sourceRef="S_step" targetRef="G_stuck" />
+      <bpmn:sequenceFlow id="s5" name="yes" sourceRef="G_stuck" targetRef="S_help">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">the student cannot complete the step as written</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="s6" name="no" sourceRef="G_stuck" targetRef="G_done" />
+      <bpmn:sequenceFlow id="s7" sourceRef="S_help" targetRef="G_keep" />
+      <bpmn:sequenceFlow id="s10" name="try&#10;suggestion" sourceRef="G_keep" targetRef="G_merge">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">the student has another attempt in them</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="s11" name="give up" sourceRef="G_keep" targetRef="S_status" />
+      <bpmn:sequenceFlow id="s12" sourceRef="S_status" targetRef="End_stuck" />
+      <bpmn:sequenceFlow id="s8" name="no" sourceRef="G_done" targetRef="G_merge" />
+      <bpmn:sequenceFlow id="s9" name="yes" sourceRef="G_done" targetRef="End_S">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">every checklist item is done</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+    </bpmn:subProcess>
+    <bpmn:exclusiveGateway id="Gate_running" name="Codex&#10;running?" default="b13">
+      <bpmn:documentation>Stage 1 ends one of two ways, and a subprocess's outgoing flow carries no outcome — so this gateway reads the outcome off the status report rather than off the flow. That is the one place in this diagram where following the arrows does not tell you where the value came from.</bpmn:documentation>
+      <bpmn:incoming>b2</bpmn:incoming>
+      <bpmn:outgoing>b12</bpmn:outgoing>
+      <bpmn:outgoing>b13</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="Task_report_status" name="Submit status report&#10;on Canvas">
+      <bpmn:documentation>Same Canvas assignment as the other two submissions. A student who never got Codex running has no doctor output to submit, so what goes up is the coach's account of where it stalled.</bpmn:documentation>
+      <bpmn:incoming>b13</bpmn:incoming>
+      <bpmn:outgoing>b14</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gate_merge">
+      <bpmn:incoming>b12</bpmn:incoming>
+      <bpmn:incoming>b6</bpmn:incoming>
+      <bpmn:outgoing>b3</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:exclusiveGateway id="Gate_ok" name="install&#10;correct?" default="b6">
+      <bpmn:incoming>b5</bpmn:incoming>
+      <bpmn:outgoing>b6</bpmn:outgoing>
+      <bpmn:outgoing>b7</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:exclusiveGateway id="Gate_fix" name="Able to&#10;complete?" default="b9">
+      <bpmn:documentation>The subprocess stopped at one of its checkpoints. This asks whether there is a way forward at all, and "yes" means RE-RUNNING once a fix has been published — not repairing in the session.
+
+Each skill inside calls the doctor only when it believes it has finished, so a failing check is the skill's account and the program's account disagreeing, not an operation that might work on a second attempt. Running the same steps again against a disagreement discards the one interesting fact, which is why nothing inside loops. The repair path is a commit: the instructor pushes a fix, the student runs setup-workspace again, setup-repos pulls it, and the orchestrator resumes at the phase that failed.
+
+What that cannot reach is a bad or missing key, or a machine the student has no rights to install on. Those take the "no" branch.</bpmn:documentation>
+      <bpmn:incoming>b4</bpmn:incoming>
+      <bpmn:outgoing>b8</bpmn:outgoing>
+      <bpmn:outgoing>b9</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="Task_report_blocked" name="Submit status report&#10;on Canvas">
+      <bpmn:documentation>The same Canvas assignment as on the success branch, drawn twice because the two outcomes end in different states. This is the only thing that tells the instructor which of the 48 got stuck, and where.</bpmn:documentation>
+      <bpmn:incoming>b9</bpmn:incoming>
+      <bpmn:outgoing>b10</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gate_blocked">
+      <bpmn:incoming>b10</bpmn:incoming>
+      <bpmn:incoming>b14</bpmn:incoming>
+      <bpmn:outgoing>b15</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="End_blocked" name="blocked — instructor will help">
+      <bpmn:incoming>b15</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:userTask id="Task_report_ok" name="Submit doctor report&#10;on Canvas">
+      <bpmn:documentation>Same assignment as the blocked branch. Submitting on success is what turns "the student says it works" into something the instructor can count.</bpmn:documentation>
+      <bpmn:incoming>b7</bpmn:incoming>
+      <bpmn:outgoing>b11</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="End_ready" name="workspace ready">
+      <bpmn:incoming>b11</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:dataObjectReference id="DOR_key" name="U-M API key" dataObjectRef="DO_key" />
+    <bpmn:dataObject id="DO_key" />
+    <bpmn:sequenceFlow id="b1" sourceRef="Start_B" targetRef="Sub_stage1" />
+    <bpmn:sequenceFlow id="b2" sourceRef="Sub_stage1" targetRef="Gate_running" />
+    <bpmn:sequenceFlow id="b12" name="success" sourceRef="Gate_running" targetRef="Gate_merge">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">the checklist finished and Codex answers with the U-M key</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="b13" name="stuck" sourceRef="Gate_running" targetRef="Task_report_status" />
+    <bpmn:sequenceFlow id="b14" sourceRef="Task_report_status" targetRef="Gate_blocked" />
+    <bpmn:sequenceFlow id="b3" sourceRef="Gate_merge" targetRef="Task_workspace" />
+    <bpmn:sequenceFlow id="b4" sourceRef="Task_workspace" targetRef="Gate_fix" />
+    <bpmn:sequenceFlow id="b5" sourceRef="Prog_doctor" targetRef="Gate_ok" />
+    <bpmn:sequenceFlow id="b6" name="not yet" sourceRef="Gate_ok" targetRef="Gate_merge" />
+    <bpmn:sequenceFlow id="b7" name="success" sourceRef="Gate_ok" targetRef="Task_report_ok">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">doctor.mjs reports every check passing</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="b8" name="yes" sourceRef="Gate_fix" targetRef="Prog_doctor">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">the failing check names something Codex can install or correct</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="b9" name="no" sourceRef="Gate_fix" targetRef="Task_report_blocked" />
+    <bpmn:sequenceFlow id="b10" sourceRef="Task_report_blocked" targetRef="Gate_blocked" />
+    <bpmn:sequenceFlow id="b15" sourceRef="Gate_blocked" targetRef="End_blocked" />
+    <bpmn:sequenceFlow id="b11" sourceRef="Task_report_ok" targetRef="End_ready" />
+    <bpmn:subProcess id="Task_workspace" name="Set up the workspace">
+      <bpmn:documentation>workflows/bootstrap/skills/setup-workspace/SKILL.md — an orchestrator, and only that: it installs nothing and clones nothing itself. Each skill inside does its own work and ends by running the doctor, which is why every box in the AI AGENT lane below is followed by one in PROGRAM.
+
+The label has no second line because there is a level below; the path lives here instead.
+
+Deliberately absent: setup-github, phase 7. It needs a GitHub account and runs in week 2, and day 1 finishing without one is the design. It is not drawn here because it is not part of this run.
+
+The skills are addressed two ways. Until "Install tools and clone the repositories" finishes there is no clone to read from, so setup-workspace and setup-repos are both fetched from raw.githubusercontent.com; everything after is read from disk by repo-relative path.</bpmn:documentation>
+      <bpmn:incoming>b3</bpmn:incoming>
+      <bpmn:outgoing>b4</bpmn:outgoing>
+      <bpmn:laneSet id="LS_W">
+        <bpmn:lane id="LW_a" name="AI AGENT">
+          <bpmn:flowNodeRef>Start_W</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>W_repos</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>W_addr</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>G_m2</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>W_tour</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>G_m3</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>W_edit</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>End_W_ok</bpmn:flowNodeRef>
+        </bpmn:lane>
+        <bpmn:lane id="LW_p" name="PROGRAM">
+          <bpmn:flowNodeRef>Prog_w1</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Prog_w2</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>G_w2</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Prog_w3</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>G_w3</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Prog_w4</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>G_w_stop</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>G_w1</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>G_resume</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>G_w4</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>End_W_stop</bpmn:flowNodeRef>
+        </bpmn:lane>
+      </bpmn:laneSet>
+      <bpmn:startEvent id="Start_W" name="setup-workspace skill invoked">
+        <bpmn:documentation>workflows/bootstrap/skills/setup-workspace/SKILL.md governs this plane. It is not a step here because it is not one of them — it is the thing that reads each skill below in order, checks what the doctor reports, and stops at the first phase that does not pass. Named on the start event so a reader can go and read it, rather than only in documentation the editor does not show.</bpmn:documentation>
+        <bpmn:outgoing>w1</bpmn:outgoing>
+      </bpmn:startEvent>
+      <bpmn:serviceTask id="W_repos" name="Install tools; clone or update the repositories&#10;setup-repos">
+        <bpmn:documentation>workflows/bootstrap/skills/setup-repos/SKILL.md — git, node, all three clones, and the student's git identity. Owns two phases: git is needed in order to clone and node for the doctor that lives inside the clone, so neither is checkable until this has finished.
+
+This is the skill that ends the network. It is fetched by URL because it is what creates the disk everything after it is read from.
+
+It runs on every attempt, including a re-run, because a repository that already exists gets UPDATED rather than skipped — see workflows/update/skills/update/SKILL.md. A student is usually back because something failed and a fix has been published since, so getting the fix is the point of running this again. Only the phases after it are skipped, at the gateway that follows.</bpmn:documentation>
+        <bpmn:incoming>w1</bpmn:incoming>
+        <bpmn:outgoing>w2</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:scriptTask id="Prog_w1" name="Check the repositories&#10;doctor.mjs">
+        <bpmn:documentation>Expects "reached 3 of 7 — Repositories". One run covers both of this skill's phases: Runtime is self-verifying, because the doctor is a node script inside the clone, so if it runs at all then git, node and the clone are good.</bpmn:documentation>
+        <bpmn:incoming>w2</bpmn:incoming>
+        <bpmn:outgoing>w3</bpmn:outgoing>
+      </bpmn:scriptTask>
+      <bpmn:exclusiveGateway id="G_w1" name="repos&#10;installed?" default="w5">
+        <bpmn:incoming>w3</bpmn:incoming>
+        <bpmn:outgoing>w4</bpmn:outgoing>
+        <bpmn:outgoing>w5</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:exclusiveGateway id="G_resume" name="how far&#10;did I get&#10;previously?" default="r1">
+        <bpmn:documentation>A re-run resumes rather than starting over, and this reads the phase off the doctor output that "Check the repositories" just produced — which is what "reached N of 7" is for, and why the doctor reports a number rather than a pass or a fail.
+
+Note what is NOT skipped: the repositories step above always runs, so an update always arrives. Only the phases already reached are jumped past.</bpmn:documentation>
+        <bpmn:incoming>w4</bpmn:incoming>
+        <bpmn:outgoing>r1</bpmn:outgoing>
+        <bpmn:outgoing>r2</bpmn:outgoing>
+        <bpmn:outgoing>r3</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:serviceTask id="W_addr" name="Record where things live&#10;setup-addressing">
+        <bpmn:documentation>workflows/bootstrap/skills/setup-addressing/SKILL.md — writes an AGENTS.md into the student's Codex home directory, which is the one place the install location is recorded. Everything downstream reads the paths from there rather than assuming them.</bpmn:documentation>
+        <bpmn:incoming>r1</bpmn:incoming>
+        <bpmn:outgoing>w6</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:scriptTask id="Prog_w2" name="Check the addressing&#10;doctor.mjs">
+        <bpmn:documentation>Expects "reached 4 of 7 — Addressing": the file exists and the paths in it resolve.</bpmn:documentation>
+        <bpmn:incoming>w6</bpmn:incoming>
+        <bpmn:outgoing>w7</bpmn:outgoing>
+      </bpmn:scriptTask>
+      <bpmn:exclusiveGateway id="G_w2" name="Address&#10;good?" default="w9">
+        <bpmn:incoming>w7</bpmn:incoming>
+        <bpmn:outgoing>w8</bpmn:outgoing>
+        <bpmn:outgoing>w9</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:exclusiveGateway id="G_m2">
+        <bpmn:incoming>w8</bpmn:incoming>
+        <bpmn:incoming>r2</bpmn:incoming>
+        <bpmn:outgoing>m2</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:serviceTask id="W_tour" name="Run the tour&#10;tour">
+        <bpmn:documentation>workflows/tour/skills/tour/SKILL.md — invoked by setup-addressing, and drawn separately because it is a real workflow rather than a step, and because it is the completion criterion for the whole setup.
+
+It is the only evidence that the addressing works end to end: a skill found by path, a manifest resolved, a script run with the directory it was given, and a write landing in a repository that is not the one the code lives in.</bpmn:documentation>
+        <bpmn:incoming>m2</bpmn:incoming>
+        <bpmn:outgoing>w10</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:scriptTask id="Prog_w3" name="Check the tour ran&#10;doctor.mjs">
+        <bpmn:documentation>Expects "reached 5 of 7 — Smoke test". It checks for the file the tour's script wrote, not for the agent's account of having run it — an agent reporting that it finished is not evidence that it did.</bpmn:documentation>
+        <bpmn:incoming>w10</bpmn:incoming>
+        <bpmn:outgoing>w11</bpmn:outgoing>
+      </bpmn:scriptTask>
+      <bpmn:exclusiveGateway id="G_w3" name="Tour&#10;good?" default="w13">
+        <bpmn:incoming>w11</bpmn:incoming>
+        <bpmn:outgoing>w12</bpmn:outgoing>
+        <bpmn:outgoing>w13</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:exclusiveGateway id="G_m3">
+        <bpmn:incoming>w12</bpmn:incoming>
+        <bpmn:incoming>r3</bpmn:incoming>
+        <bpmn:outgoing>m3</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:serviceTask id="W_edit" name="Install the editors&#10;setup-editors">
+        <bpmn:documentation>workflows/bootstrap/skills/setup-editors/SKILL.md — Zettlr and Camunda Modeler, and Zettlr's autosave setting.</bpmn:documentation>
+        <bpmn:incoming>m3</bpmn:incoming>
+        <bpmn:outgoing>w14</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:scriptTask id="Prog_w4" name="Check the editors&#10;doctor.mjs">
+        <bpmn:documentation>Expects phase 6, and nothing branches on the answer — that is the point. The editors phase is optional: a student without them can still do coursework, because the agent reads and writes the files either way. A check with no gateway after it is how this diagram says "reported, not gating".</bpmn:documentation>
+        <bpmn:incoming>w14</bpmn:incoming>
+        <bpmn:outgoing>w15</bpmn:outgoing>
+      </bpmn:scriptTask>
+      <bpmn:exclusiveGateway id="G_w4" name="editors&#10;installed?" default="e2">
+        <bpmn:documentation>Here so that "installed and checked" is not claimed when the editors are not installed. Without this the run ended there either way, which was false.
+
+The "no" branch joins the same end as the earlier checkpoints because it is the same kind of thing: a checkpoint that did not pass. This phase blocks like the rest.
+
+An earlier draft made it optional, on the reasoning that the agent reads and writes the files either way. True, and beside the point — the tour ends by having the student open its file themselves, study has them writing notes.md, and the diagram work needs Camunda. A student who cannot open their own files can watch an agent describe their work and never read or write it, which is not ready.</bpmn:documentation>
+        <bpmn:incoming>w15</bpmn:incoming>
+        <bpmn:outgoing>e1</bpmn:outgoing>
+        <bpmn:outgoing>e2</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:endEvent id="End_W_ok" name="installed and checked">
+        <bpmn:incoming>e1</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:endEvent id="End_W_stop" name="stopped at a checkpoint">
+        <bpmn:documentation>A subprocess's outgoing flow carries no outcome, so the parent cannot tell which of these two ends fired. It reads the answer off the doctor output at "Able to complete?" instead — the same pattern, and the same cost, as "Codex running?" after stage 1.</bpmn:documentation>
+        <bpmn:incoming>w16</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="w1" sourceRef="Start_W" targetRef="W_repos" />
+      <bpmn:sequenceFlow id="w2" sourceRef="W_repos" targetRef="Prog_w1" />
+      <bpmn:sequenceFlow id="w3" sourceRef="Prog_w1" targetRef="G_w1" />
+      <bpmn:sequenceFlow id="w4" name="yes" sourceRef="G_w1" targetRef="G_resume">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">all three clones are real checkouts and course-materials is clean</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="r1" name="first time" sourceRef="G_resume" targetRef="W_addr" />
+      <bpmn:sequenceFlow id="r2" name="addressing done" sourceRef="G_resume" targetRef="G_m2">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">the doctor already reported phase 4</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="r3" name="tour already ran" sourceRef="G_resume" targetRef="G_m3">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">the doctor already reported phase 5</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="w6" sourceRef="W_addr" targetRef="Prog_w2" />
+      <bpmn:sequenceFlow id="w7" sourceRef="Prog_w2" targetRef="G_w2" />
+      <bpmn:sequenceFlow id="w8" name="yes" sourceRef="G_w2" targetRef="G_m2">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">~/.codex/AGENTS.md exists and every path in it resolves</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="w10" sourceRef="W_tour" targetRef="Prog_w3" />
+      <bpmn:sequenceFlow id="w11" sourceRef="Prog_w3" targetRef="G_w3" />
+      <bpmn:sequenceFlow id="w12" name="yes" sourceRef="G_w3" targetRef="G_m3">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">the tour left a dated artifact in learning-topics</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="w14" sourceRef="W_edit" targetRef="Prog_w4" />
+      <bpmn:sequenceFlow id="w15" sourceRef="Prog_w4" targetRef="G_w4" />
+      <bpmn:sequenceFlow id="e1" name="yes" sourceRef="G_w4" targetRef="End_W_ok">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">both editors are installed</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="e2" name="no" sourceRef="G_w4" targetRef="G_w_stop" />
+      <bpmn:sequenceFlow id="m2" sourceRef="G_m2" targetRef="W_tour" />
+      <bpmn:sequenceFlow id="m3" sourceRef="G_m3" targetRef="W_edit" />
+      <bpmn:exclusiveGateway id="G_w_stop">
+        <bpmn:incoming>w13</bpmn:incoming>
+        <bpmn:incoming>w9</bpmn:incoming>
+        <bpmn:incoming>w5</bpmn:incoming>
+        <bpmn:incoming>e2</bpmn:incoming>
+        <bpmn:outgoing>w16</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:sequenceFlow id="w16" sourceRef="G_w_stop" targetRef="End_W_stop" />
+      <bpmn:sequenceFlow id="w13" name="no" sourceRef="G_w3" targetRef="G_w_stop" />
+      <bpmn:sequenceFlow id="w9" name="no" sourceRef="G_w2" targetRef="G_w_stop" />
+      <bpmn:sequenceFlow id="w5" name="no" sourceRef="G_w1" targetRef="G_w_stop" />
+    </bpmn:subProcess>
+    <bpmn:scriptTask id="Prog_doctor" name="Check the install&#10;doctor.mjs">
+      <bpmn:documentation>workflows/bootstrap/tools/doctor.mjs — the only thing in this workflow that adjudicates "done". Ships in the repo, so it arrives with the clone. Drawn once here as the summary; the drill-down shows it running after every phase.</bpmn:documentation>
+      <bpmn:incoming>b8</bpmn:incoming>
+      <bpmn:outgoing>b5</bpmn:outgoing>
+    </bpmn:scriptTask>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="D_boot">
+    <bpmndi:BPMNPlane id="Pl_boot" bpmnElement="C_B">
+      <bpmndi:BPMNShape id="P_B_di" bpmnElement="P_B" isHorizontal="true">
+        <dc:Bounds x="160" y="80" width="1820" height="520" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="LB_program_di" bpmnElement="LB_program" isHorizontal="true" color:background-color="#eef5f4" color:border-color="#7a918d">
+        <dc:Bounds x="190" y="460" width="1790" height="140" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="LB_agent_di" bpmnElement="LB_agent" isHorizontal="true" color:background-color="#fdf7ee" color:border-color="#9c8d76">
+        <dc:Bounds x="190" y="230" width="1790" height="230" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="LB_human_di" bpmnElement="LB_human" isHorizontal="true" color:background-color="#fdf3f7" color:border-color="#9c8490">
+        <dc:Bounds x="190" y="80" width="1790" height="150" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Start_B_di" bpmnElement="Start_B">
+        <dc:Bounds x="252" y="132" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="235" y="175" width="72" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Sub_stage1_di" bpmnElement="Sub_stage1" isExpanded="false">
+        <dc:Bounds x="340" y="120" width="200" height="180" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gate_running_di" bpmnElement="Gate_running" isMarkerVisible="true">
+        <dc:Bounds x="620" y="125" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="588" y="106" width="43" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_report_status_di" bpmnElement="Task_report_status">
+        <dc:Bounds x="760" y="120" width="200" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gate_merge_di" bpmnElement="Gate_merge" isMarkerVisible="true">
+        <dc:Bounds x="620" y="315" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gate_ok_di" bpmnElement="Gate_ok" isMarkerVisible="true">
+        <dc:Bounds x="1080" y="505" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1050" y="496" width="40" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gate_fix_di" bpmnElement="Gate_fix" isMarkerVisible="true">
+        <dc:Bounds x="1080" y="315" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1034" y="306" width="51" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_report_blocked_di" bpmnElement="Task_report_blocked">
+        <dc:Bounds x="1180" y="120" width="200" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gate_blocked_di" bpmnElement="Gate_blocked" isMarkerVisible="true">
+        <dc:Bounds x="1420" y="135" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_blocked_di" bpmnElement="End_blocked">
+        <dc:Bounds x="1520" y="142" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1495" y="185" width="88" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_report_ok_di" bpmnElement="Task_report_ok">
+        <dc:Bounds x="1620" y="120" width="200" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_ready_di" bpmnElement="End_ready">
+        <dc:Bounds x="1880" y="132" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1862" y="175" width="73" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_key_di" bpmnElement="DOR_key" color:background-color="#fdeaea">
+        <dc:Bounds x="352" y="350" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="337" y="404" width="67" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_workspace_di" bpmnElement="Task_workspace">
+        <dc:Bounds x="760" y="300" width="220" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Prog_doctor_di" bpmnElement="Prog_doctor">
+        <dc:Bounds x="760" y="490" width="220" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="b1_di" bpmnElement="b1">
+        <di:waypoint x="288" y="150" />
+        <di:waypoint x="340" y="150" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="b2_di" bpmnElement="b2">
+        <di:waypoint x="540" y="150" />
+        <di:waypoint x="620" y="150" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="b12_di" bpmnElement="b12">
+        <di:waypoint x="645" y="175" />
+        <di:waypoint x="645" y="315" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="660" y="243" width="40" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="b13_di" bpmnElement="b13">
+        <di:waypoint x="670" y="150" />
+        <di:waypoint x="760" y="150" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="702" y="129" width="26" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="b14_di" bpmnElement="b14">
+        <di:waypoint x="960" y="160" />
+        <di:waypoint x="1020" y="160" />
+        <di:waypoint x="1020" y="100" />
+        <di:waypoint x="1445" y="100" />
+        <di:waypoint x="1445" y="135" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="b3_di" bpmnElement="b3">
+        <di:waypoint x="670" y="340" />
+        <di:waypoint x="760" y="340" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="b4_di" bpmnElement="b4">
+        <di:waypoint x="980" y="340" />
+        <di:waypoint x="1080" y="340" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="b5_di" bpmnElement="b5">
+        <di:waypoint x="980" y="530" />
+        <di:waypoint x="1080" y="530" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="b6_di" bpmnElement="b6">
+        <di:waypoint x="1105" y="555" />
+        <di:waypoint x="1105" y="590" />
+        <di:waypoint x="645" y="590" />
+        <di:waypoint x="645" y="365" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1113" y="573" width="34" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="b7_di" bpmnElement="b7">
+        <di:waypoint x="1130" y="530" />
+        <di:waypoint x="1720" y="530" />
+        <di:waypoint x="1720" y="200" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1145" y="510" width="40" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="b8_di" bpmnElement="b8">
+        <di:waypoint x="1105" y="370" />
+        <di:waypoint x="1105" y="420" />
+        <di:waypoint x="870" y="420" />
+        <di:waypoint x="870" y="490" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1111" y="400" width="18" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="b9_di" bpmnElement="b9">
+        <di:waypoint x="1130" y="340" />
+        <di:waypoint x="1280" y="340" />
+        <di:waypoint x="1280" y="200" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1192" y="346" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="b10_di" bpmnElement="b10">
+        <di:waypoint x="1380" y="160" />
+        <di:waypoint x="1420" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="b15_di" bpmnElement="b15">
+        <di:waypoint x="1470" y="160" />
+        <di:waypoint x="1520" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="b11_di" bpmnElement="b11">
+        <di:waypoint x="1820" y="160" />
+        <di:waypoint x="1880" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="a_key_di" bpmnElement="a_key">
+        <di:waypoint x="370" y="350" />
+        <di:waypoint x="370" y="300" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+  <bpmndi:BPMNDiagram id="D_stage1">
+    <bpmndi:BPMNPlane id="Pl_stage1" bpmnElement="Sub_stage1">
+      <bpmndi:BPMNShape id="LS_a_di" bpmnElement="LS_a" isHorizontal="true" color:background-color="#fdf7ee" color:border-color="#9c8d76">
+        <dc:Bounds x="160" y="390" width="1330" height="190" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="LS_h_di" bpmnElement="LS_h" isHorizontal="true" color:background-color="#fdf3f7" color:border-color="#9c8490">
+        <dc:Bounds x="160" y="80" width="1330" height="310" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Start_S_di" bpmnElement="Start_S">
+        <dc:Bounds x="220" y="162" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="199" y="205" width="79" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_coach_di" bpmnElement="S_coach">
+        <dc:Bounds x="310" y="130" width="210" height="100" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_merge_di" bpmnElement="G_merge" isMarkerVisible="true">
+        <dc:Bounds x="580" y="155" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_step_di" bpmnElement="S_step">
+        <dc:Bounds x="680" y="130" width="210" height="100" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_stuck_di" bpmnElement="G_stuck" isMarkerVisible="true">
+        <dc:Bounds x="950" y="155" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="924" y="143" width="32" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_help_di" bpmnElement="S_help">
+        <dc:Bounds x="695" y="410" width="210" height="100" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_keep_di" bpmnElement="G_keep" isMarkerVisible="true">
+        <dc:Bounds x="1025" y="325" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1003" y="306" width="34" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_status_di" bpmnElement="S_status">
+        <dc:Bounds x="1143" y="410" width="210" height="100" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_stuck_di" bpmnElement="End_stuck">
+        <dc:Bounds x="1412" y="442" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1391" y="408" width="73" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_done_di" bpmnElement="G_done" isMarkerVisible="true">
+        <dc:Bounds x="1070" y="155" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1038" y="136" width="43" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_S_di" bpmnElement="End_S">
+        <dc:Bounds x="1230" y="162" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1209" y="205" width="79" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_prompt_di" bpmnElement="DOR_prompt" color:background-color="#eef2f9">
+        <dc:Bounds x="397" y="255" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="389" y="309" width="53" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="a_prompt_di" bpmnElement="a_prompt">
+        <di:waypoint x="415" y="255" />
+        <di:waypoint x="415" y="230" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="s1_di" bpmnElement="s1">
+        <di:waypoint x="256" y="180" />
+        <di:waypoint x="310" y="180" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="s2_di" bpmnElement="s2">
+        <di:waypoint x="520" y="180" />
+        <di:waypoint x="580" y="180" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="s3_di" bpmnElement="s3">
+        <di:waypoint x="630" y="180" />
+        <di:waypoint x="680" y="180" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="s4_di" bpmnElement="s4">
+        <di:waypoint x="890" y="180" />
+        <di:waypoint x="950" y="180" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="s5_di" bpmnElement="s5">
+        <di:waypoint x="975" y="205" />
+        <di:waypoint x="975" y="370" />
+        <di:waypoint x="790" y="370" />
+        <di:waypoint x="790" y="410" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="981" y="220" width="18" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="s6_di" bpmnElement="s6">
+        <di:waypoint x="1000" y="180" />
+        <di:waypoint x="1070" y="180" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1013" y="183" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="s7_di" bpmnElement="s7">
+        <di:waypoint x="905" y="460" />
+        <di:waypoint x="990" y="460" />
+        <di:waypoint x="990" y="350" />
+        <di:waypoint x="1025" y="350" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="s10_di" bpmnElement="s10">
+        <di:waypoint x="1050" y="325" />
+        <di:waypoint x="1050" y="270" />
+        <di:waypoint x="1360" y="270" />
+        <di:waypoint x="1360" y="110" />
+        <di:waypoint x="605" y="110" />
+        <di:waypoint x="605" y="155" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1053" y="276" width="54" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="s11_di" bpmnElement="s11">
+        <di:waypoint x="1075" y="350" />
+        <di:waypoint x="1248" y="350" />
+        <di:waypoint x="1248" y="410" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1092" y="333" width="36" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="s12_di" bpmnElement="s12">
+        <di:waypoint x="1353" y="460" />
+        <di:waypoint x="1412" y="460" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="s8_di" bpmnElement="s8">
+        <di:waypoint x="1095" y="155" />
+        <di:waypoint x="1095" y="110" />
+        <di:waypoint x="605" y="110" />
+        <di:waypoint x="605" y="155" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1103" y="123" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="s9_di" bpmnElement="s9">
+        <di:waypoint x="1120" y="180" />
+        <di:waypoint x="1230" y="180" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1131" y="159" width="18" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+  <bpmndi:BPMNDiagram id="D_stage2">
+    <bpmndi:BPMNPlane id="Pl_stage2" bpmnElement="Task_workspace">
+      <bpmndi:BPMNShape id="LW_p_di" bpmnElement="LW_p" isHorizontal="true" color:background-color="#eef4fb" color:border-color="#7d8fa6">
+        <dc:Bounds x="160" y="320" width="1960" height="240" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="LW_a_di" bpmnElement="LW_a" isHorizontal="true" color:background-color="#fdf7ee" color:border-color="#9c8d76">
+        <dc:Bounds x="160" y="80" width="1960" height="240" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Start_W_di" bpmnElement="Start_W">
+        <dc:Bounds x="240" y="202" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="216" y="245" width="84" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="W_repos_di" bpmnElement="W_repos">
+        <dc:Bounds x="340" y="170" width="210" height="100" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Prog_w1_di" bpmnElement="Prog_w1">
+        <dc:Bounds x="340" y="370" width="210" height="100" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_w1_di" bpmnElement="G_w1" isMarkerVisible="true">
+        <dc:Bounds x="585" y="395" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="556" y="377" width="47" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_resume_di" bpmnElement="G_resume" isMarkerVisible="true">
+        <dc:Bounds x="660" y="395" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="623" y="360" width="56" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="W_addr_di" bpmnElement="W_addr">
+        <dc:Bounds x="740" y="170" width="210" height="100" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Prog_w2_di" bpmnElement="Prog_w2">
+        <dc:Bounds x="740" y="370" width="210" height="100" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_w2_di" bpmnElement="G_w2" isMarkerVisible="true">
+        <dc:Bounds x="985" y="395" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="970" y="376" width="41" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_m2_di" bpmnElement="G_m2" isMarkerVisible="true">
+        <dc:Bounds x="985" y="195" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="W_tour_di" bpmnElement="W_tour">
+        <dc:Bounds x="1060" y="170" width="210" height="100" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Prog_w3_di" bpmnElement="Prog_w3">
+        <dc:Bounds x="1060" y="370" width="210" height="100" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_w3_di" bpmnElement="G_w3" isMarkerVisible="true">
+        <dc:Bounds x="1305" y="395" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1295" y="376" width="31" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_m3_di" bpmnElement="G_m3" isMarkerVisible="true">
+        <dc:Bounds x="1305" y="195" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="W_edit_di" bpmnElement="W_edit">
+        <dc:Bounds x="1380" y="170" width="210" height="100" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Prog_w4_di" bpmnElement="Prog_w4">
+        <dc:Bounds x="1380" y="370" width="210" height="100" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_w4_di" bpmnElement="G_w4" isMarkerVisible="true">
+        <dc:Bounds x="1660" y="395" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1626" y="376" width="47" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_W_ok_di" bpmnElement="End_W_ok">
+        <dc:Bounds x="1790" y="202" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1829" y="206" width="62" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_W_stop_di" bpmnElement="End_W_stop">
+        <dc:Bounds x="1852" y="382" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1849" y="346" width="61" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_w_stop_di" bpmnElement="G_w_stop" isMarkerVisible="true">
+        <dc:Bounds x="1845" y="455" width="50" height="50" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="w1_di" bpmnElement="w1">
+        <di:waypoint x="276" y="220" />
+        <di:waypoint x="340" y="220" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="w2_di" bpmnElement="w2">
+        <di:waypoint x="445" y="270" />
+        <di:waypoint x="445" y="370" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="w3_di" bpmnElement="w3">
+        <di:waypoint x="550" y="420" />
+        <di:waypoint x="585" y="420" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="w4_di" bpmnElement="w4">
+        <di:waypoint x="635" y="420" />
+        <di:waypoint x="660" y="420" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="642" y="423" width="18" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="r1_di" bpmnElement="r1">
+        <di:waypoint x="685" y="395" />
+        <di:waypoint x="685" y="220" />
+        <di:waypoint x="740" y="220" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="689" y="233" width="42" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="r2_di" bpmnElement="r2">
+        <di:waypoint x="685" y="395" />
+        <di:waypoint x="685" y="128" />
+        <di:waypoint x="1010" y="128" />
+        <di:waypoint x="1010" y="195" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="695" y="133" width="82" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="r3_di" bpmnElement="r3">
+        <di:waypoint x="685" y="395" />
+        <di:waypoint x="685" y="104" />
+        <di:waypoint x="1330" y="104" />
+        <di:waypoint x="1330" y="195" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="696" y="86" width="78" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="w6_di" bpmnElement="w6">
+        <di:waypoint x="845" y="270" />
+        <di:waypoint x="845" y="370" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="w7_di" bpmnElement="w7">
+        <di:waypoint x="950" y="420" />
+        <di:waypoint x="985" y="420" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="w8_di" bpmnElement="w8">
+        <di:waypoint x="1010" y="395" />
+        <di:waypoint x="1010" y="245" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1017" y="300" width="18" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="w10_di" bpmnElement="w10">
+        <di:waypoint x="1165" y="270" />
+        <di:waypoint x="1165" y="370" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="w11_di" bpmnElement="w11">
+        <di:waypoint x="1270" y="420" />
+        <di:waypoint x="1305" y="420" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="w12_di" bpmnElement="w12">
+        <di:waypoint x="1330" y="395" />
+        <di:waypoint x="1330" y="245" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1337" y="300" width="18" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="w14_di" bpmnElement="w14">
+        <di:waypoint x="1485" y="270" />
+        <di:waypoint x="1485" y="370" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="w15_di" bpmnElement="w15">
+        <di:waypoint x="1590" y="420" />
+        <di:waypoint x="1660" y="420" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e1_di" bpmnElement="e1">
+        <di:waypoint x="1685" y="395" />
+        <di:waypoint x="1685" y="220" />
+        <di:waypoint x="1790" y="220" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1692" y="300" width="18" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e2_di" bpmnElement="e2">
+        <di:waypoint x="1685" y="445" />
+        <di:waypoint x="1685" y="480" />
+        <di:waypoint x="1845" y="480" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1694" y="453" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="m2_di" bpmnElement="m2">
+        <di:waypoint x="1035" y="220" />
+        <di:waypoint x="1060" y="220" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="m3_di" bpmnElement="m3">
+        <di:waypoint x="1355" y="220" />
+        <di:waypoint x="1380" y="220" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="w16_di" bpmnElement="w16">
+        <di:waypoint x="1870" y="455" />
+        <di:waypoint x="1870" y="418" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="w13_di" bpmnElement="w13">
+        <di:waypoint x="1330" y="445" />
+        <di:waypoint x="1330" y="480" />
+        <di:waypoint x="1845" y="480" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1339" y="453" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="w9_di" bpmnElement="w9">
+        <di:waypoint x="1010" y="445" />
+        <di:waypoint x="1010" y="480" />
+        <di:waypoint x="1845" y="480" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1019" y="453" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="w5_di" bpmnElement="w5">
+        <di:waypoint x="610" y="445" />
+        <di:waypoint x="610" y="480" />
+        <di:waypoint x="1845" y="480" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="613" y="453" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

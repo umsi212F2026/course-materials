@@ -1,0 +1,5 @@
+{
+  "proseWrap": "always",
+  "printWidth": 95,
+  "embeddedLanguageFormatting": "off"
+}

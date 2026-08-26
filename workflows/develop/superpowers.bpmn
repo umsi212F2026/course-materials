@@ -1,0 +1,1552 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:color="http://www.omg.org/spec/BPMN/non-normative/color/1.0" id="Definitions_sp" targetNamespace="http://si212.umich.edu/schema/bpmn">
+  <bpmn:collaboration id="C_SP">
+    <bpmn:participant id="P_PLAN" name="Working out what to build — one engagement, however many chunks (OURS, NOT SUPERPOWERS)" processRef="Proc_PLAN" />
+    <bpmn:participant id="P_SP" name="obra/superpowers v6.3.0 — one chunk, from a request to a merged branch" processRef="Proc_SP" />
+  </bpmn:collaboration>
+
+  <bpmn:process id="Proc_PLAN" isExecutable="false">
+    <bpmn:documentation>NOT PART OF SUPERPOWERS. This pool is a course addition, drawn because superpowers has no product-planning layer at all: nothing in its skills library decides what to build, in what order, or records that decision anywhere.
+
+One run of this pool is one engagement — a person with something they want to exist, talking it out until there is a chunk list naming one or more chunks in build order. Each of those chunks is then a separate run of the pool below.
+
+The artifact is deliberately NOT called a plan: superpowers already owns that word for the per-chunk implementation plan at docs/superpowers/plans/. Two documents called "the plan" at two granularities is the mistake this vocabulary is trying to avoid.
+
+Nothing here is written yet. The labels say so.</bpmn:documentation>
+    <bpmn:laneSet id="LS_PLAN">
+      <bpmn:lane id="LP_human" name="HUMAN operator">
+        <bpmn:flowNodeRef>Start_idea</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_planned</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="LP_agent" name="AI AGENT">
+        <bpmn:flowNodeRef>Sub_converse</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="LP_program" name="PROGRAM" />
+    </bpmn:laneSet>
+
+    <bpmn:startEvent id="Start_idea" name="has something they&#10;want to exist">
+      <bpmn:documentation>Deliberately vaguer than the superpowers start event below. At this point there is no request, no scope and no order — that is what the conversation produces.</bpmn:documentation>
+      <bpmn:outgoing>p1</bpmn:outgoing>
+    </bpmn:startEvent>
+
+    <bpmn:adHocSubProcess id="Sub_converse" name="Work out what to build&#10;NOT WRITTEN YET">
+      <bpmn:documentation>An unstructured conversation: no fixed order of moves, which is why this is the ad-hoc idiom rather than a sequence of tasks. What belongs in it — eliciting what the person actually wants, sizing the pieces, ordering them, cutting the ones that are not worth building — is exactly the design question this box is a placeholder for.
+
+Sizing is the whole job here. From the superpowers repo's own 15 plans, a chunk should come out at roughly one spec's worth of work — a median of 5 to 7 tasks, around 30 steps, one to two and a half hours of agent time. Anything larger is two chunks. A student's weekly assignment is likely 3 to 5 chunks; a final project maybe 10.
+
+The completion condition is the gate: the conversation ends when there is a written chunk list naming at least one chunk in build order. Ad-hoc subprocesses forbid start and end events, so the condition is the only terminal this box has.</bpmn:documentation>
+      <bpmn:incoming>p1</bpmn:incoming>
+      <bpmn:outgoing>p2</bpmn:outgoing>
+      <bpmn:dataOutputAssociation id="doa_chunklist">
+        <bpmn:targetRef>DOR_chunklist</bpmn:targetRef>
+      </bpmn:dataOutputAssociation>
+      <bpmn:completionCondition xsi:type="bpmn:tFormalExpression">the chunk list names at least one chunk, in the order they will be built</bpmn:completionCondition>
+    </bpmn:adHocSubProcess>
+
+    <bpmn:endEvent id="End_planned" name="chunk list agreed">
+      <bpmn:incoming>p2</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <bpmn:dataObjectReference id="DOR_chunklist" name="chunk list&#10;LOCATION NOT DECIDED YET" dataObjectRef="DO_chunklist" />
+    <bpmn:dataObject id="DO_chunklist" />
+
+    <bpmn:sequenceFlow id="p1" sourceRef="Start_idea" targetRef="Sub_converse" />
+    <bpmn:sequenceFlow id="p2" sourceRef="Sub_converse" targetRef="End_planned" />
+  </bpmn:process>
+
+  <bpmn:process id="Proc_SP" isExecutable="false">
+    <bpmn:documentation>Drawn from the skill files in obra/superpowers at v6.3.0 (commit b36e082, 2026-08-12), not from the README. Where the two disagree the skills win; the disagreements are recorded in the documentation of the elements concerned.
+
+One run is one chunk: a single request arriving, through a design and a plan, to a merged branch or an open PR. The pool above decides which chunks exist and in what order; this pool runs once per chunk.
+
+VOCABULARY. The granularity chain, largest first:
+  assignment  — 3 to 5 chunks (a final project, maybe 10)
+  chunk       — one run of this pool: 5 to 7 tasks, ~30 steps, 1 to 2.5 hours
+  task        — superpowers' word: ~5 steps, one independently testable deliverable
+  step        — superpowers' word: one action, 2 to 5 minutes
+
+"Chunk" is ours. Superpowers has no word for this unit — it names it only by its artifacts, a spec and a plan and a branch, which is of a piece with having no planning layer. Words we did NOT reuse, and why: "project" means the repo throughout superpowers ("explore project context", "the project's full test suite"); "unit" is taken twice over, for code structure and in the sentence "a task is the smallest unit that carries its own test cycle"; "cycle" is the TDD red-green-refactor loop, one level below a task; "spec" is a document, and only the architectural path writes one at all.
+
+ARCHIVE CAVEAT: three early plans (2026-01-22, 2026-02-19, 2026-03-11) use "## Chunk N" headings for groups of tasks WITHIN one plan — a smaller sense, from a convention dropped after March. It appears nowhere in the current skills. If those plans are ever handed out as worked specimens, that difference needs one sentence of warning.</bpmn:documentation>
+    <bpmn:laneSet id="LS_SP">
+      <bpmn:lane id="L_human" name="HUMAN operator">
+        <bpmn:flowNodeRef>Start_req</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Sub_finish</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_integrated</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="L_agent" name="AI AGENT">
+        <bpmn:flowNodeRef>Gate_merge_in</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gate_classify</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Sub_brainstorm</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Sub_plan</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Sub_execute</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_spike</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gate_upgrade_spike</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_answered</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_bounded</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gate_upgrade_bounded</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_delivered</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="L_program" name="PROGRAM">
+        <bpmn:flowNodeRef>Prog_suite</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gate_green</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_red</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+
+    <bpmn:startEvent id="Start_req" name="a chunk is picked&#10;off the list">
+      <bpmn:documentation>Superpowers begins here, with a human bringing it one thing to build. It says nothing about how that thing was chosen — there is no product-planning, roadmap or backlog step anywhere in its skills library. The pool above is our answer to that; superpowers' own answer is silence.</bpmn:documentation>
+      <bpmn:outgoing>f1</bpmn:outgoing>
+    </bpmn:startEvent>
+
+    <bpmn:exclusiveGateway id="Gate_merge_in">
+      <bpmn:documentation>Unnamed, so a reader knows it is a merge and not a decision. It exists because the path ratchet (see Gate_upgrade_spike and Gate_upgrade_bounded) sends work back to be reclassified, and one gateway may never both join and fork.</bpmn:documentation>
+      <bpmn:incoming>f1</bpmn:incoming>
+      <bpmn:incoming>f8</bpmn:incoming>
+      <bpmn:incoming>f11</bpmn:incoming>
+      <bpmn:outgoing>f2</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:exclusiveGateway id="Gate_classify" name="how much process&#10;does this need?">
+      <bpmn:documentation>obra/superpowers:skills/brainstorming/SKILL.md — "Three Paths". The agent classifies the request and must say the classification out loud before its first question, so the human partner can override it. Ties go to the heavier path: "When in doubt between two paths, take the heavier one."
+
+Drawn at the top level rather than inside the brainstorming subprocess because it decides the shape of the entire run, and because it is the most distinctive single move in the methodology.</bpmn:documentation>
+      <bpmn:incoming>f2</bpmn:incoming>
+      <bpmn:outgoing>f3</bpmn:outgoing>
+      <bpmn:outgoing>f4</bpmn:outgoing>
+      <bpmn:outgoing>f5</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:task id="Task_spike" name="Probe the question and report a recommendation&#10;brainstorming — spike path">
+      <bpmn:documentation>A feasibility question whose output is an answer, not code that is kept. The agent presents the question and its probe in two or three sentences, gets a nod, then investigates as cheaply as correctness allows. Anything built stays labelled throwaway.
+
+Implemented by obra/superpowers:skills/brainstorming/SKILL.md, spike path. Drawn as a leaf, not a subprocess: there is no level below to model.</bpmn:documentation>
+      <bpmn:incoming>f3</bpmn:incoming>
+      <bpmn:outgoing>f6</bpmn:outgoing>
+    </bpmn:task>
+
+    <bpmn:exclusiveGateway id="Gate_upgrade_spike" name="hidden&#10;complexity?">
+      <bpmn:documentation>The ratchet is one-way: "hidden complexity discovered mid-task upgrades the path — stop, say so, and step up. Nothing downgrades mid-task." Drawn twice, once per lightweight path, because a single gateway serving both would have to join and fork.</bpmn:documentation>
+      <bpmn:incoming>f6</bpmn:incoming>
+      <bpmn:outgoing>f7</bpmn:outgoing>
+      <bpmn:outgoing>f8</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:endEvent id="End_answered" name="question answered,&#10;nothing kept">
+      <bpmn:documentation>"The spike works, so I'll keep the code" is listed as a red flag: keeping it is a new request that gets its own classification and its own approval.</bpmn:documentation>
+      <bpmn:incoming>f7</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <bpmn:task id="Task_bounded" name="Design in chat, get approval, implement&#10;brainstorming — bounded path">
+      <bpmn:documentation>Implemented by obra/superpowers:skills/brainstorming/SKILL.md, bounded path. A well-scoped change to a flow that already exists in the repo. Clarifying questions, a short design presented in chat, an explicit yes, then implementation through the normal development workflow with TDD. No spec file and no plan document.
+
+The approval gate here is as hard as the architectural one — "What scales with simplicity is the artifact, never the approval" — but it is a gate inside a leaf, so this diagram does not show it. That is a real loss of resolution and the reason this path is drawn as a stub rather than a phase.
+
+The skills do not say whether bounded work then runs finishing-a-development-branch. This end event asserts that the run terminates, not that the branch is handled differently.</bpmn:documentation>
+      <bpmn:incoming>f4</bpmn:incoming>
+      <bpmn:outgoing>f9</bpmn:outgoing>
+    </bpmn:task>
+
+    <bpmn:exclusiveGateway id="Gate_upgrade_bounded" name="hidden&#10;complexity?">
+      <bpmn:documentation>See Gate_upgrade_spike. "It grew, but I'm almost done — no need to re-classify" is a listed red flag.</bpmn:documentation>
+      <bpmn:incoming>f9</bpmn:incoming>
+      <bpmn:outgoing>f10</bpmn:outgoing>
+      <bpmn:outgoing>f11</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:endEvent id="End_delivered" name="change delivered">
+      <bpmn:incoming>f10</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <bpmn:subProcess id="Sub_brainstorm" name="Brainstorm the design">
+      <bpmn:documentation>obra/superpowers:skills/brainstorming/SKILL.md — architectural path. PLANE NOT YET DRAWN.
+
+Below this box: explore project context, a scope check that can decompose an over-large request, clarifying questions one at a time, two or three approaches with a recommendation, the design presented in sections with approval after each, the spec written and committed, a self-review, and a human review gate on the written spec.
+
+Two human gates live in here, and they are the only approval gates in the whole run before the finish menu.
+
+Superpowers' own decomposition step lives here too, as a scope guard rather than a planning phase: help the user decompose into sub-projects, decide what order to build them, "then brainstorm the first sub-project through the normal design flow." Nothing records the others — no file, no path, no return. The pool above exists because of that sentence.</bpmn:documentation>
+      <bpmn:incoming>f5</bpmn:incoming>
+      <bpmn:outgoing>f12</bpmn:outgoing>
+      <bpmn:dataOutputAssociation id="doa_spec">
+        <bpmn:targetRef>DOR_spec</bpmn:targetRef>
+      </bpmn:dataOutputAssociation>
+    </bpmn:subProcess>
+
+    <bpmn:subProcess id="Sub_plan" name="Write the implementation plan">
+      <bpmn:documentation>obra/superpowers:skills/writing-plans/SKILL.md. PLANE NOT YET DRAWN.
+
+Below this box: a scope check, a file-structure pass, task decomposition into bite-sized steps of two to five minutes each, and a self-review against the spec for coverage, placeholders and type consistency. The plan carries a Global Constraints block copied verbatim from the spec.
+
+The skill ends by offering the human a choice of executor — subagent-driven or inline. This diagram takes the subagent branch only, because students on this course will always have subagents, and draws no gateway for a fork it does not model.</bpmn:documentation>
+      <bpmn:incoming>f12</bpmn:incoming>
+      <bpmn:outgoing>f13</bpmn:outgoing>
+      <bpmn:dataInputAssociation id="dia_spec_plan">
+        <bpmn:sourceRef>DOR_spec</bpmn:sourceRef>
+      </bpmn:dataInputAssociation>
+      <bpmn:dataOutputAssociation id="doa_plan">
+        <bpmn:targetRef>DOR_plan</bpmn:targetRef>
+      </bpmn:dataOutputAssociation>
+    </bpmn:subProcess>
+
+    <bpmn:subProcess id="Sub_execute" name="Execute the plan, task by task">
+      <bpmn:documentation>obra/superpowers:skills/subagent-driven-development/SKILL.md.
+
+Below this box: workspace and ledger setup (which is where obra/superpowers:skills/using-git-worktrees/SKILL.md is actually invoked), a pre-flight conflict scan over the whole plan, then the per-task loop — dispatch an implementer, dispatch a task reviewer, and a fix loop of up to five rounds each ending in a scoped re-review — then a whole-branch final review on the most capable model, one single fix wave, and deletion of the workspace.
+
+Seven subagent dispatches are drawn on the plane below, off four prompt templates. Each is a seat, a model tier and a cost, and each carries its tier on its label, because those are the knobs a course would want to turn.
+
+WHY CALL ACTIVITIES, NOT COLLAPSED SUBPROCESSES. Each dispatch is drawn as a callActivity — a thick-bordered box meaning "this runs as a process defined elsewhere". A subagent session is exactly that: its own context, constructed by the controller, never inherited. bpmn-js does not drill into a call activity, which is the honest signal here — there is no plane below, only a prompt template you can go read. A collapsed subprocess would promise a plane that will never exist, and would also fail bpmnlint's start-event-required and end-event-required for as long as it stayed empty.
+
+There are no human gates in here at all. The skill is explicit: "Do not pause to check in with your human partner between tasks", and "Rulings, not stalls" tells the controller to decide ambiguities itself and record each decision in the ledger. Exactly four things stop it: an irreversible or destructive operation, a security-sensitive action, a side effect outside the worktree, and a plan so broken that every path forward is a guess. See Note_nohuman on the plane below — those are interrupts that can fire anywhere, not steps, so nothing draws them.
+
+README DISAGREEMENT: the README lists using-git-worktrees as step 2 of the basic workflow, "activates after design approval" — before planning. The skills put workspace creation at execution time (writing-plans: "it should have been created via the using-git-worktrees skill at execution time"; this skill's Setup section). The skills win here, so the worktree is inside this box and not a phase of its own.</bpmn:documentation>
+      <bpmn:incoming>f13</bpmn:incoming>
+      <bpmn:outgoing>f14</bpmn:outgoing>
+      <bpmn:dataInputAssociation id="dia_plan_exec">
+        <bpmn:sourceRef>DOR_plan</bpmn:sourceRef>
+      </bpmn:dataInputAssociation>
+
+      <bpmn:laneSet id="LS_X">
+        <bpmn:lane id="LX_human" name="HUMAN operator" />
+        <bpmn:lane id="LX_agent" name="AI AGENT">
+          <bpmn:flowNodeRef>Start_X</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>X_worktree</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Script_ws</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>X_ledger</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>X_preflight</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>G_taskmerge</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>G_tasks</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Script_brief</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>G_implmerge</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>CA_impl</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>G_report</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Script_pkg</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>CA_taskrev</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>G_review</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>X_triage</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>G_loop</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>G_fixmerge</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>CA_fix</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Script_pkg_fix</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>CA_rerev</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>G_addressed</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>G_cap</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>X_adjudicate</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>G_donemerge</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>X_complete</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Script_pkg_final</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>CA_final</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>G_finalfind</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>CA_finalfix</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Script_pkg_fw</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>CA_finalrerev</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>X_finaladj</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>G_finalmerge</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>X_rulings</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Script_rm</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>End_X</bpmn:flowNodeRef>
+        </bpmn:lane>
+        <bpmn:lane id="LX_program" name="PROGRAM" />
+      </bpmn:laneSet>
+
+      <bpmn:startEvent id="Start_X" name="the plan is handed&#10;to the executor">
+        <bpmn:documentation>The trigger is the executor fork at the end of obra/superpowers:skills/writing-plans/SKILL.md: the human is offered a subagent-driven executor or an inline one, and picks subagents. Nothing else has to be true — the branch may not exist yet, and the ledger certainly does not.</bpmn:documentation>
+        <bpmn:outgoing>xf1</bpmn:outgoing>
+      </bpmn:startEvent>
+
+      <bpmn:task id="X_worktree" name="Create or verify the isolated worktree&#10;using-git-worktrees">
+        <bpmn:documentation>obra/superpowers:skills/using-git-worktrees/SKILL.md, invoked from this skill&#39;s Setup section — not earlier, whatever the superpowers README says.
+
+Carries the one conditional human gate in the whole phase: "Never start implementation on a main/master branch without your human partner&#39;s explicit consent." Creating a worktree is what makes that question moot, which is why it is not drawn as a gateway — on the path this diagram takes, it never fires.</bpmn:documentation>
+        <bpmn:incoming>xf1</bpmn:incoming>
+        <bpmn:outgoing>xf2</bpmn:outgoing>
+      </bpmn:task>
+
+      <bpmn:scriptTask id="Script_ws" name="Resolve this plan&#39;s workspace directory&#10;sdd-workspace">
+        <bpmn:documentation>obra/superpowers:skills/subagent-driven-development/scripts/sdd-workspace PLAN_FILE. Prints the plan&#39;s git-ignored directory, &lt;repo-root&gt;/.superpowers/sdd/&lt;plan-basename&gt;/, home to every artifact for THIS plan: ledger, briefs, reports, review packages. Another plan&#39;s directory is never yours to read or write.
+
+Drawn as a script task in AI AGENT, not in PROGRAM: it is a deterministic program, which the script marker says, but it adjudicates nothing and the controller is the one accountable for it. See Note_noprogram.</bpmn:documentation>
+        <bpmn:incoming>xf2</bpmn:incoming>
+        <bpmn:outgoing>xf3</bpmn:outgoing>
+      </bpmn:scriptTask>
+
+      <bpmn:task id="X_ledger" name="Open this plan&#39;s ledger, or start one&#10;subagent-driven-development">
+        <bpmn:documentation>obra/superpowers:skills/subagent-driven-development/SKILL.md, Setup.
+
+The ledger is the recovery map: "Conversation memory does not survive compaction. In real sessions, controllers that lost their place have re-dispatched entire completed task sequences — the single most expensive failure observed."
+
+Resume rules, folded into this one box rather than drawn as a gateway: if the ledger&#39;s first line names this plan file, tasks with a "Task N: complete" line are done and are not re-dispatched; a task whose last line is a fix round is mid-loop and resumes at the next round. A ledger naming a different plan — or a stray progress file sitting directly in the old flat .superpowers/sdd/ directory — belongs to another plan and is left alone. A new ledger&#39;s first line is its identity: "# SDD ledger — plan: &lt;plan file path&gt;".</bpmn:documentation>
+        <bpmn:incoming>xf3</bpmn:incoming>
+        <bpmn:outgoing>xf4</bpmn:outgoing>
+        <bpmn:dataOutputAssociation id="xda3">
+          <bpmn:targetRef>DOR_ledger_a</bpmn:targetRef>
+        </bpmn:dataOutputAssociation>
+      </bpmn:task>
+
+      <bpmn:task id="X_preflight" name="Scan the plan for conflicts and rule on each&#10;subagent-driven-development">
+        <bpmn:documentation>obra/superpowers:skills/subagent-driven-development/SKILL.md, Setup, last three paragraphs. Runs once, before Task 1.
+
+"The scan&#39;s output is a table, not a verdict." One row for every pair of tasks that share a file or an interface — what one produces against what the other consumes — and one row for every task, on whether its own text agrees with itself. "The scan is clean" without those rows is not a scan you ran.
+
+The table goes in the ledger, and every conflict it surfaces is ruled on before execution begins, with the spec as the binding authority and the ruling recorded beside its row.</bpmn:documentation>
+        <bpmn:incoming>xf4</bpmn:incoming>
+        <bpmn:outgoing>xf5</bpmn:outgoing>
+        <bpmn:dataInputAssociation id="xda1">
+          <bpmn:sourceRef>DOR_plan_a</bpmn:sourceRef>
+        </bpmn:dataInputAssociation>
+      </bpmn:task>
+
+      <bpmn:exclusiveGateway id="G_taskmerge">
+        <bpmn:documentation>Unnamed, so a reader knows it is a merge and not a decision. It exists only because the task loop returns here and one gateway may never both join and fork.</bpmn:documentation>
+        <bpmn:incoming>xf5</bpmn:incoming>
+        <bpmn:incoming>xf31</bpmn:incoming>
+        <bpmn:outgoing>xf6</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+
+      <bpmn:exclusiveGateway id="G_tasks" name="tasks left&#10;in the plan?">
+        <bpmn:documentation>The loop head. Adjudicated by the controller against its todo list and the ledger — not by a program, which is why this diamond sits in AI AGENT like every other one on this plane.
+
+"Batch small same-shape work": when the plan lists several tasks that are each the same small independent edit, one dispatch brief covers the whole batch and one review covers its diff. So a pass through this loop is not always exactly one task from the plan.</bpmn:documentation>
+        <bpmn:incoming>xf6</bpmn:incoming>
+        <bpmn:outgoing>xf7</bpmn:outgoing>
+        <bpmn:outgoing>xf8</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+
+      <bpmn:scriptTask id="Script_brief" name="Extract the task&#39;s text to its own brief file&#10;task-brief">
+        <bpmn:documentation>obra/superpowers:skills/subagent-driven-development/scripts/task-brief PLAN_FILE N. Writes the task&#39;s full text to a uniquely named file and prints the path.
+
+The brief exists so that "Never make a subagent read the whole plan file" can be true, and so the exact values — numbers, magic strings, signatures, test cases — live in exactly one place. The dispatch prompt introduces it as "read this first — it is your requirements, with the exact values to use verbatim".
+
+Also here, though it has no box of its own: the controller records BASE (git rev-parse HEAD) before dispatching, because the review package needs it. Never HEAD~1, which silently drops all but the last commit of a multi-commit task.</bpmn:documentation>
+        <bpmn:incoming>xf7</bpmn:incoming>
+        <bpmn:outgoing>xf9</bpmn:outgoing>
+        <bpmn:dataInputAssociation id="xda2">
+          <bpmn:sourceRef>DOR_plan_b</bpmn:sourceRef>
+        </bpmn:dataInputAssociation>
+        <bpmn:dataOutputAssociation id="xda6">
+          <bpmn:targetRef>DOR_brief</bpmn:targetRef>
+        </bpmn:dataOutputAssociation>
+      </bpmn:scriptTask>
+
+      <bpmn:exclusiveGateway id="G_implmerge">
+        <bpmn:incoming>xf9</bpmn:incoming>
+        <bpmn:incoming>xf13</bpmn:incoming>
+        <bpmn:outgoing>xf10</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+
+      <bpmn:callActivity id="CA_impl" name="Dispatch a fresh implementer&#10;implementer-prompt.md&#10;MODEL: the cheapest that fits, mid-tier floor">
+        <bpmn:documentation>obra/superpowers:skills/subagent-driven-development/implementer-prompt.md.
+
+Seat 1 of 7 on this plane, and the one that runs most often — once per task, plus every re-dispatch.
+
+MODEL, from the skill&#39;s Model Selection: "Use the least powerful model that can handle each role." One or two files with a complete spec, cheap; multiple files with integration concerns, standard; design judgment or broad codebase understanding, most capable. But "turn count beats token price" — the cheapest models routinely take 2-3x the turns on multi-step work, so a mid-tier model is the floor for an implementer working from prose. Only when the plan text contains the complete code to write is it transcription plus testing, and the cheapest tier is right. "Always specify the model explicitly when dispatching a subagent" — an omitted model inherits the session&#39;s, usually the most expensive one.
+
+The dispatch carries five things and nothing else: where this task fits, the brief path, interfaces and decisions from earlier tasks, the controller&#39;s resolution of any ambiguity it spotted, and the report-file path. Not the session&#39;s history — "a real session&#39;s dispatch hit 42k chars of which 99% was pasted history."
+
+The implementer implements, tests, commits and self-reviews, writes its full report to the report file, and returns only status, commits, a one-line test summary and concerns. It never dispatches subagents of its own, and above all never a reviewer: "every reviewer a worker spawned duplicated the task review the controller dispatched anyway — a full extra review seat per task."
+
+Never dispatch two implementers in parallel — they conflict.</bpmn:documentation>
+        <bpmn:incoming>xf10</bpmn:incoming>
+        <bpmn:outgoing>xf11</bpmn:outgoing>
+        <bpmn:dataInputAssociation id="xda7">
+          <bpmn:sourceRef>DOR_brief</bpmn:sourceRef>
+        </bpmn:dataInputAssociation>
+      </bpmn:callActivity>
+
+      <bpmn:exclusiveGateway id="G_report" name="what did the&#10;report say?">
+        <bpmn:documentation>Implementers return one of four statuses. DONE and DONE_WITH_CONCERNS go to review — concerns about correctness or scope get addressed first, observations get noted. NEEDS_CONTEXT and BLOCKED go back for another dispatch: supply the missing context; or, if the task needs more reasoning, a more capable model; or break the task up; or, if the plan itself is wrong, rule on the correction, ledger it, and carry the ruling in the new dispatch.
+
+"Never ignore an escalation or force the same model to retry without changes." Each return through this branch is another implementer seat, and nothing counts them.</bpmn:documentation>
+        <bpmn:incoming>xf11</bpmn:incoming>
+        <bpmn:outgoing>xf12</bpmn:outgoing>
+        <bpmn:outgoing>xf13</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+
+      <bpmn:scriptTask id="Script_pkg" name="Write the diff to a file&#10;review-package">
+        <bpmn:documentation>obra/superpowers:skills/subagent-driven-development/scripts/review-package PLAN_FILE BASE HEAD, where BASE is the commit recorded before the implementer was dispatched. It prints the path of the file it wrote: the commit list, the stat summary, and git diff -U10, in one file the reviewer reads in a single call.
+
+This is the cost mechanism of the whole phase, and it is structural rather than accounted: "the output never enters your own context". Drawn four times on this plane because it runs four times — before each of the two task-loop reviews, and before each of the two final ones.
+
+"Never dispatch a task reviewer without a diff file."</bpmn:documentation>
+        <bpmn:incoming>xf12</bpmn:incoming>
+        <bpmn:outgoing>xf14</bpmn:outgoing>
+        <bpmn:dataOutputAssociation id="xda8">
+          <bpmn:targetRef>DOR_pkg</bpmn:targetRef>
+        </bpmn:dataOutputAssociation>
+      </bpmn:scriptTask>
+
+      <bpmn:callActivity id="CA_taskrev" name="Dispatch the task reviewer&#10;task-reviewer-prompt.md&#10;MODEL: scaled to the diff">
+        <bpmn:documentation>obra/superpowers:skills/subagent-driven-development/task-reviewer-prompt.md.
+
+Seat 2 of 7. Exactly one per task: "Per-task reviews are task-scoped gates. The broad review happens once, at the final whole-branch review." Never skipped, and never replaced by the implementer&#39;s self-review — both are required.
+
+MODEL: "choose the model with the same judgment, scaled to the diff&#39;s size, complexity, and risk. A small mechanical diff does not need the most capable model; a subtle concurrency change does." Mid-tier is the floor.
+
+The reviewer gets three paths — brief, report, review package — plus the plan&#39;s Global Constraints copied verbatim as its attention lens. It must return both verdicts, spec compliance AND task quality; a report missing either is not accepted.
+
+Three things the controller may not do to it: re-ask for tests the implementer already ran, add open-ended directives without a task-specific reason, or pre-judge a finding. "If the prompt you are writing contains &#39;do not flag&#39;, &#39;don&#39;t treat X as a defect&#39;, &#39;at most Minor&#39;, or &#39;the plan chose&#39; — stop: you are pre-judging, usually to spare yourself a review loop."</bpmn:documentation>
+        <bpmn:incoming>xf14</bpmn:incoming>
+        <bpmn:outgoing>xf15</bpmn:outgoing>
+        <bpmn:dataInputAssociation id="xda9">
+          <bpmn:sourceRef>DOR_pkg</bpmn:sourceRef>
+        </bpmn:dataInputAssociation>
+      </bpmn:callActivity>
+
+      <bpmn:exclusiveGateway id="G_review" name="spec met and&#10;quality approved?">
+        <bpmn:documentation>Adjudicated by the reviewer&#39;s two verdicts, read by the controller. The loop triggers on spec failure, any Critical or Important finding, or a "Cannot verify from diff" item the controller has confirmed as a real gap — those items do not block the rest of the review, but the controller holds the plan and the cross-task context the reviewer lacks and must resolve each one before the task can be called complete.</bpmn:documentation>
+        <bpmn:incoming>xf15</bpmn:incoming>
+        <bpmn:outgoing>xf16</bpmn:outgoing>
+        <bpmn:outgoing>xf17</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+
+      <bpmn:task id="X_triage" name="Defer the Minors to the ledger; rule on what the plan mandates&#10;subagent-driven-development">
+        <bpmn:documentation>The two routes that leave before the fix loop starts.
+
+Minor findings go to the ledger as "Task N: minor (deferred): &lt;one-liner&gt;" and never enter the loop; the final whole-branch review is pointed at that list so it can triage which must be fixed before merge. "A roll-up nobody reads is a silent discard."
+
+A finding labelled plan-mandated, or any finding that contradicts the plan&#39;s text, is the controller&#39;s to rule on — weighed against the plan, decided with the spec as binding authority, ledgered before it is acted on. "Do not dismiss the finding because the plan mandates it, and do not dispatch a fix that contradicts the plan without a recorded ruling."</bpmn:documentation>
+        <bpmn:incoming>xf17</bpmn:incoming>
+        <bpmn:outgoing>xf18</bpmn:outgoing>
+      </bpmn:task>
+
+      <bpmn:exclusiveGateway id="G_loop" name="anything left&#10;above Minor?">
+        <bpmn:documentation>If triage left nothing above Minor, the task completes without a fix round at all.</bpmn:documentation>
+        <bpmn:incoming>xf18</bpmn:incoming>
+        <bpmn:outgoing>xf19</bpmn:outgoing>
+        <bpmn:outgoing>xf20</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+
+      <bpmn:exclusiveGateway id="G_fixmerge">
+        <bpmn:incoming>xf20</bpmn:incoming>
+        <bpmn:incoming>xf27</bpmn:incoming>
+        <bpmn:outgoing>xf21</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+
+      <bpmn:callActivity id="CA_fix" name="Dispatch fix round R of 5&#10;implementer-prompt.md — fresh from round 4&#10;MODEL: the same agent, then one tier up">
+        <bpmn:documentation>Seat 3 of 7. One box for both halves of the round, because the seat is the same seat and the difference is which agent sits in it.
+
+ROUNDS 1-3: resume the original implementer, sending it the open findings verbatim. Its context is intact — it knows the task, the code and its own choices. Where a harness cannot message a live subagent, a fresh implementer is dispatched with the brief path, the report-file path and the findings; the report file is the persistent memory either way.
+
+ROUNDS 4-5: a fresh implementer on a model at least one tier above the one that got stuck, framed as "A prior implementer attempted this task N times; you own it now. Read the report file for what was tried." "A loop that survives three resumes usually means the implementer cannot see its own problem — fresh eyes and a capability bump in one move."
+
+Either way the implementer re-runs the tests covering the amended code, appends its fix report to the same report file, and returns the short contract. The controller confirms the fix report carries the covering tests, the command and the output before it dispatches the re-review.
+
+"Never fix findings yourself in the controller session — your context stays clean for coordination, and controller fixes skip review."
+
+Uses obra/superpowers:skills/subagent-driven-development/implementer-prompt.md for the fresh dispatches.</bpmn:documentation>
+        <bpmn:incoming>xf21</bpmn:incoming>
+        <bpmn:outgoing>xf22</bpmn:outgoing>
+      </bpmn:callActivity>
+
+      <bpmn:scriptTask id="Script_pkg_fix" name="Write the diff to a file&#10;review-package">
+        <bpmn:documentation>obra/superpowers:skills/subagent-driven-development/scripts/review-package PLAN_FILE FIX_BASE HEAD, where FIX_BASE is the head the previous review saw — so the re-reviewer sees the fix diff and only the fix diff.</bpmn:documentation>
+        <bpmn:incoming>xf22</bpmn:incoming>
+        <bpmn:outgoing>xf23</bpmn:outgoing>
+      </bpmn:scriptTask>
+
+      <bpmn:callActivity id="CA_rerev" name="Dispatch a scoped re-review&#10;re-review-prompt.md&#10;MODEL: cheap to mid tier">
+        <bpmn:documentation>obra/superpowers:skills/subagent-driven-development/re-review-prompt.md.
+
+Seat 4 of 7. Not a fresh review — "the full review already happened". It verdicts each open finding ADDRESSED or NOT ADDRESSED and looks for new breakage in the fix diff only.
+
+MODEL: "scoped re-reviews of small fix diffs take a cheap-to-mid tier."
+
+New Critical or Important breakage in the fix diff joins the open findings list. Out-of-scope observations go to the ledger as deferred minors — "they never extend the loop." Every round ends here: "unreviewed fixes are how regressions land."
+
+After each round the ledger gets: "Task N: fix round R/5 (X addressed, Y open — &lt;one-liners&gt;; commits a7..b7)".</bpmn:documentation>
+        <bpmn:incoming>xf23</bpmn:incoming>
+        <bpmn:outgoing>xf24</bpmn:outgoing>
+      </bpmn:callActivity>
+
+      <bpmn:exclusiveGateway id="G_addressed" name="every finding&#10;addressed?">
+        <bpmn:incoming>xf24</bpmn:incoming>
+        <bpmn:outgoing>xf25</bpmn:outgoing>
+        <bpmn:outgoing>xf26</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+
+      <bpmn:exclusiveGateway id="G_cap" name="was that&#10;round 5?">
+        <bpmn:documentation>The breaker. Five rounds maximum per task, and the cap is the only place adjudication is allowed: "Adjudicate only at the cap. Adjudicating earlier to end a loop is pre-judging with a different name."
+
+This is the loop&#39;s exit condition and it can actually become false, which is what keeps the plane terminating. It is also cost control: nothing counts tokens anywhere in this phase, so a hard round cap is the only thing that bounds a task that will not converge. "Past the cap, rounds don&#39;t converge — the failure is structural."</bpmn:documentation>
+        <bpmn:incoming>xf26</bpmn:incoming>
+        <bpmn:outgoing>xf27</bpmn:outgoing>
+        <bpmn:outgoing>xf28</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+
+      <bpmn:task id="X_adjudicate" name="Adjudicate each open finding: park it, or rule and carry it forward&#10;subagent-driven-development">
+        <bpmn:documentation>Three outcomes, all of them ledger entries — "a silent discard is forbidden."
+
+Reviewer wrong or the point contestable: park it, "Task N: parked — &lt;finding&gt; — Ruling: &lt;why the code stands&gt;". The final review sees both sides.
+
+Real but nothing downstream builds on it: park it the same way, with a ruling that says it is real and deferred.
+
+Real and load-bearing — a later task builds on it, or it reveals a plan defect: rule on the smallest change that unblocks the dependent work, ledger it, and carry it into the next task&#39;s dispatch. "Parking a structural failure silently lets every dependent task build on it." Stop only when the defect leaves every path forward a guess.</bpmn:documentation>
+        <bpmn:incoming>xf28</bpmn:incoming>
+        <bpmn:outgoing>xf29</bpmn:outgoing>
+      </bpmn:task>
+
+      <bpmn:exclusiveGateway id="G_donemerge">
+        <bpmn:documentation>Four ways a task finishes: the review was clean; triage left nothing above Minor; the fix loop converged; or the breaker tripped and every open finding is parked with a ruling. Unnamed, because it decides nothing.</bpmn:documentation>
+        <bpmn:incoming>xf16</bpmn:incoming>
+        <bpmn:incoming>xf19</bpmn:incoming>
+        <bpmn:incoming>xf25</bpmn:incoming>
+        <bpmn:incoming>xf29</bpmn:incoming>
+        <bpmn:outgoing>xf30</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+
+      <bpmn:task id="X_complete" name="Append the completion line and mark the todo done&#10;subagent-driven-development">
+        <bpmn:documentation>"Task N: complete (commits base7..head7, review clean)", or "... K parked" after a tripped breaker. The line is what a compacted controller reads to know this task is done, and the commits it names exist in git even when context no longer remembers creating them.
+
+"Never move to the next task while the review has open Critical/Important issues that are neither fixed nor parked-with-ruling at the cap."</bpmn:documentation>
+        <bpmn:incoming>xf30</bpmn:incoming>
+        <bpmn:outgoing>xf31</bpmn:outgoing>
+        <bpmn:dataOutputAssociation id="xda4">
+          <bpmn:targetRef>DOR_ledger_b</bpmn:targetRef>
+        </bpmn:dataOutputAssociation>
+      </bpmn:task>
+
+      <bpmn:scriptTask id="Script_pkg_final" name="Write the diff to a file&#10;review-package">
+        <bpmn:documentation>obra/superpowers:skills/subagent-driven-development/scripts/review-package PLAN_FILE MERGE_BASE HEAD, where MERGE_BASE is the commit the branch started from (git merge-base main HEAD). The whole-branch diff, so the final reviewer reads one file instead of re-deriving it with git commands.</bpmn:documentation>
+        <bpmn:incoming>xf8</bpmn:incoming>
+        <bpmn:outgoing>xf32</bpmn:outgoing>
+      </bpmn:scriptTask>
+
+      <bpmn:callActivity id="CA_final" name="Dispatch the whole-branch reviewer&#10;code-reviewer.md&#10;MODEL: the most capable available">
+        <bpmn:documentation>obra/superpowers:skills/requesting-code-review/code-reviewer.md.
+
+Seat 5 of 7, and the one place the skill names a tier outright: "The final whole-branch review is one of these — dispatch it on the most capable available model, not the session default."
+
+It is pointed at the ledger&#39;s deferred-minor and parked lines, so it can triage which of them must be fixed before merge. That is the only thing that reads those lists.</bpmn:documentation>
+        <bpmn:incoming>xf32</bpmn:incoming>
+        <bpmn:outgoing>xf33</bpmn:outgoing>
+      </bpmn:callActivity>
+
+      <bpmn:exclusiveGateway id="G_finalfind" name="did the final review&#10;find anything?">
+        <bpmn:incoming>xf33</bpmn:incoming>
+        <bpmn:outgoing>xf34</bpmn:outgoing>
+        <bpmn:outgoing>xf35</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+
+      <bpmn:callActivity id="CA_finalfix" name="Dispatch ONE fixer for the whole findings list&#10;no template — the findings list is the brief&#10;MODEL: unstated in the skill">
+        <bpmn:documentation>Seat 6 of 7. "If the final whole-branch review returns findings, dispatch ONE fix subagent with the complete findings list — not one fixer per finding. Per-finding fixers each rebuild context and re-run suites; a real session&#39;s final-review fix wave cost more than all its tasks combined."
+
+No prompt template in the skills library covers this dispatch — it is described in prose, in the Final Review section, and nothing else. The label says so rather than pointing at a file that does not exist.
+
+MODEL: not stated for this seat. The general Model Selection rule is all there is to go on, which for a fix wave over a whole branch reads as standard-to-capable. Worth flagging: this is the second-most expensive dispatch in the phase and it is the one with no tier written down.</bpmn:documentation>
+        <bpmn:incoming>xf34</bpmn:incoming>
+        <bpmn:outgoing>xf36</bpmn:outgoing>
+      </bpmn:callActivity>
+
+      <bpmn:scriptTask id="Script_pkg_fw" name="Write the diff to a file&#10;review-package">
+        <bpmn:documentation>obra/superpowers:skills/subagent-driven-development/scripts/review-package PLAN_FILE FIX_BASE HEAD over the fix range — the fix wave&#39;s diff and nothing else.</bpmn:documentation>
+        <bpmn:incoming>xf36</bpmn:incoming>
+        <bpmn:outgoing>xf37</bpmn:outgoing>
+      </bpmn:scriptTask>
+
+      <bpmn:callActivity id="CA_finalrerev" name="Dispatch the one scoped re-review&#10;re-review-prompt.md&#10;MODEL: cheap to mid tier">
+        <bpmn:documentation>obra/superpowers:skills/subagent-driven-development/re-review-prompt.md, the same template the task loop uses.
+
+Seat 7 of 7. "Then run exactly one scoped re-review of the fix wave." Exactly one, and there is no second fix wave after it — see Note_redundancy.</bpmn:documentation>
+        <bpmn:incoming>xf37</bpmn:incoming>
+        <bpmn:outgoing>xf38</bpmn:outgoing>
+      </bpmn:callActivity>
+
+      <bpmn:task id="X_finaladj" name="Adjudicate the residual findings — there is no second wave&#10;subagent-driven-development">
+        <bpmn:documentation>"Adjudicate any residual findings as in the task loop&#39;s breaker: park with rulings, or rule on the load-bearing ones and ledger what you decided. Only the four classes above stop you here. There is no second fix wave — residual load-bearing findings surface to your human partner when finishing-a-development-branch presents the options."
+
+So a finding that survives the one fix wave leaves this phase unfixed, carried out as a ruling for the human to read at the integration menu. That is the design, not an oversight.</bpmn:documentation>
+        <bpmn:incoming>xf38</bpmn:incoming>
+        <bpmn:outgoing>xf39</bpmn:outgoing>
+      </bpmn:task>
+
+      <bpmn:exclusiveGateway id="G_finalmerge">
+        <bpmn:incoming>xf35</bpmn:incoming>
+        <bpmn:incoming>xf39</bpmn:incoming>
+        <bpmn:outgoing>xf40</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+
+      <bpmn:task id="X_rulings" name="Collect every ruling into the handover message&#10;subagent-driven-development">
+        <bpmn:documentation>Every ledger line containing "Ruling:" — preflight rulings, parked findings, breaker adjudications, all of them — goes into the final message under "Rulings I made", in the order they were made, each with what it costs if wrong.
+
+"That list is the only place the decisions you took on your human partner&#39;s behalf reach them — they read it and rework whatever you got wrong. A ruling that dies with the workspace was a decision made in secret."
+
+Done before the workspace is deleted, and read by the human one box later, at Sub_finish&#39;s integration menu.</bpmn:documentation>
+        <bpmn:incoming>xf40</bpmn:incoming>
+        <bpmn:outgoing>xf41</bpmn:outgoing>
+        <bpmn:dataInputAssociation id="xda5">
+          <bpmn:sourceRef>DOR_ledger_c</bpmn:sourceRef>
+        </bpmn:dataInputAssociation>
+      </bpmn:task>
+
+      <bpmn:scriptTask id="Script_rm" name="Delete this plan&#39;s workspace&#10;rm -rf &lt;workspace&gt;">
+        <bpmn:documentation>"When the final whole-branch review is clean and its fixes are merged, delete this plan&#39;s workspace — the git history is the record now. Sibling directories belong to other plans; leave them alone."
+
+The ledger, the briefs, the reports and every review package go with it. Anything not carried out in the rulings list or in a commit message is gone.</bpmn:documentation>
+        <bpmn:incoming>xf41</bpmn:incoming>
+        <bpmn:outgoing>xf42</bpmn:outgoing>
+      </bpmn:scriptTask>
+
+      <bpmn:endEvent id="End_X" name="branch built,&#10;rulings handed over">
+        <bpmn:documentation>What is true here: every task in the plan is committed on the branch, the whole-branch review has had its one fix wave, the workspace is gone, and the rulings the controller made on the human&#39;s behalf are in the handover message. What is NOT asserted: that the branch is green — the project&#39;s own test suite runs one box later, in the parent, and can still fail.</bpmn:documentation>
+        <bpmn:incoming>xf42</bpmn:incoming>
+      </bpmn:endEvent>
+
+      <bpmn:dataObjectReference id="DOR_plan_a" name="plan&#10;docs/superpowers/plans/" dataObjectRef="DO_plan" />
+      <bpmn:dataObjectReference id="DOR_plan_b" name="plan&#10;docs/superpowers/plans/" dataObjectRef="DO_plan" />
+      <bpmn:dataObjectReference id="DOR_ledger_a" name="ledger&#10;&lt;workspace&gt;/progress.md" dataObjectRef="DO_ledger">
+        <bpmn:documentation>Full path: &lt;repo-root&gt;/.superpowers/sdd/&lt;plan-basename&gt;/progress.md. Git-ignored scratch — git clean -fdx destroys it, and the recovery from that is git log.
+
+Drawn three times because its three users sit far apart: created at setup, appended to after every task, read once at the finish to collect the rulings. One data object, three references.</bpmn:documentation>
+      </bpmn:dataObjectReference>
+      <bpmn:dataObjectReference id="DOR_ledger_b" name="ledger&#10;&lt;workspace&gt;/progress.md" dataObjectRef="DO_ledger" />
+      <bpmn:dataObjectReference id="DOR_ledger_c" name="ledger&#10;&lt;workspace&gt;/progress.md" dataObjectRef="DO_ledger" />
+      <bpmn:dataObject id="DO_ledger" />
+      <bpmn:dataObjectReference id="DOR_brief" name="task brief&#10;one file per task" dataObjectRef="DO_brief">
+        <bpmn:documentation>&lt;workspace&gt;/task-N-brief.md, written by task-brief. The implementer&#39;s report file is named after it — task-N-report.md — and is the persistent memory a resumed or replaced implementer reads.</bpmn:documentation>
+      </bpmn:dataObjectReference>
+      <bpmn:dataObject id="DO_brief" />
+      <bpmn:dataObjectReference id="DOR_pkg" name="review package&#10;commits + stat + diff -U10" dataObjectRef="DO_pkg">
+        <bpmn:documentation>Written by review-package into the workspace under a unique name, handed to the reviewer as a path. The point is what does NOT happen: the diff never enters the controller&#39;s context, where it would be re-read on every later turn.</bpmn:documentation>
+      </bpmn:dataObjectReference>
+      <bpmn:dataObject id="DO_pkg" />
+
+      <bpmn:textAnnotation id="Note_nohuman">
+        <bpmn:text>This lane is empty, and that is the finding. No human gate exists anywhere in this phase: "Do not pause to check in with your human partner between tasks." Ambiguities are settled by ruling and recorded in the ledger — "a wrong ruling costs rework your human partner can see and undo; a session parked on a question costs their whole day". Exactly four things stop the run and ask: an irreversible or destructive operation, a security-sensitive action, a side effect outside this worktree, and a plan so broken every path forward is a guess. None of them is a step — they can fire anywhere — so nothing draws them.</bpmn:text>
+      </bpmn:textAnnotation>
+      <bpmn:association id="xas1" sourceRef="Note_nohuman" targetRef="Start_X" />
+
+      <bpmn:textAnnotation id="Note_budget">
+        <bpmn:text>NO BUDGET MECHANISM. Nothing in superpowers counts tokens, and nothing stops at a threshold — grep the skills for token accounting and there is none. Cost control here is entirely structural: the cheapest model that fits each role, the five-round breaker, one fixer for the whole findings list, no second wave, and review packages handed over as file paths so diffs never enter the controller's context. Every one of those is a fixed shape, not a limit that can be set. For a student on a $50 cap, that is the gap.</bpmn:text>
+      </bpmn:textAnnotation>
+      <bpmn:association id="xas2" sourceRef="Note_budget" targetRef="CA_final" />
+
+      <bpmn:textAnnotation id="Note_noprogram">
+        <bpmn:text>The PROGRAM lane is empty too. Every diamond on this plane — approved? addressed? round 5? findings? — is decided by the AI, and the scripts it runs (sdd-workspace, task-brief, review-package) produce files rather than verdicts. The one machine adjudication in this phase, the TDD red/green cycle, happens inside each implementer, which is a called process with no plane to show it on. The project's own test suite runs one box later, in the parent.</bpmn:text>
+      </bpmn:textAnnotation>
+      <bpmn:association id="xas3" sourceRef="Note_noprogram" targetRef="End_X" />
+
+      <bpmn:textAnnotation id="Note_redundancy">
+        <bpmn:text>ANTI-REDUNDANT BY DESIGN. One task reviewer per task. One fixer for the whole findings list, never one per finding — "a real session's final-review fix wave cost more than all its tasks combined". One scoped re-review after it, and no second wave. A worker that spawns its own reviewer is "a defect to flag, not rigor". So "how many redundant agents" is a knob superpowers set to 1 and nailed shut: turning it up is a disagreement with the methodology, not a configuration of it.</bpmn:text>
+      </bpmn:textAnnotation>
+      <bpmn:association id="xas4" sourceRef="Note_redundancy" targetRef="CA_finalrerev" />
+
+      <bpmn:sequenceFlow id="xf1" sourceRef="Start_X" targetRef="X_worktree" />
+      <bpmn:sequenceFlow id="xf2" sourceRef="X_worktree" targetRef="Script_ws" />
+      <bpmn:sequenceFlow id="xf3" sourceRef="Script_ws" targetRef="X_ledger" />
+      <bpmn:sequenceFlow id="xf4" sourceRef="X_ledger" targetRef="X_preflight" />
+      <bpmn:sequenceFlow id="xf5" sourceRef="X_preflight" targetRef="G_taskmerge" />
+      <bpmn:sequenceFlow id="xf6" sourceRef="G_taskmerge" targetRef="G_tasks" />
+      <bpmn:sequenceFlow id="xf7" name="yes" sourceRef="G_tasks" targetRef="Script_brief" />
+      <bpmn:sequenceFlow id="xf8" name="no — all tasks done" sourceRef="G_tasks" targetRef="Script_pkg_final" />
+      <bpmn:sequenceFlow id="xf9" sourceRef="Script_brief" targetRef="G_implmerge" />
+      <bpmn:sequenceFlow id="xf10" sourceRef="G_implmerge" targetRef="CA_impl" />
+      <bpmn:sequenceFlow id="xf11" sourceRef="CA_impl" targetRef="G_report" />
+      <bpmn:sequenceFlow id="xf12" name="done, or done with concerns" sourceRef="G_report" targetRef="Script_pkg" />
+      <bpmn:sequenceFlow id="xf13" name="needs context, or blocked" sourceRef="G_report" targetRef="G_implmerge" />
+      <bpmn:sequenceFlow id="xf14" sourceRef="Script_pkg" targetRef="CA_taskrev" />
+      <bpmn:sequenceFlow id="xf15" sourceRef="CA_taskrev" targetRef="G_review" />
+      <bpmn:sequenceFlow id="xf16" name="yes" sourceRef="G_review" targetRef="G_donemerge" />
+      <bpmn:sequenceFlow id="xf17" name="no" sourceRef="G_review" targetRef="X_triage" />
+      <bpmn:sequenceFlow id="xf18" sourceRef="X_triage" targetRef="G_loop" />
+      <bpmn:sequenceFlow id="xf19" name="no — only Minors" sourceRef="G_loop" targetRef="G_donemerge" />
+      <bpmn:sequenceFlow id="xf20" name="yes" sourceRef="G_loop" targetRef="G_fixmerge" />
+      <bpmn:sequenceFlow id="xf21" sourceRef="G_fixmerge" targetRef="CA_fix" />
+      <bpmn:sequenceFlow id="xf22" sourceRef="CA_fix" targetRef="Script_pkg_fix" />
+      <bpmn:sequenceFlow id="xf23" sourceRef="Script_pkg_fix" targetRef="CA_rerev" />
+      <bpmn:sequenceFlow id="xf24" sourceRef="CA_rerev" targetRef="G_addressed" />
+      <bpmn:sequenceFlow id="xf25" name="yes" sourceRef="G_addressed" targetRef="G_donemerge" />
+      <bpmn:sequenceFlow id="xf26" name="no" sourceRef="G_addressed" targetRef="G_cap" />
+      <bpmn:sequenceFlow id="xf27" name="no — next round" sourceRef="G_cap" targetRef="G_fixmerge" />
+      <bpmn:sequenceFlow id="xf28" name="yes — the breaker trips" sourceRef="G_cap" targetRef="X_adjudicate" />
+      <bpmn:sequenceFlow id="xf29" sourceRef="X_adjudicate" targetRef="G_donemerge" />
+      <bpmn:sequenceFlow id="xf30" sourceRef="G_donemerge" targetRef="X_complete" />
+      <bpmn:sequenceFlow id="xf31" sourceRef="X_complete" targetRef="G_taskmerge" />
+      <bpmn:sequenceFlow id="xf32" sourceRef="Script_pkg_final" targetRef="CA_final" />
+      <bpmn:sequenceFlow id="xf33" sourceRef="CA_final" targetRef="G_finalfind" />
+      <bpmn:sequenceFlow id="xf34" name="yes" sourceRef="G_finalfind" targetRef="CA_finalfix" />
+      <bpmn:sequenceFlow id="xf35" name="no" sourceRef="G_finalfind" targetRef="G_finalmerge" />
+      <bpmn:sequenceFlow id="xf36" sourceRef="CA_finalfix" targetRef="Script_pkg_fw" />
+      <bpmn:sequenceFlow id="xf37" sourceRef="Script_pkg_fw" targetRef="CA_finalrerev" />
+      <bpmn:sequenceFlow id="xf38" sourceRef="CA_finalrerev" targetRef="X_finaladj" />
+      <bpmn:sequenceFlow id="xf39" sourceRef="X_finaladj" targetRef="G_finalmerge" />
+      <bpmn:sequenceFlow id="xf40" sourceRef="G_finalmerge" targetRef="X_rulings" />
+      <bpmn:sequenceFlow id="xf41" sourceRef="X_rulings" targetRef="Script_rm" />
+      <bpmn:sequenceFlow id="xf42" sourceRef="Script_rm" targetRef="End_X" />
+    </bpmn:subProcess>
+
+    <bpmn:serviceTask id="Prog_suite" name="Run the project&#39;s full test suite&#10;npm test / pytest / cargo test / go test ./...">
+      <bpmn:documentation>obra/superpowers:skills/finishing-a-development-branch/SKILL.md, Step 1. The project's own test command, not a superpowers program — which is why the label carries commands rather than a path into the repo.
+
+This is the machine adjudication that matters most in the whole workflow: the integration menu is not shown until the suite is green. "If tests fail, report the failures and stop — the menu comes after a green suite."
+
+It is not the only one. TDD's red/green cycle runs inside every task in Sub_execute, adjudicated by the same kind of command. The PROGRAM lane is thin here but it is not empty, and that is a real difference from the learning workflow in workflow-v2.bpmn, where nothing is machine-adjudicated at all.</bpmn:documentation>
+      <bpmn:incoming>f14</bpmn:incoming>
+      <bpmn:outgoing>f15</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:exclusiveGateway id="Gate_green" name="suite green?">
+      <bpmn:documentation>Adjudicated by the test command's exit status, which is why this diamond sits in PROGRAM rather than AI AGENT.</bpmn:documentation>
+      <bpmn:incoming>f15</bpmn:incoming>
+      <bpmn:outgoing>f16</bpmn:outgoing>
+      <bpmn:outgoing>f17</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:endEvent id="End_red" name="stopped,&#10;suite red">
+      <bpmn:documentation>The skill stops and reports the failures. It does not loop back into the task loop, and it does not present the menu. Drawn as a terminal state because that is what the prose describes; a reader should notice that superpowers has no automatic repair path from here.</bpmn:documentation>
+      <bpmn:incoming>f16</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <bpmn:subProcess id="Sub_finish" name="Finish the branch">
+      <bpmn:documentation>obra/superpowers:skills/finishing-a-development-branch/SKILL.md, Steps 2 to 6. PLANE NOT YET DRAWN.
+
+Below this box: detect whether this is a normal repo, a named-branch worktree or a detached HEAD; confirm the base branch; present a three-option menu (merge locally, push and open a PR, keep the branch as-is); execute the choice, re-running the suite on the merged result if merging; then clean up the worktree.
+
+Declared in HUMAN because the phase waits on the human's answer to the menu, and the integration decision is explicitly theirs. The agent does the work either side of that answer, which is why this is a plain subprocess with no type marker.
+
+This is also where the controller's "Rulings I made" list surfaces — every decision the agent took on the human's behalf during execution, read at the moment they choose what to do with the branch.</bpmn:documentation>
+      <bpmn:incoming>f17</bpmn:incoming>
+      <bpmn:outgoing>f18</bpmn:outgoing>
+    </bpmn:subProcess>
+
+    <bpmn:endEvent id="End_integrated" name="work integrated&#10;or handed back">
+      <bpmn:documentation>One end event for three menu outcomes, because from the outside the run is over either way: merged, PR open, or branch kept for the human to handle. Which one fired is visible on the plane below, not here — a subprocess's outgoing flow carries no outcome.</bpmn:documentation>
+      <bpmn:incoming>f18</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <bpmn:dataObjectReference id="DOR_spec" name="spec&#10;docs/superpowers/specs/" dataObjectRef="DO_spec">
+      <bpmn:documentation>Full name: docs/superpowers/specs/YYYY-MM-DD-&lt;topic&gt;-design.md. Written and committed by Sub_brainstorm, on the architectural path only — the spike and bounded paths write no spec at all, so this object does not exist for two runs in three. A user preference for spec location overrides the default directory.</bpmn:documentation>
+    </bpmn:dataObjectReference>
+    <bpmn:dataObject id="DO_spec" />
+    <bpmn:dataObjectReference id="DOR_plan" name="plan&#10;docs/superpowers/plans/" dataObjectRef="DO_plan">
+      <bpmn:documentation>Full name: docs/superpowers/plans/YYYY-MM-DD-&lt;feature-name&gt;.md. Written by Sub_plan. A user preference for plan location overrides the default directory.
+
+Every plan opens with a required header naming the spec it argues from and a Global Constraints block copied verbatim from that spec — the constraints bind every task in the plan, and the task reviewer is handed them as its attention lens.</bpmn:documentation>
+    </bpmn:dataObjectReference>
+    <bpmn:dataObject id="DO_plan" />
+
+    <bpmn:textAnnotation id="Note_handoff">
+      <bpmn:text>Nothing carries a chunk from the list into a run. A human picks the next one and opens a session — which is why no flow crosses the boundary between the pools.</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="assoc_handoff" sourceRef="Note_handoff" targetRef="Start_req" />
+
+    <bpmn:sequenceFlow id="f1" sourceRef="Start_req" targetRef="Gate_merge_in" />
+    <bpmn:sequenceFlow id="f2" sourceRef="Gate_merge_in" targetRef="Gate_classify" />
+    <bpmn:sequenceFlow id="f3" name="spike" sourceRef="Gate_classify" targetRef="Task_spike" />
+    <bpmn:sequenceFlow id="f4" name="bounded" sourceRef="Gate_classify" targetRef="Task_bounded" />
+    <bpmn:sequenceFlow id="f5" name="architectural" sourceRef="Gate_classify" targetRef="Sub_brainstorm" />
+    <bpmn:sequenceFlow id="f6" sourceRef="Task_spike" targetRef="Gate_upgrade_spike" />
+    <bpmn:sequenceFlow id="f7" name="no" sourceRef="Gate_upgrade_spike" targetRef="End_answered" />
+    <bpmn:sequenceFlow id="f8" name="yes — step up" sourceRef="Gate_upgrade_spike" targetRef="Gate_merge_in" />
+    <bpmn:sequenceFlow id="f9" sourceRef="Task_bounded" targetRef="Gate_upgrade_bounded" />
+    <bpmn:sequenceFlow id="f10" name="no" sourceRef="Gate_upgrade_bounded" targetRef="End_delivered" />
+    <bpmn:sequenceFlow id="f11" name="yes — step up" sourceRef="Gate_upgrade_bounded" targetRef="Gate_merge_in" />
+    <bpmn:sequenceFlow id="f12" sourceRef="Sub_brainstorm" targetRef="Sub_plan" />
+    <bpmn:sequenceFlow id="f13" sourceRef="Sub_plan" targetRef="Sub_execute" />
+    <bpmn:sequenceFlow id="f14" sourceRef="Sub_execute" targetRef="Prog_suite" />
+    <bpmn:sequenceFlow id="f15" sourceRef="Prog_suite" targetRef="Gate_green" />
+    <bpmn:sequenceFlow id="f16" name="no" sourceRef="Gate_green" targetRef="End_red" />
+    <bpmn:sequenceFlow id="f17" name="yes" sourceRef="Gate_green" targetRef="Sub_finish" />
+    <bpmn:sequenceFlow id="f18" sourceRef="Sub_finish" targetRef="End_integrated" />
+  </bpmn:process>
+
+  <bpmndi:BPMNDiagram id="D_SP">
+    <bpmndi:BPMNPlane id="Plane_SP" bpmnElement="C_SP">
+
+      <bpmndi:BPMNShape id="P_PLAN_di" bpmnElement="P_PLAN" isHorizontal="true">
+        <dc:Bounds x="160" y="80" width="2080" height="350" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="LP_human_di" bpmnElement="LP_human" isHorizontal="true" color:background-color="#fdf3f7" color:border-color="#9c8490">
+        <dc:Bounds x="190" y="80" width="2050" height="120" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="LP_agent_di" bpmnElement="LP_agent" isHorizontal="true" color:background-color="#fdf7ee" color:border-color="#9c8d76">
+        <dc:Bounds x="190" y="200" width="2050" height="150" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="LP_program_di" bpmnElement="LP_program" isHorizontal="true" color:background-color="#eef5f4" color:border-color="#7a918d">
+        <dc:Bounds x="190" y="350" width="2050" height="80" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Start_idea_di" bpmnElement="Start_idea">
+        <dc:Bounds x="250" y="112" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="228" y="155" width="82" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Sub_converse_di" bpmnElement="Sub_converse" isExpanded="false">
+        <dc:Bounds x="400" y="235" width="260" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_chunklist_di" bpmnElement="DOR_chunklist" color:background-color="#fdf0e6">
+        <dc:Bounds x="790" y="240" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="738" y="295" width="140" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_planned_di" bpmnElement="End_planned">
+        <dc:Bounds x="960" y="112" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1005" y="120" width="93" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNEdge id="p1_di" bpmnElement="p1">
+        <di:waypoint x="268" y="148" />
+        <di:waypoint x="268" y="275" />
+        <di:waypoint x="400" y="275" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="p2_di" bpmnElement="p2">
+        <di:waypoint x="660" y="275" />
+        <di:waypoint x="978" y="275" />
+        <di:waypoint x="978" y="148" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="doa_chunklist_di" bpmnElement="doa_chunklist">
+        <di:waypoint x="660" y="265" />
+        <di:waypoint x="790" y="265" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNShape id="P_SP_di" bpmnElement="P_SP" isHorizontal="true">
+        <dc:Bounds x="160" y="470" width="2080" height="890" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L_human_di" bpmnElement="L_human" isHorizontal="true" color:background-color="#fdf3f7" color:border-color="#9c8490">
+        <dc:Bounds x="190" y="470" width="2050" height="170" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L_agent_di" bpmnElement="L_agent" isHorizontal="true" color:background-color="#fdf7ee" color:border-color="#9c8d76">
+        <dc:Bounds x="190" y="640" width="2050" height="520" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L_program_di" bpmnElement="L_program" isHorizontal="true" color:background-color="#eef5f4" color:border-color="#7a918d">
+        <dc:Bounds x="190" y="1160" width="2050" height="200" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Note_handoff_di" bpmnElement="Note_handoff">
+        <dc:Bounds x="330" y="482" width="470" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="assoc_handoff_di" bpmnElement="assoc_handoff">
+        <di:waypoint x="330" y="512" />
+        <di:waypoint x="273" y="536" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNShape id="Start_req_di" bpmnElement="Start_req">
+        <dc:Bounds x="237" y="535" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="285" y="578" width="87" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gate_merge_in_di" bpmnElement="Gate_merge_in" isMarkerVisible="true">
+        <dc:Bounds x="230" y="705" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gate_classify_di" bpmnElement="Gate_classify" isMarkerVisible="true">
+        <dc:Bounds x="360" y="705" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="335" y="652" width="101" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Sub_brainstorm_di" bpmnElement="Sub_brainstorm" isExpanded="false">
+        <dc:Bounds x="500" y="680" width="220" height="100" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_spec_di" bpmnElement="DOR_spec" color:background-color="#eef2f9">
+        <dc:Bounds x="670" y="820" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="606" y="875" width="164" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Sub_plan_di" bpmnElement="Sub_plan" isExpanded="false">
+        <dc:Bounds x="820" y="680" width="220" height="100" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_plan_di" bpmnElement="DOR_plan" color:background-color="#f2eef9">
+        <dc:Bounds x="990" y="820" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="926" y="875" width="164" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Sub_execute_di" bpmnElement="Sub_execute" isExpanded="false">
+        <dc:Bounds x="1140" y="680" width="240" height="100" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Task_spike_di" bpmnElement="Task_spike">
+        <dc:Bounds x="470" y="970" width="200" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gate_upgrade_spike_di" bpmnElement="Gate_upgrade_spike" isMarkerVisible="true">
+        <dc:Bounds x="710" y="985" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="700" y="1042" width="71" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_answered_di" bpmnElement="End_answered">
+        <dc:Bounds x="800" y="992" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="774" y="1035" width="89" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_bounded_di" bpmnElement="Task_bounded">
+        <dc:Bounds x="900" y="970" width="200" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gate_upgrade_bounded_di" bpmnElement="Gate_upgrade_bounded" isMarkerVisible="true">
+        <dc:Bounds x="1140" y="985" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1130" y="1042" width="71" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_delivered_di" bpmnElement="End_delivered">
+        <dc:Bounds x="1230" y="992" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1204" y="1035" width="89" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Prog_suite_di" bpmnElement="Prog_suite">
+        <dc:Bounds x="1450" y="1190" width="200" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gate_green_di" bpmnElement="Gate_green" isMarkerVisible="true">
+        <dc:Bounds x="1710" y="1205" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1700" y="1265" width="71" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_red_di" bpmnElement="End_red">
+        <dc:Bounds x="1830" y="1212" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1810" y="1255" width="77" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Sub_finish_di" bpmnElement="Sub_finish" isExpanded="false">
+        <dc:Bounds x="1830" y="490" width="220" height="100" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_integrated_di" bpmnElement="End_integrated">
+        <dc:Bounds x="2150" y="522" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2124" y="565" width="89" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNEdge id="f1_di" bpmnElement="f1">
+        <di:waypoint x="255" y="571" />
+        <di:waypoint x="255" y="705" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f2_di" bpmnElement="f2">
+        <di:waypoint x="280" y="730" />
+        <di:waypoint x="360" y="730" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f3_di" bpmnElement="f3">
+        <di:waypoint x="385" y="755" />
+        <di:waypoint x="385" y="1010" />
+        <di:waypoint x="470" y="1010" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="392" y="986" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f4_di" bpmnElement="f4">
+        <di:waypoint x="385" y="755" />
+        <di:waypoint x="385" y="1090" />
+        <di:waypoint x="1000" y="1090" />
+        <di:waypoint x="1000" y="1050" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="392" y="1066" width="47" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f5_di" bpmnElement="f5">
+        <di:waypoint x="410" y="730" />
+        <di:waypoint x="500" y="730" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="414" y="703" width="72" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f6_di" bpmnElement="f6">
+        <di:waypoint x="670" y="1010" />
+        <di:waypoint x="710" y="1010" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f7_di" bpmnElement="f7">
+        <di:waypoint x="760" y="1010" />
+        <di:waypoint x="800" y="1010" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="768" y="986" width="17" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f8_di" bpmnElement="f8">
+        <di:waypoint x="735" y="985" />
+        <di:waypoint x="735" y="935" />
+        <di:waypoint x="255" y="935" />
+        <di:waypoint x="255" y="755" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="300" y="911" width="82" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f9_di" bpmnElement="f9">
+        <di:waypoint x="1100" y="1010" />
+        <di:waypoint x="1140" y="1010" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f10_di" bpmnElement="f10">
+        <di:waypoint x="1190" y="1010" />
+        <di:waypoint x="1230" y="1010" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1198" y="986" width="17" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f11_di" bpmnElement="f11">
+        <di:waypoint x="1165" y="1035" />
+        <di:waypoint x="1165" y="1130" />
+        <di:waypoint x="215" y="1130" />
+        <di:waypoint x="215" y="730" />
+        <di:waypoint x="230" y="730" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1074" y="1106" width="82" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f12_di" bpmnElement="f12">
+        <di:waypoint x="720" y="730" />
+        <di:waypoint x="820" y="730" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f13_di" bpmnElement="f13">
+        <di:waypoint x="1040" y="730" />
+        <di:waypoint x="1140" y="730" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f14_di" bpmnElement="f14">
+        <di:waypoint x="1380" y="730" />
+        <di:waypoint x="1420" y="730" />
+        <di:waypoint x="1420" y="1230" />
+        <di:waypoint x="1450" y="1230" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f15_di" bpmnElement="f15">
+        <di:waypoint x="1650" y="1230" />
+        <di:waypoint x="1710" y="1230" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f16_di" bpmnElement="f16">
+        <di:waypoint x="1760" y="1230" />
+        <di:waypoint x="1830" y="1230" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1778" y="1206" width="17" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f17_di" bpmnElement="f17">
+        <di:waypoint x="1735" y="1205" />
+        <di:waypoint x="1735" y="540" />
+        <di:waypoint x="1830" y="540" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1743" y="559" width="21" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f18_di" bpmnElement="f18">
+        <di:waypoint x="2050" y="540" />
+        <di:waypoint x="2150" y="540" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="doa_spec_di" bpmnElement="doa_spec">
+        <di:waypoint x="657" y="780" />
+        <di:waypoint x="688" y="820" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="dia_spec_plan_di" bpmnElement="dia_spec_plan">
+        <di:waypoint x="706" y="836" />
+        <di:waypoint x="880" y="836" />
+        <di:waypoint x="880" y="780" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="doa_plan_di" bpmnElement="doa_plan">
+        <di:waypoint x="977" y="780" />
+        <di:waypoint x="1008" y="820" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="dia_plan_exec_di" bpmnElement="dia_plan_exec">
+        <di:waypoint x="1026" y="836" />
+        <di:waypoint x="1260" y="836" />
+        <di:waypoint x="1260" y="780" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+
+  <bpmndi:BPMNDiagram id="D_execute">
+    <bpmndi:BPMNPlane id="Pl_execute" bpmnElement="Sub_execute">
+
+      <bpmndi:BPMNShape id="LX_human_di" bpmnElement="LX_human" isHorizontal="true" color:background-color="#fdf3f7" color:border-color="#9c8490">
+        <dc:Bounds x="160" y="80" width="2900" height="120" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="LX_agent_di" bpmnElement="LX_agent" isHorizontal="true" color:background-color="#fdf7ee" color:border-color="#9c8d76">
+        <dc:Bounds x="160" y="200" width="2900" height="1160" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="LX_program_di" bpmnElement="LX_program" isHorizontal="true" color:background-color="#eef5f4" color:border-color="#7a918d">
+        <dc:Bounds x="160" y="1360" width="2900" height="190" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Start_X_di" bpmnElement="Start_X">
+        <dc:Bounds x="340" y="277" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="273" y="217" width="90" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="X_worktree_di" bpmnElement="X_worktree">
+        <dc:Bounds x="430" y="250" width="250" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Script_ws_di" bpmnElement="Script_ws">
+        <dc:Bounds x="730" y="250" width="250" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="X_ledger_di" bpmnElement="X_ledger">
+        <dc:Bounds x="1030" y="250" width="250" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="X_preflight_di" bpmnElement="X_preflight">
+        <dc:Bounds x="1330" y="250" width="270" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_taskmerge_di" bpmnElement="G_taskmerge" isMarkerVisible="true">
+        <dc:Bounds x="1650" y="270" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_tasks_di" bpmnElement="G_tasks" isMarkerVisible="true">
+        <dc:Bounds x="1750" y="270" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1810" y="322" width="90" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Script_brief_di" bpmnElement="Script_brief">
+        <dc:Bounds x="340" y="470" width="250" height="110" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_implmerge_di" bpmnElement="G_implmerge" isMarkerVisible="true">
+        <dc:Bounds x="640" y="500" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="CA_impl_di" bpmnElement="CA_impl">
+        <dc:Bounds x="740" y="470" width="270" height="110" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_report_di" bpmnElement="G_report" isMarkerVisible="true">
+        <dc:Bounds x="1060" y="500" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1047" y="557" width="77" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Script_pkg_di" bpmnElement="Script_pkg">
+        <dc:Bounds x="1160" y="470" width="250" height="110" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="CA_taskrev_di" bpmnElement="CA_taskrev">
+        <dc:Bounds x="1460" y="470" width="270" height="110" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_review_di" bpmnElement="G_review" isMarkerVisible="true">
+        <dc:Bounds x="1780" y="500" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1758" y="440" width="95" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="X_triage_di" bpmnElement="X_triage">
+        <dc:Bounds x="1880" y="470" width="270" height="110" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_loop_di" bpmnElement="G_loop" isMarkerVisible="true">
+        <dc:Bounds x="2200" y="500" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2187" y="440" width="77" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="G_fixmerge_di" bpmnElement="G_fixmerge" isMarkerVisible="true">
+        <dc:Bounds x="340" y="740" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="CA_fix_di" bpmnElement="CA_fix">
+        <dc:Bounds x="440" y="710" width="270" height="110" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Script_pkg_fix_di" bpmnElement="Script_pkg_fix">
+        <dc:Bounds x="760" y="710" width="250" height="110" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="CA_rerev_di" bpmnElement="CA_rerev">
+        <dc:Bounds x="1060" y="710" width="270" height="110" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_addressed_di" bpmnElement="G_addressed" isMarkerVisible="true">
+        <dc:Bounds x="1380" y="740" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1367" y="797" width="77" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_cap_di" bpmnElement="G_cap" isMarkerVisible="true">
+        <dc:Bounds x="1490" y="740" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1470" y="698" width="100" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="X_adjudicate_di" bpmnElement="X_adjudicate">
+        <dc:Bounds x="1600" y="710" width="290" height="110" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_donemerge_di" bpmnElement="G_donemerge" isMarkerVisible="true">
+        <dc:Bounds x="2400" y="740" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="X_complete_di" bpmnElement="X_complete">
+        <dc:Bounds x="2510" y="710" width="270" height="110" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Script_pkg_final_di" bpmnElement="Script_pkg_final">
+        <dc:Bounds x="340" y="950" width="250" height="110" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="CA_final_di" bpmnElement="CA_final">
+        <dc:Bounds x="640" y="950" width="270" height="110" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_finalfind_di" bpmnElement="G_finalfind" isMarkerVisible="true">
+        <dc:Bounds x="960" y="980" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="936" y="920" width="98" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="CA_finalfix_di" bpmnElement="CA_finalfix">
+        <dc:Bounds x="1060" y="950" width="270" height="110" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Script_pkg_fw_di" bpmnElement="Script_pkg_fw">
+        <dc:Bounds x="1380" y="950" width="250" height="110" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="CA_finalrerev_di" bpmnElement="CA_finalrerev">
+        <dc:Bounds x="1680" y="950" width="270" height="110" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="X_finaladj_di" bpmnElement="X_finaladj">
+        <dc:Bounds x="340" y="1190" width="290" height="110" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_finalmerge_di" bpmnElement="G_finalmerge" isMarkerVisible="true">
+        <dc:Bounds x="680" y="1220" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="X_rulings_di" bpmnElement="X_rulings">
+        <dc:Bounds x="780" y="1190" width="270" height="110" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Script_rm_di" bpmnElement="Script_rm">
+        <dc:Bounds x="1100" y="1190" width="250" height="110" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_X_di" bpmnElement="End_X">
+        <dc:Bounds x="1400" y="1227" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1373" y="1270" width="91" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="DOR_plan_a_di" bpmnElement="DOR_plan_a" color:background-color="#f2eef9">
+        <dc:Bounds x="1620" y="375" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1556" y="428" width="164" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_plan_b_di" bpmnElement="DOR_plan_b" color:background-color="#f2eef9">
+        <dc:Bounds x="430" y="375" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="366" y="428" width="164" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_ledger_a_di" bpmnElement="DOR_ledger_a" color:background-color="#e9f2ea">
+        <dc:Bounds x="1100" y="375" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1036" y="428" width="164" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_ledger_b_di" bpmnElement="DOR_ledger_b" color:background-color="#e9f2ea">
+        <dc:Bounds x="2620" y="830" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2556" y="883" width="164" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_ledger_c_di" bpmnElement="DOR_ledger_c" color:background-color="#e9f2ea">
+        <dc:Bounds x="900" y="1105" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="940" y="1112" width="164" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_brief_di" bpmnElement="DOR_brief" color:background-color="#fdf6e3">
+        <dc:Bounds x="620" y="590" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="556" y="643" width="164" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_pkg_di" bpmnElement="DOR_pkg" color:background-color="#f7ecec">
+        <dc:Bounds x="1400" y="590" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1336" y="643" width="164" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Note_nohuman_di" bpmnElement="Note_nohuman">
+        <dc:Bounds x="340" y="95" width="760" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Note_budget_di" bpmnElement="Note_budget">
+        <dc:Bounds x="340" y="1390" width="780" height="130" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Note_noprogram_di" bpmnElement="Note_noprogram">
+        <dc:Bounds x="1180" y="1390" width="780" height="130" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Note_redundancy_di" bpmnElement="Note_redundancy">
+        <dc:Bounds x="2050" y="950" width="800" height="130" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNEdge id="xas1_di" bpmnElement="xas1">
+        <di:waypoint x="500" y="185" />
+        <di:waypoint x="358" y="277" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="xas2_di" bpmnElement="xas2">
+        <di:waypoint x="755" y="1390" />
+        <di:waypoint x="755" y="1060" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="xas3_di" bpmnElement="xas3">
+        <di:waypoint x="1420" y="1390" />
+        <di:waypoint x="1420" y="1263" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="xas4_di" bpmnElement="xas4">
+        <di:waypoint x="2050" y="1005" />
+        <di:waypoint x="1950" y="1005" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="xf1_di" bpmnElement="xf1">
+        <di:waypoint x="376" y="295" />
+        <di:waypoint x="430" y="295" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="xf2_di" bpmnElement="xf2">
+        <di:waypoint x="680" y="295" />
+        <di:waypoint x="730" y="295" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="xf3_di" bpmnElement="xf3">
+        <di:waypoint x="980" y="295" />
+        <di:waypoint x="1030" y="295" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="xf4_di" bpmnElement="xf4">
+        <di:waypoint x="1280" y="295" />
+        <di:waypoint x="1330" y="295" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="xf5_di" bpmnElement="xf5">
+        <di:waypoint x="1600" y="295" />
+        <di:waypoint x="1650" y="295" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="xf6_di" bpmnElement="xf6">
+        <di:waypoint x="1700" y="295" />
+        <di:waypoint x="1750" y="295" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="xf7_di" bpmnElement="xf7">
+        <di:waypoint x="1775" y="320" />
+        <di:waypoint x="1775" y="355" />
+        <di:waypoint x="400" y="355" />
+        <di:waypoint x="400" y="470" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1786" y="330" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="xf8_di" bpmnElement="xf8">
+        <di:waypoint x="1800" y="295" />
+        <di:waypoint x="2900" y="295" />
+        <di:waypoint x="2900" y="900" />
+        <di:waypoint x="400" y="900" />
+        <di:waypoint x="400" y="950" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1820" y="266" width="126" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="xf9_di" bpmnElement="xf9">
+        <di:waypoint x="590" y="525" />
+        <di:waypoint x="640" y="525" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="xf10_di" bpmnElement="xf10">
+        <di:waypoint x="690" y="525" />
+        <di:waypoint x="740" y="525" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="xf11_di" bpmnElement="xf11">
+        <di:waypoint x="1010" y="525" />
+        <di:waypoint x="1060" y="525" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="xf12_di" bpmnElement="xf12">
+        <di:waypoint x="1110" y="525" />
+        <di:waypoint x="1160" y="525" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1073" y="600" width="180" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="xf13_di" bpmnElement="xf13">
+        <di:waypoint x="1085" y="500" />
+        <di:waypoint x="1085" y="445" />
+        <di:waypoint x="665" y="445" />
+        <di:waypoint x="665" y="500" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="797" y="420" width="167" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="xf14_di" bpmnElement="xf14">
+        <di:waypoint x="1410" y="525" />
+        <di:waypoint x="1460" y="525" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="xf15_di" bpmnElement="xf15">
+        <di:waypoint x="1730" y="525" />
+        <di:waypoint x="1780" y="525" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="xf16_di" bpmnElement="xf16">
+        <di:waypoint x="1805" y="550" />
+        <di:waypoint x="1805" y="620" />
+        <di:waypoint x="2415" y="620" />
+        <di:waypoint x="2415" y="740" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1816" y="560" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="xf17_di" bpmnElement="xf17">
+        <di:waypoint x="1830" y="525" />
+        <di:waypoint x="1880" y="525" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1845" y="500" width="17" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="xf18_di" bpmnElement="xf18">
+        <di:waypoint x="2150" y="525" />
+        <di:waypoint x="2200" y="525" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="xf19_di" bpmnElement="xf19">
+        <di:waypoint x="2250" y="525" />
+        <di:waypoint x="2470" y="525" />
+        <di:waypoint x="2470" y="700" />
+        <di:waypoint x="2445" y="700" />
+        <di:waypoint x="2445" y="740" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2266" y="500" width="106" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="xf20_di" bpmnElement="xf20">
+        <di:waypoint x="2225" y="550" />
+        <di:waypoint x="2225" y="655" />
+        <di:waypoint x="365" y="655" />
+        <di:waypoint x="365" y="740" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2236" y="565" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="xf21_di" bpmnElement="xf21">
+        <di:waypoint x="390" y="765" />
+        <di:waypoint x="440" y="765" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="xf22_di" bpmnElement="xf22">
+        <di:waypoint x="710" y="765" />
+        <di:waypoint x="760" y="765" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="xf23_di" bpmnElement="xf23">
+        <di:waypoint x="1010" y="765" />
+        <di:waypoint x="1060" y="765" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="xf24_di" bpmnElement="xf24">
+        <di:waypoint x="1330" y="765" />
+        <di:waypoint x="1380" y="765" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="xf25_di" bpmnElement="xf25">
+        <di:waypoint x="1405" y="740" />
+        <di:waypoint x="1405" y="690" />
+        <di:waypoint x="2435" y="690" />
+        <di:waypoint x="2435" y="740" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1416" y="700" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="xf26_di" bpmnElement="xf26">
+        <di:waypoint x="1430" y="765" />
+        <di:waypoint x="1490" y="765" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1450" y="740" width="17" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="xf27_di" bpmnElement="xf27">
+        <di:waypoint x="1515" y="790" />
+        <di:waypoint x="1515" y="860" />
+        <di:waypoint x="365" y="860" />
+        <di:waypoint x="365" y="790" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1000" y="838" width="99" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="xf28_di" bpmnElement="xf28">
+        <di:waypoint x="1540" y="765" />
+        <di:waypoint x="1600" y="765" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1550" y="830" width="143" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="xf29_di" bpmnElement="xf29">
+        <di:waypoint x="1890" y="765" />
+        <di:waypoint x="2400" y="765" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="xf30_di" bpmnElement="xf30">
+        <di:waypoint x="2450" y="765" />
+        <di:waypoint x="2510" y="765" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="xf31_di" bpmnElement="xf31">
+        <di:waypoint x="2780" y="765" />
+        <di:waypoint x="2960" y="765" />
+        <di:waypoint x="2960" y="225" />
+        <di:waypoint x="1675" y="225" />
+        <di:waypoint x="1675" y="270" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="xf32_di" bpmnElement="xf32">
+        <di:waypoint x="590" y="1005" />
+        <di:waypoint x="640" y="1005" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="xf33_di" bpmnElement="xf33">
+        <di:waypoint x="910" y="1005" />
+        <di:waypoint x="960" y="1005" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="xf34_di" bpmnElement="xf34">
+        <di:waypoint x="1010" y="1005" />
+        <di:waypoint x="1060" y="1005" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1025" y="980" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="xf35_di" bpmnElement="xf35">
+        <di:waypoint x="985" y="1030" />
+        <di:waypoint x="985" y="1090" />
+        <di:waypoint x="705" y="1090" />
+        <di:waypoint x="705" y="1220" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="996" y="1042" width="17" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="xf36_di" bpmnElement="xf36">
+        <di:waypoint x="1330" y="1005" />
+        <di:waypoint x="1380" y="1005" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="xf37_di" bpmnElement="xf37">
+        <di:waypoint x="1630" y="1005" />
+        <di:waypoint x="1680" y="1005" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="xf38_di" bpmnElement="xf38">
+        <di:waypoint x="1815" y="1060" />
+        <di:waypoint x="1815" y="1170" />
+        <di:waypoint x="480" y="1170" />
+        <di:waypoint x="480" y="1190" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="xf39_di" bpmnElement="xf39">
+        <di:waypoint x="630" y="1245" />
+        <di:waypoint x="680" y="1245" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="xf40_di" bpmnElement="xf40">
+        <di:waypoint x="730" y="1245" />
+        <di:waypoint x="780" y="1245" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="xf41_di" bpmnElement="xf41">
+        <di:waypoint x="1050" y="1245" />
+        <di:waypoint x="1100" y="1245" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="xf42_di" bpmnElement="xf42">
+        <di:waypoint x="1350" y="1245" />
+        <di:waypoint x="1400" y="1245" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="xda1_di" bpmnElement="xda1">
+        <di:waypoint x="1630" y="375" />
+        <di:waypoint x="1560" y="340" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="xda2_di" bpmnElement="xda2">
+        <di:waypoint x="448" y="425" />
+        <di:waypoint x="448" y="470" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="xda3_di" bpmnElement="xda3">
+        <di:waypoint x="1118" y="340" />
+        <di:waypoint x="1118" y="375" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="xda4_di" bpmnElement="xda4">
+        <di:waypoint x="2638" y="820" />
+        <di:waypoint x="2638" y="830" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="xda5_di" bpmnElement="xda5">
+        <di:waypoint x="918" y="1155" />
+        <di:waypoint x="918" y="1190" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="xda6_di" bpmnElement="xda6">
+        <di:waypoint x="580" y="580" />
+        <di:waypoint x="630" y="590" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="xda7_di" bpmnElement="xda7">
+        <di:waypoint x="656" y="600" />
+        <di:waypoint x="745" y="580" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="xda8_di" bpmnElement="xda8">
+        <di:waypoint x="1385" y="580" />
+        <di:waypoint x="1410" y="590" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="xda9_di" bpmnElement="xda9">
+        <di:waypoint x="1436" y="600" />
+        <di:waypoint x="1465" y="580" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

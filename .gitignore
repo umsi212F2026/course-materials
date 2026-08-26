@@ -1,0 +1,10 @@
+node_modules/
+.DS_Store
+
+# Renders of each workflow's .bpmn. Untracked as of 2026-08-24: a render goes stale
+# the moment the diagram is edited, and a stale picture is worse than none. Read the
+# .bpmn in workflows/diagram/tools/bpmn-viewer.html, or re-render with render.mjs.
+workflows/*/*.png
+
+# Claude Code machine-local settings — absolute paths, never shared.
+.claude/settings.local.json
