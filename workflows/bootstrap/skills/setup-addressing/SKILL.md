@@ -5,8 +5,6 @@ description: Record where the course repositories are so that every later sessio
 
 # Set up addressing
 
-**Status: draft.** Written 2026-08-25. Not yet run with a student.
-
 The **Addressing** phase, fourth of seven, and then the **Smoke test**, fifth.
 
 You write one small file and then run one workflow. The file is what makes every future session

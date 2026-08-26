@@ -5,8 +5,6 @@ description: Install git and Node, clone the three course repositories, and set 
 
 # Set up the repositories
 
-**Status: draft.** Written 2026-08-25. Not yet run with a student.
-
 The **Runtime** and **Repositories** phases, second and third of seven. `setup-workspace`
 handed off to you.
 
@@ -80,9 +78,22 @@ git -C <repo> config user.name  "<their name>"
 git -C <repo> config user.email "<uniqname>@umich.edu"
 ```
 
-Ask for the name as they want it written; use their **umich address**, so the commits attach to
-their GitHub account when they make one in week 2. Without this, git refuses the first commit
-or invents an identity from the machine's hostname.
+**Two separate questions, and the reason before the first.** They have never heard the word
+_commit_ and do not know what git is, so the reason has to be given in words they already have:
+_from now on, whenever your work gets saved into the course's record of it, your name goes on
+it — that is how your instructor knows which work is yours._ Then ask what name they want on
+it.
+
+Ask for the uniqname afterwards, as its own question. Both in one breath reads as a single
+question with two halves and gets answered as neither — which is what happened on 2026-08-26,
+to a reader who has been at this university for thirty years.
+
+**Build the address from the uniqname; do not ask for an email.** Their umich address is what
+attaches this work to their GitHub account in week 2. That is a reason to use it, not a thing
+to explain today.
+
+Without any of this, git refuses to record the first piece of work, or invents an identity from
+the machine's hostname.
 
 **6. Check the phases.** Run `node course-materials/workflows/bootstrap/tools/doctor.mjs` and
 show its complete output, unedited. It should report **reached 3 of 7 — Repositories**.

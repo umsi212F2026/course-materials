@@ -5,8 +5,6 @@ description: Give a student a GitHub account and publish their two course reposi
 
 # Set up GitHub
 
-**Status: draft.** Written 2026-08-25. Not yet run with a student.
-
 The **Remote** phase, seventh of seven, and **not part of the first day**. It runs in week 2,
 ahead of the first thing due in week 3.
 
@@ -81,7 +79,8 @@ gh api -X PUT repos/<username>/si212-assignments-<uniqname>/collaborators/presni
 ```
 
 `presnick` is the whole teaching team this term. Add individuals, one call each — a repository
-in someone's personal account cannot grant access to a GitHub team at all, only to named people.
+in someone's personal account cannot grant access to a GitHub team at all, only to named
+people.
 
 `push` is not a choice either. A private repository owned by a personal account has exactly two
 tiers, owner and collaborator, and a collaborator gets write access; read-only is not on offer.

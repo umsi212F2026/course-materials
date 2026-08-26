@@ -5,8 +5,6 @@ description: Bring one of the course repositories up to date with the instructor
 
 # Update
 
-**Status: draft. Not yet run with a student.**
-
 One repository, brought up to date. It is deliberately small and deliberately boring: the whole
 value is that it does the same safe thing every time, so that "get the latest" is never an
 adventure.

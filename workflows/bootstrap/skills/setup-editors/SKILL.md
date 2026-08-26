@@ -5,8 +5,6 @@ description: Install the Markdown editor and the BPMN editor, and set Zettlr to 
 
 # Set up the editors
 
-**Status: draft.** Written 2026-08-25. Not yet run with a student.
-
 The **Editors** phase, sixth of seven.
 
 Two applications and one preference, and they matter more than they look. The tour ends by
@@ -32,11 +30,11 @@ first launch — so download, install, and stop.
 
 Download the version this course pins, from the project's own releases:
 
-| Platform | File |
-| --- | --- |
+| Platform           | File                     |
+| ------------------ | ------------------------ |
 | Mac, Apple Silicon | `Zettlr-4.7.0-arm64.dmg` |
-| Mac, Intel | `Zettlr-4.7.0-x64.dmg` |
-| Windows | `Zettlr-4.7.0-x64.exe` |
+| Mac, Intel         | `Zettlr-4.7.0-x64.dmg`   |
+| Windows            | `Zettlr-4.7.0-x64.exe`   |
 
 each under `https://github.com/Zettlr/Zettlr/releases/download/v4.7.0/`.
 
@@ -53,9 +51,23 @@ On a Mac this is a `.dmg` to mount, with one application to copy into `/Applicat
 Windows the `.exe` is a wizard; `/S` runs it without one, installing under the student's own
 account.
 
-**Neither platform should ask for an administrator password.** If a Mac does, that account is
-not an administrator of its own machine — stop, and see the rule below. On Windows, the
-installer offers to install for all users, which does ask; take the default instead.
+**Neither platform should need an administrator password**, and on Windows the installer's
+offer to install for all users is the one thing that asks — take the default instead.
+
+**But if a prompt does appear, a prompt is not a blocked machine.** These are three different
+situations and only the last one stops the day:
+
+- **A password box the student can fill in.** Say what it is — the machine asking permission to
+  put a new application in the shared Applications folder — and have them type their own login
+  password. It is not shown as they type, which is worth saying, because a box that does not
+  react to typing reads as broken. This is the ordinary case and it is not a failure.
+- **"Zettlr can't be opened because Apple cannot check it for malicious software."** Nothing to
+  do with administrator rights, and it arrives at first launch rather than at install. The fix
+  is to right-click the app and choose **Open**, then **Open** again in the dialog that follows
+  — once per application, and never again. Double-clicking will keep failing for as long as
+  they keep trying it, which is the part that makes students think they broke something.
+- **A password they do not have.** Now stop, and see the rule below. The distinction is whether
+  the password exists and they know it, not whether a box appeared.
 
 **3. Set Zettlr to autosave on a short delay,** by writing its configuration file before Zettlr
 has ever been opened:
@@ -87,11 +99,11 @@ disk and the agent reads those files too.
 **4. Install Camunda Modeler.** Same pinned shape, from
 `https://github.com/camunda/camunda-modeler/releases/download/v5.50.1/`:
 
-| Platform | File |
-| --- | --- |
+| Platform           | File                                   |
+| ------------------ | -------------------------------------- |
 | Mac, Apple Silicon | `camunda-modeler-5.50.1-mac-arm64.dmg` |
-| Mac, Intel | `camunda-modeler-5.50.1-mac-x64.dmg` |
-| Windows | `camunda-modeler-5.50.1-win-x64.zip` |
+| Mac, Intel         | `camunda-modeler-5.50.1-mac-x64.dmg`   |
+| Windows            | `camunda-modeler-5.50.1-win-x64.zip`   |
 
 Same 404 rule as Zettlr, against `camunda/camunda-modeler`. No configuration to write here.
 
@@ -120,6 +132,12 @@ problem that surfaces in week five, when nobody remembers this conversation.
 
 **If an install needs an administrator password the student does not have, stop and say so.**
 That is a loaner-laptop conversation with their instructor, not something to work around.
+
+**Help with a prompt; stop at a wall.** The rules above are about not routing around a machine
+that has refused you — they are not a reason to abandon a student at a dialog box. A password
+they can type, a security warning that needs a right-click, a folder that has to be created
+first: work through those with them, in plain words, as many times as it takes. Only a
+permission that does not exist on that machine ends the day.
 
 ## When you cannot finish
 

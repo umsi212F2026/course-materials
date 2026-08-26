@@ -5,8 +5,6 @@ description: Walk a student through what a workflow is made of — a guide, a sk
 
 # Tour
 
-**Status: draft.** Written 2026-08-24. Not yet run with a student.
-
 The last step of setting a machine up. Everything before you was installing things and cloning
 repositories; you are the first thing that uses any of it.
 

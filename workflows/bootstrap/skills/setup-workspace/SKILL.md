@@ -5,8 +5,6 @@ description: Run the first-day setup skills in order, checking after each that t
 
 # Set up the workspace
 
-**Status: draft. Not yet run with a student.**
-
 You are an orchestrator. You install nothing and clone nothing yourself — each skill below does
 its own work and ends by checking its own result.
 
@@ -57,6 +55,19 @@ run commands — run them yourself and say what you are doing.
 Say what you are about to do before each step, in one sentence, in plain words. "Downloading
 the course files" rather than "cloning the upstream remote".
 
+**Answer what they ask you.** Everything else in these skills tells you to be brief, not to
+volunteer, and to stop when a step is done — all of which is right, and none of which survives
+contact with a student who asks a question. A question is not an interruption of the setup; it
+is the first thing in this course they have done on their own initiative.
+
+So: answer it, in a sentence or two, in the same plain words, and then carry on from where you
+were. **"Why are you asking?" is the one that matters most** — it went unanswered on
+2026-08-26, and a setup that will not say why it wants something is teaching the wrong lesson
+in the first ten minutes of a course about working with agents.
+
+If the honest answer is that a skill told you to and you do not know why, say that. It is true,
+it is short, and it is better than changing the subject.
+
 ## Start by finding out where they are
 
 **Do this before anything else, every time.** A student running you a second time is the normal
@@ -86,6 +97,14 @@ read what they tell you.
    creates the disk you would otherwise read it from. Should reach **3 of 7, Repositories**.
 2. **`workflows/bootstrap/skills/setup-addressing/SKILL.md`** — writes `~/.codex/AGENTS.md`,
    then runs the tour. From here on, read from the clone. Should reach **5 of 7, Smoke test**.
+
+   **Say one sentence when the tour hands back**, before you start on the editors: that the
+   tour is over and there is one thing left to install. The tour deliberately ends on a full
+   stop — it has them open their own file and then says nothing more — and from the student's
+   side that is indistinguishable from the setup being finished, or from its being their move.
+   On 2026-08-26 the student had to ask _"I opened it. Now what?"_ Do not fix this by changing
+   the tour; it is right, and the sentence belongs to you.
+
 3. **`workflows/bootstrap/skills/setup-editors/SKILL.md`** — Zettlr and Camunda Modeler. Should
    reach **6 of 7, Editors**.
 
