@@ -123,8 +123,23 @@ publishes a fix and the student runs the setup again; `setup-repos` pulls it and
 orchestrator resumes at the phase that failed.
 
 Then **say where they stand.** One short paragraph: which phase they reached, and if it is not
-the last, which step stopped and why. Then print the final doctor output again on its own, so
-they can copy it into the Canvas assignment in one action.
+the last, which step stopped and why.
+
+**Then print the doctor's output verbatim, as the last thing you say.** Not a summary of it,
+not a list of what passed, not your own account of what happened — the text the program
+produced, from `SI 212 — first-day setup check` down to the `Copy everything above` line, in
+one block they can select in a single gesture. Your paragraph goes before it. Nothing goes
+after it.
+
+**This is the entire submission, and summarising it destroys it.** The report's own last line
+tells the student to copy everything above into Canvas; if what sits above that line is your
+bullet list, the instruction points at nothing and they have nothing to hand in. That is not a
+tidiness question — the Canvas assignment is the only way an instructor finds out which of 48
+students is stuck, and a student who submits a summary looks identical to one who submitted
+nothing.
+
+It is a real failure and not a hypothetical one: on 2026-08-26 a model closed with five
+accurate bullets and no report. Accurate is not the bar. Reproduced is.
 
 ## What you do not do
 
@@ -143,6 +158,10 @@ harmful, but it is confusing and it makes the doctor output stop meaning what it
 
 **Never print the API key**, or any part of it. The doctor output gets pasted into Canvas by a
 student who will not think about that.
+
+**Do not replace the doctor's report with a summary of it.** Said above and repeated here
+because it is the easiest thing in this whole skill to get wrong: everything else you say is
+yours to phrase, and this one block is not yours at all. Copy it out.
 
 ## When you cannot finish
 
