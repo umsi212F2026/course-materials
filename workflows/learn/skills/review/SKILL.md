@@ -5,8 +5,6 @@ description: Run everything that has come due for review, across all topics — 
 
 # Review
 
-**Status: draft.** Written 2026-08-21 during SI 212 workflow design. Not yet run.
-
 ## Operates on
 
 Establish it once, at the start, by asking: the student's clone of `learning-topics`. Carry it

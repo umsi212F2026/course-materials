@@ -5,8 +5,6 @@ description: Run the curation phase — stamp an entry for every goal that suppl
 
 # Curation
 
-**Status: draft.** Written 2026-08-16 during SI 212 workflow design. Not yet run.
-
 ## Operates on
 
 `<topic-dir>` — one topic folder, whose `activities.md` you are filling in.

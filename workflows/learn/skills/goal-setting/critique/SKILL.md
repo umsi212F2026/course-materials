@@ -5,8 +5,6 @@ description: Judge a draft goals.md that another agent has just finished writing
 
 # Goal setting — critique
 
-**Status: draft.** Written 2026-08-21 during SI 212 workflow design. Not yet run.
-
 ## Operates on
 
 `<topic-dir>/goals.md` — that one file, and nothing else in the folder. The isolation is the

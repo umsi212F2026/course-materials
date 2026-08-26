@@ -5,8 +5,6 @@ description: Work out whether something a learner named is a new topic, a word f
 
 # Add topic
 
-**Status: draft.** Written 2026-08-21. Not yet run.
-
 ## Operates on
 
 `<data-dir>` — the student's clone of `learning-topics`, holding one folder per topic. You

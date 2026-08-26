@@ -5,8 +5,6 @@ description: Tutor a learner through the activities their goals supply — run t
 
 # Study
 
-**Status: draft.** Written 2026-08-16 during SI 212 workflow design. Not yet run.
-
 ## Operates on
 
 Establish it once, at the start, by asking: the student's clone of `learning-topics`. Carry it

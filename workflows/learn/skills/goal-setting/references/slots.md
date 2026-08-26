@@ -1,7 +1,7 @@
 # Goal slots — the seven questions, and the three contracts
 
-**Status: draft, 2026-08-23.** This file carries the rules and the contracts, and no argument —
-the reasoning behind them is recorded outside this repository.
+This file carries the rules and the contracts, and no argument — the reasoning behind them is
+recorded outside this repository.
 
 A **goal** is a claim about the learner that can be true or false. An **activity** is an
 occasion that produces evidence for such a claim. Everything in `goals.md` is a goal — an

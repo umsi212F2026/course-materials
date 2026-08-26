@@ -5,8 +5,6 @@ description: Check the facts in a draft activities.md — that named artifacts e
 
 # Curation — verify
 
-**Status: draft.** Written 2026-08-16 during SI 212 workflow design. Not yet run.
-
 ## Operates on
 
 `<topic-dir>/activities.md` — that one file, checked against what it claims.

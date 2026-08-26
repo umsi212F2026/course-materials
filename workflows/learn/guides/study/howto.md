@@ -1,7 +1,5 @@
 # Study sessions: your side
 
-**Status: draft.** Written 2026-08-17. Not yet used with students.
-
 This is where nearly all the time goes. [The overall guide](../learn/howto.md) covers how
 sessions fit together; this is what happens inside one.
 

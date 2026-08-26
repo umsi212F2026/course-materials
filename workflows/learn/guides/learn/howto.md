@@ -1,7 +1,5 @@
 # Teaching yourself something: how the whole thing works
 
-**Status: draft.** Written 2026-08-17. Not yet used with students.
-
 Start here. This is the shape of the process; the other guides cover the parts you'll spend
 time in.
 

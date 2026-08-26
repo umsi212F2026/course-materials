@@ -5,8 +5,6 @@ description: Run the goal-setting interview with a learner. Produces goals.md â€
 
 # Goal setting
 
-**Status: draft.** Written 2026-08-15 during SI 212 workflow design. Not yet run.
-
 ## Operates on
 
 `<topic-dir>` â€” one topic folder, whose `goals.md` you are filling in.

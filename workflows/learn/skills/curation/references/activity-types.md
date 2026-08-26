@@ -1,6 +1,6 @@
 # Activity types
 
-**Status: draft.** Types to instantiate from, grouped by the `supports` value they serve.
+Types to instantiate from, grouped by the `supports` value they serve.
 
 A type is not an activity. An activity is a type plus a specific artifact or material plus a
 statement of what this learner does with it. "Contrast" is a type; "here are four of these, two

@@ -1,8 +1,8 @@
 # The vocabulary supply
 
-**Status: draft.** An implementation of the `supply` slot — see [`slots.md`](slots.md) for the
-contract and for the other six slots. A goal carrying `supply: vocabulary` gets its activities
-from here rather than from `activities.md`.
+An implementation of the `supply` slot — see [`slots.md`](slots.md) for the contract and for
+the other six slots. A goal carrying `supply: vocabulary` gets its activities from here rather
+than from `activities.md`.
 
 Also the definition site for `criterion: vocabulary`, which is one sentence and is never
 restated per word and never negotiated with the learner.

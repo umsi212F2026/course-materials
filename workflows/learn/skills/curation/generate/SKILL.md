@@ -5,8 +5,6 @@ description: Fill in or revise activities.md — candidate study activities and 
 
 # Curation — generate
 
-**Status: draft.** Written 2026-08-16 during SI 212 workflow design. Not yet run.
-
 ## Operates on
 
 `<topic-dir>` — one topic folder. It already exists — you are never the thing that creates one.

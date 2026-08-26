@@ -1,7 +1,5 @@
 # Moves for any conversation with a thought partner
 
-**Status: draft.** Written 2026-08-16. Not yet used with students.
-
 There are some ways that you can get an agent (or a person) to be a better thought partner for
 you. None of these are specific to any one task — they work in a conversation about anything,
 and they're worth having to hand whenever you're working something out with an agent rather

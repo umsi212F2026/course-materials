@@ -5,8 +5,6 @@ description: Run one learning topic — work out which phase it needs next, do t
 
 # Topic
 
-**Status: draft.** Written 2026-08-17 during SI 212 workflow design. Not yet run.
-
 ## Operates on
 
 `<topic-dir>` — one topic folder, named `<area>-<yyyy>-<mm>/`, inside the student's

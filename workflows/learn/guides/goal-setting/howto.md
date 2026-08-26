@@ -1,7 +1,5 @@
 # Goal setting: your side of the conversation
 
-**Status: draft.** Written 2026-08-15. Not yet used with students.
-
 Before you learn something, you and an agent spend a few minutes writing down what you want to
 be able to do and what would count as having got there. It goes in a file called `goals.md`.
 The agent has its own instructions; this is about yours.

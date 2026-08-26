@@ -1,7 +1,7 @@
 # Library of uses
 
-**Status: draft.** A menu to offer a learner who can't answer "what will you use this for?"
-cold. Reacting to candidates is much easier than generating from a blank field.
+A menu to offer a learner who can't answer "what will you use this for?" cold. Reacting to
+candidates is much easier than generating from a blank field.
 
 Each use implies a depth and a shape of evidence. That's the point of the library — once a use
 is chosen, the depth calibration and the criteria are half-decided.

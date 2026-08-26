@@ -5,8 +5,6 @@ description: Judge a draft activities.md — whether entries can be run as writt
 
 # Curation — critique
 
-**Status: draft.** Written 2026-08-16 during SI 212 workflow design. Not yet run.
-
 ## Operates on
 
 `<topic-dir>/activities.md` — that one file. You judge what is in it, not the folder around it.

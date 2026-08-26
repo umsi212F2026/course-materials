@@ -5,8 +5,6 @@ description: Rule on one attempt — whether it was unaided, and whether it meet
 
 # Study — judge
 
-**Status: draft.** Written 2026-08-21 during SI 212 workflow design. Not yet run.
-
 ## Operates on
 
 Nothing on disk. You are handed an attempt and you rule on it; you open no files and write

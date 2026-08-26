@@ -1,7 +1,5 @@
 # Reviews: doing it again, cold
 
-**Status: draft.** Written 2026-08-23. Not yet used with students.
-
 Once you've shown you can do something, it comes back — a few days later, then a week or two,
 then a month or two — to see whether you still can. [The overall guide](../learn/howto.md)
 covers where reviews sit; this is what one is like from the inside.

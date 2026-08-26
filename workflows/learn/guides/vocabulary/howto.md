@@ -1,7 +1,5 @@
 # Words: the cheap half of learning something
 
-**Status: draft.** Written 2026-08-23. Not yet used with students.
-
 A lot of what makes a field hard isn't the ideas — it's that everyone talking about it uses
 twenty words you don't have. This is how those get handled. It's deliberately the lightest part
 of the whole process.

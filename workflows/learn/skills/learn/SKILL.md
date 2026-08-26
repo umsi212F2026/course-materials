@@ -5,8 +5,6 @@ description: The way in. Surveys every learning topic, does the agent-only maint
 
 # Learn
 
-**Status: draft.** Written 2026-08-17 during SI 212 workflow design. Not yet run.
-
 ## Operates on
 
 Establish it once, at the start, by asking: the student's clone of `learning-topics`. Carry it
