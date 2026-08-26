@@ -99,6 +99,5 @@ bar is met, on its own clock, whatever the rest of the topic is doing.
 Nothing anywhere else. Where a word stands is derived from the attempt log by
 `workflows/learn/tools/survey.mjs`, like everything else about where a learner stands.
 
-**The six moves are not activity ids and never appear in `activities.md`.** They used to be six
-reserved global ids in a per-topic namespace; they are now what this supply writes into a
-label, which is where a supply's own record of what it served belongs.
+**The six moves are not activity ids and never appear in `activities.md`.** They are what this
+supply writes into a label, which is where a supply's own record of what it served belongs.

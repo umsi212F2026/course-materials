@@ -125,11 +125,10 @@ with the learner.
   That's a defect in goals.md rather than here, and it needs the learner to resolve.
 
   THE ORIENTATION GOAL is an ordinary row and always first, because it is first in goals.md.
-  It used to be a row that named no goal, which is why nothing could ever finish it and why
-  the rung named after it never meant anything; it is now a goal like any other, with a
-  criterion, an adjudicator and a bar. It carries the activities that serve `all` — the ones
-  that give the learner the shape of the thing before any particular part is in play — and
-  its `checks` cell is filled like any other.
+  It is a goal like any other, with a criterion, an adjudicator and a bar — a row naming no
+  goal could never finish. It carries the activities that serve `all` — the ones that give the
+  learner the shape of the thing before any particular part is in play — and its `checks` cell
+  is filled like any other.
 
   If `goals.md` says the learner is already oriented, its entry there will have been deleted
   and this row won't exist. If the entry is there but `what I already have` settles it, write

@@ -85,10 +85,9 @@ indistinguishable in kind from one they made themselves. That's the point.
 Any topic with an outstanding item whose `needs` is **`curation`** gets its `topic` skill
 spawned to deal with it. That is the whole test, and it needs no judgement from you.
 
-**This includes the commonest case, which used to be invisible.** A topic whose goal setting
-finished and whose session ended before curation ran has a `goal-added` line per goal and
-nothing having cleared them. Nobody wrote a note saying so; the queue just still has them on
-it.
+**This includes the commonest case.** A topic whose goal setting finished and whose session
+ended before curation ran has a `goal-added` line per goal and nothing having cleared them.
+Nobody wrote a note saying so; the queue just still has them on it.
 
 **Spawn and carry on.** Don't wait. That work can run a generate pass and two checks; the
 learner is in front of you wanting to do something, and making them watch housekeeping is a bad

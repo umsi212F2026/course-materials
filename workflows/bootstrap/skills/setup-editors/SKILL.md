@@ -27,12 +27,9 @@ through an agent. Camunda Modeler is for drawing workflow diagrams later in the 
 **2. Install Zettlr, but do not open it yet.** Step 3 writes Zettlr's configuration file, and
 it has to be written before Zettlr's first launch — so download, install, and stop.
 
-**Say what you are about to do, in one sentence, and then do it. Do not ask.** "Installing
-Zettlr now" — and install it. Not _may I install Zettlr?_ The machine puts up its own prompt if
-it needs permission, and that is one click; a question in the chat stops the student until they
-notice and reply, and the app runs a second agent over the whole conversation to assess each
-approval, so it costs twice. Three such questions on 2026-08-26 turned ten minutes of work into
-thirty-three.
+**Say what you are about to do in one sentence, then do it. Do not ask.** "Installing Zettlr
+now" — not _may I install Zettlr?_ The machine puts up its own prompt if permission is needed,
+which is one click; a question in the chat stops the student until they notice it.
 
 Download the version this course pins, from the project's own releases:
 
@@ -62,20 +59,19 @@ account.
 **Neither platform should need an administrator password**, and on Windows the installer's
 offer to install for all users is the one thing that asks — take the default instead.
 
-**But if a prompt does appear, a prompt is not a blocked machine.** These are three different
-situations and only the last one stops the day:
+**But a prompt is not a blocked machine.** Three situations, and only the last stops the day:
 
-- **A password box the student can fill in.** Say what it is — the machine asking permission to
-  put a new application in the shared Applications folder — and have them type their own login
-  password. It is not shown as they type, which is worth saying, because a box that does not
-  react to typing reads as broken. This is the ordinary case and it is not a failure.
-- **"Zettlr can't be opened because Apple cannot check it for malicious software."** Nothing to
-  do with administrator rights, and it arrives at first launch rather than at install. The fix
-  is to right-click the app and choose **Open**, then **Open** again in the dialog that follows
-  — once per application, and never again. Double-clicking will keep failing for as long as
-  they keep trying it, which is the part that makes students think they broke something.
-- **A password they do not have.** Now stop, and see the rule below. The distinction is whether
-  the password exists and they know it, not whether a box appeared.
+- **A password box they can fill in.** Say what it is — the machine asking permission to put a
+  new application in the shared Applications folder — and have them type their own login
+  password. Say that it will not show as they type, because a box that does not react reads as
+  broken. Ordinary, not a failure.
+- **"Zettlr can't be opened because Apple cannot check it for malicious software."** macOS
+  only, nothing to do with administrator rights, and it arrives at first launch rather than at
+  install. Right-click the app, choose **Open**, then **Open** again — once per application.
+  Double-clicking will keep failing for as long as they keep trying it, which is what makes
+  students think they broke something.
+- **A password they do not have.** Stop; see the rule below. The distinction is whether the
+  password exists and they know it, not whether a box appeared.
 
 **3. Set Zettlr to autosave on a short delay,** by writing its configuration file before Zettlr
 has ever been opened:
@@ -142,10 +138,8 @@ problem that surfaces in week five, when nobody remembers this conversation.
 That is a loaner-laptop conversation with their instructor, not something to work around.
 
 **Help with a prompt; stop at a wall.** The rules above are about not routing around a machine
-that has refused you — they are not a reason to abandon a student at a dialog box. A password
-they can type, a security warning that needs a right-click, a folder that has to be created
-first: work through those with them, in plain words, as many times as it takes. Only a
-permission that does not exist on that machine ends the day.
+that has refused you, not a reason to abandon a student at a dialog box. Work through those
+with them, in plain words, as many times as it takes.
 
 ## When you cannot finish
 

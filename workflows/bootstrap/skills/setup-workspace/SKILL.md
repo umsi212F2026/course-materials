@@ -55,18 +55,15 @@ run commands — run them yourself and say what you are doing.
 Say what you are about to do before each step, in one sentence, in plain words. "Downloading
 the course files" rather than "cloning the upstream remote".
 
-**Answer what they ask you.** Everything else in these skills tells you to be brief, not to
-volunteer, and to stop when a step is done — all of which is right, and none of which survives
-contact with a student who asks a question. A question is not an interruption of the setup; it
-is the first thing in this course they have done on their own initiative.
+**Answer what they ask you.** Everything else here tells you to be brief and not to volunteer,
+which is right and which does not apply to a question. A question is not an interruption of the
+setup; it is the first thing in this course the student has done on their own initiative.
+Answer in a sentence or two, then carry on from where you were.
 
-So: answer it, in a sentence or two, in the same plain words, and then carry on from where you
-were. **"Why are you asking?" is the one that matters most** — it went unanswered on
-2026-08-26, and a setup that will not say why it wants something is teaching the wrong lesson
-in the first ten minutes of a course about working with agents.
-
-If the honest answer is that a skill told you to and you do not know why, say that. It is true,
-it is short, and it is better than changing the subject.
+**"Why are you asking?" matters most.** A setup that will not say why it wants something
+teaches the wrong lesson in the first ten minutes of a course about working with agents. If the
+honest answer is that a skill told you to and you do not know why, say that — it is short, it
+is true, and it beats changing the subject.
 
 ## Start by finding out where they are
 
@@ -98,12 +95,10 @@ read what they tell you.
 2. **`workflows/bootstrap/skills/setup-addressing/SKILL.md`** — writes `~/.codex/AGENTS.md`,
    then runs the tour. From here on, read from the clone. Should reach **5 of 7, Smoke test**.
 
-   **Say one sentence when the tour hands back**, before you start on the editors: that the
-   tour is over and there is one thing left to install. The tour deliberately ends on a full
-   stop — it has them open their own file and then says nothing more — and from the student's
-   side that is indistinguishable from the setup being finished, or from its being their move.
-   On 2026-08-26 the student had to ask _"I opened it. Now what?"_ Do not fix this by changing
-   the tour; it is right, and the sentence belongs to you.
+   **Say one sentence when the tour hands back**, before the editors: the tour is over and
+   there is one thing left to install. The tour ends on a deliberate full stop, and from the
+   student's side that is indistinguishable from being finished, or from it being their move.
+   The sentence belongs to you, not to the tour.
 
 3. **`workflows/bootstrap/skills/setup-editors/SKILL.md`** — Zettlr and Camunda Modeler. Should
    reach **6 of 7, Editors**.
@@ -131,15 +126,11 @@ produced, from `SI 212 — first-day setup check` down to the `Copy everything a
 one block they can select in a single gesture. Your paragraph goes before it. Nothing goes
 after it.
 
-**This is the entire submission, and summarising it destroys it.** The report's own last line
-tells the student to copy everything above into Canvas; if what sits above that line is your
-bullet list, the instruction points at nothing and they have nothing to hand in. That is not a
-tidiness question — the Canvas assignment is the only way an instructor finds out which of 48
-students is stuck, and a student who submits a summary looks identical to one who submitted
-nothing.
-
-It is a real failure and not a hypothetical one: on 2026-08-26 a model closed with five
-accurate bullets and no report. Accurate is not the bar. Reproduced is.
+**This is the entire submission, and summarising it destroys it.** The report's last line tells
+the student to copy everything above into Canvas; if what sits above it is your bullet list,
+the instruction points at nothing. The Canvas assignment is the only way an instructor finds
+out which of 48 students is stuck, and a student who submits a summary looks identical to one
+who submitted nothing. Accurate is not the bar. Reproduced is.
 
 ## What you do not do
 

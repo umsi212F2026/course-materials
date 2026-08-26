@@ -40,21 +40,16 @@ sentence before you do it.
 >
 > So: what are you hoping to get out of this course? A sentence or two is plenty.
 
-**The framing and the question are one message, and that is deliberate.** They were two steps
-until 2026-08-26, when a run read this file, read the guide, and then asked the question with
-no framing at all — not paraphrased, skipped. The pattern is worth knowing because it will
-recur: **an agent keeps what it needs and drops what only the reader needs.** It could not
-proceed without the answer, so the question survived; nothing downstream depended on the
-explanation, so the explanation went. Fused, the explanation cannot be dropped without losing
-the answer.
+**The framing and the question are one message on purpose.** As two steps the framing gets
+dropped and the question asked bare, because you need the answer and nothing needs the framing.
+Fused, it cannot be dropped without losing the answer.
 
-**Send that wording, not a version of it**, and do not open with the four parts instead. A
+**Send that wording, not a version of it**, and do not open with the four parts instead — a
 student handed _guide, skill, script, data directory_ before they know why has been given a
-taxonomy of nothing. The vocabulary is worth having, and step 2 is where it lands — on
-something that just happened rather than on nothing.
+taxonomy of nothing. Step 2 is where that vocabulary lands, on something that just happened.
 
-Do not coach their answer, do not improve it, and do not ask a second question. This is the
-only thing in the whole setup that is theirs rather than the machine's.
+Do not coach their answer, improve it, or ask a second question. It is the only thing in the
+whole setup that is theirs rather than the machine's.
 
 **2. Once they have answered, read the guide with them.** Open
 [`tour.md`](workflows/tour/guides/tour.md) and walk through it — a guide, a skill, a script,

@@ -156,11 +156,9 @@ for (const [name, dir] of Object.entries(repos)) {
     try {
       gitIn(dir, ['rev-parse', '--is-inside-work-tree']);
     } catch (err) {
-      // Say what git said. An earlier version guessed "it may have been downloaded as a zip",
-      // which on 2026-08-26 sent a real report to Canvas naming a cause that had not happened:
-      // the clones were fine and git was refusing them for dubious ownership. This output is
-      // read by an instructor deciding what to repair, so a plausible guess is worse than a
-      // quotation — it is confident, wrong, and indistinguishable from a diagnosis.
+      // Say what git said, never a guess at why. This output is read by an instructor deciding
+      // what to repair, and a plausible wrong cause is worse than a quotation — it is
+      // confident and indistinguishable from a diagnosis.
       const said = String(err.message || err).trim();
       if (/dubious ownership/i.test(said))
         throw new Error(

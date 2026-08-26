@@ -24,10 +24,9 @@ what you cloned.
 
 ## What you do, in order
 
-**1. Check what is already here — by looking, not by asking the shell.** `git --version` and
-`node --version` are **not** the check. Neither is on the sandbox account's `PATH` even when
-both are installed, so asking the shell reports "missing" for software that is sitting on the
-disk. Look for the files:
+**1. Check what is already here — by looking for the files, not by asking the shell.** On
+Windows `git --version` fails whether or not git exists, because it is not on this account's
+`PATH`. Test these paths instead, and report what you find by running it at its full path:
 
 ```
 Windows:  C:\Program Files\Git\cmd\git.exe
@@ -36,29 +35,16 @@ Windows:  C:\Program Files\Git\cmd\git.exe
 macOS:    git and node on PATH is a fair test
 ```
 
-Then report what you found and its version, running it by full path. Install nothing yet.
+Install nothing yet.
 
-This is not a hypothetical. On 2026-08-26 a run offered to install git **and** Node onto a
-machine that already had both, because it asked the shell — two downloads, two waits and two
-interruptions bought nothing.
+**2. Install what is missing** — git and Node, nothing else. git first: without it there is
+nothing to clone with.
 
-**2. Install what is missing.** git and Node, and nothing else — the editors come later, and
-the GitHub CLI is not needed until week 2.
-
-**Say what you are about to do, in one sentence, and then do it. Do not ask.** "Installing git,
-which is what downloads the course files" — and then install it. **Do not ask _may I_, do not
-offer a choice, and do not wait for a reply in the conversation.** If the machine needs
-permission it will put up its own prompt, and that is one click.
-
-A question in the chat is not a small thing. It is a round trip that stops the student until
-they notice and answer, and the app runs a second agent over the whole conversation to assess
-each approval, so it costs twice. On 2026-08-26 three such questions turned ten minutes of work
-into thirty-three. And an agent that asks whether it may do the thing it was just told to do
-teaches a student that it needs supervising for its own instructions, on the day they are least
-able to judge that.
-
-git has to come first and it is not optional: without it there is nothing to clone with. Node
-can wait until after the clones if that is easier, but the doctor cannot run without it.
+**Say what you are about to do in one sentence, then do it. Do not ask.** "Installing git,
+which is what downloads the course files" — and install it. Not _may I_, no choices, no waiting
+for a reply. If permission is needed the machine puts up its own prompt, which is one click; a
+question in the chat stops the student until they notice it, and makes the agent look like it
+needs supervising for its own instructions.
 
 **Download from these addresses. Do not ask an API which version is current.**
 
@@ -67,39 +53,30 @@ can wait until after the clones if that is easier, but the doctor cannot run wit
 | Windows  | `Git-2.55.0.5-64-bit.exe` from git-for-windows' `v2.55.0.windows.5` release | `node-v24.20.0-x64.msi` from `nodejs.org/dist/v24.20.0/` |
 | macOS    | `xcode-select --install` — git ships with the command line tools            | `node-v24.20.0.pkg` from the same path                   |
 
-Note the git filename: four version components, because Git for Windows folds the `.windows.5`
-of the tag into the file's own version. It is not a typo, and an earlier version of this table
-had it wrong.
+Four version components in the git filename is correct, not a typo: Git for Windows folds the
+`.windows.5` of the tag into the file's own version.
 
-**Why pinned, and the editor downloads later in the setup are pinned for the same reason:**
-`api.github.com` allows sixty requests an hour from one address, and a room full of students
-shares one. A lab section that resolves "latest" here exhausts the limit before anybody reaches
-the editors, and the failure looks like a network problem rather than a rate limit. On
-2026-08-26 an agent given no pinned address reached for
-`api.github.com/repos/git-for-windows/git/releases/latest` and `nodejs.org/dist/index.json`
-unprompted — the instinct is strong, so the addresses have to be here.
+**Why pinned:** `api.github.com` allows sixty requests an hour from one address and a lab
+section shares one, so a class that resolves "latest" here exhausts it before anyone reaches
+the editors — and the failure looks like a network problem. The editor downloads are pinned for
+the same reason.
 
-**If a pinned address 404s, it no longer resolves — and why is not something you can know.**
-The release may have been withdrawn, the asset may have been renamed, or the address in this
-file may simply be wrong; all three have the same remedy and only one of them is anybody's
-fault. Only then ask the project for its current version, take the equivalently-named asset,
-and say plainly what you asked and what you found. Do not assert a cause. On 2026-08-26 this
-clause said "the release was withdrawn", the run repeated it, and the truth was a wrong
-filename here.
+**If a pinned address 404s, it no longer resolves, and why is not something you can know** —
+withdrawn release, renamed asset, or a mistake in this file. Only then ask the project for its
+current version, take the equivalently-named asset, and say what you asked and what you found.
+Do not assert a cause.
 
-**`PATH` does not update in a session that is already running.** This is not a Windows quirk to
-work around once — it will happen every time. After installing git, `git` will still not be
-found by name; the same for `node`. Do not conclude the install failed, and **do not install it
-again**. Use the full path for the rest of the session:
+**`PATH` does not update in a session that is already running.** After installing, `git` and
+`node` will still not be found by name. That is not a failed install and **not a reason to
+install again** — use the full path for the rest of the session:
 
 ```
 Windows:  & 'C:\Program Files\Git\cmd\git.exe'      & 'C:\Program Files\nodejs\node.exe'
 macOS:    git and node are on PATH once installed
 ```
 
-**The macOS row of that table is untested.** Both trial machines already had git and Node, so
-this step has only ever run on Windows. If it fails on a Mac, say so and stop rather than
-improvising an install — that improvisation is what the pinned addresses exist to prevent.
+**The macOS row is untested** — both trial machines already had git and Node. If it fails
+there, say so and stop rather than improvising an install.
 
 **3. Clone all three repositories — or update them if they are already here.** A student may be
 re-running this after a failure, and the point of a re-run is usually that a fix has been
@@ -126,46 +103,33 @@ the student.
 
 ### On Windows, one more step, and skipping it breaks everything after it
 
-**Cloning on Windows needs elevation, and elevation is what causes the problem.** You have no
-network without it, so the clone escalates; escalation runs as the student, who is in the
-Administrators group; and Windows gives what an elevated Administrators member creates to
-`BUILTIN\Administrators`. Every command after the clone runs unescalated, as a different
-account, and git refuses a repository owned by somebody else:
+Cloning needs the network, the network needs elevation, and elevation runs as the student — who
+is in the Administrators group, so Windows gives what they create to `BUILTIN\Administrators`.
+Everything afterwards runs unescalated as a different account, and git refuses a repository
+owned by somebody else with `fatal: detected dubious ownership`.
 
-```
-fatal: detected dubious ownership in repository at '...'
-```
-
-**So, on Windows only, while you are still elevated**, register the folder as safe — one line,
-**forward slashes**, the full path to `<parent>`, with `/*` on the end:
+**While you are still elevated**, register the folder as safe — one line, forward slashes, the
+full path to `<parent>` with `/*` on the end:
 
 ```
 git config --global --add safe.directory C:/Users/<them>/Documents/si212/*
 ```
 
-The trailing `/*` covers every repository under that folder, which is all three of them and
-anything added later. **Never plain `safe.directory *`** — that switches the check off for
-every repository on their machine, for the rest of its life, to solve a problem with one
-folder.
+The `/*` covers every repository under the folder. **Never plain `safe.directory *`**, which
+switches the check off for every repository on the machine for the rest of its life.
 
-**Do this on every Windows run, not only after a fresh clone.** It is the step that repairs a
-student who moved their course folder: the entry names an absolute path, so a folder dragged to
-an external drive, into OneDrive, or onto a new laptop stops matching and git refuses again.
-Running setup a second time is the documented repair, and it only repairs anything if this step
-runs when the repositories already exist. Adding an entry that is already there is harmless.
+**From the elevated side, and on every Windows run — not only after a fresh clone.** The entry
+belongs in the student's `.gitconfig`, which the unescalated account cannot write; attempted
+from the wrong side it fails silently and leaves the clones looking finished. And because the
+entry names an absolute path, a student who moves their course folder breaks it — re-running
+setup is the repair, which only works if this runs when the clones already exist. Re-adding an
+existing entry is harmless.
 
-**It has to be done from the elevated side.** The entry belongs in the student's own
-`.gitconfig`, in their home folder, and the unescalated account cannot write there — that is
-the whole reason this is a step and not something the agent works out later. An attempt from
-the wrong side fails silently, leaves the clones looking finished, and surfaces at the doctor
-as something else entirely. That happened on 2026-08-26.
+**Nothing else about those clones is wrong.** Files inside them can be written unescalated, so
+the ownership is cosmetic once git accepts it. Do not change ownership, do not run `icacls` or
+`takeown`, and do not ask the student to turn on Full access.
 
-**Nothing else is wrong with those clones.** Files inside them can be written unescalated —
-`tour.md`, `notes.md`, everything the course does later — so the ownership is cosmetic once git
-has been told to accept it. Do not change ownership, do not run `icacls` or `takeown`, and do
-not ask the student to turn on Full access.
-
-**On macOS none of this applies.** No elevation, no ownership split, no `safe.directory`.
+**On macOS none of this applies.**
 
 **4. Rename the remote on the two student repositories.** Not on `course-materials`:
 
@@ -193,26 +157,18 @@ git -C <repo> config user.email "<uniqname>@umich.edu"
 > From now on, whenever your work gets saved into the course's record of it, your name goes on
 > it — that's how your instructor knows which work is yours. What name would you like on it?
 
-**Send that wording, not a version of it.** It is a script, not a description of one. On
-2026-08-26 this instruction was written as prose describing what to convey, and the agent
-summarised the description instead of performing it — asking _"What name should appear on your
-course work?"_, which is almost exactly the sentence the rewrite existed to remove, and which
-had already confused a reader who has been at this university for thirty years. Compressing
-"ask for their name" back to one line lands on that phrasing every time. The quoted block
-survives because there is nothing in it to compress.
+**Send that wording, not a version of it.** Reworded to your own phrasing it comes out as "what
+name should appear on your course work?", which means nothing to someone who has not yet learnt
+what gets saved where.
 
-**Then, and only after they answer, ask for the uniqname as its own question:**
+**Then, and only after they answer:**
 
 > And your uniqname — the part of your U-M email before the @?
 
-Both in one breath reads as a single question with two halves and gets answered as neither.
+Both in one breath reads as one question with two halves and gets answered as neither.
 
-**Build the address from the uniqname; do not ask for an email.** Their umich address is what
-attaches this work to their GitHub account in week 2. That is a reason to use it, not a thing
-to explain today.
-
-Without any of this, git refuses to record the first piece of work, or invents an identity from
-the machine's hostname.
+**Build the address from the uniqname; do not ask for an email.** Without an identity git
+refuses to record their first piece of work, or invents one from the machine's hostname.
 
 **6. Check the phases.** Run `node course-materials/workflows/bootstrap/tools/doctor.mjs` and
 show its complete output, unedited. It should report **reached 3 of 7 — Repositories**.

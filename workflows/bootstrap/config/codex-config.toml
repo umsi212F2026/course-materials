@@ -8,18 +8,16 @@
 # being asked to check the output carefully.
 #
 # `model` and `model_reasoning_effort` are STARTING defaults, not course requirements. They are
-# set here only so all 48 students begin in the same known place rather than on whatever the
-# app defaults to that week. Students change both from beside the message box, and choosing a
-# model against a token budget is part of the course.
+# set here so all 48 students begin in the same known place rather than on whatever the app
+# defaults to that week. Students change both from beside the message box, and choosing a model
+# against a token budget is part of the course.
 #
-# They start cheap on purpose. Raising it is a decision a student makes when a task needs it,
-# which is a better lesson than starting high and never noticing. First-day setup measured at
-# about twelve cents on these settings, against about a dollar sixteen for the same work on a
-# heavier model - both on 2026-08-26, both reaching the same place.
+# They start cheap on purpose - raising it when a task needs it is a better lesson than starting
+# high and never noticing. First-day setup costs about twelve cents on these settings and about
+# a dollar sixteen on a heavier model, for the same result.
 #
-# The effort is pinned here rather than left to the app because it is roughly half of what
-# determines a bill and nothing records it: the setup check reports the model and no log
-# anywhere names the effort, so a run without this line cannot be compared with another one.
+# The effort is pinned rather than left to the app because it is roughly half of what determines
+# a bill and nothing else records it anywhere.
 #
 # `name` is what shows at the bottom left of the app window, so it doubles as the visible
 # proof that this file is installed and working.
