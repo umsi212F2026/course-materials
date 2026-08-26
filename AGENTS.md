@@ -3,6 +3,24 @@
 Always-on context for any agent working in this repository. Kept short deliberately: every line
 here costs context in every session.
 
+## This repository is public
+
+Everything on `main` is world-readable, permanently. Forks and caches mean a thing published by
+mistake cannot be unpublished — so material that is not ready, or not for students, is kept on
+a branch that is never pushed.
+
+**A private branch is never merged.** Not into `main`, not into an integration branch, not with
+`/land`. Merging carries the branch's whole history across, including everything written while
+thinking, and that is the one move nobody can undo.
+
+To move work from a private branch into the public one, copy the finished files over on a fresh
+commit — `git checkout <branch> -- <path>` — or cherry-pick the specific commits meant to be
+seen. Never `git merge`, and never `git push --all` or `--mirror`, which push every branch
+regardless.
+
+If you are asked to merge and the branch looks like private work, say so and ask rather than
+doing it.
+
 ## Working with someone else's files
 
 **Ask before you edit a file they may have open, and before you run a merge.** "Have you saved

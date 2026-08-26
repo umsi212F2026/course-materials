@@ -21,8 +21,24 @@ worktree cannot perform it.
 - **It does not close the worktree's VS Code window** (a skill can't) — it reminds you to,
   because `/teardown` misbehaves on an open window.
 - **It does not remove the worktree** (that's `/teardown`).
-- **It does not push.** This repo has no remote. Everything integrates locally, and there is
-  nowhere to push to.
+- **It does not push.** Landing is a local merge. Pushing is a separate, deliberate act.
+- **It does not land a private branch.** See below — this is a refusal, not a caution.
+
+## Private branches are not landed
+
+**This repository is public.** Work that is not ready, or not for students — an unreleased
+assignment, notes about a particular student, a rubric — is kept on a branch that is never
+pushed and never merged.
+
+Merging is what makes it public: it carries the branch's whole history onto `main`, including
+everything written on the way, and no later commit takes that back.
+
+**So: if the branch looks like private work, stop and say so.** Ask rather than assume. What
+should reach `main` is copied across as a fresh commit — `git checkout <branch> -- <path>` — or
+cherry-picked commit by commit. Never merged.
+
+The awkward part is that this skill exists to merge, so the reflex and the rule point opposite
+ways. That is exactly why it is written down here rather than left to be remembered.
 
 ## Procedure
 
