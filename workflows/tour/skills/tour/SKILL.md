@@ -31,37 +31,41 @@ sentence before you do it.
 
 ## What you do, in order
 
-**1. Open with exactly this, before you explain anything:**
+**1. Send exactly this, as one message, and wait for their answer:**
 
 > Last thing, and it's a small test. Everything so far was installed separately — this checks
 > that the pieces can actually find each other, which is the sort of thing that looks fine
 > until the first time something needs them at once. When it works you'll have a file in your
 > own folder, with your own words in it, written by a program rather than by me.
+>
+> So: what are you hoping to get out of this course? A sentence or two is plenty.
 
-**Send that wording, not a version of it.** It is a script, not a description of one. The
-question about the student's name, earlier in the setup, was written as a description on
-2026-08-26 and the agent summarised it back into the exact phrasing the rewrite existed to
-remove. Assume this would go the same way — a quoted block survives because there is nothing in
-it to compress.
+**The framing and the question are one message, and that is deliberate.** They were two steps
+until 2026-08-26, when a run read this file, read the guide, and then asked the question with
+no framing at all — not paraphrased, skipped. The pattern is worth knowing because it will
+recur: **an agent keeps what it needs and drops what only the reader needs.** It could not
+proceed without the answer, so the question survived; nothing downstream depended on the
+explanation, so the explanation went. Fused, the explanation cannot be dropped without losing
+the answer.
 
-**Do not open with the four parts.** A student who is handed _guide, skill, script, data
-directory_ before they know why has been given a taxonomy of nothing, and both runs on
-2026-08-26 opened exactly that way. The vocabulary is worth having, but it only means anything
-once it is attached to something they watched happen.
+**Send that wording, not a version of it**, and do not open with the four parts instead. A
+student handed _guide, skill, script, data directory_ before they know why has been given a
+taxonomy of nothing. The vocabulary is worth having, and step 2 is where it lands — on
+something that just happened rather than on nothing.
 
-**2. Read the guide with them.** Open [`tour.md`](workflows/tour/guides/tour.md) and walk
-through it — a guide, a skill, a script, and a data directory. Do not paste it at them
-wholesale. Take the four parts one at a time and say which one you are, which one the file they
-are reading is, and which one you are about to run.
+Do not coach their answer, do not improve it, and do not ask a second question. This is the
+only thing in the whole setup that is theirs rather than the machine's.
+
+**2. Once they have answered, read the guide with them.** Open
+[`tour.md`](workflows/tour/guides/tour.md) and walk through it — a guide, a skill, a script,
+and a data directory. Do not paste it at them wholesale. Take the four parts one at a time and
+say which one you are, which one the file they are reading is, and which one you are about to
+run.
 
 Tell them where you are: name `<data-dir>` out loud, and say that you were told it rather than
 finding it yourself.
 
-**3. Ask them one question.** _What are you hoping to get out of this course?_ One or two
-sentences is plenty. Do not coach the answer, do not improve it, and do not ask a second
-question — this is the only thing in the whole setup that is theirs rather than the machine's.
-
-**4. Run the script.** Pass their answer through unedited:
+**3. Run the script.** Pass their answer through unedited:
 
 ```
 node workflows/tour/tools/tour.mjs --dir <data-dir> --answer "<what they said>"
@@ -70,11 +74,11 @@ node workflows/tour/tools/tour.mjs --dir <data-dir> --answer "<what they said>"
 Show its output. It prints the paths it actually resolved, and those are the point: the course
 materials found relative to the script itself, the data directory taken as an argument.
 
-**5. Have them open the file.** It is at `<data-dir>/tour.md`. They open it themselves, in
+**4. Have them open the file.** It is at `<data-dir>/tour.md`. They open it themselves, in
 their editor — you do not read it to them. This is the first time they will look at one of
 their own files directly, and it is worth the thirty seconds.
 
-**6. Say what just happened, in three sentences.** A guide explained it, a skill directed it, a
+**5. Say what just happened, in three sentences.** A guide explained it, a skill directed it, a
 script did the exact part. Say the test passed, in those words — you opened by calling it a
 test, and a test nobody is told the result of is just a chore. Then stop.
 

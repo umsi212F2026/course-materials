@@ -24,22 +24,52 @@ what you cloned.
 
 ## What you do, in order
 
-**1. Check what is already here.** Report which of git and Node.js are installed, and their
-versions. Install nothing yet.
+**1. Check what is already here — by looking, not by asking the shell.** `git --version` and
+`node --version` are **not** the check. Neither is on the sandbox account's `PATH` even when
+both are installed, so asking the shell reports "missing" for software that is sitting on the
+disk. Look for the files:
+
+```
+Windows:  C:\Program Files\Git\cmd\git.exe
+          %LOCALAPPDATA%\Programs\Git\cmd\git.exe
+          C:\Program Files\nodejs\node.exe
+macOS:    git and node on PATH is a fair test
+```
+
+Then report what you found and its version, running it by full path. Install nothing yet.
+
+This is not a hypothetical. On 2026-08-26 a run offered to install git **and** Node onto a
+machine that already had both, because it asked the shell — two downloads, two waits and two
+interruptions bought nothing.
 
 **2. Install what is missing.** git and Node, and nothing else — the editors come later, and
-the GitHub CLI is not needed until week 2. Tell the student before each install and wait for
-approval.
+the GitHub CLI is not needed until week 2.
+
+**Say what you are about to do, in one sentence, and then do it. Do not ask.** "Installing git,
+which is what downloads the course files" — and then install it. **Do not ask _may I_, do not
+offer a choice, and do not wait for a reply in the conversation.** If the machine needs
+permission it will put up its own prompt, and that is one click.
+
+A question in the chat is not a small thing. It is a round trip that stops the student until
+they notice and answer, and the app runs a second agent over the whole conversation to assess
+each approval, so it costs twice. On 2026-08-26 three such questions turned ten minutes of work
+into thirty-three. And an agent that asks whether it may do the thing it was just told to do
+teaches a student that it needs supervising for its own instructions, on the day they are least
+able to judge that.
 
 git has to come first and it is not optional: without it there is nothing to clone with. Node
 can wait until after the clones if that is easier, but the doctor cannot run without it.
 
 **Download from these addresses. Do not ask an API which version is current.**
 
-| Platform | git                                                                       | Node                                                     |
-| -------- | ------------------------------------------------------------------------- | -------------------------------------------------------- |
-| Windows  | `Git-2.55.0-64-bit.exe` from git-for-windows' `v2.55.0.windows.5` release | `node-v24.20.0-x64.msi` from `nodejs.org/dist/v24.20.0/` |
-| macOS    | `xcode-select --install` — git ships with the command line tools          | `node-v24.20.0.pkg` from the same path                   |
+| Platform | git                                                                         | Node                                                     |
+| -------- | --------------------------------------------------------------------------- | -------------------------------------------------------- |
+| Windows  | `Git-2.55.0.5-64-bit.exe` from git-for-windows' `v2.55.0.windows.5` release | `node-v24.20.0-x64.msi` from `nodejs.org/dist/v24.20.0/` |
+| macOS    | `xcode-select --install` — git ships with the command line tools            | `node-v24.20.0.pkg` from the same path                   |
+
+Note the git filename: four version components, because Git for Windows folds the `.windows.5`
+of the tag into the file's own version. It is not a typo, and an earlier version of this table
+had it wrong.
 
 **Why pinned, and the editor downloads later in the setup are pinned for the same reason:**
 `api.github.com` allows sixty requests an hour from one address, and a room full of students
@@ -49,8 +79,13 @@ the editors, and the failure looks like a network problem rather than a rate lim
 `api.github.com/repos/git-for-windows/git/releases/latest` and `nodejs.org/dist/index.json`
 unprompted — the instinct is strong, so the addresses have to be here.
 
-If a pinned address 404s, the release was withdrawn; only then ask the project for its current
-version, and say that you did.
+**If a pinned address 404s, it no longer resolves — and why is not something you can know.**
+The release may have been withdrawn, the asset may have been renamed, or the address in this
+file may simply be wrong; all three have the same remedy and only one of them is anybody's
+fault. Only then ask the project for its current version, take the equivalently-named asset,
+and say plainly what you asked and what you found. Do not assert a cause. On 2026-08-26 this
+clause said "the release was withdrawn", the run repeated it, and the truth was a wrong
+filename here.
 
 **`PATH` does not update in a session that is already running.** This is not a Windows quirk to
 work around once — it will happen every time. After installing git, `git` will still not be

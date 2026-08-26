@@ -24,9 +24,15 @@ Zettlr's own configuration, which lives outside any workspace.
 reading and writing their own notes and goals directly, rather than only ever seeing them
 through an agent. Camunda Modeler is for drawing workflow diagrams later in the term.
 
-**2. Install Zettlr, but do not open it yet.** Tell them before you start and wait for
-approval. Step 3 writes Zettlr's configuration file, and it has to be written before Zettlr's
-first launch — so download, install, and stop.
+**2. Install Zettlr, but do not open it yet.** Step 3 writes Zettlr's configuration file, and
+it has to be written before Zettlr's first launch — so download, install, and stop.
+
+**Say what you are about to do, in one sentence, and then do it. Do not ask.** "Installing
+Zettlr now" — and install it. Not _may I install Zettlr?_ The machine puts up its own prompt if
+it needs permission, and that is one click; a question in the chat stops the student until they
+notice and reply, and the app runs a second agent over the whole conversation to assess each
+approval, so it costs twice. Three such questions on 2026-08-26 turned ten minutes of work into
+thirty-three.
 
 Download the version this course pins, from the project's own releases:
 
@@ -41,11 +47,13 @@ each under `https://github.com/Zettlr/Zettlr/releases/download/v4.7.0/`.
 Do not use the download buttons on `zettlr.com`. Those addresses serve a web page, not a file,
 and downloading one gets you HTML named like an installer.
 
-**If a pinned address returns 404**, the release was withdrawn. Only then, ask
-`https://api.github.com/repos/Zettlr/Zettlr/releases/latest` for the current version and take
-the equally-named asset from it — and carry that version number into step 3, which needs to
-match what you actually installed. Do not reach for the API first: it allows sixty requests an
-hour from one address, and a room full of students shares one.
+**If a pinned address returns 404, it no longer resolves — and why is not something you can
+know.** Withdrawn release, renamed asset, or a mistake in this file; same remedy for all three.
+Only then, ask `https://api.github.com/repos/Zettlr/Zettlr/releases/latest` for the current
+version and take the equivalently-named asset — and carry that version number into step 3,
+which needs to match what you actually installed. Say what you asked and what you found, and do
+not assert a cause. Do not reach for the API first: it allows sixty requests an hour from one
+address, and a room full of students shares one.
 
 On a Mac this is a `.dmg` to mount, with one application to copy into `/Applications`. On
 Windows the `.exe` is a wizard; `/S` runs it without one, installing under the student's own
