@@ -26,22 +26,81 @@ Zettlr's own configuration, which lives outside any workspace.
 reading and writing their own notes and goals directly, rather than only ever seeing them
 through an agent. Camunda Modeler is for drawing workflow diagrams later in the term.
 
-**2. Install Zettlr.** Tell them before you start and wait for approval. On a Mac this is a
-`.dmg` to mount and an application to copy into `/Applications`; on Windows it is an installer.
-`TO VERIFY — the download URL on each platform, and whether the Mac copy needs an admin password.`
+**2. Install Zettlr, but do not open it yet.** Tell them before you start and wait for
+approval. Step 3 writes Zettlr's configuration file, and it has to be written before Zettlr's
+first launch — so download, install, and stop.
 
-**3. Set Zettlr to autosave on a short delay.** In its settings, saving is one of manual,
-immediate, or a short delay. Choose the **short delay**.
+Download the version this course pins, from the project's own releases:
+
+| Platform | File |
+| --- | --- |
+| Mac, Apple Silicon | `Zettlr-4.7.0-arm64.dmg` |
+| Mac, Intel | `Zettlr-4.7.0-x64.dmg` |
+| Windows | `Zettlr-4.7.0-x64.exe` |
+
+each under `https://github.com/Zettlr/Zettlr/releases/download/v4.7.0/`.
+
+Do not use the download buttons on `zettlr.com`. Those addresses serve a web page, not a file,
+and downloading one gets you HTML named like an installer.
+
+**If a pinned address returns 404**, the release was withdrawn. Only then, ask
+`https://api.github.com/repos/Zettlr/Zettlr/releases/latest` for the current version and take
+the equally-named asset from it — and carry that version number into step 3, which needs to
+match what you actually installed. Do not reach for the API first: it allows sixty requests an
+hour from one address, and a room full of students shares one.
+
+On a Mac this is a `.dmg` to mount, with one application to copy into `/Applications`. On
+Windows the `.exe` is a wizard; `/S` runs it without one, installing under the student's own
+account.
+
+**Neither platform should ask for an administrator password.** If a Mac does, that account is
+not an administrator of its own machine — stop, and see the rule below. On Windows, the
+installer offers to install for all users, which does ask; take the default instead.
+
+**3. Set Zettlr to autosave on a short delay,** by writing its configuration file before Zettlr
+has ever been opened:
+
+- Mac: `~/Library/Application Support/Zettlr/config.json`
+- Windows: `%APPDATA%\Zettlr\config.json`
+
+Create the folder if it isn't there, and write exactly:
+
+```json
+{ "version": "4.7.0", "editor": { "autoSave": "delayed" } }
+```
+
+Zettlr merges this over its own defaults, so the two keys are all it needs. `"delayed"` saves
+five seconds after the student stops typing.
+
+**The `version` line is not decoration — leave it in, and keep it equal to the version you
+installed.** On first launch Zettlr runs a welcome wizard, and that wizard's autosave question
+has only two answers: manual, or save immediately. There is no short-delay button on it. A
+version that matches the installed app tells Zettlr this is not a first launch, and the wizard
+never appears. Get it wrong and the student is shown a screen whose only working choice is the
+one this step exists to avoid.
 
 Say why in one sentence, because it is a real thing they will meet: the agent and the student
 both write files in this course, and unsaved work in an editor is invisible to everything
 outside it. Short delay rather than immediate, because immediate puts half-typed sentences on
 disk and the agent reads those files too.
 
-`TO VERIFY — where Zettlr keeps this preference, so it can be set by writing the file rather than by talking someone through a settings pane.`
+**4. Install Camunda Modeler.** Same pinned shape, from
+`https://github.com/camunda/camunda-modeler/releases/download/v5.50.1/`:
 
-**4. Install Camunda Modeler.** Same shape. It is not needed for weeks, so if it fails, that is
-the least costly failure in the whole setup.
+| Platform | File |
+| --- | --- |
+| Mac, Apple Silicon | `camunda-modeler-5.50.1-mac-arm64.dmg` |
+| Mac, Intel | `camunda-modeler-5.50.1-mac-x64.dmg` |
+| Windows | `camunda-modeler-5.50.1-win-x64.zip` |
+
+Same 404 rule as Zettlr, against `camunda/camunda-modeler`. No configuration to write here.
+
+**On Windows this is a zip, not an installer** — Camunda ships no Windows installer at all.
+Unpack it to `%LOCALAPPDATA%\Programs\camunda-modeler`, alongside where Zettlr installs itself,
+so there is one place to look for either of them.
+
+It is not needed for weeks, so if it fails, that is the least costly failure in the whole
+setup.
 
 **5. Check the phase.** Run `node course-materials/workflows/bootstrap/tools/doctor.mjs`. It
 should report **reached 6 of 7 — Editors**.

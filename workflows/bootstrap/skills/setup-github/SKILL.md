@@ -76,11 +76,24 @@ reconcile.
 **5. Add the teaching team to `assignments` only.**
 
 ```
-gh api -X PUT repos/<username>/si212-assignments-<uniqname>/collaborators/<instructor> \
+gh api -X PUT repos/<username>/si212-assignments-<uniqname>/collaborators/presnick \
   -f permission=push
 ```
 
-`TO VERIFY — the teaching team's GitHub usernames, and whether to add individuals or a team.`
+`presnick` is the whole teaching team this term. Add individuals, one call each — a repository
+in someone's personal account cannot grant access to a GitHub team at all, only to named people.
+
+`push` is not a choice either. A private repository owned by a personal account has exactly two
+tiers, owner and collaborator, and a collaborator gets write access; read-only is not on offer.
+
+**This sends an invitation, not access.** It is accepted on the instructor's side, so the
+student is finished the moment the call succeeds and should not be told to wait for anything.
+The check below counts an unaccepted invitation as done, for the same reason.
+
+**Do not skip this step, and do not carry on if it errors.** It is the only thing in setup that
+the student alone can repair: nobody on the teaching team can add themselves to a repository in
+a student's account afterwards. A failure discovered now costs one retry; discovered at grading
+in week 3 it costs an email to that student and a late submission.
 
 **Do not offer to do the same for `learning-topics`, and do not ask whether they want to.**
 That repository is theirs and the teaching team does not see it. It is a record of learning,

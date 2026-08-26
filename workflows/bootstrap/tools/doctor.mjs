@@ -229,18 +229,87 @@ smoke('the tour ran', () => {
 
 const editors = phase(6, 'Editors');
 
+// Where an installed application lives, per platform.
+//
+// On a Mac both are an app bundle dragged into /Applications, and `setup-editors` puts them
+// there. On Windows there is no single answer, so look in every place the student could
+// plausibly have ended up and pass if any of them exists:
+//
+//   - Zettlr's installer is NSIS with perMachine:false, so its default is the per-user
+//     %LOCALAPPDATA%\Programs\Zettlr. But it also sets allowElevation and
+//     allowToChangeInstallationDirectory, so a student who clicked through the wizard rather
+//     than taking the silent install may have put it in Program Files instead. Both are a
+//     working install; neither should fail this check.
+//   - Camunda ships no Windows installer at all, only a zip, so its location is entirely
+//     whatever `setup-editors` chose to unpack it to. Keep these two in step: if that skill's
+//     destination changes, this is the other end of the same decision.
+//
+// Anything that is neither macOS nor Windows is not a platform this course supports, and
+// saying so is more use than a check that silently passes.
+
 const mac = platform() === 'darwin';
+const windows = platform() === 'win32';
 
-editors('Markdown editor', () => {
-  if (!mac) notYet('TO VERIFY: how to detect this on Windows');
-  if (!existsSync('/Applications/Zettlr.app')) notYet('Zettlr not installed');
-  return 'Zettlr';
-});
+const programs = (...rest) => {
+  const roots = [process.env.LOCALAPPDATA && join(process.env.LOCALAPPDATA, 'Programs'), process.env.PROGRAMFILES];
+  return roots.filter(Boolean).map((root) => join(root, ...rest));
+};
 
-editors('BPMN editor', () => {
-  if (!mac) notYet('TO VERIFY: how to detect this on Windows');
-  if (!existsSync('/Applications/Camunda Modeler.app')) notYet('Camunda Modeler not installed');
-  return 'Camunda Modeler';
+const installed = (label, macPath, winPaths) => () => {
+  if (mac) {
+    if (!existsSync(macPath)) notYet(`${label} not installed`);
+  } else if (windows) {
+    if (!winPaths().some(existsSync)) notYet(`${label} not installed`);
+  } else {
+    notYet(`${platform()} is not a supported platform — tell your instructor`);
+  }
+  return label;
+};
+
+editors(
+  'Markdown editor',
+  installed('Zettlr', '/Applications/Zettlr.app', () => programs('Zettlr', 'Zettlr.exe')),
+);
+
+editors(
+  'BPMN editor',
+  installed('Camunda Modeler', '/Applications/Camunda Modeler.app', () =>
+    programs('camunda-modeler', 'Camunda Modeler.exe'),
+  ),
+);
+
+// Zettlr's autosave setting, which `setup-editors` writes into Zettlr's own configuration file
+// before Zettlr's first launch.
+//
+// This is checked and not merely assumed because the step can fail silently. Zettlr shows a
+// welcome wizard on first launch, and that wizard's autosave question offers only "manually"
+// and "immediately" — there is no short-delay answer on it. Writing the file first sets the
+// preference AND suppresses the wizard; if the write did not happen, the student is shown a
+// screen whose only working choice is the one the step exists to avoid, and nothing downstream
+// would notice. An install that is present but unconfigured is the failure this catches.
+//
+// A wrong value is a FAIL rather than a `not yet`: the file only exists because something wrote
+// it, so a value other than "delayed" means setup ran and produced the wrong state.
+
+const zettlrConfig = mac
+  ? join(homedir(), 'Library', 'Application Support', 'Zettlr', 'config.json')
+  : process.env.APPDATA && join(process.env.APPDATA, 'Zettlr', 'config.json');
+
+editors('Zettlr autosave', () => {
+  if (!mac && !windows) notYet(`${platform()} is not a supported platform — tell your instructor`);
+  if (!zettlrConfig || !existsSync(zettlrConfig)) notYet('Zettlr not configured yet');
+
+  let config;
+  try {
+    config = JSON.parse(readFileSync(zettlrConfig, 'utf8'));
+  } catch {
+    throw new Error('Zettlr config.json is not valid JSON — it may have been hand-edited');
+  }
+
+  const autoSave = config.editor?.autoSave;
+  if (autoSave === 'delayed') return 'saves a few seconds after you stop typing';
+  if (autoSave === undefined) throw new Error('no autosave setting written — re-run setup-editors');
+  throw new Error(`set to "${autoSave}", should be "delayed" — re-run setup-editors`);
 });
 
 // --- 7. Remote -------------------------------------------------------------
@@ -276,6 +345,72 @@ for (const name of ['learning-topics', 'assignments']) {
     return name === 'assignments' ? url : 'published';
   });
 }
+
+// The teaching team, by GitHub username. One person this term; kept as a list so that adding
+// someone is an edit to this line rather than a change of shape.
+//
+// WHY THIS IS CHECKED AT ALL. Adding the teaching team to `assignments` is the one grant in the
+// whole design that positively must happen, it is a single API call that can fail quietly, and
+// — because a repository owned by a personal account has only two tiers, owner and collaborator,
+// with no admin tier — the student is the only person who can ever repair it. Unchecked, a
+// student who skipped or fumbled step 5 of `setup-github` is discovered at grading in week 3,
+// one at a time, and the fix is an email asking them to run a command. The counterpart check
+// below verifies the negative (that `learning-topics` was NOT shared); this verifies the
+// positive, and both are needed.
+//
+// `not yet` rather than a failure when nobody has been added: that is a student part-way
+// through week 2, not a broken machine. It still holds the phase frontier back, so
+// `setup-github`'s own "reached 7 of 7" check is what catches it — at setup time, which is the
+// whole point.
+
+const teachingTeam = ['presnick'];
+
+remote('teaching team can read assignments', () => {
+  const dir = repos['assignments'];
+  if (!existsSync(dir)) notYet('repository not cloned yet');
+  let url;
+  try {
+    url = gitIn(dir, ['remote', 'get-url', 'origin']);
+  } catch {
+    notYet('no personal remote yet — this happens in week 2');
+  }
+  const slug = /github\.com[/:]([^/]+\/[^/.]+)/.exec(url);
+  if (!slug) notYet(`cannot tell from this remote (${url.replace(/\/\/[^@]*@/, '//')})`);
+
+  const logins = (endpoint, jq) => {
+    return run('gh', ['api', `repos/${slug[1]}/${endpoint}`, '--jq', jq])
+      .split('\n')
+      .filter(Boolean)
+      .map((n) => n.toLowerCase());
+  };
+
+  // Adding a collaborator to a personal repository sends an invitation rather than granting
+  // access outright, so someone who has been added but has not yet accepted appears only in
+  // the second list. That is the student's obligation discharged: they are not left failing a
+  // check that only their instructor can clear.
+  let have;
+  try {
+    have = logins('collaborators', '.[].login');
+  } catch {
+    notYet('not checked — needs the GitHub CLI, signed in');
+  }
+  let invited = [];
+  try {
+    invited = logins('invitations', '.[].invitee.login');
+  } catch {
+    // An unreadable invitation list is not evidence of anything; fall back to what we know.
+  }
+
+  const wanted = teachingTeam.map((n) => n.toLowerCase());
+  const missing = wanted.filter((n) => !have.includes(n) && !invited.includes(n));
+  if (missing.length === wanted.length) notYet('not added yet — this is step 5 of setup-github');
+  if (missing.length)
+    throw new Error(`${missing.join(', ')} still missing — re-run step 5 of setup-github`);
+
+  const pending = wanted.filter((n) => !have.includes(n));
+  if (pending.length) return `invited ${pending.join(', ')} — not accepted yet, which is fine`;
+  return teachingTeam.join(', ');
+});
 
 remote(
   'learning-topics is private to you',
