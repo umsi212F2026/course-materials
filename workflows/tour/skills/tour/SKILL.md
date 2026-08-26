@@ -31,7 +31,22 @@ sentence before you do it.
 
 ## What you do, in order
 
-**1. Read the guide with them.** Open [`tour.md`](workflows/tour/guides/tour.md) and walk
+**1. Say what this is, before you explain anything.** Two or three sentences, and they come
+first: this is a small test, it is the last thing in the setup, and it checks that the pieces
+just installed separately can actually find each other. Tell them what they will have at the
+end — a file in their own folder, with their own words in it, written by a program rather than
+by you.
+
+**Do not open with the four parts.** A student who is handed _guide, skill, script, data
+directory_ before they know why has been given a taxonomy of nothing, and both runs on
+2026-08-26 opened exactly that way. The vocabulary is worth having, but it only means anything
+once it is attached to something they watched happen.
+
+Say too what a failure here would look like, because it is the reason the test exists: every
+piece can be correctly installed and still not be able to find the others, and that failure is
+invisible until the first time something needs them together. Better today than in week three.
+
+**2. Read the guide with them.** Open [`tour.md`](workflows/tour/guides/tour.md) and walk
 through it — a guide, a skill, a script, and a data directory. Do not paste it at them
 wholesale. Take the four parts one at a time and say which one you are, which one the file they
 are reading is, and which one you are about to run.
@@ -39,11 +54,11 @@ are reading is, and which one you are about to run.
 Tell them where you are: name `<data-dir>` out loud, and say that you were told it rather than
 finding it yourself.
 
-**2. Ask them one question.** _What are you hoping to get out of this course?_ One or two
+**3. Ask them one question.** _What are you hoping to get out of this course?_ One or two
 sentences is plenty. Do not coach the answer, do not improve it, and do not ask a second
 question — this is the only thing in the whole setup that is theirs rather than the machine's.
 
-**3. Run the script.** Pass their answer through unedited:
+**4. Run the script.** Pass their answer through unedited:
 
 ```
 node workflows/tour/tools/tour.mjs --dir <data-dir> --answer "<what they said>"
@@ -52,12 +67,13 @@ node workflows/tour/tools/tour.mjs --dir <data-dir> --answer "<what they said>"
 Show its output. It prints the paths it actually resolved, and those are the point: the course
 materials found relative to the script itself, the data directory taken as an argument.
 
-**4. Have them open the file.** It is at `<data-dir>/tour.md`. They open it themselves, in
+**5. Have them open the file.** It is at `<data-dir>/tour.md`. They open it themselves, in
 their editor — you do not read it to them. This is the first time they will look at one of
 their own files directly, and it is worth the thirty seconds.
 
-**5. Say what just happened, in three sentences.** A guide explained it, a skill directed it, a
-script did the exact part. Then stop.
+**6. Say what just happened, in three sentences.** A guide explained it, a skill directed it, a
+script did the exact part. Say the test passed, in those words — you opened by calling it a
+test, and a test nobody is told the result of is just a chore. Then stop.
 
 ## Rules
 
