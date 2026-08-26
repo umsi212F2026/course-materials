@@ -31,20 +31,23 @@ sentence before you do it.
 
 ## What you do, in order
 
-**1. Say what this is, before you explain anything.** Two or three sentences, and they come
-first: this is a small test, it is the last thing in the setup, and it checks that the pieces
-just installed separately can actually find each other. Tell them what they will have at the
-end — a file in their own folder, with their own words in it, written by a program rather than
-by you.
+**1. Open with exactly this, before you explain anything:**
+
+> Last thing, and it's a small test. Everything so far was installed separately — this checks
+> that the pieces can actually find each other, which is the sort of thing that looks fine
+> until the first time something needs them at once. When it works you'll have a file in your
+> own folder, with your own words in it, written by a program rather than by me.
+
+**Send that wording, not a version of it.** It is a script, not a description of one. The
+question about the student's name, earlier in the setup, was written as a description on
+2026-08-26 and the agent summarised it back into the exact phrasing the rewrite existed to
+remove. Assume this would go the same way — a quoted block survives because there is nothing in
+it to compress.
 
 **Do not open with the four parts.** A student who is handed _guide, skill, script, data
 directory_ before they know why has been given a taxonomy of nothing, and both runs on
 2026-08-26 opened exactly that way. The vocabulary is worth having, but it only means anything
 once it is attached to something they watched happen.
-
-Say too what a failure here would look like, because it is the reason the test exists: every
-piece can be correctly installed and still not be able to find the others, and that failure is
-invisible until the first time something needs them together. Better today than in week three.
 
 **2. Read the guide with them.** Open [`tour.md`](workflows/tour/guides/tour.md) and walk
 through it — a guide, a skill, a script, and a data directory. Do not paste it at them

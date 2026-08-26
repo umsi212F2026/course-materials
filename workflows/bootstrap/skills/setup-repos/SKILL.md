@@ -101,17 +101,23 @@ account, and git refuses a repository owned by somebody else:
 fatal: detected dubious ownership in repository at '...'
 ```
 
-**So, on Windows only, while you are still elevated from the clone**, register the three
-repositories as safe, one line each, with **forward slashes** and the full path:
+**So, on Windows only, while you are still elevated**, register the folder as safe — one line,
+**forward slashes**, the full path to `<parent>`, with `/*` on the end:
 
 ```
-git config --global --add safe.directory C:/Users/<them>/.../course-materials
-git config --global --add safe.directory C:/Users/<them>/.../learning-topics
-git config --global --add safe.directory C:/Users/<them>/.../assignments
+git config --global --add safe.directory C:/Users/<them>/Documents/si212/*
 ```
 
-**Three named paths. Never `safe.directory *`** — that switches the check off for every
-repository on their machine, for the rest of its life, to solve a problem with three folders.
+The trailing `/*` covers every repository under that folder, which is all three of them and
+anything added later. **Never plain `safe.directory *`** — that switches the check off for
+every repository on their machine, for the rest of its life, to solve a problem with one
+folder.
+
+**Do this on every Windows run, not only after a fresh clone.** It is the step that repairs a
+student who moved their course folder: the entry names an absolute path, so a folder dragged to
+an external drive, into OneDrive, or onto a new laptop stops matching and git refuses again.
+Running setup a second time is the documented repair, and it only repairs anything if this step
+runs when the repositories already exist. Adding an entry that is already there is harmless.
 
 **It has to be done from the elevated side.** The entry belongs in the student's own
 `.gitconfig`, in their home folder, and the unescalated account cannot write there — that is
@@ -147,15 +153,24 @@ git -C <repo> config user.name  "<their name>"
 git -C <repo> config user.email "<uniqname>@umich.edu"
 ```
 
-**Two separate questions, and the reason before the first.** They have never heard the word
-_commit_ and do not know what git is, so the reason has to be given in words they already have:
-_from now on, whenever your work gets saved into the course's record of it, your name goes on
-it — that is how your instructor knows which work is yours._ Then ask what name they want on
-it.
+**Say exactly this, then stop and wait:**
 
-Ask for the uniqname afterwards, as its own question. Both in one breath reads as a single
-question with two halves and gets answered as neither — which is what happened on 2026-08-26,
-to a reader who has been at this university for thirty years.
+> From now on, whenever your work gets saved into the course's record of it, your name goes on
+> it — that's how your instructor knows which work is yours. What name would you like on it?
+
+**Send that wording, not a version of it.** It is a script, not a description of one. On
+2026-08-26 this instruction was written as prose describing what to convey, and the agent
+summarised the description instead of performing it — asking _"What name should appear on your
+course work?"_, which is almost exactly the sentence the rewrite existed to remove, and which
+had already confused a reader who has been at this university for thirty years. Compressing
+"ask for their name" back to one line lands on that phrasing every time. The quoted block
+survives because there is nothing in it to compress.
+
+**Then, and only after they answer, ask for the uniqname as its own question:**
+
+> And your uniqname — the part of your U-M email before the @?
+
+Both in one breath reads as a single question with two halves and gets answered as neither.
 
 **Build the address from the uniqname; do not ask for an email.** Their umich address is what
 attaches this work to their GitHub account in week 2. That is a reason to use it, not a thing

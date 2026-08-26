@@ -476,8 +476,12 @@ runtime('Codex configuration', () => {
       'model is nested inside [model_providers.toolkit], where Codex ignores it — this is the ' +
         'ITS documentation bug, and it costs about 2.5x. Use the config from this course.',
     );
+  // Report the effort alongside the model. It is roughly half of what a session costs and
+  // nothing else records it anywhere — not the session log, not the app — so a report that
+  // names only the model cannot be compared with another one.
   const top = /^\s*model\s*=\s*"([^"]+)"/m.exec(text);
-  return `U-M gateway, model ${top ? top[1] : 'not set'}`;
+  const effort = /^\s*model_reasoning_effort\s*=\s*"([^"]+)"/m.exec(text);
+  return `U-M gateway, model ${top ? top[1] : 'not set'}, effort ${effort ? effort[1] : 'not set'}`;
 });
 
 // --- report ----------------------------------------------------------------
