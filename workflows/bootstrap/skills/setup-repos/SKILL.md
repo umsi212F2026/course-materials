@@ -28,11 +28,43 @@ what you cloned.
 versions. Install nothing yet.
 
 **2. Install what is missing.** git and Node, and nothing else — the editors come later, and
-the GitHub CLI is not needed until week 2. Use the standard installer for the platform. Tell
-the student before each install and wait for approval.
+the GitHub CLI is not needed until week 2. Tell the student before each install and wait for
+approval.
 
 git has to come first and it is not optional: without it there is nothing to clone with. Node
 can wait until after the clones if that is easier, but the doctor cannot run without it.
+
+**Download from these addresses. Do not ask an API which version is current.**
+
+| Platform | git                                                                       | Node                                                     |
+| -------- | ------------------------------------------------------------------------- | -------------------------------------------------------- |
+| Windows  | `Git-2.55.0-64-bit.exe` from git-for-windows' `v2.55.0.windows.5` release | `node-v24.20.0-x64.msi` from `nodejs.org/dist/v24.20.0/` |
+| macOS    | `xcode-select --install` — git ships with the command line tools          | `node-v24.20.0.pkg` from the same path                   |
+
+**Why pinned, and the editor downloads later in the setup are pinned for the same reason:**
+`api.github.com` allows sixty requests an hour from one address, and a room full of students
+shares one. A lab section that resolves "latest" here exhausts the limit before anybody reaches
+the editors, and the failure looks like a network problem rather than a rate limit. On
+2026-08-26 an agent given no pinned address reached for
+`api.github.com/repos/git-for-windows/git/releases/latest` and `nodejs.org/dist/index.json`
+unprompted — the instinct is strong, so the addresses have to be here.
+
+If a pinned address 404s, the release was withdrawn; only then ask the project for its current
+version, and say that you did.
+
+**`PATH` does not update in a session that is already running.** This is not a Windows quirk to
+work around once — it will happen every time. After installing git, `git` will still not be
+found by name; the same for `node`. Do not conclude the install failed, and **do not install it
+again**. Use the full path for the rest of the session:
+
+```
+Windows:  & 'C:\Program Files\Git\cmd\git.exe'      & 'C:\Program Files\nodejs\node.exe'
+macOS:    git and node are on PATH once installed
+```
+
+**The macOS row of that table is untested.** Both trial machines already had git and Node, so
+this step has only ever run on Windows. If it fails on a Mac, say so and stop rather than
+improvising an install — that improvisation is what the pinned addresses exist to prevent.
 
 **3. Clone all three repositories — or update them if they are already here.** A student may be
 re-running this after a failure, and the point of a re-run is usually that a fix has been
@@ -56,6 +88,43 @@ git clone https://github.com/umsi212F2026/assignments.git      assignments
 All three are public. **If any of them asks for credentials, stop** — a GitHub account is not
 needed today, and being asked for one means something is wrong with the URL rather than with
 the student.
+
+### On Windows, one more step, and skipping it breaks everything after it
+
+**Cloning on Windows needs elevation, and elevation is what causes the problem.** You have no
+network without it, so the clone escalates; escalation runs as the student, who is in the
+Administrators group; and Windows gives what an elevated Administrators member creates to
+`BUILTIN\Administrators`. Every command after the clone runs unescalated, as a different
+account, and git refuses a repository owned by somebody else:
+
+```
+fatal: detected dubious ownership in repository at '...'
+```
+
+**So, on Windows only, while you are still elevated from the clone**, register the three
+repositories as safe, one line each, with **forward slashes** and the full path:
+
+```
+git config --global --add safe.directory C:/Users/<them>/.../course-materials
+git config --global --add safe.directory C:/Users/<them>/.../learning-topics
+git config --global --add safe.directory C:/Users/<them>/.../assignments
+```
+
+**Three named paths. Never `safe.directory *`** — that switches the check off for every
+repository on their machine, for the rest of its life, to solve a problem with three folders.
+
+**It has to be done from the elevated side.** The entry belongs in the student's own
+`.gitconfig`, in their home folder, and the unescalated account cannot write there — that is
+the whole reason this is a step and not something the agent works out later. An attempt from
+the wrong side fails silently, leaves the clones looking finished, and surfaces at the doctor
+as something else entirely. That happened on 2026-08-26.
+
+**Nothing else is wrong with those clones.** Files inside them can be written unescalated —
+`tour.md`, `notes.md`, everything the course does later — so the ownership is cosmetic once git
+has been told to accept it. Do not change ownership, do not run `icacls` or `takeown`, and do
+not ask the student to turn on Full access.
+
+**On macOS none of this applies.** No elevation, no ownership split, no `safe.directory`.
 
 **4. Rename the remote on the two student repositories.** Not on `course-materials`:
 

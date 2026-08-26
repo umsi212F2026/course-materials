@@ -155,8 +155,21 @@ for (const [name, dir] of Object.entries(repos)) {
     if (!existsSync(dir)) notYet(`not cloned yet (expected at ${dir})`);
     try {
       gitIn(dir, ['rev-parse', '--is-inside-work-tree']);
-    } catch {
-      throw new Error(`${dir} is not a git checkout — it may have been downloaded as a zip`);
+    } catch (err) {
+      // Say what git said. An earlier version guessed "it may have been downloaded as a zip",
+      // which on 2026-08-26 sent a real report to Canvas naming a cause that had not happened:
+      // the clones were fine and git was refusing them for dubious ownership. This output is
+      // read by an instructor deciding what to repair, so a plausible guess is worse than a
+      // quotation — it is confident, wrong, and indistinguishable from a diagnosis.
+      const said = String(err.message || err).trim();
+      if (/dubious ownership/i.test(said))
+        throw new Error(
+          `${dir} exists and is a real clone, but git refuses it: it is owned by a different ` +
+            `account than the one running this check. On Windows this means setup cloned while ` +
+            `elevated and did not register the repository as safe afterwards. Re-run the setup; ` +
+            `it repairs this. git said:\n${said}`,
+        );
+      throw new Error(`${dir} is not usable as a git checkout. git said:\n${said}`);
     }
     // course-materials keeps `origin` and is pull-only; the two student repos are renamed to
     // `upstream` on day 1 so that week 2 can add a personal `origin` without undoing anything.
