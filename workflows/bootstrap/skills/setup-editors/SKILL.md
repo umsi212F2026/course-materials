@@ -125,6 +125,12 @@ the student's own shell:
 | `%LOCALAPPDATA%`          | **no**           |
 | `%APPDATA%`               | **no**           |
 
+**And redirection under `AppData` is selective, which is worse than if it were total.** In the
+same run, an installer's shortcut written to `%APPDATA%\Microsoft\Windows\Start Menu` _did_
+reach the student, while an ordinary file beside it did not — so a student can end up with a
+Start-menu entry for a program that is not there. You cannot tell by writing something and
+looking, because you are on the wrong side of the boundary to look from.
+
 So: `%USERPROFILE%\Programs\Zettlr` and `%USERPROFILE%\Programs\camunda-modeler`. It needs no
 administrator rights, it is not a hidden folder, and it is the same place `check-setup.mjs`
 looks — which now refuses to look under `AppData` at all, precisely so that an install into the
