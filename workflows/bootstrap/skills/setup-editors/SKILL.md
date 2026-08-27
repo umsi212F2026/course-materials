@@ -7,16 +7,18 @@ description: Install the Markdown editor and the BPMN editor, and set Zettlr to 
 
 The **Editors** phase, sixth of seven.
 
-Two applications and one preference, and they matter more than they look. The tour ends by
-having the student open its file themselves; `study` has them writing `notes.md` while the
-agent prompts; the diagram work needs Camunda. Without these, a student can watch an agent
-describe their own work and never read or write it — so this is not the optional trimming it
-might seem.
+Two applications, and they matter more than they look. `study` has the student writing
+`notes.md` while the agent prompts; the diagram work needs Camunda. Without these, a student
+can watch an agent describe their own work and never read or write it — so this is not the
+optional trimming it might seem.
+
+**Installing them is half the phase.** The other half is watching the student open a real file
+in each, which is the only thing that establishes they can actually use them.
 
 ## Operates on
 
-Nothing in the student's repositories. You install applications and set one preference in
-Zettlr's own configuration, which lives outside any workspace.
+You install applications, and you write one small file — `<parent>/.si212-editors.json` —
+recording what you watched the student do.
 
 ## What you do, in order
 
@@ -24,8 +26,7 @@ Zettlr's own configuration, which lives outside any workspace.
 reading and writing their own notes and goals directly, rather than only ever seeing them
 through an agent. Camunda Modeler is for drawing workflow diagrams later in the term.
 
-**2. Install Zettlr, but do not open it yet.** Step 3 writes Zettlr's configuration file, and
-it has to be written before Zettlr's first launch — so download, install, and stop.
+**2. Install Zettlr.** Download and install; they open it in step 4.
 
 **Say what you are about to do in one sentence, then do it. Do not ask.** "Installing Zettlr
 now" — not _may I install Zettlr?_ The machine puts up its own prompt if permission is needed,
@@ -73,34 +74,7 @@ offer to install for all users is the one thing that asks — take the default i
 - **A password they do not have.** Stop; see the rule below. The distinction is whether the
   password exists and they know it, not whether a box appeared.
 
-**3. Set Zettlr to autosave on a short delay,** by writing its configuration file before Zettlr
-has ever been opened:
-
-- Mac: `~/Library/Application Support/Zettlr/config.json`
-- Windows: `%APPDATA%\Zettlr\config.json`
-
-Create the folder if it isn't there, and write exactly:
-
-```json
-{ "version": "4.7.0", "editor": { "autoSave": "delayed" } }
-```
-
-Zettlr merges this over its own defaults, so the two keys are all it needs. `"delayed"` saves
-five seconds after the student stops typing.
-
-**The `version` line is not decoration — leave it in, and keep it equal to the version you
-installed.** On first launch Zettlr runs a welcome wizard, and that wizard's autosave question
-has only two answers: manual, or save immediately. There is no short-delay button on it. A
-version that matches the installed app tells Zettlr this is not a first launch, and the wizard
-never appears. Get it wrong and the student is shown a screen whose only working choice is the
-one this step exists to avoid.
-
-Say why in one sentence, because it is a real thing they will meet: the agent and the student
-both write files in this course, and unsaved work in an editor is invisible to everything
-outside it. Short delay rather than immediate, because immediate puts half-typed sentences on
-disk and the agent reads those files too.
-
-**4. Install Camunda Modeler.** Same pinned shape, from
+**3. Install Camunda Modeler.** Same pinned shape, from
 `https://github.com/camunda/camunda-modeler/releases/download/v5.50.1/`:
 
 | Platform           | File                                   |
@@ -118,8 +92,48 @@ so there is one place to look for either of them.
 It is not needed for weeks, so if it fails, that is the least costly failure in the whole
 setup.
 
-**5. Check the phase.** Run `node course-materials/workflows/bootstrap/tools/check-setup.mjs`. It
-should report **reached 6 of 7 — Editors**.
+**4. Have them open their own file in Zettlr.** Installing an editor proves nothing; opening
+your own work in it is the thing that matters, and it is the first time in this course they
+handle a file without an agent in between.
+
+The file is the one the tour wrote — `<parent>/learning-topics/tour.md`, with their own words
+in it. They have already read it in whatever their machine opens `.md` files with. This is the
+same file in the editor they will use all term.
+
+Send them this, filling in the real path:
+
+> Open Zettlr, then open `<parent>/learning-topics/tour.md` in it — File → Open, or drag the
+> file onto the window. When you can see your own words on screen, send me a screenshot of it.
+
+**5. Have them open a diagram in Camunda Modeler.** The same move, and the file is deliberately
+this one:
+
+> Now open Camunda Modeler and open
+> `<parent>/course-materials/workflows/bootstrap/bootstrap.bpmn` in it. That diagram is the
+> setup you have just been through. Send me a screenshot when it is on screen.
+
+**Look at both screenshots yourself.** You are checking that the application is open with the
+right file in it — not that they say so. If a screenshot shows an empty editor, a different
+file, or an error, work through it with them rather than accepting it.
+
+**6. Record what you saw.** Write `<parent>/.si212-editors.json`, creating or replacing it:
+
+```json
+{
+  "zettlr": { "opened": "learning-topics/tour.md", "on": "YYYY-MM-DD" },
+  "camunda": { "opened": "workflows/bootstrap/bootstrap.bpmn", "on": "YYYY-MM-DD" }
+}
+```
+
+**Only write an entry for a screenshot you actually saw.** The setup check reads this file and
+reports those two lines as `CONFIRMED` rather than `PASS`, because they are your word rather
+than something it established. Writing an entry for something you did not see puts a false
+statement into a report an instructor uses to decide who needs help.
+
+If one editor worked and the other did not, write the one that did and leave the other out.
+
+**7. Check the phase.** Run `node course-materials/workflows/bootstrap/tools/check-setup.mjs`.
+It should report **reached 6 of 7 — Editors**.
 
 Then hand back to `setup-workspace`.
 
@@ -143,8 +157,8 @@ with them, in plain words, as many times as it takes.
 
 ## When you cannot finish
 
-Say which application failed and show the error, and have them submit the setup check output to the
-Canvas assignment.
+Say which application failed and show the error, and have them submit the setup check output to
+the Canvas assignment.
 
 Be accurate about where it leaves them, because the gap is real but narrow: everything the
 agent does for them works, and what they cannot yet do is open their own files. That is worth
@@ -155,3 +169,4 @@ their instructor knowing today rather than in week three.
 - [`study`](workflows/learn/skills/study/SKILL.md) — skill
 - [`setup-workspace`](workflows/bootstrap/skills/setup-workspace/SKILL.md) — skill
 - [`check-setup.mjs`](workflows/bootstrap/tools/check-setup.mjs) — tool
+- [`bootstrap.bpmn`](workflows/bootstrap/bootstrap.bpmn) — diagram, the one they open in Camunda

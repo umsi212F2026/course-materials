@@ -80,6 +80,11 @@ const repos = {
 const OK = "PASS";
 const NOTYET = "not yet";
 const FAIL = "FAIL";
+// Reported by the student and taken on trust, not established by this program. Kept visibly
+// apart from PASS because an instructor triaging forty-eight of these should be able to see at
+// a glance which lines are evidence and which are testimony — and because the difference
+// between a machine-adjudicated check and a judged one is something this course teaches.
+const SAID = "CONFIRMED";
 
 class NotYet extends Error {}
 const notYet = (msg) => {
@@ -95,7 +100,8 @@ const phase = (n, name, opts = {}) => {
   // lookup that needs the network, say. A check nobody could run is not a check that failed.
   return (label, fn, opts = {}) => {
     try {
-      p.checks.push({ state: OK, label, detail: fn() || "ok", ...opts });
+      const detail = fn() || "ok";
+      p.checks.push({ state: opts.attested ? SAID : OK, label, detail, ...opts });
     } catch (err) {
       p.checks.push({
         state: err instanceof NotYet ? NOTYET : FAIL,
@@ -335,51 +341,38 @@ editors(
   ),
 );
 
-// Zettlr's autosave setting, read out of Zettlr's own configuration file.
+// What the student did, rather than what is on disk.
 //
-// The setting matters because the agent reads the same files the student types into, and work
-// held unsaved in an editor is invisible to everything outside it.
+// Installing an editor is not the point; being able to open your own work in it is, and no
+// program can establish that from here. `setup-editors` walks them through opening a real file
+// in each editor, sees a screenshot of the result, and records its verdict. This reads that
+// record.
 //
-// **Whether the file is authoritative depends on whether Zettlr has ever run.** Setup writes a
-// two-key file — a version and the setting — before first launch. Zettlr does not merge that:
-// on its first launch it writes its own complete configuration over the top, with its own
-// defaults, and the setting is lost. So a two-key file means "written, not yet in force", and
-// reporting it as a pass claims something that has not happened. The tell is `uuid`, which only
-// Zettlr writes.
+// It is taken on trust, and the report says so rather than blurring it into the checks this
+// program made itself.
 
-const zettlrConfig = mac
-  ? join(homedir(), "Library", "Application Support", "Zettlr", "config.json")
-  : process.env.APPDATA && join(process.env.APPDATA, "Zettlr", "config.json");
+const verdicts = join(parent, ".si212-editors.json");
 
-editors("Zettlr autosave", () => {
-  if (!mac && !windows)
-    notYet(`${platform()} is not a supported platform — tell your instructor`);
-  if (!zettlrConfig || !existsSync(zettlrConfig)) notYet("Zettlr not configured yet");
-
-  let config;
-  try {
-    config = JSON.parse(readFileSync(zettlrConfig, "utf8"));
-  } catch {
-    throw new Error("Zettlr config.json is not valid JSON — it may have been hand-edited");
-  }
-
-  const autoSave = config.editor?.autoSave;
-  const zettlrHasRun = config.uuid !== undefined;
-
-  if (!zettlrHasRun)
-    throw new Error(
-      `set to "${autoSave ?? "nothing"}" in a file Zettlr has not read yet. Zettlr overwrites ` +
-        `this file with its own defaults the first time it opens, so this setting is not in ` +
-        `force and will not survive. Show this line to your instructor.`,
-    );
-
-  if (autoSave === "delayed") return "saves a few seconds after you stop typing";
-  if (autoSave === undefined)
-    throw new Error("no autosave setting — open Zettlr and set it in Preferences");
-  throw new Error(
-    `set to "${autoSave}", should be "delayed" — change it in Zettlr's Preferences`,
+const opened = (label, key, what) =>
+  editors(
+    label,
+    () => {
+      if (!existsSync(verdicts)) notYet(`not confirmed yet — ${what}`);
+      let record;
+      try {
+        record = JSON.parse(readFileSync(verdicts, "utf8"));
+      } catch {
+        throw new Error(`${verdicts} is not valid JSON — re-run setup-editors`);
+      }
+      const entry = record[key];
+      if (!entry?.opened) notYet(`not confirmed yet — ${what}`);
+      return `${entry.opened}${entry.on ? `, ${entry.on}` : ""}`;
+    },
+    { attested: true },
   );
-});
+
+opened("you opened a file in Zettlr", "zettlr", "open one of your own notes in Zettlr");
+opened("you opened a diagram in Camunda", "camunda", "open a .bpmn file in Camunda Modeler");
 
 // --- 7. Remote -------------------------------------------------------------
 
@@ -578,7 +571,7 @@ for (const p of phases) {
   lines.push(`${p.n}. ${p.name}`);
   for (const c of p.checks)
     lines.push(
-      `   ${c.state.padEnd(7)}  ${c.label.padEnd(width)}  ${c.detail}${c.advisory ? "" : ""}`,
+      `   ${c.state.padEnd(9)}  ${c.label.padEnd(width)}  ${c.detail}${c.advisory ? "" : ""}`,
     );
   lines.push("");
 }
@@ -593,6 +586,13 @@ if (leapfrogged.length)
   );
 if (failed.length)
   lines.push(`${failed.length} check${failed.length === 1 ? "" : "s"} failed.`);
+if (phases.some((p) => p.checks.some((c) => c.state === SAID)))
+  lines.push(
+    "",
+    "PASS is something this program checked. CONFIRMED is something you told it, which it",
+    "has no way to check for itself.",
+  );
+
 lines.push("", "Copy everything above into the Canvas assignment — including if it failed.");
 
 console.log(lines.join("\n"));

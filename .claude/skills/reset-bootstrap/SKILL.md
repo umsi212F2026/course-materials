@@ -14,15 +14,16 @@ else. Two things survive it, and one of them corrupts the result:
 
 - `~/.codex/AGENTS.md` is machine-global, and `setup-addressing` is told to merge into it
   rather than overwrite. The second run finds the first run's block still there.
-- `check-setup.mjs` **prefers the paths recorded in `AGENTS.md`** over the parent of its own clone.
-  So the second run's setup check checks the first run's repositories, and passes. Repeated runs get
-  quietly more likely to pass, which is the wrong direction for a test.
+- `check-setup.mjs` **prefers the paths recorded in `AGENTS.md`** over the parent of its own
+  clone. So the second run's setup check checks the first run's repositories, and passes.
+  Repeated runs get quietly more likely to pass, which is the wrong direction for a test.
 
 ## What it resets, and what it deliberately does not
 
 | survives a new folder               | this skill                                                        |
 | ----------------------------------- | ----------------------------------------------------------------- |
 | the three clones, `tour.md`         | deletes                                                           |
+| `<parent>/.si212-editors.json`      | deletes — see below                                               |
 | the SI 212 block in `AGENTS.md`     | removes                                                           |
 | git, Node                           | **leaves** — phase 2 passes free on every run after the first     |
 | Zettlr, Camunda, Zettlr's autosave  | **leaves** — phase 6, same                                        |
@@ -41,10 +42,10 @@ repository, with `git -C <repo> config`, so it dies with the clones.
 Ask which, unless the conversation already settled it. Default to **full**.
 
 | level               | removes                                             | next run's setup check | what that tests                                                                           |
-| ------------------- | --------------------------------------------------- | ----------------- | ----------------------------------------------------------------------------------------- |
-| **full**            | all three clones, `tour.md`, `hello.txt`, the block | nothing cloned    | the whole thing: the URL→disk boundary, every skill in order                              |
-| **from addressing** | the block and `tour.md`; keeps the clones           | reached 3 of 7    | the resume path, and `setup-repos` updating instead of cloning                            |
-| **from smoke**      | `tour.md` only                                      | reached 4 of 7    | that `setup-addressing` **merges** into an existing `AGENTS.md` rather than clobbering it |
+| ------------------- | --------------------------------------------------- | ---------------------- | ----------------------------------------------------------------------------------------- |
+| **full**            | all three clones, `tour.md`, `hello.txt`, the block | nothing cloned         | the whole thing: the URL→disk boundary, every skill in order                              |
+| **from addressing** | the block and `tour.md`; keeps the clones           | reached 3 of 7         | the resume path, and `setup-repos` updating instead of cloning                            |
+| **from smoke**      | `tour.md` only                                      | reached 4 of 7         | that `setup-addressing` **merges** into an existing `AGENTS.md` rather than clobbering it |
 
 Both partial levels re-enter at `setup-addressing`, which owns phases 4 and 5. The difference
 between them is whether `AGENTS.md` already exists, and that difference is the point of the
@@ -58,9 +59,9 @@ second one.
    node <parent>/course-materials/workflows/bootstrap/tools/check-setup.mjs
    ```
 
-   The setup check lives inside the clone, so deleting the clone destroys the only account of where
-   the run got to. Print its full output. If the clone never got made, say that instead — that
-   is itself the result.
+   The setup check lives inside the clone, so deleting the clone destroys the only account of
+   where the run got to. Print its full output. If the clone never got made, say that instead —
+   that is itself the result.
 
 2. **Establish `<parent>`. Ask; never infer, and never default to the working directory.** The
    working directory here is the course repository. Getting this wrong is the one way this
@@ -86,15 +87,21 @@ second one.
    child individually. Never `rm -rf` the parent, and never a glob — the parent survives,
    because the Codex project points at it.
 
+   **`<parent>/.si212-editors.json` goes with them.** It is not a clone, so a folder reset
+   leaves it, and it holds `setup-editors`' record that it watched the student open a file in
+   each editor. Left in place, the next run's setup check reports both editors `CONFIRMED`
+   without anyone having opened anything — a pass carried over from a previous student on a
+   previous day.
+
 6. **Strip the SI 212 block from `~/.codex/AGENTS.md`**, in place: from the `# SI 212` heading
    to the next top-level heading or the end of the file. Leave everything else exactly as it
    is; it is a personal configuration file that this course is a guest in.
 
    **If nothing but whitespace remains, delete the file.** Blanking it is not equivalent and is
-   worse than doing nothing: `check-setup.mjs` tests the file's contents for truthiness, so a file
-   containing only a newline counts as present. At the **from addressing** level, where the
-   clones are still there, that makes phase 4 report `0 lines, paths resolve` and **pass** —
-   addressing checks out as done when it has been deleted, and the resume starts in the wrong
+   worse than doing nothing: `check-setup.mjs` tests the file's contents for truthiness, so a
+   file containing only a newline counts as present. At the **from addressing** level, where
+   the clones are still there, that makes phase 4 report `0 lines, paths resolve` and **pass**
+   — addressing checks out as done when it has been deleted, and the resume starts in the wrong
    place. An absent file reports the honest `not yet`.
 
 7. **Report what survived**, from the second column of the table above, and therefore which
@@ -118,8 +125,8 @@ next run's setup check cannot tell you which it got.
 ## Notes
 
 - Written 2026-08-25, before the first repeat run. The `AGENTS.md` precedence in step 6 is read
-  off `check-setup.mjs`, not observed — if the setup check's handling of that file changes, this changes
-  with it.
+  off `check-setup.mjs`, not observed — if the setup check's handling of that file changes,
+  this changes with it.
 - The public `course-materials` repository must actually contain the skills, the tools and the
   tour before any of this is worth running. As of writing it holds the config and the bootstrap
   prompt only, so step 8 of the prompt fetches a 404.
