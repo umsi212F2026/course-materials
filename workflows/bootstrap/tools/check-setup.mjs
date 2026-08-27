@@ -33,21 +33,25 @@
 //
 // Exit code 1 if any check fails.
 
-import { execFileSync } from 'node:child_process';
-import { existsSync, readFileSync, statSync } from 'node:fs';
-import { platform, homedir } from 'node:os';
-import { join, dirname, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { execFileSync } from "node:child_process";
+import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
+import { platform, homedir } from "node:os";
+import { join, dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
-const materials = resolve(dirname(fileURLToPath(import.meta.url)), '../../..');
-const codexHome = join(homedir(), '.codex');
+const materials = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
+const codexHome = join(homedir(), ".codex");
 
 // `git --version` and friends write to stderr on some platforms even when they succeed, so
 // capture both and let a non-zero exit be the only failure signal.
 const run = (cmd, args, opts = {}) =>
-  execFileSync(cmd, args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], ...opts }).trim();
+  execFileSync(cmd, args, {
+    encoding: "utf8",
+    stdio: ["ignore", "pipe", "pipe"],
+    ...opts,
+  }).trim();
 
-const gitIn = (dir, args) => run('git', args, { cwd: dir });
+const gitIn = (dir, args) => run("git", args, { cwd: dir });
 
 // --- where the repositories are --------------------------------------------
 //
@@ -56,26 +60,26 @@ const gitIn = (dir, args) => run('git', args, { cwd: dir });
 // this clone, which is where setup puts them — needed because the Repositories phase is
 // checked BEFORE the Addressing phase writes that file.
 
-const agentsPath = join(codexHome, 'AGENTS.md');
-const agentsText = existsSync(agentsPath) ? readFileSync(agentsPath, 'utf8') : '';
+const agentsPath = join(codexHome, "AGENTS.md");
+const agentsText = existsSync(agentsPath) ? readFileSync(agentsPath, "utf8") : "";
 
 const recorded = (label) => {
-  const m = new RegExp(`^${label}:\\s*(\\S.*?)\\s*$`, 'im').exec(agentsText);
+  const m = new RegExp(`^${label}:\\s*(\\S.*?)\\s*$`, "im").exec(agentsText);
   return m ? m[1] : null;
 };
 
 const parent = dirname(materials);
 const repos = {
-  'course-materials': materials,
-  'learning-topics': recorded('Learning topics') ?? join(parent, 'learning-topics'),
-  assignments: recorded('Assignments') ?? join(parent, 'assignments'),
+  "course-materials": materials,
+  "learning-topics": recorded("Learning topics") ?? join(parent, "learning-topics"),
+  assignments: recorded("Assignments") ?? join(parent, "assignments"),
 };
 
 // --- check plumbing --------------------------------------------------------
 
-const OK = 'PASS';
-const NOTYET = 'not yet';
-const FAIL = 'FAIL';
+const OK = "PASS";
+const NOTYET = "not yet";
+const FAIL = "FAIL";
 
 class NotYet extends Error {}
 const notYet = (msg) => {
@@ -91,7 +95,7 @@ const phase = (n, name, opts = {}) => {
   // lookup that needs the network, say. A check nobody could run is not a check that failed.
   return (label, fn, opts = {}) => {
     try {
-      p.checks.push({ state: OK, label, detail: fn() || 'ok', ...opts });
+      p.checks.push({ state: OK, label, detail: fn() || "ok", ...opts });
     } catch (err) {
       p.checks.push({
         state: err instanceof NotYet ? NOTYET : FAIL,
@@ -105,55 +109,55 @@ const phase = (n, name, opts = {}) => {
 
 // --- 2. Runtime ------------------------------------------------------------
 
-const runtime = phase(2, 'Runtime');
+const runtime = phase(2, "Runtime");
 
-runtime('Node.js', () => {
-  const major = Number(process.versions.node.split('.')[0]);
+runtime("Node.js", () => {
+  const major = Number(process.versions.node.split(".")[0]);
   if (major < 18) throw new Error(`found ${process.version}, need 18 or newer`);
   return process.version;
 });
 
-runtime('git', () => {
+runtime("git", () => {
   try {
-    return run('git', ['--version']);
+    return run("git", ["--version"]);
   } catch {
-    throw new Error('not installed, or not on PATH');
+    throw new Error("not installed, or not on PATH");
   }
 });
 
-runtime('signed in to Codex', () => {
+runtime("signed in to Codex", () => {
   // The key lives in ~/.codex/auth.json, written by the app's own sign-in — NOT in
   // OPENAI_API_KEY, which nothing sets. Presence only, never the value.
   //
   // The pass condition is "signed in somehow", not "has a U-M key": students on their own
   // ChatGPT subscription sign in with a personal account and deliberately have no toolkit
   // config at all. Failing them would be wrong.
-  const auth = join(codexHome, 'auth.json');
+  const auth = join(codexHome, "auth.json");
   if (!existsSync(auth)) {
     throw new Error(
-      'no ~/.codex/auth.json — Codex has not been signed in, or was signed in a way this ' +
-        'check does not recognise. TO VERIFY: what a personal ChatGPT sign-in writes.',
+      "no ~/.codex/auth.json — Codex has not been signed in, or was signed in a way this " +
+        "check does not recognise. TO VERIFY: what a personal ChatGPT sign-in writes.",
     );
   }
-  if (statSync(auth).size === 0) throw new Error('~/.codex/auth.json is empty');
+  if (statSync(auth).size === 0) throw new Error("~/.codex/auth.json is empty");
   let mode;
   try {
-    mode = JSON.parse(readFileSync(auth, 'utf8')).auth_mode ?? 'unknown';
+    mode = JSON.parse(readFileSync(auth, "utf8")).auth_mode ?? "unknown";
   } catch {
-    throw new Error('~/.codex/auth.json is not valid JSON — it may have been hand-edited');
+    throw new Error("~/.codex/auth.json is not valid JSON — it may have been hand-edited");
   }
-  return mode === 'apikey' ? 'API key present' : `signed in (${mode})`;
+  return mode === "apikey" ? "API key present" : `signed in (${mode})`;
 });
 
 // --- 3. Repositories -------------------------------------------------------
 
-const repositories = phase(3, 'Repositories');
+const repositories = phase(3, "Repositories");
 
 for (const [name, dir] of Object.entries(repos)) {
   repositories(name, () => {
     if (!existsSync(dir)) notYet(`not cloned yet (expected at ${dir})`);
     try {
-      gitIn(dir, ['rev-parse', '--is-inside-work-tree']);
+      gitIn(dir, ["rev-parse", "--is-inside-work-tree"]);
     } catch (err) {
       // Say what git said, never a guess at why. This output is read by an instructor deciding
       // what to repair, and a plausible wrong cause is worse than a quotation — it is
@@ -170,62 +174,70 @@ for (const [name, dir] of Object.entries(repos)) {
     }
     // course-materials keeps `origin` and is pull-only; the two student repos are renamed to
     // `upstream` on day 1 so that week 2 can add a personal `origin` without undoing anything.
-    const wanted = name === 'course-materials' ? 'origin' : 'upstream';
+    const wanted = name === "course-materials" ? "origin" : "upstream";
     let url;
     try {
-      url = gitIn(dir, ['remote', 'get-url', wanted]);
+      url = gitIn(dir, ["remote", "get-url", wanted]);
     } catch {
       throw new Error(`no "${wanted}" remote, so course updates will not reach you`);
     }
     // Safe to print: `upstream` is the instructor's public template, the same for everyone.
     // It is the personal `origin` of learning-topics that stays unreported (phase 7).
-    return `${url} (on ${gitIn(dir, ['rev-parse', '--abbrev-ref', 'HEAD'])})`;
+    return `${url} (on ${gitIn(dir, ["rev-parse", "--abbrev-ref", "HEAD"])})`;
   });
 }
 
-repositories('course-materials unmodified', () => {
+repositories("course-materials unmodified", () => {
   // A pull-only clone, so anything local is either an accidental edit or an agent that was
   // told not to write here and did. Free detection beats prevention the sandbox cannot give.
-  const dirty = gitIn(materials, ['status', '--porcelain']);
+  const dirty = gitIn(materials, ["status", "--porcelain"]);
   if (dirty) {
-    const n = dirty.split('\n').length;
-    throw new Error(`${n} local change${n === 1 ? '' : 's'} — the next "git pull" will conflict`);
+    const n = dirty.split("\n").length;
+    throw new Error(
+      `${n} local change${n === 1 ? "" : "s"} — the next "git pull" will conflict`,
+    );
   }
-  return 'clean';
+  return "clean";
 });
 
 // --- 4. Addressing ---------------------------------------------------------
 
-const addressing = phase(4, 'Addressing');
+const addressing = phase(4, "Addressing");
 
-addressing('~/.codex/AGENTS.md', () => {
-  if (!agentsText) notYet('not written yet');
+addressing("~/.codex/AGENTS.md", () => {
+  if (!agentsText) notYet("not written yet");
   const missing = Object.entries(repos)
     .filter(([, dir]) => !existsSync(dir))
     .map(([name]) => name);
   if (missing.length)
-    throw new Error(`names paths that do not exist: ${missing.join(', ')} — did a folder move?`);
-  return `${agentsText.split('\n').filter((l) => l.trim()).length} lines, paths resolve`;
+    throw new Error(
+      `names paths that do not exist: ${missing.join(", ")} — did a folder move?`,
+    );
+  return `${agentsText.split("\n").filter((l) => l.trim()).length} lines, paths resolve`;
 });
 
-addressing('entry-point index', () => {
-  const index = join(materials, 'AGENTS.md');
-  if (!existsSync(index)) throw new Error('course-materials/AGENTS.md is missing from the clone');
-  return 'present';
+addressing("entry-point index", () => {
+  const index = join(materials, "AGENTS.md");
+  if (!existsSync(index))
+    throw new Error("course-materials/AGENTS.md is missing from the clone");
+  return "present";
 });
 
 // --- 5. Smoke test ---------------------------------------------------------
 
-const smoke = phase(5, 'Smoke test');
+const smoke = phase(5, "Smoke test");
 
-smoke('the tour ran', () => {
-  const artifact = join(repos['learning-topics'], 'tour.md');
-  if (!existsSync(artifact)) notYet('tour.md not written yet');
-  const text = readFileSync(artifact, 'utf8');
+smoke("the tour ran", () => {
+  const artifact = join(repos["learning-topics"], "tour.md");
+  if (!existsSync(artifact)) notYet("tour.md not written yet");
+  const text = readFileSync(artifact, "utf8");
   const m = /on (\d{4}-\d{2}-\d{2})/.exec(text);
-  if (!m) throw new Error('tour.md exists but carries no date — was it written by the script?');
+  if (!m)
+    throw new Error("tour.md exists but carries no date — was it written by the script?");
   if (/separate repositories \| \*\*no/.test(text))
-    throw new Error('the tour ran but your work is inside the course files — tell your instructor');
+    throw new Error(
+      "the tour ran but your work is inside the course files — tell your instructor",
+    );
   return `ran ${m[1]}`;
 });
 
@@ -237,7 +249,7 @@ smoke('the tour ran', () => {
 // the diagram work needs Camunda. Without an editor they can watch an agent describe their own
 // work and never read or write it, which is not ready.
 
-const editors = phase(6, 'Editors');
+const editors = phase(6, "Editors");
 
 // Where an installed application lives, per platform.
 //
@@ -257,102 +269,149 @@ const editors = phase(6, 'Editors');
 // Anything that is neither macOS nor Windows is not a platform this course supports, and
 // saying so is more use than a check that silently passes.
 
-const mac = platform() === 'darwin';
-const windows = platform() === 'win32';
+const mac = platform() === "darwin";
+const windows = platform() === "win32";
 
-const programs = (...rest) => {
-  const roots = [process.env.LOCALAPPDATA && join(process.env.LOCALAPPDATA, 'Programs'), process.env.PROGRAMFILES];
-  return roots.filter(Boolean).map((root) => join(root, ...rest));
+const programsRoots = () =>
+  [
+    process.env.LOCALAPPDATA && join(process.env.LOCALAPPDATA, "Programs"),
+    process.env.PROGRAMFILES,
+  ].filter(Boolean);
+
+// On Windows the sandbox this runs inside refuses reads INTO an installed application's folder
+// — statSync there raises EPERM — while the folder holding them lists normally. existsSync
+// cannot tell that refusal from an absence: it answers false to both, so asking it directly
+// reports a correctly installed application as missing.
+//
+// So look for the folder's NAME in the parent listing, which is permitted, and fall back to
+// looking inside only if the listing is unavailable. And if neither can see, say so: a check
+// that was not allowed to look has not established that something is absent.
+const lookFor = (label, dirName, exeName) => {
+  const refused = [];
+  for (const root of programsRoots()) {
+    try {
+      if (readdirSync(root).includes(dirName)) return label;
+      continue; // the folder listed and this is not in it — a real absence, try the next root
+    } catch (err) {
+      if (err.code !== "ENOENT") refused.push(`${root} (${err.code})`);
+    }
+    try {
+      statSync(join(root, dirName, exeName));
+      return label;
+    } catch (err) {
+      if (err.code !== "ENOENT") refused.push(`${join(root, dirName)} (${err.code})`);
+    }
+  }
+  if (refused.length)
+    throw new Error(
+      `cannot tell whether ${label} is installed — this check was not allowed to read ` +
+        `${refused.join(", ")}. That is a limit on this check, not a fault of yours; ` +
+        `show this line to your instructor.`,
+    );
+  notYet(`${label} not installed`);
 };
 
-const installed = (label, macPath, winPaths) => () => {
+const installed = (label, macPath, dirName, exeName) => () => {
   if (mac) {
     if (!existsSync(macPath)) notYet(`${label} not installed`);
-  } else if (windows) {
-    if (!winPaths().some(existsSync)) notYet(`${label} not installed`);
-  } else {
-    notYet(`${platform()} is not a supported platform — tell your instructor`);
+    return label;
   }
-  return label;
+  if (windows) return lookFor(label, dirName, exeName);
+  notYet(`${platform()} is not a supported platform — tell your instructor`);
 };
 
 editors(
-  'Markdown editor',
-  installed('Zettlr', '/Applications/Zettlr.app', () => programs('Zettlr', 'Zettlr.exe')),
+  "Markdown editor",
+  installed("Zettlr", "/Applications/Zettlr.app", "Zettlr", "Zettlr.exe"),
 );
 
 editors(
-  'BPMN editor',
-  installed('Camunda Modeler', '/Applications/Camunda Modeler.app', () =>
-    programs('camunda-modeler', 'Camunda Modeler.exe'),
+  "BPMN editor",
+  installed(
+    "Camunda Modeler",
+    "/Applications/Camunda Modeler.app",
+    "camunda-modeler",
+    "Camunda Modeler.exe",
   ),
 );
 
-// Zettlr's autosave setting, which `setup-editors` writes into Zettlr's own configuration file
-// before Zettlr's first launch.
+// Zettlr's autosave setting, read out of Zettlr's own configuration file.
 //
-// This is checked and not merely assumed because the step can fail silently. Zettlr shows a
-// welcome wizard on first launch, and that wizard's autosave question offers only "manually"
-// and "immediately" — there is no short-delay answer on it. Writing the file first sets the
-// preference AND suppresses the wizard; if the write did not happen, the student is shown a
-// screen whose only working choice is the one the step exists to avoid, and nothing downstream
-// would notice. An install that is present but unconfigured is the failure this catches.
+// The setting matters because the agent reads the same files the student types into, and work
+// held unsaved in an editor is invisible to everything outside it.
 //
-// A wrong value is a FAIL rather than a `not yet`: the file only exists because something wrote
-// it, so a value other than "delayed" means setup ran and produced the wrong state.
+// **Whether the file is authoritative depends on whether Zettlr has ever run.** Setup writes a
+// two-key file — a version and the setting — before first launch. Zettlr does not merge that:
+// on its first launch it writes its own complete configuration over the top, with its own
+// defaults, and the setting is lost. So a two-key file means "written, not yet in force", and
+// reporting it as a pass claims something that has not happened. The tell is `uuid`, which only
+// Zettlr writes.
 
 const zettlrConfig = mac
-  ? join(homedir(), 'Library', 'Application Support', 'Zettlr', 'config.json')
-  : process.env.APPDATA && join(process.env.APPDATA, 'Zettlr', 'config.json');
+  ? join(homedir(), "Library", "Application Support", "Zettlr", "config.json")
+  : process.env.APPDATA && join(process.env.APPDATA, "Zettlr", "config.json");
 
-editors('Zettlr autosave', () => {
-  if (!mac && !windows) notYet(`${platform()} is not a supported platform — tell your instructor`);
-  if (!zettlrConfig || !existsSync(zettlrConfig)) notYet('Zettlr not configured yet');
+editors("Zettlr autosave", () => {
+  if (!mac && !windows)
+    notYet(`${platform()} is not a supported platform — tell your instructor`);
+  if (!zettlrConfig || !existsSync(zettlrConfig)) notYet("Zettlr not configured yet");
 
   let config;
   try {
-    config = JSON.parse(readFileSync(zettlrConfig, 'utf8'));
+    config = JSON.parse(readFileSync(zettlrConfig, "utf8"));
   } catch {
-    throw new Error('Zettlr config.json is not valid JSON — it may have been hand-edited');
+    throw new Error("Zettlr config.json is not valid JSON — it may have been hand-edited");
   }
 
   const autoSave = config.editor?.autoSave;
-  if (autoSave === 'delayed') return 'saves a few seconds after you stop typing';
-  if (autoSave === undefined) throw new Error('no autosave setting written — re-run setup-editors');
-  throw new Error(`set to "${autoSave}", should be "delayed" — re-run setup-editors`);
+  const zettlrHasRun = config.uuid !== undefined;
+
+  if (!zettlrHasRun)
+    throw new Error(
+      `set to "${autoSave ?? "nothing"}" in a file Zettlr has not read yet. Zettlr overwrites ` +
+        `this file with its own defaults the first time it opens, so this setting is not in ` +
+        `force and will not survive. Show this line to your instructor.`,
+    );
+
+  if (autoSave === "delayed") return "saves a few seconds after you stop typing";
+  if (autoSave === undefined)
+    throw new Error("no autosave setting — open Zettlr and set it in Preferences");
+  throw new Error(
+    `set to "${autoSave}", should be "delayed" — change it in Zettlr's Preferences`,
+  );
 });
 
 // --- 7. Remote -------------------------------------------------------------
 
-const remote = phase(7, 'Remote');
+const remote = phase(7, "Remote");
 
-remote('git identity', () => {
+remote("git identity", () => {
   const val = (k) => {
     try {
-      return gitIn(repos['learning-topics'], ['config', '--get', k]);
+      return gitIn(repos["learning-topics"], ["config", "--get", k]);
     } catch {
-      return '';
+      return "";
     }
   };
-  const name = val('user.name');
-  const email = val('user.email');
-  if (!name || !email) notYet('not set — git cannot record who made a commit');
+  const name = val("user.name");
+  const email = val("user.email");
+  if (!name || !email) notYet("not set — git cannot record who made a commit");
   return `${name} <${email}>`;
 });
 
-for (const name of ['learning-topics', 'assignments']) {
+for (const name of ["learning-topics", "assignments"]) {
   remote(`${name} published`, () => {
     const dir = repos[name];
-    if (!existsSync(dir)) notYet('repository not cloned yet');
+    if (!existsSync(dir)) notYet("repository not cloned yet");
     let url;
     try {
-      url = gitIn(dir, ['remote', 'get-url', 'origin']);
+      url = gitIn(dir, ["remote", "get-url", "origin"]);
     } catch {
-      notYet('no personal remote yet — this happens in week 2');
+      notYet("no personal remote yet — this happens in week 2");
     }
     // The assignments URL is the roster mapping and goes in the report. The learning-topics
     // URL does not: that repository is the student's own (§2).
-    return name === 'assignments' ? url : 'published';
+    return name === "assignments" ? url : "published";
   });
 }
 
@@ -373,23 +432,23 @@ for (const name of ['learning-topics', 'assignments']) {
 // `setup-github`'s own "reached 7 of 7" check is what catches it — at setup time, which is the
 // whole point.
 
-const teachingTeam = ['presnick'];
+const teachingTeam = ["presnick"];
 
-remote('teaching team can read assignments', () => {
-  const dir = repos['assignments'];
-  if (!existsSync(dir)) notYet('repository not cloned yet');
+remote("teaching team can read assignments", () => {
+  const dir = repos["assignments"];
+  if (!existsSync(dir)) notYet("repository not cloned yet");
   let url;
   try {
-    url = gitIn(dir, ['remote', 'get-url', 'origin']);
+    url = gitIn(dir, ["remote", "get-url", "origin"]);
   } catch {
-    notYet('no personal remote yet — this happens in week 2');
+    notYet("no personal remote yet — this happens in week 2");
   }
   const slug = /github\.com[/:]([^/]+\/[^/.]+)/.exec(url);
-  if (!slug) notYet(`cannot tell from this remote (${url.replace(/\/\/[^@]*@/, '//')})`);
+  if (!slug) notYet(`cannot tell from this remote (${url.replace(/\/\/[^@]*@/, "//")})`);
 
   const logins = (endpoint, jq) => {
-    return run('gh', ['api', `repos/${slug[1]}/${endpoint}`, '--jq', jq])
-      .split('\n')
+    return run("gh", ["api", `repos/${slug[1]}/${endpoint}`, "--jq", jq])
+      .split("\n")
       .filter(Boolean)
       .map((n) => n.toLowerCase());
   };
@@ -400,69 +459,71 @@ remote('teaching team can read assignments', () => {
   // check that only their instructor can clear.
   let have;
   try {
-    have = logins('collaborators', '.[].login');
+    have = logins("collaborators", ".[].login");
   } catch {
-    notYet('not checked — needs the GitHub CLI, signed in');
+    notYet("not checked — needs the GitHub CLI, signed in");
   }
   let invited = [];
   try {
-    invited = logins('invitations', '.[].invitee.login');
+    invited = logins("invitations", ".[].invitee.login");
   } catch {
     // An unreadable invitation list is not evidence of anything; fall back to what we know.
   }
 
   const wanted = teachingTeam.map((n) => n.toLowerCase());
   const missing = wanted.filter((n) => !have.includes(n) && !invited.includes(n));
-  if (missing.length === wanted.length) notYet('not added yet — this is step 5 of setup-github');
+  if (missing.length === wanted.length)
+    notYet("not added yet — this is step 5 of setup-github");
   if (missing.length)
-    throw new Error(`${missing.join(', ')} still missing — re-run step 5 of setup-github`);
+    throw new Error(`${missing.join(", ")} still missing — re-run step 5 of setup-github`);
 
   const pending = wanted.filter((n) => !have.includes(n));
-  if (pending.length) return `invited ${pending.join(', ')} — not accepted yet, which is fine`;
-  return teachingTeam.join(', ');
+  if (pending.length) return `invited ${pending.join(", ")} — not accepted yet, which is fine`;
+  return teachingTeam.join(", ");
 });
 
 remote(
-  'learning-topics is private to you',
+  "learning-topics is private to you",
   () => {
-  // The learning log is the student's own and the instructor never sees it — that is what makes
-  // the ungraded-learning rule structural rather than a promise (§2). Sharing it anyway is the
-  // student's call to make, so a collaborator is reported and confirmed, never failed. What this
-  // catches is the student who shared it without meaning to.
-  const dir = repos['learning-topics'];
-  if (!existsSync(dir)) notYet('repository not cloned yet');
-  let url;
-  try {
-    url = gitIn(dir, ['remote', 'get-url', 'origin']);
-  } catch {
-    notYet('not published yet');
-  }
-  const slug = /github\.com[/:]([^/]+\/[^/.]+)/.exec(url);
-  if (!slug) notYet(`cannot tell from this remote (${url.replace(/\/\/[^@]*@/, '//')})`);
-  let names;
-  try {
-    names = run('gh', ['api', `repos/${slug[1]}/collaborators`, '--jq', '.[].login'])
-      .split('\n')
-      .filter(Boolean);
-  } catch {
-    notYet('not checked — needs the GitHub CLI, signed in');
-  }
-  const others = names.filter((n) => !url.includes(n));
+    // The learning log is the student's own and the instructor never sees it — that is what makes
+    // the ungraded-learning rule structural rather than a promise (§2). Sharing it anyway is the
+    // student's call to make, so a collaborator is reported and confirmed, never failed. What this
+    // catches is the student who shared it without meaning to.
+    const dir = repos["learning-topics"];
+    if (!existsSync(dir)) notYet("repository not cloned yet");
+    let url;
+    try {
+      url = gitIn(dir, ["remote", "get-url", "origin"]);
+    } catch {
+      notYet("not published yet");
+    }
+    const slug = /github\.com[/:]([^/]+\/[^/.]+)/.exec(url);
+    if (!slug) notYet(`cannot tell from this remote (${url.replace(/\/\/[^@]*@/, "//")})`);
+    let names;
+    try {
+      names = run("gh", ["api", `repos/${slug[1]}/collaborators`, "--jq", ".[].login"])
+        .split("\n")
+        .filter(Boolean);
+    } catch {
+      notYet("not checked — needs the GitHub CLI, signed in");
+    }
+    const others = names.filter((n) => !url.includes(n));
     if (others.length)
-      return `SHARED WITH ${others.join(', ')} — if you did not mean to, tell your instructor`;
-    return 'private';
+      return `SHARED WITH ${others.join(", ")} — if you did not mean to, tell your instructor`;
+    return "private";
   },
   { advisory: true },
 );
 
 // --- config.toml, reported alongside Runtime -------------------------------
 
-runtime('Codex configuration', () => {
-  const cfg = join(codexHome, 'config.toml');
-  if (!existsSync(cfg)) notYet('no ~/.codex/config.toml — expected if you use a personal account');
-  const text = readFileSync(cfg, 'utf8');
+runtime("Codex configuration", () => {
+  const cfg = join(codexHome, "config.toml");
+  if (!existsSync(cfg))
+    notYet("no ~/.codex/config.toml — expected if you use a personal account");
+  const text = readFileSync(cfg, "utf8");
   if (!/api\.toolkit\.umgpt\.umich\.edu/.test(text))
-    notYet('no U-M gateway configured — expected if you use a personal account');
+    notYet("no U-M gateway configured — expected if you use a personal account");
 
   // The ITS documentation nests `model` inside [model_providers.toolkit], where Codex's schema
   // does not read it. That mistake costs about 2.5x in tokens. Neither value is
@@ -470,15 +531,15 @@ runtime('Codex configuration', () => {
   const provider = /\[model_providers\.toolkit\]([\s\S]*?)(?=\n\[|$)/.exec(text);
   if (provider && /^\s*model\s*=/m.test(provider[1]))
     throw new Error(
-      'model is nested inside [model_providers.toolkit], where Codex ignores it — this is the ' +
-        'ITS documentation bug, and it costs about 2.5x. Use the config from this course.',
+      "model is nested inside [model_providers.toolkit], where Codex ignores it — this is the " +
+        "ITS documentation bug, and it costs about 2.5x. Use the config from this course.",
     );
   // Report the effort alongside the model. It is roughly half of what a session costs and
   // nothing else records it anywhere — not the session log, not the app — so a report that
   // names only the model cannot be compared with another one.
   const top = /^\s*model\s*=\s*"([^"]+)"/m.exec(text);
   const effort = /^\s*model_reasoning_effort\s*=\s*"([^"]+)"/m.exec(text);
-  return `U-M gateway, model ${top ? top[1] : 'not set'}, effort ${effort ? effort[1] : 'not set'}`;
+  return `U-M gateway, model ${top ? top[1] : "not set"}, effort ${effort ? effort[1] : "not set"}`;
 });
 
 // --- report ----------------------------------------------------------------
@@ -499,31 +560,42 @@ for (const p of phases) {
 // the whole content of the warning.
 const frontierIndex = phases.indexOf(frontier);
 const after = phases.slice(frontierIndex + 1);
-const leapfrogged = after.filter((p) => gating(p).length && gating(p).every((c) => c.state === OK));
-const skipped = after.filter((p) => gating(p).length && !gating(p).every((c) => c.state === OK));
+const leapfrogged = after.filter(
+  (p) => gating(p).length && gating(p).every((c) => c.state === OK),
+);
+const skipped = after.filter(
+  (p) => gating(p).length && !gating(p).every((c) => c.state === OK),
+);
 
 const width = Math.max(...phases.flatMap((p) => p.checks.map((c) => c.label.length)));
-const lines = ['SI 212 — first-day setup check', `${new Date().toISOString().slice(0, 10)}  ${platform()}  node ${process.version}`, ''];
+const lines = [
+  "SI 212 — first-day setup check",
+  `${new Date().toISOString().slice(0, 10)}  ${platform()}  node ${process.version}`,
+  "",
+];
 
 for (const p of phases) {
   lines.push(`${p.n}. ${p.name}`);
   for (const c of p.checks)
-    lines.push(`   ${c.state.padEnd(7)}  ${c.label.padEnd(width)}  ${c.detail}${c.advisory ? '' : ''}`);
-  lines.push('');
+    lines.push(
+      `   ${c.state.padEnd(7)}  ${c.label.padEnd(width)}  ${c.detail}${c.advisory ? "" : ""}`,
+    );
+  lines.push("");
 }
 
 lines.push(`Reached ${frontier.n} of ${phases[phases.length - 1].n} — ${frontier.name}.`);
 if (leapfrogged.length)
   lines.push(
-    `Note: ${leapfrogged.map((p) => p.name).join(' and ')} passed, but ` +
-      `${skipped.map((p) => `${p.n} ${p.name}`).join(' and ')} did not. The setup does not ` +
+    `Note: ${leapfrogged.map((p) => p.name).join(" and ")} passed, but ` +
+      `${skipped.map((p) => `${p.n} ${p.name}`).join(" and ")} did not. The setup does not ` +
       `produce that order, so something was run out of sequence or has stopped working since. ` +
       `Show this to your instructor.`,
   );
-if (failed.length) lines.push(`${failed.length} check${failed.length === 1 ? '' : 's'} failed.`);
-lines.push('', 'Copy everything above into the Canvas assignment — including if it failed.');
+if (failed.length)
+  lines.push(`${failed.length} check${failed.length === 1 ? "" : "s"} failed.`);
+lines.push("", "Copy everything above into the Canvas assignment — including if it failed.");
 
-console.log(lines.join('\n'));
+console.log(lines.join("\n"));
 
 // Deliberately not `process.exit()`: let stdout flush first. The exit code is for the agent
 // that ran this; the student reads the text. `not yet` does not fail — see the header.
