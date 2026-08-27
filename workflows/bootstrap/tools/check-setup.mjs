@@ -233,16 +233,16 @@ addressing("entry-point index", () => {
 
 const smoke = phase(5, "Smoke test");
 
-smoke("the tour ran", () => {
-  const artifact = join(repos["learning-topics"], "tour.md");
-  if (!existsSync(artifact)) notYet("tour.md not written yet");
+smoke("the smoke test ran", () => {
+  const artifact = join(repos["learning-topics"], "setup.md");
+  if (!existsSync(artifact)) notYet("setup.md not written yet");
   const text = readFileSync(artifact, "utf8");
   const m = /on (\d{4}-\d{2}-\d{2})/.exec(text);
   if (!m)
-    throw new Error("tour.md exists but carries no date — was it written by the script?");
+    throw new Error("setup.md exists but carries no date — was it written by the script?");
   if (/separate repositories \| \*\*no/.test(text))
     throw new Error(
-      "the tour ran but your work is inside the course files — tell your instructor",
+      "the smoke test ran but your work is inside the course files — tell your instructor",
     );
   return `ran ${m[1]}`;
 });
@@ -250,10 +250,10 @@ smoke("the tour ran", () => {
 // --- 6. Editors ------------------------------------------------------------
 //
 // Blocking, like every other phase. An earlier draft made this optional on the reasoning that
-// the agent reads and writes the files either way — which is true and beside the point. The tour
-// ends by having the student open its file themselves, `study` has them writing notes.md, and
-// the diagram work needs Camunda. Without an editor they can watch an agent describe their own
-// work and never read or write it, which is not ready.
+// the agent reads and writes the files either way — which is true and beside the point. The
+// smoke test ends by having the student open setup.md themselves, `study` has them writing
+// notes.md, and the diagram work needs Camunda. Without an editor they can watch an agent
+// describe their own work and never read or write it, which is not ready.
 
 const editors = phase(6, "Editors");
 

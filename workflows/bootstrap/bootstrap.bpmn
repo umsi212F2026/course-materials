@@ -220,8 +220,7 @@ The skills are addressed two ways. Until "Install tools and clone the repositori
           <bpmn:flowNodeRef>W_repos</bpmn:flowNodeRef>
           <bpmn:flowNodeRef>W_addr</bpmn:flowNodeRef>
           <bpmn:flowNodeRef>G_m2</bpmn:flowNodeRef>
-          <bpmn:flowNodeRef>W_tour</bpmn:flowNodeRef>
-          <bpmn:flowNodeRef>G_m3</bpmn:flowNodeRef>
+            <bpmn:flowNodeRef>G_m3</bpmn:flowNodeRef>
           <bpmn:flowNodeRef>W_edit</bpmn:flowNodeRef>
           <bpmn:flowNodeRef>End_W_ok</bpmn:flowNodeRef>
         </bpmn:lane>
@@ -229,7 +228,8 @@ The skills are addressed two ways. Until "Install tools and clone the repositori
           <bpmn:flowNodeRef>Prog_w1</bpmn:flowNodeRef>
           <bpmn:flowNodeRef>Prog_w2</bpmn:flowNodeRef>
           <bpmn:flowNodeRef>G_w2</bpmn:flowNodeRef>
-          <bpmn:flowNodeRef>Prog_w3</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Prog_smoke</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Prog_w3</bpmn:flowNodeRef>
           <bpmn:flowNodeRef>G_w3</bpmn:flowNodeRef>
           <bpmn:flowNodeRef>Prog_w4</bpmn:flowNodeRef>
           <bpmn:flowNodeRef>G_w_stop</bpmn:flowNodeRef>
@@ -291,19 +291,21 @@ Note what is NOT skipped: the repositories step above always runs, so an update 
         <bpmn:incoming>r2</bpmn:incoming>
         <bpmn:outgoing>m2</bpmn:outgoing>
       </bpmn:exclusiveGateway>
-      <bpmn:serviceTask id="W_tour" name="Run the tour&#10;tour">
-        <bpmn:documentation>workflows/tour/skills/tour/SKILL.md — invoked by setup-addressing, and drawn separately because it is a real workflow rather than a step, and because it is the completion criterion for the whole setup.
+      <bpmn:scriptTask id="Prog_smoke" name="Write the receipt&#10;smoke-test.mjs">
+        <bpmn:documentation>workflows/bootstrap/tools/smoke-test.mjs --dir &lt;parent&gt;/learning-topics — run by setup-addressing once the addressing file in the student&#39;s Codex home exists.
 
-It is the only evidence that the addressing works end to end: a skill found by path, a manifest resolved, a script run with the directory it was given, and a write landing in a repository that is not the one the code lives in.</bpmn:documentation>
+It reads the entry-point index, resolves every repo-relative path in it against this machine, and writes what it found into learning-topics. That is the only evidence that the addressing works end to end: a path written once for forty-eight machines landing on a real file on this one, and a write landing in a repository that is not the one the code lives in.
+
+It was a whole workflow until it wasn&#39;t. The tour ran here, asked the student what they wanted from the course, and wrote the answer into the same file — which made a warmer artifact and proved nothing further, since the check never read the answer and any string satisfied it. Orientation became a workflow of its own and this became a receipt, which is why the AI AGENT lane above this column is now empty: nothing at the smoke test needs a conversation.</bpmn:documentation>
         <bpmn:incoming>m2</bpmn:incoming>
         <bpmn:outgoing>w10</bpmn:outgoing>
-      </bpmn:serviceTask>
-      <bpmn:scriptTask id="Prog_w3" name="Check the tour ran&#10;check-setup.mjs">
-        <bpmn:documentation>Expects "reached 5 of 7 — Smoke test". It checks for the file the tour's script wrote, not for the agent's account of having run it — an agent reporting that it finished is not evidence that it did.</bpmn:documentation>
+      </bpmn:scriptTask>
+      <bpmn:scriptTask id="Prog_w3" name="Check the receipt landed&#10;check-setup.mjs">
+        <bpmn:documentation>Expects "reached 5 of 7 — Smoke test". It checks for setup.md, the file the smoke test wrote, not for the agent's account of having run it — an agent reporting that it finished is not evidence that it did.</bpmn:documentation>
         <bpmn:incoming>w10</bpmn:incoming>
         <bpmn:outgoing>w11</bpmn:outgoing>
       </bpmn:scriptTask>
-      <bpmn:exclusiveGateway id="G_w3" name="Tour&#10;good?" default="w13">
+      <bpmn:exclusiveGateway id="G_w3" name="receipt&#10;landed?" default="w13">
         <bpmn:incoming>w11</bpmn:incoming>
         <bpmn:outgoing>w12</bpmn:outgoing>
         <bpmn:outgoing>w13</bpmn:outgoing>
@@ -328,7 +330,7 @@ It is the only evidence that the addressing works end to end: a skill found by p
 
 The "no" branch joins the same end as the earlier checkpoints because it is the same kind of thing: a checkpoint that did not pass. This phase blocks like the rest.
 
-An earlier draft made it optional, on the reasoning that the agent reads and writes the files either way. True, and beside the point — the tour ends by having the student open its file themselves, study has them writing notes.md, and the diagram work needs Camunda. A student who cannot open their own files can watch an agent describe their work and never read or write it, which is not ready.</bpmn:documentation>
+An earlier draft made it optional, on the reasoning that the agent reads and writes the files either way. True, and beside the point — setup-editors ends by having the student open setup.md themselves, study has them writing notes.md, and the diagram work needs Camunda. A student who cannot open their own files can watch an agent describe their work and never read or write it, which is not ready.</bpmn:documentation>
         <bpmn:incoming>w15</bpmn:incoming>
         <bpmn:outgoing>e1</bpmn:outgoing>
         <bpmn:outgoing>e2</bpmn:outgoing>
@@ -350,7 +352,7 @@ An earlier draft made it optional, on the reasoning that the agent reads and wri
       <bpmn:sequenceFlow id="r2" name="addressing done" sourceRef="G_resume" targetRef="G_m2">
         <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">the setup check already reported phase 4</bpmn:conditionExpression>
       </bpmn:sequenceFlow>
-      <bpmn:sequenceFlow id="r3" name="tour already ran" sourceRef="G_resume" targetRef="G_m3">
+      <bpmn:sequenceFlow id="r3" name="smoke test already ran" sourceRef="G_resume" targetRef="G_m3">
         <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">the setup check already reported phase 5</bpmn:conditionExpression>
       </bpmn:sequenceFlow>
       <bpmn:sequenceFlow id="w6" sourceRef="W_addr" targetRef="Prog_w2" />
@@ -358,10 +360,10 @@ An earlier draft made it optional, on the reasoning that the agent reads and wri
       <bpmn:sequenceFlow id="w8" name="yes" sourceRef="G_w2" targetRef="G_m2">
         <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">~/.codex/AGENTS.md exists and every path in it resolves</bpmn:conditionExpression>
       </bpmn:sequenceFlow>
-      <bpmn:sequenceFlow id="w10" sourceRef="W_tour" targetRef="Prog_w3" />
+      <bpmn:sequenceFlow id="w10" sourceRef="Prog_smoke" targetRef="Prog_w3" />
       <bpmn:sequenceFlow id="w11" sourceRef="Prog_w3" targetRef="G_w3" />
       <bpmn:sequenceFlow id="w12" name="yes" sourceRef="G_w3" targetRef="G_m3">
-        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">the tour left a dated artifact in learning-topics</bpmn:conditionExpression>
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">the smoke test left a dated receipt in learning-topics</bpmn:conditionExpression>
       </bpmn:sequenceFlow>
       <bpmn:sequenceFlow id="w14" sourceRef="W_edit" targetRef="Prog_w4" />
       <bpmn:sequenceFlow id="w15" sourceRef="Prog_w4" targetRef="G_w4" />
@@ -369,7 +371,7 @@ An earlier draft made it optional, on the reasoning that the agent reads and wri
         <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">both editors are installed</bpmn:conditionExpression>
       </bpmn:sequenceFlow>
       <bpmn:sequenceFlow id="e2" name="no" sourceRef="G_w4" targetRef="G_w_stop" />
-      <bpmn:sequenceFlow id="m2" sourceRef="G_m2" targetRef="W_tour" />
+      <bpmn:sequenceFlow id="m2" sourceRef="G_m2" targetRef="Prog_smoke" />
       <bpmn:sequenceFlow id="m3" sourceRef="G_m3" targetRef="W_edit" />
       <bpmn:exclusiveGateway id="G_w_stop">
         <bpmn:incoming>w13</bpmn:incoming>
@@ -768,18 +770,18 @@ An earlier draft made it optional, on the reasoning that the agent reads and wri
       <bpmndi:BPMNShape id="G_m2_di" bpmnElement="G_m2" isMarkerVisible="true">
         <dc:Bounds x="985" y="195" width="50" height="50" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="W_tour_di" bpmnElement="W_tour">
-        <dc:Bounds x="1060" y="170" width="210" height="100" />
+      <bpmndi:BPMNShape id="Prog_smoke_di" bpmnElement="Prog_smoke">
+        <dc:Bounds x="1060" y="332" width="210" height="68" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Prog_w3_di" bpmnElement="Prog_w3">
-        <dc:Bounds x="1060" y="370" width="210" height="100" />
+        <dc:Bounds x="1060" y="408" width="210" height="68" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="G_w3_di" bpmnElement="G_w3" isMarkerVisible="true">
         <dc:Bounds x="1305" y="395" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1295" y="376" width="31" height="27" />
+          <dc:Bounds x="1258" y="372" width="45" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="G_m3_di" bpmnElement="G_m3" isMarkerVisible="true">
@@ -857,7 +859,7 @@ An earlier draft made it optional, on the reasoning that the agent reads and wri
         <di:waypoint x="1330" y="104" />
         <di:waypoint x="1330" y="195" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="696" y="86" width="78" height="14" />
+          <dc:Bounds x="696" y="82" width="118" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="w6_di" bpmnElement="w6">
@@ -876,11 +878,13 @@ An earlier draft made it optional, on the reasoning that the agent reads and wri
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="w10_di" bpmnElement="w10">
-        <di:waypoint x="1165" y="270" />
-        <di:waypoint x="1165" y="370" />
+        <di:waypoint x="1165" y="400" />
+        <di:waypoint x="1165" y="408" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="w11_di" bpmnElement="w11">
-        <di:waypoint x="1270" y="420" />
+        <di:waypoint x="1270" y="442" />
+        <di:waypoint x="1288" y="442" />
+        <di:waypoint x="1288" y="420" />
         <di:waypoint x="1305" y="420" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="w12_di" bpmnElement="w12">
@@ -915,8 +919,9 @@ An earlier draft made it optional, on the reasoning that the agent reads and wri
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="m2_di" bpmnElement="m2">
-        <di:waypoint x="1035" y="220" />
-        <di:waypoint x="1060" y="220" />
+        <di:waypoint x="1010" y="245" />
+        <di:waypoint x="1010" y="366" />
+        <di:waypoint x="1060" y="366" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="m3_di" bpmnElement="m3">
         <di:waypoint x="1355" y="220" />

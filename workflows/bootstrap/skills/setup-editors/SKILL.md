@@ -139,38 +139,38 @@ tool, and Windows hash-protects the user's choice against `assoc` and `ftype`. I
 do, and that is the point: setting it opens the file, and opening the file is the first thing
 in this course they do without an agent in between.
 
-The file is the one the tour wrote — `<parent>/learning-topics/tour.md`, with their own words
-in it.
+The file is the one the smoke test wrote — `<parent>/learning-topics/setup.md`. It names the
+two directories their machine now knows about, so it is worth the look on its own.
 
 On macOS, send them this, filling in the real path, and send nothing after it:
 
-> In Finder, open `<parent>/learning-topics` and click once on `tour.md` — one click, not two.
+> In Finder, open `<parent>/learning-topics` and click once on `setup.md` — one click, not two.
 > Press ⌘I, find **Open with**, choose **Zettlr**, then click **Change All…** and confirm. Now
-> double-click `tour.md`. It should open in Zettlr with your own words in it. Send me a
-> screenshot of that.
+> double-click `setup.md`. It should open in Zettlr, showing where your work lives and where
+> the course lives. Send me a screenshot of that.
 
 On Windows:
 
-> In File Explorer, open `<parent>\learning-topics` and right-click `tour.md`. Choose **Open
+> In File Explorer, open `<parent>\learning-topics` and right-click `setup.md`. Choose **Open
 > with → Choose another app**, pick **Zettlr**, tick **Always use this app to open .md files**,
-> and click OK. It should open in Zettlr with your own words in it. Send me a screenshot of
-> that.
+> and click OK. It should open in Zettlr, showing where your work lives and where the course
+> lives. Send me a screenshot of that.
 
-**5. Open the diagram for them, and tell them you did.** The file is the tour they ran a few
-minutes ago, drawn — the simplest diagram in the course, and about something they have just
-done, which is what makes it their first readable one. There is nothing to learn from hunting
-for it, and on Windows they could not open it by hand anyway: if the registration in step 3
-failed, double-clicking a `.bpmn` there offers Notepad and a browser and does not list Camunda
-at all. Open it yourself:
+**5. Open the diagram for them, and tell them you did.** The file is the setup they have just
+been through, drawn — about something they have just done, which is what makes it their first
+readable one. There is nothing to learn from hunting for it, and on Windows they could not open
+it by hand anyway: if the registration in step 3 failed, double-clicking a `.bpmn` there offers
+Notepad and a browser and does not list Camunda at all. Open it yourself:
 
-- macOS — `open -a "Camunda Modeler" "<parent>/course-materials/workflows/tour/tour.bpmn"`
+- macOS —
+  `open -a "Camunda Modeler" "<parent>/course-materials/workflows/bootstrap/bootstrap.bpmn"`
 - Windows —
-  `Start-Process "$env:LOCALAPPDATA\Programs\camunda-modeler\Camunda Modeler.exe" -ArgumentList "<parent>\course-materials\workflows\tour\tour.bpmn"`
+  `Start-Process "$env:LOCALAPPDATA\Programs\camunda-modeler\Camunda Modeler.exe" -ArgumentList "<parent>\course-materials\workflows\bootstrap\bootstrap.bpmn"`
 
 Run it first, then send this, with nothing after it:
 
-> I have opened Camunda Modeler for you, with `tour.bpmn` in it — that diagram is the tour you
-> ran a few minutes ago. Send me a screenshot when it is on screen.
+> I have opened Camunda Modeler for you, with `bootstrap.bpmn` in it — that diagram is the
+> setup you have just been through. Send me a screenshot when it is on screen.
 
 **Look at both screenshots yourself.** You are checking that the application is open with the
 right file in it — not that they say so. If a screenshot shows an empty editor, a different
@@ -180,8 +180,8 @@ file, or an error, work through it with them rather than accepting it.
 
 ```json
 {
-  "zettlr": { "opened": "learning-topics/tour.md", "on": "YYYY-MM-DD" },
-  "camunda": { "opened": "workflows/tour/tour.bpmn", "on": "YYYY-MM-DD" }
+  "zettlr": { "opened": "learning-topics/setup.md", "on": "YYYY-MM-DD" },
+  "camunda": { "opened": "workflows/bootstrap/bootstrap.bpmn", "on": "YYYY-MM-DD" }
 }
 ```
 
@@ -235,4 +235,5 @@ their instructor knowing today rather than in week three.
 - [`study`](workflows/learn/skills/study/SKILL.md) — skill
 - [`setup-workspace`](workflows/bootstrap/skills/setup-workspace/SKILL.md) — skill
 - [`check-setup.mjs`](workflows/bootstrap/tools/check-setup.mjs) — tool
-- [`tour.bpmn`](workflows/tour/tour.bpmn) — diagram, the one they open in Camunda
+- [`bootstrap.bpmn`](workflows/bootstrap/bootstrap.bpmn) — diagram, the one they open in
+  Camunda

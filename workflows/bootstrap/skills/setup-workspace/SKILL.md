@@ -93,12 +93,8 @@ you need to read what they tell you.
    three repositories, sets the student's git identity. **Fetch this one by URL**: it is what
    creates the disk you would otherwise read it from. Should reach **3 of 7, Repositories**.
 2. **`workflows/bootstrap/skills/setup-addressing/SKILL.md`** — writes `~/.codex/AGENTS.md`,
-   then runs the tour. From here on, read from the clone. Should reach **5 of 7, Smoke test**.
-
-   **Say one sentence when the tour hands back**, before the editors: the tour is over and
-   there is one thing left to install. The tour ends on a deliberate full stop, and from the
-   student's side that is indistinguishable from being finished, or from it being their move.
-   The sentence belongs to you, not to the tour.
+   then runs the smoke test. From here on, read from the clone. Should reach **5 of 7, Smoke
+   test**.
 
 3. **`workflows/bootstrap/skills/setup-editors/SKILL.md`** — Zettlr and Camunda Modeler. Should
    reach **6 of 7, Editors**.

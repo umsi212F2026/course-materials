@@ -1,14 +1,14 @@
 ---
 name: setup-addressing
-description: Record where the course repositories are so that every later session can find them, then run the tour to prove the whole chain works. Runs during first-day setup, after setup-repos has cloned the student's repositories.
+description: Record where the course repositories are so that every later session can find them, then run the smoke test to prove the whole chain works. Runs during first-day setup, after setup-repos has cloned the student's repositories.
 ---
 
 # Set up addressing
 
 The **Addressing** phase, fourth of seven, and then the **Smoke test**, fifth.
 
-You write one small file and then run one workflow. The file is what makes every future session
-able to find anything; the workflow is what proves it worked, in a way that is a file on disk
+You write one small file and then run one program. The file is what makes every future session
+able to find anything; the program is what proves it worked, in a way that is a file on disk
 rather than your own account of it.
 
 ## Operates on
@@ -55,14 +55,20 @@ file has done something it should not. Merge in the SI 212 block and leave the r
 It should report **reached 4 of 7 — Addressing**. If the paths do not resolve, the most likely
 cause is a typo in what you just wrote rather than anything wrong with the clones.
 
-**3. Run the tour.** Read [`tour`](workflows/tour/skills/tour/SKILL.md) and follow it, pointed
-at the `learning-topics` clone. It is a real workflow, and running it is the only evidence that
-the addressing works end to end — it finds a skill by path, resolves a manifest, runs a script
-with the directory it was given, and writes into a repository that is not the one the code
-lives in.
+**3. Run the smoke test.** Point it at the `learning-topics` clone:
 
-Do not summarise the tour or do it on the student's behalf. It asks them a question and that
-question is theirs.
+```
+node course-materials/workflows/bootstrap/tools/smoke-test.mjs --dir <parent>/learning-topics
+```
+
+It is the only evidence that the addressing works end to end. It reads the entry-point index
+you just pointed at, resolves every repo-relative path in it against this machine, and writes
+what it found into a repository that is not the one the code lives in.
+
+**Show its output.** The two paths it prints are the point — the course materials found
+relative to the script itself, the data directory taken as an argument. Say that much in a
+sentence, and no more: this is a check, not a lesson, and there is a workflow whose job is the
+lesson.
 
 **4. Check the phase again.** The setup check should now report **reached 5 of 7 — Smoke
 test**.
@@ -88,9 +94,9 @@ orchestrator resumes at the phase that failed.
 the answer is that `setup-repos` did not finish, not that this file should point somewhere
 else.
 
-**If the tour reports that the repositories are nested**, pass that on rather than rearranging
-anything. It means the student's work is inside the course files, which is worth their
-instructor knowing and is not yours to fix mid-setup.
+**If the smoke test reports that the repositories are nested**, pass that on rather than
+rearranging anything. It means the student's work is inside the course files, which is worth
+their instructor knowing and is not yours to fix mid-setup.
 
 ## When you cannot finish
 
@@ -101,5 +107,5 @@ its output to the Canvas assignment. Submitting a failure is the correct action.
 
 - [`setup-workspace`](workflows/bootstrap/skills/setup-workspace/SKILL.md) — skill
 - [`setup-repos`](workflows/bootstrap/skills/setup-repos/SKILL.md) — skill
-- [`tour`](workflows/tour/skills/tour/SKILL.md) — skill
 - [`check-setup.mjs`](workflows/bootstrap/tools/check-setup.mjs) — tool
+- [`smoke-test.mjs`](workflows/bootstrap/tools/smoke-test.mjs) — tool

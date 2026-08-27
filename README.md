@@ -13,7 +13,7 @@ not in this one.
 
     AGENTS.md                where an agent starts — the entry-point index
     workflows/bootstrap/     first-day setup: the U-M GPT prompt, the setup skills, the setup check
-    workflows/tour/          the setup's own smoke test, and what a workflow is made of
+    workflows/tour/          what a workflow is made of
     workflows/learn/         the learning workflow — goals, activities, study, review
     workflows/update/        bringing one repository up to date with this one
     workflows/diagram/       BPMN validators and viewer  (provisional — see its STATUS.md)
@@ -25,8 +25,8 @@ and the diagram that says how its parts fit together.
 ## Reading it
 
 Start with [`AGENTS.md`](AGENTS.md). It lists the handful of workflows you can begin a session
-from, with each one's own description, and every skill lists what it depends on at the bottom of
-its own file — so anything reached from those is findable from there.
+from, with each one's own description, and every skill lists what it depends on at the bottom
+of its own file — so anything reached from those is findable from there.
 
 Nothing is hidden. The skills are plain English, and if an agent does something unexpected, the
 skill it was following is the place to look.
@@ -41,5 +41,5 @@ Two other public repositories seed the repositories that become yours:
   team can read it.
 
 You clone all three on the first day. In week 2 the two above become your own private
-repositories, while this one stays pull-only for the term — which is what lets a correction here
-reach you without touching anything you have written.
+repositories, while this one stays pull-only for the term — which is what lets a correction
+here reach you without touching anything you have written.
