@@ -51,11 +51,15 @@ taxonomy of nothing. Step 2 is where that vocabulary lands, on something that ju
 Do not coach their answer, improve it, or ask a second question. It is the only thing in the
 whole setup that is theirs rather than the machine's.
 
-**2. Once they have answered, read the guide with them.** Open
-[`tour.md`](workflows/tour/guides/tour.md) and walk through it — a guide, a skill, a script,
-and a data directory. Do not paste it at them wholesale. Take the four parts one at a time and
-say which one you are, which one the file they are reading is, and which one you are about to
-run.
+**2. Once they have answered, explain the four parts.** Open
+[`tour.md`](workflows/tour/guides/tour.md) and read it — **you** read it, not them. They are
+not opening anything at this point and have not been given the path; what reaches them is your
+account of what it says. Do not paste it at them wholesale. Take the four parts one at a time —
+a guide, a skill, a script, and a data directory — and say which one you are, which one you
+have just read, and which one you are about to run.
+
+Their turn with a file comes at step 4, on their own record rather than on a course document,
+and it is the better one to spend it on.
 
 Tell them where you are: name `<data-dir>` out loud, and say that you were told it rather than
 finding it yourself.

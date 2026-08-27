@@ -45,10 +45,10 @@ The skill forbids coaching the answer, improving it, or asking a second question
       <bpmn:incoming>t2</bpmn:incoming>
       <bpmn:outgoing>t3</bpmn:outgoing>
     </bpmn:userTask>
-    <bpmn:task id="T_guide" name="Read the guide together —&#10;guide, skill, script, data directory">
-      <bpmn:documentation>Step 2. workflows/tour/guides/tour.md, taken one part at a time rather than pasted at them wholesale. The agent says which part it is itself, which part the file they are reading is, and which part it is about to run.
+    <bpmn:serviceTask id="T_guide" name="Explain the four parts of the tour to the user.">
+      <bpmn:documentation>Step 2. THE AGENT opens workflows/tour/guides/tour.md and reads it; the student does not, and is never given the path. What reaches them is the agent's account of it, one part at a time — a guide, a skill, a script and a data directory — not the file pasted at them wholesale.
 
-A PLAIN TASK, with no type marker, because this is not simply one kind of performer: the agent walks, the student reads. Drawn across both bands for the same reason, and declared in AI AGENT because that is the band it mostly overlaps and the role accountable for it.
+So this is one performer, not two, and the box sits wholly in AI AGENT. An earlier draft drew it as a plain task straddling HUMAN and AI AGENT, on the reading that the agent walks and the student reads. That was the aspiration, not the step: nothing here hands a student a file. The HUMAN lane is empty from their answer until they open their own record, and that gap is the truth about this stretch.
 
 Also here: the agent names the data directory out loud and says it was TOLD it rather than finding it itself. That asymmetry — materials addressed relative to the repository, data named absolutely and passed in — is what the whole workflow exists to teach.</bpmn:documentation>
       <bpmn:incoming>t3</bpmn:incoming>
@@ -56,21 +56,7 @@ Also here: the agent names the data directory out loud and says it was TOLD it r
       <bpmn:dataInputAssociation id="a_guide">
         <bpmn:sourceRef>DOR_guide</bpmn:sourceRef>
       </bpmn:dataInputAssociation>
-    </bpmn:task>
-    <bpmn:scriptTask id="T_run" name="Write the record and print what resolved&#10;tour.mjs">
-      <bpmn:documentation>workflows/tour/tools/tour.mjs --dir &lt;data-dir&gt; --answer "&lt;what they said&gt;". The agent types the command; the program does the part that has to come out right every time, which is why the box sits in this lane.
-
-It records the paths it ACTUALLY resolved rather than the ones it was supposed to: the course materials found relative to the script itself, the data directory taken as an argument. It refuses to run without --dir, because "a tool that guessed could write your work somewhere you would not find it". It also checks that the guide, the skill and itself are all present under the materials it resolved, and says so if they are not.
-
-It deliberately does not merely echo the answer back — a script that repeated what the agent said would prove nothing a bare agent could not do.
-
-The agent shows the output; it does not write the file. "If you find yourself composing tour.md, something has gone wrong — the whole point is that a program made the record, so that the record is evidence rather than a claim."</bpmn:documentation>
-      <bpmn:incoming>t4</bpmn:incoming>
-      <bpmn:outgoing>t5</bpmn:outgoing>
-      <bpmn:dataOutputAssociation id="a_rec_out">
-        <bpmn:targetRef>DOR_rec_a</bpmn:targetRef>
-      </bpmn:dataOutputAssociation>
-    </bpmn:scriptTask>
+    </bpmn:serviceTask>
     <bpmn:serviceTask id="T_open_ask" name="Give them the path, and ask&#10;them to open it themselves">
       <bpmn:documentation>Step 4 — three things in one message that needs a reply, and the skill is emphatic that they stay together.
 
@@ -128,6 +114,20 @@ The run hands back to setup-addressing, which runs the setup check and expects "
     <bpmn:sequenceFlow id="t6" sourceRef="T_open_ask" targetRef="T_open" />
     <bpmn:sequenceFlow id="t7" sourceRef="T_open" targetRef="T_recap" />
     <bpmn:sequenceFlow id="t8" sourceRef="T_recap" targetRef="End_T" />
+    <bpmn:scriptTask id="T_run" name="Write the record and print what resolved&#10;tour.mjs">
+      <bpmn:documentation>workflows/tour/tools/tour.mjs --dir &lt;data-dir&gt; --answer "&lt;what they said&gt;". The agent types the command; the program does the part that has to come out right every time, which is why the box sits in this lane.
+
+It records the paths it ACTUALLY resolved rather than the ones it was supposed to: the course materials found relative to the script itself, the data directory taken as an argument. It refuses to run without --dir, because "a tool that guessed could write your work somewhere you would not find it". It also checks that the guide, the skill and itself are all present under the materials it resolved, and says so if they are not.
+
+It deliberately does not merely echo the answer back — a script that repeated what the agent said would prove nothing a bare agent could not do.
+
+The agent shows the output; it does not write the file. "If you find yourself composing tour.md, something has gone wrong — the whole point is that a program made the record, so that the record is evidence rather than a claim."</bpmn:documentation>
+      <bpmn:incoming>t4</bpmn:incoming>
+      <bpmn:outgoing>t5</bpmn:outgoing>
+      <bpmn:dataOutputAssociation id="a_rec_out">
+        <bpmn:targetRef>DOR_rec_a</bpmn:targetRef>
+      </bpmn:dataOutputAssociation>
+    </bpmn:scriptTask>
     <bpmn:textAnnotation id="Note_scope">
       <bpmn:text>THIS DIAGRAM IS THE SUCCESSFUL PATH ONLY. The failure rules are omitted for simplicity.</bpmn:text>
     </bpmn:textAnnotation>
@@ -161,11 +161,7 @@ The run hands back to setup-addressing, which runs the setup check and expects "
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="T_guide_di" bpmnElement="T_guide">
-        <dc:Bounds x="900" y="300" width="220" height="110" />
-        <bpmndi:BPMNLabel />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="T_run_di" bpmnElement="T_run">
-        <dc:Bounds x="1220" y="600" width="250" height="80" />
+        <dc:Bounds x="900" y="400" width="220" height="80" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="T_open_ask_di" bpmnElement="T_open_ask">
@@ -204,6 +200,10 @@ The run hands back to setup-addressing, which runs the setup check and expects "
           <dc:Bounds x="1840" y="169" width="120" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_run_di" bpmnElement="T_run">
+        <dc:Bounds x="1220" y="570" width="250" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Note_scope_di" bpmnElement="Note_scope">
         <dc:Bounds x="250" y="580" width="899.9999389648438" height="25.998262405395508" />
         <bpmndi:BPMNLabel />
@@ -221,19 +221,18 @@ The run hands back to setup-addressing, which runs the setup check and expects "
       <bpmndi:BPMNEdge id="t3_di" bpmnElement="t3">
         <di:waypoint x="820" y="250" />
         <di:waypoint x="860" y="250" />
-        <di:waypoint x="860" y="355" />
-        <di:waypoint x="900" y="355" />
+        <di:waypoint x="860" y="440" />
+        <di:waypoint x="900" y="440" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="t4_di" bpmnElement="t4">
-        <di:waypoint x="1120" y="355" />
-        <di:waypoint x="1170" y="355" />
-        <di:waypoint x="1170" y="640" />
-        <di:waypoint x="1220" y="640" />
+        <di:waypoint x="1120" y="440" />
+        <di:waypoint x="1170" y="440" />
+        <di:waypoint x="1170" y="610" />
+        <di:waypoint x="1220" y="610" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="t5_di" bpmnElement="t5">
-        <di:waypoint x="1470" y="640" />
-        <di:waypoint x="1480" y="640" />
-        <di:waypoint x="1480" y="440" />
+        <di:waypoint x="1345" y="570" />
+        <di:waypoint x="1345" y="440" />
         <di:waypoint x="1520" y="440" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="t6_di" bpmnElement="t6">
@@ -255,10 +254,10 @@ The run hands back to setup-addressing, which runs the setup check and expects "
       <bpmndi:BPMNEdge id="a_guide_di" bpmnElement="a_guide">
         <di:waypoint x="1038" y="140" />
         <di:waypoint x="1080" y="140" />
-        <di:waypoint x="1080" y="300" />
+        <di:waypoint x="1080" y="400" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="a_rec_out_di" bpmnElement="a_rec_out">
-        <di:waypoint x="1330" y="680" />
+        <di:waypoint x="1330" y="650" />
         <di:waypoint x="1330" y="695" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="a_rec_in_di" bpmnElement="a_rec_in">
