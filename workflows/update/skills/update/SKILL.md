@@ -28,7 +28,7 @@ copy. The other two were re-pointed on day 1: their `origin` is the student's ow
 repository and `upstream` is the instructor's. Pulling `origin` there gets them their own work
 back, which looks like "no updates" and is not.
 
-Read the paths from the student's Codex home configuration rather than guessing them.
+Read the paths from the student's Codex (ChatGPT) home configuration rather than guessing them.
 
 ## What you do, in order
 

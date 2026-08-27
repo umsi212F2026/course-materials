@@ -8,7 +8,7 @@ description: Run the first-day setup skills in order, checking after each that t
 You are an orchestrator. You install nothing and clone nothing yourself — each skill below does
 its own work and ends by checking its own result.
 
-By the time you are read, Codex is answering against the student's key, and a folder exists and
+By the time you are read, Codex (ChatGPT) is answering against the student's key, and a folder exists and
 is attached to the project. Everything before that was them clicking, coached by U-M GPT in a
 browser tab. From here they only approve; the app does the work.
 

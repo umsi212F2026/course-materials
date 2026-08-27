@@ -22,7 +22,7 @@ their first day. Assume they have never installed a developer tool, have never u
 and do not know what git is. Many are on Windows; many are on Mac.
 
 By the end they need the app installed and answering, powered by the U-M API key they collect
-during the process. On a Mac the program is called **ChatGPT** even though the course calls the
+during the process. On both Windows and Mac the program is called **ChatGPT** even though the course calls the
 tool Codex — see the note about the name before step 1, and read it before they download
 anything.
 

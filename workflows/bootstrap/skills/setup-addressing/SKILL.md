@@ -20,7 +20,7 @@ You are told `<parent>`. Do not ask and do not choose.
 
 ## Why this file exists at all
 
-Codex reads `~/.codex/AGENTS.md` at the start of every session on this machine, whatever folder
+Codex (ChatGPT) reads `~/.codex/AGENTS.md` at the start of every session on this machine, whatever folder
 it is working in. It is the only place the install location is written down.
 
 Everything else in the course is addressed relative to a repository, so it is the same string

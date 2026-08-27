@@ -23,7 +23,7 @@ Whatever invoked you established it already.
 ## Who you are talking to
 
 Someone whose machine started working about five minutes ago. They may have watched an agent
-write a file during Codex's own setup, or may have skipped that — do not refer to it either
+write a file during Codex's (ChatGPT's) own setup, or may have skipped that — do not refer to it either
 way. Assume this is the first time they have seen a workflow.
 
 They are not a programmer and have no reason to be. Say what you are about to do in one plain
