@@ -8,9 +8,9 @@ description: Run the first-day setup skills in order, checking after each that t
 You are an orchestrator. You install nothing and clone nothing yourself — each skill below does
 its own work and ends by checking its own result.
 
-By the time you are read, Codex (ChatGPT) is answering against the student's key, and a folder exists and
-is attached to the project. Everything before that was them clicking, coached by U-M GPT in a
-browser tab. From here they only approve; the app does the work.
+By the time you are read, Codex (ChatGPT) is answering against the student's key, and a folder
+exists and is attached to the project. Everything before that was them clicking, coached by U-M
+GPT in a browser tab. From here they only approve; the app does the work.
 
 ## Where to read the other skills from
 
@@ -76,8 +76,8 @@ Run `node course-materials/workflows/bootstrap/tools/check-setup.mjs`.
 - **It runs and reports a phase** — start at the first step past that phase. Do not repeat the
   earlier ones.
 
-That is what the setup check's "reached N of 7" line is for, and why it reports a number rather than
-pass or fail.
+That is what the setup check's "reached N of 7" line is for, and why it reports a number rather
+than pass or fail.
 
 **A re-run is usually a repair.** If they are back because a check failed, the fix has probably
 been published since — which is why step 1 updates the repositories when they already exist
@@ -85,9 +85,9 @@ rather than skipping past them. Getting the fix is the point of running you agai
 
 ## What you do, in order
 
-Read each skill and follow it, then come back here. Each one ends by running `check-setup.mjs` and
-reporting the phase it reached, so you do not need to run the setup check between them — you need to
-read what they tell you.
+Read each skill and follow it, then come back here. Each one ends by running `check-setup.mjs`
+and reporting the phase it reached, so you do not need to run the setup check between them —
+you need to read what they tell you.
 
 1. **`workflows/bootstrap/skills/setup-repos/SKILL.md`** — installs git and Node, clones all
    three repositories, sets the student's git identity. **Fetch this one by URL**: it is what
@@ -107,11 +107,11 @@ read what they tell you.
 student who cannot open their own files can watch an agent describe their work but never read
 or write it, which is not ready to start the course.
 
-**A failing check is not a reason to try again.** You call the setup check only when you believe you
-have finished, so a check that fails is your account and the program's account disagreeing —
-not an operation that might work on a second attempt. Running the same steps again against a
-disagreement throws away the one interesting fact, which is the whole reason a program
-adjudicates here rather than you.
+**A failing check is not a reason to try again.** You call the setup check only when you
+believe you have finished, so a check that fails is your account and the program's account
+disagreeing — not an operation that might work on a second attempt. Running the same steps
+again against a disagreement throws away the one interesting fact, which is the whole reason a
+program adjudicates here rather than you.
 
 Stop, show the output, and say which check disagreed. The repair path is that the instructor
 publishes a fix and the student runs the setup again; `setup-repos` pulls it and the
@@ -120,8 +120,8 @@ orchestrator resumes at the phase that failed.
 Then **say where they stand.** One short paragraph: which phase they reached, and if it is not
 the last, which step stopped and why.
 
-**Then print the setup check's output verbatim, as the last thing you say.** Not a summary of it,
-not a list of what passed, not your own account of what happened — the text the program
+**Then print the setup check's output verbatim, as the last thing you say.** Not a summary of
+it, not a list of what passed, not your own account of what happened — the text the program
 produced, from `SI 212 — first-day setup check` down to the `Copy everything above` line, in
 one block they can select in a single gesture. Your paragraph goes before it. Nothing goes
 after it.
@@ -147,8 +147,8 @@ without one is the whole design.
 repeating itself when the repositories are already there. Re-running an earlier phase is not
 harmful, but it is confusing and it makes the setup check output stop meaning what it says.
 
-**Never print the API key**, or any part of it. The setup check output gets pasted into Canvas by a
-student who will not think about that.
+**Never print the API key**, or any part of it. The setup check output gets pasted into Canvas
+by a student who will not think about that.
 
 **Do not replace the setup check's report with a summary of it.** Said above and repeated here
 because it is the easiest thing in this whole skill to get wrong: everything else you say is

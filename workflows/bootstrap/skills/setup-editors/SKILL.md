@@ -169,4 +169,5 @@ their instructor knowing today rather than in week three.
 - [`study`](workflows/learn/skills/study/SKILL.md) — skill
 - [`setup-workspace`](workflows/bootstrap/skills/setup-workspace/SKILL.md) — skill
 - [`check-setup.mjs`](workflows/bootstrap/tools/check-setup.mjs) — tool
-- [`bootstrap.bpmn`](workflows/bootstrap/bootstrap.bpmn) — diagram, the one they open in Camunda
+- [`bootstrap.bpmn`](workflows/bootstrap/bootstrap.bpmn) — diagram, the one they open in
+  Camunda

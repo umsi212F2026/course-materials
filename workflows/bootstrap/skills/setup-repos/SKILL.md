@@ -11,8 +11,8 @@ handed off to you.
 **You are the skill that ends the network.** Everything before you — including you — is fetched
 from a raw GitHub URL, because there is nothing on the student's disk to read. Everything after
 you is read from the clone you are about to make. That is why the installs live here rather
-than in a skill of their own: git is needed _in order to_ clone, and Node for the setup check that
-lives _inside_ the clone. Neither is a phase anyone can check until you have finished.
+than in a skill of their own: git is needed _in order to_ clone, and Node for the setup check
+that lives _inside_ the clone. Neither is a phase anyone can check until you have finished.
 
 ## Operates on
 
@@ -201,11 +201,11 @@ Both in one breath reads as one question with two halves and gets answered as ne
 **Build the address from the uniqname; do not ask for an email.** Without an identity git
 refuses to record their first piece of work, or invents one from the machine's hostname.
 
-**6. Check the phases.** Run `node course-materials/workflows/bootstrap/tools/check-setup.mjs` and
-show its complete output, unedited. It should report **reached 3 of 7 — Repositories**.
+**6. Check the phases.** Run `node course-materials/workflows/bootstrap/tools/check-setup.mjs`
+and show its complete output, unedited. It should report **reached 3 of 7 — Repositories**.
 
-That single run covers both your phases. Runtime is self-verifying: the setup check is a Node script
-inside the clone, so if it runs at all, git and Node work and the clone succeeded.
+That single run covers both your phases. Runtime is self-verifying: the setup check is a Node
+script inside the clone, so if it runs at all, git and Node work and the clone succeeded.
 
 **7. Say what these three are for**, in three sentences, because it is the first time a student
 sees that their work and the course files are different things. `course-materials` is the
@@ -218,8 +218,8 @@ this is read from disk rather than fetched.
 ## Rules
 
 **Do not touch `course-materials`.** No commits, no edits, no new files. It is pull-only, and
-the setup check checks it for local modifications precisely because an agent that was told this can
-still do it by accident.
+the setup check checks it for local modifications precisely because an agent that was told this
+can still do it by accident.
 
 **Do not create any of the three.** They already exist and are public. If a clone fails, the
 answer is never to `git init` something with the same name — a student left holding an empty
@@ -229,11 +229,11 @@ repository that looks right is worse off than one holding nothing, because nobod
 is in a state the rest of the setup does not expect, and `course-materials` failing is the
 worst of them: everything after this is read from it.
 
-**A failing check is not a reason to try again.** You call the setup check only when you believe you
-have finished, so a check that fails is your account and the program's account disagreeing —
-not an operation that might work on a second attempt. Running the same steps again against a
-disagreement throws away the one interesting fact, which is the whole reason a program
-adjudicates here rather than you.
+**A failing check is not a reason to try again.** You call the setup check only when you
+believe you have finished, so a check that fails is your account and the program's account
+disagreeing — not an operation that might work on a second attempt. Running the same steps
+again against a disagreement throws away the one interesting fact, which is the whole reason a
+program adjudicates here rather than you.
 
 Stop, show the output, and say which check disagreed. The repair path is that the instructor
 publishes a fix and the student runs the setup again; `setup-repos` pulls it and the
@@ -254,13 +254,13 @@ failed. A check that fails is a disagreement, not a hiccup — see above.
 laptops are available from the instructor; that is the fix, not a workaround. Do not attempt a
 portable build or an install under another account.
 
-**Never print the API key**, or any part of it. The setup check output gets pasted into Canvas by a
-student who will not think about that.
+**Never print the API key**, or any part of it. The setup check output gets pasted into Canvas
+by a student who will not think about that.
 
 ## When you cannot finish
 
-Say which step stopped and show the error unedited. Run the setup check anyway if you got far enough
-for it to run, and have them submit its output to the Canvas assignment.
+Say which step stopped and show the error unedited. Run the setup check anyway if you got far
+enough for it to run, and have them submit its output to the Canvas assignment.
 
 Submitting a failure is the correct action. It is how their instructor finds out who is stuck,
 and it is the only way they find out.

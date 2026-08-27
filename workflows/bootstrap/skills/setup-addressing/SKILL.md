@@ -20,8 +20,8 @@ You are told `<parent>`. Do not ask and do not choose.
 
 ## Why this file exists at all
 
-Codex (ChatGPT) reads `~/.codex/AGENTS.md` at the start of every session on this machine, whatever folder
-it is working in. It is the only place the install location is written down.
+Codex (ChatGPT) reads `~/.codex/AGENTS.md` at the start of every session on this machine,
+whatever folder it is working in. It is the only place the install location is written down.
 
 Everything else in the course is addressed relative to a repository, so it is the same string
 on all forty-eight machines. This one fact — where the student actually put things — is the
@@ -51,8 +51,8 @@ It lists the available workflows and how to start one.
 may have something else in there, and a course that quietly clobbers a personal configuration
 file has done something it should not. Merge in the SI 212 block and leave the rest.
 
-**2. Check the phase.** Run `node course-materials/workflows/bootstrap/tools/check-setup.mjs`. It
-should report **reached 4 of 7 — Addressing**. If the paths do not resolve, the most likely
+**2. Check the phase.** Run `node course-materials/workflows/bootstrap/tools/check-setup.mjs`.
+It should report **reached 4 of 7 — Addressing**. If the paths do not resolve, the most likely
 cause is a typo in what you just wrote rather than anything wrong with the clones.
 
 **3. Run the tour.** Read [`tour`](workflows/tour/skills/tour/SKILL.md) and follow it, pointed
@@ -64,17 +64,18 @@ lives in.
 Do not summarise the tour or do it on the student's behalf. It asks them a question and that
 question is theirs.
 
-**4. Check the phase again.** The setup check should now report **reached 5 of 7 — Smoke test**.
+**4. Check the phase again.** The setup check should now report **reached 5 of 7 — Smoke
+test**.
 
 Then hand back to `setup-workspace`.
 
 ## Rules
 
-**A failing check is not a reason to try again.** You call the setup check only when you believe you
-have finished, so a check that fails is your account and the program's account disagreeing —
-not an operation that might work on a second attempt. Running the same steps again against a
-disagreement throws away the one interesting fact, which is the whole reason a program
-adjudicates here rather than you.
+**A failing check is not a reason to try again.** You call the setup check only when you
+believe you have finished, so a check that fails is your account and the program's account
+disagreeing — not an operation that might work on a second attempt. Running the same steps
+again against a disagreement throws away the one interesting fact, which is the whole reason a
+program adjudicates here rather than you.
 
 Stop, show the output, and say which check disagreed. The repair path is that the instructor
 publishes a fix and the student runs the setup again; `setup-repos` pulls it and the
@@ -93,8 +94,8 @@ instructor knowing and is not yours to fix mid-setup.
 
 ## When you cannot finish
 
-Say which step stopped and show the error unedited. Run the setup check and have them submit its
-output to the Canvas assignment. Submitting a failure is the correct action.
+Say which step stopped and show the error unedited. Run the setup check and have them submit
+its output to the Canvas assignment. Submitting a failure is the correct action.
 
 ## Depends on
 

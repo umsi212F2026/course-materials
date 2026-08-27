@@ -98,8 +98,8 @@ in week 3 it costs an email to that student and a late submission.
 That repository is theirs and the teaching team does not see it. It is a record of learning,
 not work being graded, and that is a property of the design rather than a courtesy.
 
-**6. Check the phase.** Run `node course-materials/workflows/bootstrap/tools/check-setup.mjs`. It
-should report **reached 7 of 7 — Remote**, and print the `assignments` URL.
+**6. Check the phase.** Run `node course-materials/workflows/bootstrap/tools/check-setup.mjs`.
+It should report **reached 7 of 7 — Remote**, and print the `assignments` URL.
 
 **7. Have them submit that output to Canvas.** The `assignments` URL in it is how their
 instructor knows which repository is theirs.
@@ -121,12 +121,12 @@ the machine or the address telling you something true, and doing it again just s
 **This never applies to a check.** Retry the operation that visibly failed, at the moment it
 failed. A check that fails is a disagreement, not a hiccup — see above.
 
-**Never print the API key**, and never print the `learning-topics` URL. The setup check output is
-pasted into Canvas by a student who will not think about either.
+**Never print the API key**, and never print the `learning-topics` URL. The setup check output
+is pasted into Canvas by a student who will not think about either.
 
 **The student may share `learning-topics` if they want to.** With a study partner, say. That is
-their call and not a mistake. If the setup check reports collaborators on it, ask whether they meant
-to — do not remove anyone, and do not treat it as a failure.
+their call and not a mistake. If the setup check reports collaborators on it, ask whether they
+meant to — do not remove anyone, and do not treat it as a failure.
 
 **Do not push anything to `course-materials`.** It is pull-only and not theirs. Its `origin`
 points at the course copy, which they cannot write to, so an attempt will fail confusingly.
@@ -137,9 +137,9 @@ Say which step stopped and show the error. The most likely one is authentication
 likely cause is a Deny on the keychain prompt — `gh auth status` will say whether git is
 authenticated.
 
-Have them submit the setup check output to Canvas either way. A student who is stuck here still has
-every local thing working and has lost nothing; they just have no backup yet, which is worth
-saying out loud so they are not worried.
+Have them submit the setup check output to Canvas either way. A student who is stuck here still
+has every local thing working and has lost nothing; they just have no backup yet, which is
+worth saying out loud so they are not worried.
 
 ## Depends on
 
