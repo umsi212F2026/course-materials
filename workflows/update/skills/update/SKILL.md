@@ -87,7 +87,7 @@ does not: anything asking for credentials, a 404, permission denied, no space le
 the machine or the address telling you something true, and doing it again just says it twice.
 
 **This never applies to a check.** Retry the operation that visibly failed, at the moment it
-failed. A doctor check that fails is a disagreement, not a hiccup — see above.
+failed. A check that fails is a disagreement, not a hiccup — see above.
 
 **One repository at a time.** If they want all three, do them one after another and say which
 you are on. A single "updating everything" that half-fails is a state nobody can reason about.
@@ -101,4 +101,4 @@ repositories the student was not thinking about, at a moment they did not pick.
 
 ## Depends on
 
-- [`doctor.mjs`](workflows/bootstrap/tools/doctor.mjs) — tool
+- [`check-setup.mjs`](workflows/bootstrap/tools/check-setup.mjs) — tool

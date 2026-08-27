@@ -14,8 +14,8 @@ else. Two things survive it, and one of them corrupts the result:
 
 - `~/.codex/AGENTS.md` is machine-global, and `setup-addressing` is told to merge into it
   rather than overwrite. The second run finds the first run's block still there.
-- `doctor.mjs` **prefers the paths recorded in `AGENTS.md`** over the parent of its own clone.
-  So the second run's doctor checks the first run's repositories, and passes. Repeated runs get
+- `check-setup.mjs` **prefers the paths recorded in `AGENTS.md`** over the parent of its own clone.
+  So the second run's setup check checks the first run's repositories, and passes. Repeated runs get
   quietly more likely to pass, which is the wrong direction for a test.
 
 ## What it resets, and what it deliberately does not
@@ -40,7 +40,7 @@ repository, with `git -C <repo> config`, so it dies with the clones.
 
 Ask which, unless the conversation already settled it. Default to **full**.
 
-| level               | removes                                             | next run's doctor | what that tests                                                                           |
+| level               | removes                                             | next run's setup check | what that tests                                                                           |
 | ------------------- | --------------------------------------------------- | ----------------- | ----------------------------------------------------------------------------------------- |
 | **full**            | all three clones, `tour.md`, `hello.txt`, the block | nothing cloned    | the whole thing: the URL→disk boundary, every skill in order                              |
 | **from addressing** | the block and `tour.md`; keeps the clones           | reached 3 of 7    | the resume path, and `setup-repos` updating instead of cloning                            |
@@ -55,10 +55,10 @@ second one.
 1. **Capture the outcome of the run you are ending, before deleting anything.**
 
    ```
-   node <parent>/course-materials/workflows/bootstrap/tools/doctor.mjs
+   node <parent>/course-materials/workflows/bootstrap/tools/check-setup.mjs
    ```
 
-   The doctor lives inside the clone, so deleting the clone destroys the only account of where
+   The setup check lives inside the clone, so deleting the clone destroys the only account of where
    the run got to. Print its full output. If the clone never got made, say that instead — that
    is itself the result.
 
@@ -91,7 +91,7 @@ second one.
    is; it is a personal configuration file that this course is a guest in.
 
    **If nothing but whitespace remains, delete the file.** Blanking it is not equivalent and is
-   worse than doing nothing: `doctor.mjs` tests the file's contents for truthiness, so a file
+   worse than doing nothing: `check-setup.mjs` tests the file's contents for truthiness, so a file
    containing only a newline counts as present. At the **from addressing** level, where the
    clones are still there, that makes phase 4 report `0 lines, paths resolve` and **pass** —
    addressing checks out as done when it has been deleted, and the resume starts in the wrong
@@ -113,12 +113,12 @@ test loop stops reporting the bug it just found.
 
 **Delete, do not rearrange.** No moving a folder aside "just in case", no `.bak` copies. A
 half-reset machine is harder to reason about than either a clean one or a used one, and the
-next run's doctor cannot tell you which it got.
+next run's setup check cannot tell you which it got.
 
 ## Notes
 
 - Written 2026-08-25, before the first repeat run. The `AGENTS.md` precedence in step 6 is read
-  off `doctor.mjs`, not observed — if the doctor's handling of that file changes, this changes
+  off `check-setup.mjs`, not observed — if the setup check's handling of that file changes, this changes
   with it.
 - The public `course-materials` repository must actually contain the skills, the tools and the
   tour before any of this is worth running. As of writing it holds the config and the bootstrap

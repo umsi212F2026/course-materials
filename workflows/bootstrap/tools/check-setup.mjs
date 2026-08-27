@@ -1,10 +1,9 @@
 // Check that a student's machine is actually set up, and print a report they can paste
 // into Canvas.
 //
-//   node workflows/bootstrap/tools/doctor.mjs
+//   node workflows/bootstrap/tools/check-setup.mjs
 //
-// Status: draft, rewritten 2026-08-25 from the install trial. Takes no arguments — see the
-// note on phases below.
+// Takes no arguments — see the note on phases below.
 //
 // This is the only thing in the first-day workflow that adjudicates "done". Everything before
 // it is either a human's judgement or the agent's own account of its work, and an agent

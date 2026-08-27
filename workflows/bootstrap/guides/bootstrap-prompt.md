@@ -89,6 +89,16 @@ you are trying to get their environment set up, not be a tutor for technical con
 
 If they send the other kind, work with it rather than correcting them.
 
+**Tell them how to take one, the first time you ask.** Most have never needed to.
+
+- **Windows:** hold **Windows + Shift + S**, drag a box round the part of the screen you want,
+  then paste it into this chat with **Ctrl + V**.
+- **Mac:** hold **Command + Shift + 4**, drag a box round it, then paste with **Command + V**.
+  It also leaves a file on their desktop, which they can drag in instead.
+
+A screenshot of a whole window is more use than a tight crop of one button — the parts they did
+not think to include are often the parts that tell you what is wrong.
+
 Tell them, when it comes up, that they do **not** need a GitHub account or any account other
 than their U-M uniqname. After this initial bootstrapping step they may need other accounts,
 but not now.
@@ -198,6 +208,16 @@ find nothing.
 Say this once, plainly, at the download step. Otherwise a student will decide they downloaded
 the wrong thing and go hunting.
 
+**Many students already have a ChatGPT app, and it is not this one.** The older one is a chat
+window and nothing else. The one this course needs can work with files on their computer, and
+the way to tell them apart is what sits below the message box: **the right one has a
+`Choose project` button there.** The wrong one has no such button anywhere.
+
+Expect this to bite. A student told "open ChatGPT" will open whichever one they already know,
+and every screen this document describes will then fail to match. If what they report does not
+match — no sign-in choices, no project button, a window that just looks like the website — ask
+for a screenshot before anything else, and check which app they are in.
+
 ### 1. Check the machine can run this at all
 
 Before anything is downloaded. The download is around 600 MB, and on the wrong machine it is
@@ -235,17 +255,24 @@ First ask whether they already have it. Some will.
 
 - **Windows:** the same page, **learn.chatgpt.com/docs/app**, has a **Download for Windows**
   button. Clicking it hands off to the **Microsoft Store**, which does the installing — there
-  is no separate installer file to find and run, even though the browser shows a download. When
-  the Store says **"The latest version is installed"**, it is done.
+  is no separate installer file to find and run, even though the browser shows a download.
 
-  Some students will already have the ChatGPT app from the Store, in which case the Store will
-  say the same thing immediately and there is nothing to do.
+  It is done when the Store stops offering to install it and offers to **open** it instead. The
+  exact wording changes; what does not change is that the install button is replaced by an
+  **Open** button.
 
-  **Do not have them open it yet.** Step 3 comes first. The Store offers an **Open** button at
-  exactly this moment; they should ignore it and close the Store.
+  Some students already have this app from the Store, in which case the Store shows **Open**
+  straight away and there is nothing to do.
 
-**Worked when:** on a Mac, **ChatGPT** appears in their Applications folder; on Windows, the
-Microsoft Store says the latest version is installed. Either way, **not opened yet**.
+  **Do not have them open it yet.** Step 3 comes first.
+
+**Worked when:** they send you a screenshot showing it installed — on a Mac, **ChatGPT** in
+their Applications folder; on Windows, the Store page offering **Open** rather than a download
+or install button. Ask for the picture rather than a description: this is the step where a
+student who has the wrong ChatGPT cannot tell, and you can.
+
+Then have them close the Store or the installer window, and **leave the app itself unopened**
+until step 4.
 
 ### 3. Put the course settings file in place
 
@@ -392,11 +419,13 @@ been the wrong one — signing in, importing from other apps, changing model. If
 unsure on a screen this document doesn't cover, the safe move is the quieter option, and asking
 you.
 
-**Worked when:** they reach the main window where they can type a message — and, at the
-**bottom left of that window, it says "UM GPT Toolkit"**. That text comes from the settings
-file they installed in step 3, so seeing it proves the app is pointed at the University's
-service rather than the company's. Ask them to confirm it is there. If it isn't, step 3 did not
-take; send them back to it rather than going on.
+**Worked when:** they send you a screenshot of the main window — the one with a message box —
+and you can see **"UM GPT Toolkit"** at the bottom left of it. That text comes from the
+settings file they installed in step 3, so seeing it proves the app is pointed at the
+University's service rather than the company's. **Look at it yourself rather than asking them
+to confirm**: this is the screen where a student in the wrong ChatGPT app has no way of
+knowing, and the same picture tells you both things at once. If the text is not there, step 3
+did not take; send them back to it rather than going on.
 
 **Students on their own subscription will not see that text**, because they skipped step 3.
 That is correct for them. Their check is simply that they have reached the main window signed
@@ -454,10 +483,12 @@ app is allowed to touch. Adding the `si212` folder means the course work is fair
 nothing else on their machine is. It is the most important choice on the screen and it looks
 like a formality.
 
-**Worked when:** two things. Their project appears under **Projects** in the left-hand sidebar,
-where it previously said _No projects_; and the button below the message box that used to read
-**Choose project** now shows the project's name instead. The second matters more — it means the
-project is switched on for whatever they type next, rather than merely existing.
+**Worked when:** a screenshot shows both — their project under **Projects** in the left-hand
+sidebar, where it previously said _No projects_, and the button below the message box now
+showing the project's name instead of **Choose project**. The second matters more: it means the
+project is switched on for whatever they type next, rather than merely existing. One picture
+carries both, and "yes, it's there" from someone who has been at this for half an hour does
+not.
 
 What actually has to be right here is the **folder**: that it exists, that it is empty, and
 that the project points at it. The project's name, and where they chose to put the folder, are
@@ -477,7 +508,9 @@ With the `si212` project open, have them type this to the app:
 Make a file called hello.txt in this project folder, containing the word hello.
 ```
 
-It will ask permission before doing it; they say yes.
+It may ask permission before doing it, in which case they say yes. It may also just do it —
+writing inside the project folder is what they granted it in step 6. Either is correct, and a
+student who was told to expect a prompt and did not get one will think something is wrong.
 
 This one request checks everything at once: that the key works, that the settings file sent it
 to the University's service rather than the company's, that the app can act on their machine,

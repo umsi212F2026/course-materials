@@ -70,13 +70,13 @@ is true, and it beats changing the subject.
 **Do this before anything else, every time.** A student running you a second time is the normal
 case, not the exception: something failed, it got fixed, and they came back.
 
-Run `node course-materials/workflows/bootstrap/tools/doctor.mjs`.
+Run `node course-materials/workflows/bootstrap/tools/check-setup.mjs`.
 
 - **No `course-materials` folder** — nothing is cloned. Start at step 1.
 - **It runs and reports a phase** — start at the first step past that phase. Do not repeat the
   earlier ones.
 
-That is what the doctor's "reached N of 7" line is for, and why it reports a number rather than
+That is what the setup check's "reached N of 7" line is for, and why it reports a number rather than
 pass or fail.
 
 **A re-run is usually a repair.** If they are back because a check failed, the fix has probably
@@ -85,8 +85,8 @@ rather than skipping past them. Getting the fix is the point of running you agai
 
 ## What you do, in order
 
-Read each skill and follow it, then come back here. Each one ends by running `doctor.mjs` and
-reporting the phase it reached, so you do not need to run the doctor between them — you need to
+Read each skill and follow it, then come back here. Each one ends by running `check-setup.mjs` and
+reporting the phase it reached, so you do not need to run the setup check between them — you need to
 read what they tell you.
 
 1. **`workflows/bootstrap/skills/setup-repos/SKILL.md`** — installs git and Node, clones all
@@ -107,7 +107,7 @@ read what they tell you.
 student who cannot open their own files can watch an agent describe their work but never read
 or write it, which is not ready to start the course.
 
-**A failing check is not a reason to try again.** You call the doctor only when you believe you
+**A failing check is not a reason to try again.** You call the setup check only when you believe you
 have finished, so a check that fails is your account and the program's account disagreeing —
 not an operation that might work on a second attempt. Running the same steps again against a
 disagreement throws away the one interesting fact, which is the whole reason a program
@@ -120,7 +120,7 @@ orchestrator resumes at the phase that failed.
 Then **say where they stand.** One short paragraph: which phase they reached, and if it is not
 the last, which step stopped and why.
 
-**Then print the doctor's output verbatim, as the last thing you say.** Not a summary of it,
+**Then print the setup check's output verbatim, as the last thing you say.** Not a summary of it,
 not a list of what passed, not your own account of what happened — the text the program
 produced, from `SI 212 — first-day setup check` down to the `Copy everything above` line, in
 one block they can select in a single gesture. Your paragraph goes before it. Nothing goes
@@ -145,18 +145,18 @@ without one is the whole design.
 
 **Do not re-run a phase that already passed** — except step 1, which updates rather than
 repeating itself when the repositories are already there. Re-running an earlier phase is not
-harmful, but it is confusing and it makes the doctor output stop meaning what it says.
+harmful, but it is confusing and it makes the setup check output stop meaning what it says.
 
-**Never print the API key**, or any part of it. The doctor output gets pasted into Canvas by a
+**Never print the API key**, or any part of it. The setup check output gets pasted into Canvas by a
 student who will not think about that.
 
-**Do not replace the doctor's report with a summary of it.** Said above and repeated here
+**Do not replace the setup check's report with a summary of it.** Said above and repeated here
 because it is the easiest thing in this whole skill to get wrong: everything else you say is
 yours to phrase, and this one block is not yours at all. Copy it out.
 
 ## When you cannot finish
 
-Say so plainly, name the skill and the step it stopped at, and have them submit the doctor
+Say so plainly, name the skill and the step it stopped at, and have them submit the setup check
 output — or, if nothing got as far as running it, your own account of where you stopped — to
 the Canvas assignment.
 
@@ -169,4 +169,4 @@ how their instructor finds out who needs help, and it is the only way they find 
 - [`setup-addressing`](workflows/bootstrap/skills/setup-addressing/SKILL.md) — skill
 - [`setup-editors`](workflows/bootstrap/skills/setup-editors/SKILL.md) — skill
 - [`setup-github`](workflows/bootstrap/skills/setup-github/SKILL.md) — skill
-- [`doctor.mjs`](workflows/bootstrap/tools/doctor.mjs) — tool
+- [`check-setup.mjs`](workflows/bootstrap/tools/check-setup.mjs) — tool

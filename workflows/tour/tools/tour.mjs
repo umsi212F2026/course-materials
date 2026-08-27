@@ -11,7 +11,7 @@
 // was read, this workflow's skill was found by path, its manifest resolved, a
 // script ran with the data directory it was given, and the write landed in a
 // repository that is not the one the code lives in. An agent reporting that all
-// of that happened is not evidence that it did — same reason doctor.mjs exists.
+// of that happened is not evidence that it did — same reason check-setup.mjs exists.
 //
 // So this records the paths it ACTUALLY resolved, not the ones it was supposed
 // to. If the addressing is wrong, the file says so in a way a person can read.

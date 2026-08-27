@@ -118,7 +118,7 @@ so there is one place to look for either of them.
 It is not needed for weeks, so if it fails, that is the least costly failure in the whole
 setup.
 
-**5. Check the phase.** Run `node course-materials/workflows/bootstrap/tools/doctor.mjs`. It
+**5. Check the phase.** Run `node course-materials/workflows/bootstrap/tools/check-setup.mjs`. It
 should report **reached 6 of 7 — Editors**.
 
 Then hand back to `setup-workspace`.
@@ -143,7 +143,7 @@ with them, in plain words, as many times as it takes.
 
 ## When you cannot finish
 
-Say which application failed and show the error, and have them submit the doctor output to the
+Say which application failed and show the error, and have them submit the setup check output to the
 Canvas assignment.
 
 Be accurate about where it leaves them, because the gap is real but narrow: everything the
@@ -154,4 +154,4 @@ their instructor knowing today rather than in week three.
 
 - [`study`](workflows/learn/skills/study/SKILL.md) — skill
 - [`setup-workspace`](workflows/bootstrap/skills/setup-workspace/SKILL.md) — skill
-- [`doctor.mjs`](workflows/bootstrap/tools/doctor.mjs) — tool
+- [`check-setup.mjs`](workflows/bootstrap/tools/check-setup.mjs) — tool

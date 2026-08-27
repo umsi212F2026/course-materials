@@ -136,7 +136,7 @@
       <bpmn:outgoing>b13</bpmn:outgoing>
     </bpmn:exclusiveGateway>
     <bpmn:userTask id="Task_report_status" name="Submit status report&#10;on Canvas">
-      <bpmn:documentation>Same Canvas assignment as the other two submissions. A student who never got Codex running has no doctor output to submit, so what goes up is the coach's account of where it stalled.</bpmn:documentation>
+      <bpmn:documentation>Same Canvas assignment as the other two submissions. A student who never got Codex running has no setup-check output to submit, so what goes up is the coach's account of where it stalled.</bpmn:documentation>
       <bpmn:incoming>b13</bpmn:incoming>
       <bpmn:outgoing>b14</bpmn:outgoing>
     </bpmn:userTask>
@@ -153,7 +153,7 @@
     <bpmn:exclusiveGateway id="Gate_fix" name="Able to&#10;complete?" default="b9">
       <bpmn:documentation>The subprocess stopped at one of its checkpoints. This asks whether there is a way forward at all, and "yes" means RE-RUNNING once a fix has been published — not repairing in the session.
 
-Each skill inside calls the doctor only when it believes it has finished, so a failing check is the skill's account and the program's account disagreeing, not an operation that might work on a second attempt. Running the same steps again against a disagreement discards the one interesting fact, which is why nothing inside loops. The repair path is a commit: the instructor pushes a fix, the student runs setup-workspace again, setup-repos pulls it, and the orchestrator resumes at the phase that failed.
+Each skill inside calls the setup check only when it believes it has finished, so a failing check is the skill's account and the program's account disagreeing, not an operation that might work on a second attempt. Running the same steps again against a disagreement discards the one interesting fact, which is why nothing inside loops. The repair path is a commit: the instructor pushes a fix, the student runs setup-workspace again, setup-repos pulls it, and the orchestrator resumes at the phase that failed.
 
 What that cannot reach is a bad or missing key, or a machine the student has no rights to install on. Those take the "no" branch.</bpmn:documentation>
       <bpmn:incoming>b4</bpmn:incoming>
@@ -173,7 +173,7 @@ What that cannot reach is a bad or missing key, or a machine the student has no 
     <bpmn:endEvent id="End_blocked" name="blocked — instructor will help">
       <bpmn:incoming>b15</bpmn:incoming>
     </bpmn:endEvent>
-    <bpmn:userTask id="Task_report_ok" name="Submit doctor report&#10;on Canvas">
+    <bpmn:userTask id="Task_report_ok" name="Submit setup report&#10;on Canvas">
       <bpmn:documentation>Same assignment as the blocked branch. Submitting on success is what turns "the student says it works" into something the instructor can count.</bpmn:documentation>
       <bpmn:incoming>b7</bpmn:incoming>
       <bpmn:outgoing>b11</bpmn:outgoing>
@@ -195,7 +195,7 @@ What that cannot reach is a bad or missing key, or a machine the student has no 
     <bpmn:sequenceFlow id="b5" sourceRef="Prog_doctor" targetRef="Gate_ok" />
     <bpmn:sequenceFlow id="b6" name="not yet" sourceRef="Gate_ok" targetRef="Gate_merge" />
     <bpmn:sequenceFlow id="b7" name="success" sourceRef="Gate_ok" targetRef="Task_report_ok">
-      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">doctor.mjs reports every check passing</bpmn:conditionExpression>
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">check-setup.mjs reports every check passing</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
     <bpmn:sequenceFlow id="b8" name="yes" sourceRef="Gate_fix" targetRef="Prog_doctor">
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">the failing check names something Codex can install or correct</bpmn:conditionExpression>
@@ -205,7 +205,7 @@ What that cannot reach is a bad or missing key, or a machine the student has no 
     <bpmn:sequenceFlow id="b15" sourceRef="Gate_blocked" targetRef="End_blocked" />
     <bpmn:sequenceFlow id="b11" sourceRef="Task_report_ok" targetRef="End_ready" />
     <bpmn:subProcess id="Task_workspace" name="Set up the workspace">
-      <bpmn:documentation>workflows/bootstrap/skills/setup-workspace/SKILL.md — an orchestrator, and only that: it installs nothing and clones nothing itself. Each skill inside does its own work and ends by running the doctor, which is why every box in the AI AGENT lane below is followed by one in PROGRAM.
+      <bpmn:documentation>workflows/bootstrap/skills/setup-workspace/SKILL.md — an orchestrator, and only that: it installs nothing and clones nothing itself. Each skill inside does its own work and ends by running the setup check, which is why every box in the AI AGENT lane below is followed by one in PROGRAM.
 
 The label has no second line because there is a level below; the path lives here instead.
 
@@ -240,11 +240,11 @@ The skills are addressed two ways. Until "Install tools and clone the repositori
         </bpmn:lane>
       </bpmn:laneSet>
       <bpmn:startEvent id="Start_W" name="setup-workspace skill invoked">
-        <bpmn:documentation>workflows/bootstrap/skills/setup-workspace/SKILL.md governs this plane. It is not a step here because it is not one of them — it is the thing that reads each skill below in order, checks what the doctor reports, and stops at the first phase that does not pass. Named on the start event so a reader can go and read it, rather than only in documentation the editor does not show.</bpmn:documentation>
+        <bpmn:documentation>workflows/bootstrap/skills/setup-workspace/SKILL.md governs this plane. It is not a step here because it is not one of them — it is the thing that reads each skill below in order, checks what the setup check reports, and stops at the first phase that does not pass. Named on the start event so a reader can go and read it, rather than only in documentation the editor does not show.</bpmn:documentation>
         <bpmn:outgoing>w1</bpmn:outgoing>
       </bpmn:startEvent>
       <bpmn:serviceTask id="W_repos" name="Install tools; clone or update the repositories&#10;setup-repos">
-        <bpmn:documentation>workflows/bootstrap/skills/setup-repos/SKILL.md — git, node, all three clones, and the student's git identity. Owns two phases: git is needed in order to clone and node for the doctor that lives inside the clone, so neither is checkable until this has finished.
+        <bpmn:documentation>workflows/bootstrap/skills/setup-repos/SKILL.md — git, node, all three clones, and the student's git identity. Owns two phases: git is needed in order to clone and node for the setup check that lives inside the clone, so neither is checkable until this has finished.
 
 This is the skill that ends the network. It is fetched by URL because it is what creates the disk everything after it is read from.
 
@@ -252,8 +252,8 @@ It runs on every attempt, including a re-run, because a repository that already 
         <bpmn:incoming>w1</bpmn:incoming>
         <bpmn:outgoing>w2</bpmn:outgoing>
       </bpmn:serviceTask>
-      <bpmn:scriptTask id="Prog_w1" name="Check the repositories&#10;doctor.mjs">
-        <bpmn:documentation>Expects "reached 3 of 7 — Repositories". One run covers both of this skill's phases: Runtime is self-verifying, because the doctor is a node script inside the clone, so if it runs at all then git, node and the clone are good.</bpmn:documentation>
+      <bpmn:scriptTask id="Prog_w1" name="Check the repositories&#10;check-setup.mjs">
+        <bpmn:documentation>Expects "reached 3 of 7 — Repositories". One run covers both of this skill's phases: Runtime is self-verifying, because the setup check is a node script inside the clone, so if it runs at all then git, node and the clone are good.</bpmn:documentation>
         <bpmn:incoming>w2</bpmn:incoming>
         <bpmn:outgoing>w3</bpmn:outgoing>
       </bpmn:scriptTask>
@@ -263,7 +263,7 @@ It runs on every attempt, including a re-run, because a repository that already 
         <bpmn:outgoing>w5</bpmn:outgoing>
       </bpmn:exclusiveGateway>
       <bpmn:exclusiveGateway id="G_resume" name="how far&#10;did I get&#10;previously?" default="r1">
-        <bpmn:documentation>A re-run resumes rather than starting over, and this reads the phase off the doctor output that "Check the repositories" just produced — which is what "reached N of 7" is for, and why the doctor reports a number rather than a pass or a fail.
+        <bpmn:documentation>A re-run resumes rather than starting over, and this reads the phase off the setup check output that "Check the repositories" just produced — which is what "reached N of 7" is for, and why the setup check reports a number rather than a pass or a fail.
 
 Note what is NOT skipped: the repositories step above always runs, so an update always arrives. Only the phases already reached are jumped past.</bpmn:documentation>
         <bpmn:incoming>w4</bpmn:incoming>
@@ -276,7 +276,7 @@ Note what is NOT skipped: the repositories step above always runs, so an update 
         <bpmn:incoming>r1</bpmn:incoming>
         <bpmn:outgoing>w6</bpmn:outgoing>
       </bpmn:serviceTask>
-      <bpmn:scriptTask id="Prog_w2" name="Check the addressing&#10;doctor.mjs">
+      <bpmn:scriptTask id="Prog_w2" name="Check the addressing&#10;check-setup.mjs">
         <bpmn:documentation>Expects "reached 4 of 7 — Addressing": the file exists and the paths in it resolve.</bpmn:documentation>
         <bpmn:incoming>w6</bpmn:incoming>
         <bpmn:outgoing>w7</bpmn:outgoing>
@@ -298,7 +298,7 @@ It is the only evidence that the addressing works end to end: a skill found by p
         <bpmn:incoming>m2</bpmn:incoming>
         <bpmn:outgoing>w10</bpmn:outgoing>
       </bpmn:serviceTask>
-      <bpmn:scriptTask id="Prog_w3" name="Check the tour ran&#10;doctor.mjs">
+      <bpmn:scriptTask id="Prog_w3" name="Check the tour ran&#10;check-setup.mjs">
         <bpmn:documentation>Expects "reached 5 of 7 — Smoke test". It checks for the file the tour's script wrote, not for the agent's account of having run it — an agent reporting that it finished is not evidence that it did.</bpmn:documentation>
         <bpmn:incoming>w10</bpmn:incoming>
         <bpmn:outgoing>w11</bpmn:outgoing>
@@ -318,7 +318,7 @@ It is the only evidence that the addressing works end to end: a skill found by p
         <bpmn:incoming>m3</bpmn:incoming>
         <bpmn:outgoing>w14</bpmn:outgoing>
       </bpmn:serviceTask>
-      <bpmn:scriptTask id="Prog_w4" name="Check the editors&#10;doctor.mjs">
+      <bpmn:scriptTask id="Prog_w4" name="Check the editors&#10;check-setup.mjs">
         <bpmn:documentation>Expects phase 6, and nothing branches on the answer — that is the point. The editors phase is optional: a student without them can still do coursework, because the agent reads and writes the files either way. A check with no gateway after it is how this diagram says "reported, not gating".</bpmn:documentation>
         <bpmn:incoming>w14</bpmn:incoming>
         <bpmn:outgoing>w15</bpmn:outgoing>
@@ -337,7 +337,7 @@ An earlier draft made it optional, on the reasoning that the agent reads and wri
         <bpmn:incoming>e1</bpmn:incoming>
       </bpmn:endEvent>
       <bpmn:endEvent id="End_W_stop" name="stopped at a checkpoint">
-        <bpmn:documentation>A subprocess's outgoing flow carries no outcome, so the parent cannot tell which of these two ends fired. It reads the answer off the doctor output at "Able to complete?" instead — the same pattern, and the same cost, as "Codex running?" after stage 1.</bpmn:documentation>
+        <bpmn:documentation>A subprocess's outgoing flow carries no outcome, so the parent cannot tell which of these two ends fired. It reads the answer off the setup check output at "Able to complete?" instead — the same pattern, and the same cost, as "Codex running?" after stage 1.</bpmn:documentation>
         <bpmn:incoming>w16</bpmn:incoming>
       </bpmn:endEvent>
       <bpmn:sequenceFlow id="w1" sourceRef="Start_W" targetRef="W_repos" />
@@ -348,10 +348,10 @@ An earlier draft made it optional, on the reasoning that the agent reads and wri
       </bpmn:sequenceFlow>
       <bpmn:sequenceFlow id="r1" name="first time" sourceRef="G_resume" targetRef="W_addr" />
       <bpmn:sequenceFlow id="r2" name="addressing done" sourceRef="G_resume" targetRef="G_m2">
-        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">the doctor already reported phase 4</bpmn:conditionExpression>
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">the setup check already reported phase 4</bpmn:conditionExpression>
       </bpmn:sequenceFlow>
       <bpmn:sequenceFlow id="r3" name="tour already ran" sourceRef="G_resume" targetRef="G_m3">
-        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">the doctor already reported phase 5</bpmn:conditionExpression>
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">the setup check already reported phase 5</bpmn:conditionExpression>
       </bpmn:sequenceFlow>
       <bpmn:sequenceFlow id="w6" sourceRef="W_addr" targetRef="Prog_w2" />
       <bpmn:sequenceFlow id="w7" sourceRef="Prog_w2" targetRef="G_w2" />
@@ -383,8 +383,8 @@ An earlier draft made it optional, on the reasoning that the agent reads and wri
       <bpmn:sequenceFlow id="w9" name="no" sourceRef="G_w2" targetRef="G_w_stop" />
       <bpmn:sequenceFlow id="w5" name="no" sourceRef="G_w1" targetRef="G_w_stop" />
     </bpmn:subProcess>
-    <bpmn:scriptTask id="Prog_doctor" name="Check the install&#10;doctor.mjs">
-      <bpmn:documentation>workflows/bootstrap/tools/doctor.mjs — the only thing in this workflow that adjudicates "done". Ships in the repo, so it arrives with the clone. Drawn once here as the summary; the drill-down shows it running after every phase.</bpmn:documentation>
+    <bpmn:scriptTask id="Prog_doctor" name="Check the install&#10;check-setup.mjs">
+      <bpmn:documentation>workflows/bootstrap/tools/check-setup.mjs — the only thing in this workflow that adjudicates "done". Ships in the repo, so it arrives with the clone. Drawn once here as the summary; the drill-down shows it running after every phase.</bpmn:documentation>
       <bpmn:incoming>b8</bpmn:incoming>
       <bpmn:outgoing>b5</bpmn:outgoing>
     </bpmn:scriptTask>

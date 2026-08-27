@@ -12,7 +12,7 @@ not in this one.
 ## What's here
 
     AGENTS.md                where an agent starts — the entry-point index
-    workflows/bootstrap/     first-day setup: the U-M GPT prompt, the setup skills, the doctor
+    workflows/bootstrap/     first-day setup: the U-M GPT prompt, the setup skills, the setup check
     workflows/tour/          the setup's own smoke test, and what a workflow is made of
     workflows/learn/         the learning workflow — goals, activities, study, review
     workflows/update/        bringing one repository up to date with this one

@@ -11,7 +11,7 @@ handed off to you.
 **You are the skill that ends the network.** Everything before you — including you — is fetched
 from a raw GitHub URL, because there is nothing on the student's disk to read. Everything after
 you is read from the clone you are about to make. That is why the installs live here rather
-than in a skill of their own: git is needed _in order to_ clone, and Node for the doctor that
+than in a skill of their own: git is needed _in order to_ clone, and Node for the setup check that
 lives _inside_ the clone. Neither is a phase anyone can check until you have finished.
 
 ## Operates on
@@ -201,10 +201,10 @@ Both in one breath reads as one question with two halves and gets answered as ne
 **Build the address from the uniqname; do not ask for an email.** Without an identity git
 refuses to record their first piece of work, or invents one from the machine's hostname.
 
-**6. Check the phases.** Run `node course-materials/workflows/bootstrap/tools/doctor.mjs` and
+**6. Check the phases.** Run `node course-materials/workflows/bootstrap/tools/check-setup.mjs` and
 show its complete output, unedited. It should report **reached 3 of 7 — Repositories**.
 
-That single run covers both your phases. Runtime is self-verifying: the doctor is a Node script
+That single run covers both your phases. Runtime is self-verifying: the setup check is a Node script
 inside the clone, so if it runs at all, git and Node work and the clone succeeded.
 
 **7. Say what these three are for**, in three sentences, because it is the first time a student
@@ -218,7 +218,7 @@ this is read from disk rather than fetched.
 ## Rules
 
 **Do not touch `course-materials`.** No commits, no edits, no new files. It is pull-only, and
-the doctor checks it for local modifications precisely because an agent that was told this can
+the setup check checks it for local modifications precisely because an agent that was told this can
 still do it by accident.
 
 **Do not create any of the three.** They already exist and are public. If a clone fails, the
@@ -229,7 +229,7 @@ repository that looks right is worse off than one holding nothing, because nobod
 is in a state the rest of the setup does not expect, and `course-materials` failing is the
 worst of them: everything after this is read from it.
 
-**A failing check is not a reason to try again.** You call the doctor only when you believe you
+**A failing check is not a reason to try again.** You call the setup check only when you believe you
 have finished, so a check that fails is your account and the program's account disagreeing —
 not an operation that might work on a second attempt. Running the same steps again against a
 disagreement throws away the one interesting fact, which is the whole reason a program
@@ -248,18 +248,18 @@ does not: anything asking for credentials, a 404, permission denied, no space le
 the machine or the address telling you something true, and doing it again just says it twice.
 
 **This never applies to a check.** Retry the operation that visibly failed, at the moment it
-failed. A doctor check that fails is a disagreement, not a hiccup — see above.
+failed. A check that fails is a disagreement, not a hiccup — see above.
 
 **If an install needs administrator rights the student does not have, stop and say so.** Loaner
 laptops are available from the instructor; that is the fix, not a workaround. Do not attempt a
 portable build or an install under another account.
 
-**Never print the API key**, or any part of it. The doctor output gets pasted into Canvas by a
+**Never print the API key**, or any part of it. The setup check output gets pasted into Canvas by a
 student who will not think about that.
 
 ## When you cannot finish
 
-Say which step stopped and show the error unedited. Run the doctor anyway if you got far enough
+Say which step stopped and show the error unedited. Run the setup check anyway if you got far enough
 for it to run, and have them submit its output to the Canvas assignment.
 
 Submitting a failure is the correct action. It is how their instructor finds out who is stuck,
@@ -269,4 +269,4 @@ and it is the only way they find out.
 
 - [`update`](workflows/update/skills/update/SKILL.md) — skill
 - [`setup-workspace`](workflows/bootstrap/skills/setup-workspace/SKILL.md) — skill
-- [`doctor.mjs`](workflows/bootstrap/tools/doctor.mjs) — tool
+- [`check-setup.mjs`](workflows/bootstrap/tools/check-setup.mjs) — tool
