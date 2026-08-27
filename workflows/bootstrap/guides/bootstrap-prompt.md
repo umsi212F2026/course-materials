@@ -271,22 +271,26 @@ their U-M key. They do not need to understand the command.
   reads as failure. Then have them paste this and press Return:
 
   ```
-  cat ~/.codex/config.toml
+  grep -v '^#' ~/.codex/config.toml
   ```
 
 - **Windows:** Start menu, type `PowerShell`, open it. Paste this one line and press Enter — it
   fetches the file and prints it back in the same command, so there is no second step:
 
   ```
-  New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.codex" | Out-Null; Invoke-WebRequest -UseBasicParsing https://raw.githubusercontent.com/umsi212F2026/course-materials/main/workflows/bootstrap/config/codex-config.toml -OutFile "$env:USERPROFILE\.codex\config.toml"; Get-Content "$env:USERPROFILE\.codex\config.toml"
+  New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.codex" | Out-Null; Invoke-WebRequest -UseBasicParsing https://raw.githubusercontent.com/umsi212F2026/course-materials/main/workflows/bootstrap/config/codex-config.toml -OutFile "$env:USERPROFILE\.codex\config.toml"; Get-Content "$env:USERPROFILE\.codex\config.toml" | Where-Object { $_ -notmatch '^\s*#' }
   ```
 
-**Worked when:** the settings file is printed — a few lines of explanation beginning with `#`,
-then settings, one of which reads `base_url = "https://api.toolkit.umgpt.umich.edu/v1"`. Ask
-them to paste that text back to you and look for the `umich.edu` line yourself rather than
-taking "it worked" for it. If nothing is printed, or an error, the file did not arrive — do not
-go on to step 4, because the failure there will look like a rejected key and send you hunting
-in entirely the wrong place.
+Both commands leave out the explanatory lines at the top of the file, which begin with `#`.
+That is deliberate: those lines are written for whoever reads the file in the course
+repository, not for the student, and pasted into a chat window they render as enormous headings
+— `#` starts a comment in a settings file and a heading in a chat.
+
+**Worked when:** seven short lines of settings are printed, one of which reads
+`base_url = "https://api.toolkit.umgpt.umich.edu/v1"`. Ask them to paste that text back to you
+and look for the `umich.edu` line yourself rather than taking "it worked" for it. If nothing is
+printed, or an error, the file did not arrive — do not go on to step 4, because the failure
+there will look like a rejected key and send you hunting in entirely the wrong place.
 
 Two things to expect here:
 
@@ -296,7 +300,7 @@ Two things to expect here:
   can ask for just this, which prints the file without fetching it again:
 
   ```
-  Get-Content "$env:USERPROFILE\.codex\config.toml"
+  Get-Content "$env:USERPROFILE\.codex\config.toml" | Where-Object { $_ -notmatch '^\s*#' }
   ```
 
 - **Backslashes sometimes vanish when text passes through a chat window.** If a Windows student
