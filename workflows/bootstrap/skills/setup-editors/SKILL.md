@@ -40,37 +40,25 @@ writing their own notes and goals directly, rather than only ever seeing them th
 now" — not _may I install Zettlr?_ The machine puts up its own prompt if permission is needed,
 which is one click; a question in the chat stops the student until they notice it.
 
-Download the version this course pins, from the project's own releases:
+**On Windows, install it with `winget` and nothing else:**
 
-| Platform           | File                     |
-| ------------------ | ------------------------ |
-| Mac, Apple Silicon | `Zettlr-4.7.0-arm64.dmg` |
-| Mac, Intel         | `Zettlr-4.7.0-x64.dmg`   |
-| Windows            | `Zettlr-4.7.0-x64.exe`   |
+```powershell
+winget install --id Zettlr.Zettlr --version 4.7.0 --silent --accept-package-agreements --accept-source-agreements
+```
 
-each under `https://github.com/Zettlr/Zettlr/releases/download/v4.7.0/`.
+**On macOS**, download `Zettlr-4.7.0-arm64.dmg` (Apple Silicon) or `Zettlr-4.7.0-x64.dmg`
+(Intel) from `https://github.com/Zettlr/Zettlr/releases/download/v4.7.0/`, mount it, and copy
+the one application into `/Applications`. Not the download buttons on `zettlr.com` — those
+addresses serve a web page, and you get HTML named like an installer.
 
-Do not use the download buttons on `zettlr.com`. Those addresses serve a web page, not a file,
-and downloading one gets you HTML named like an installer.
-
-**If a pinned address returns 404, it no longer resolves — and why is not something you can
+**If that macOS address returns 404, it no longer resolves — and why is not something you can
 know.** Withdrawn release, renamed asset, or a mistake in this file; same remedy for all three.
 Only then, ask `https://api.github.com/repos/Zettlr/Zettlr/releases/latest` for the current
 version and take the equivalently-named asset. Say what you asked and what you found, and do
 not assert a cause. Do not reach for the API first: it allows sixty requests an hour from one
 address, and a room full of students shares one.
 
-On a Mac this is a `.dmg` to mount, with one application to copy into `/Applications`. On
-Windows the `.exe` is a wizard; `/S` runs it without one, and **`/D=` must name the
-destination** — see the Windows rule below. `/D=` takes no quotes and has to be last on the
-line:
-
-```powershell
-& "$env:TEMP\Zettlr-4.7.0-x64.exe" /S /D=$env:USERPROFILE\Programs\Zettlr
-```
-
-**Neither platform should need an administrator password**, and on Windows the installer's
-offer to install for all users is the one thing that asks — take the default instead.
+**Neither platform should need an administrator password.**
 
 **But a prompt is not a blocked machine.** Three situations, and only the last stops the day:
 
@@ -86,45 +74,33 @@ offer to install for all users is the one thing that asks — take the default i
 - **A password they do not have.** Stop; see the rule below. The distinction is whether the
   password exists and they know it, not whether a box appeared.
 
-### On Windows, install to `%USERPROFILE%\Programs` and nowhere else
+### On Windows, `winget` is not a preference. Anything else installs nothing.
 
-**Anything you write under `AppData` may not exist for the student, and you cannot tell from in
-here.** On some Windows installations this app is packaged, and then your writes to
-`%LOCALAPPDATA%` and `%APPDATA%` are redirected into a private container —
-`%LOCALAPPDATA%\Packages\OpenAI.Codex_*\LocalCache\`. You will see them afterwards. They will
-not. An installation there launches for nobody, a config file written there configures nothing,
-and the setup check run from in here reports it all as present.
+**A program you launch does not install onto the student's machine.** On Windows this app runs
+in a container, and every process you start inherits it — so an installer you download and run
+puts its files somewhere only you can see, registers its file types somewhere only you can see,
+and reports success. The student gets nothing, and the setup check run from in here agrees with
+you because it is inside too.
 
-You have no way to know which kind of machine you are on before you install, and the failure is
-silent on the kind that redirects — so treat every Windows machine as though it does.
+**Escalated permissions do not change this**, which is the part worth knowing before you try:
+measured on Windows 11, the same Zettlr installer run escalated as a child process landed in
+the container, while `winget install` in the same session landed in the student's real profile.
+It is not about permissions. It is about **who does the work** — `winget` hands it to a Windows
+service outside the container, and that service can reach the real machine.
 
-Measured on Windows 11, one file written from in here to each location and then looked for from
-the student's own shell:
+So a downloaded `.exe`, an unpacked zip, `Start-Process`, `HKCU:\Software\Classes`, `assoc` and
+`ftype` are all equally useless here, however carefully aimed.
 
-| you write to              | the student sees |
-| ------------------------- | ---------------- |
-| `%USERPROFILE%\Programs`  | yes              |
-| `%USERPROFILE%\Documents` | yes              |
-| `%LOCALAPPDATA%`          | **no**           |
-| `%APPDATA%`               | **no**           |
+**Never test for `winget` by running `winget --version`.** It will say _"not recognized"_ on a
+machine where `winget install` works perfectly, because `winget.exe` lives inside the
+redirected region and a version check is not the kind of command this app escalates. Believe
+that answer and you will fall back to the download-and-run install that silently fails. Run the
+install command; let it report.
 
-**And redirection under `AppData` is selective, which is worse than if it were total.** In the
-same run, an installer's shortcut written to `%APPDATA%\Microsoft\Windows\Start Menu` _did_
-reach the student, while an ordinary file beside it did not — so a student can end up with a
-Start-menu entry for a program that is not there. You cannot tell by writing something and
-looking, because you are on the wrong side of the boundary to look from.
+**If the install itself fails**, say what it said and stop. Do not download the installer
+instead.
 
-So: `%USERPROFILE%\Programs\Zettlr`. It needs no administrator rights, it is not a hidden
-folder, and it is the same place `check-setup.mjs` looks — which now refuses to look under
-`AppData` at all, precisely so that an install into the container cannot pass.
-
-**And the registry goes the same way, which is why you do not touch file associations.** A
-packaged app's `HKCU` writes are redirected too, so `assoc`, `ftype`, and anything written to
-`HKCU:\Software\Classes` are invisible outside this app however carefully they are aimed. On
-Windows the student's own **Open with → Always** is not a fallback for doing it yourself. It is
-the only registry write that happens outside the container, so it is the only one that counts.
-
-None of this applies to macOS, where you write to the real filesystem.
+None of this applies to macOS, where you install onto the real machine directly.
 
 **3. Have them open the file themselves, by double-clicking it.** From here on their notes and
 goals are `.md`, and this is the first file in the course they handle without an agent in

@@ -24,19 +24,20 @@ what you cloned.
 
 ## What you do, in order
 
-**1. Check what is already here — by looking for the files, not by asking the shell.** On
-Windows `git --version` fails whether or not git exists, because it is not on this account's
-`PATH`. Test these paths instead, and report what you find by running it at its full path:
+**1. Check what is already here.** On macOS, `git --version` and `node --version` are a fair
+test. On Windows they are not: a missing name on `PATH` is what you get whether or not the
+program exists, so ask `winget` and look in `Program Files`:
 
-```
-Windows:  C:\Program Files\Git\cmd\git.exe
-          %USERPROFILE%\Programs\Git\cmd\git.exe
-          %USERPROFILE%\Programs\nodejs\node.exe
-          C:\Program Files\nodejs\node.exe
-macOS:    git and node on PATH is a fair test
+```powershell
+winget list --id Git.Git
+winget list --id OpenJS.NodeJS.LTS
+Test-Path 'C:\Program Files\Git\cmd\git.exe'
+Test-Path 'C:\Program Files\nodejs\node.exe'
 ```
 
-Both Node locations, because a machine may already have one installed either way.
+`Program Files` as well as `winget`, because a machine may have had either installed some other
+way — by an administrator, or by the student last year — and reinstalling over a working
+program is a waste of their morning.
 
 Install nothing yet.
 
@@ -49,45 +50,49 @@ for a reply. If permission is needed the machine puts up its own prompt, which i
 question in the chat stops the student until they notice it, and makes the agent look like it
 needs supervising for its own instructions.
 
-**Download from these addresses. Do not ask an API which version is current.**
+**On Windows, install both with `winget`.** The flags are not decoration — each one picks the
+variant that does not need an administrator password:
 
-| Platform | git                                                                         | Node                                                         |
-| -------- | --------------------------------------------------------------------------- | ------------------------------------------------------------ |
-| Windows  | `Git-2.55.0.5-64-bit.exe` from git-for-windows' `v2.55.0.windows.5` release | `node-v24.20.0-win-x64.zip` from `nodejs.org/dist/v24.20.0/` |
-| macOS    | `xcode-select --install` — git ships with the command line tools            | `node-v24.20.0.pkg` from the same path                       |
+```powershell
+winget install --id Git.Git --scope user --silent --accept-package-agreements --accept-source-agreements
+winget install --id OpenJS.NodeJS.LTS --installer-type zip --silent --accept-package-agreements --accept-source-agreements
+```
 
-Four version components in the git filename is correct, not a typo: Git for Windows folds the
-`.windows.5` of the tag into the file's own version.
-
-**On Windows, Node is the zip and not the `.msi` — this matters.** The installer writes to
-`Program Files` for every account on the machine, so it asks for an administrator password and
-stops dead without one:
+**`--scope user` on git**, because its installer ships in both scopes and the machine one
+elevates. **`--installer-type zip` on Node**, because its package offers a machine-scope `.msi`
+that elevates and a portable zip that does not; without the flag you get the `.msi` and this:
 
 ```
 Error 1925. You do not have sufficient privileges to complete this installation
 for all users of the machine.
 ```
 
-Nothing in this course needs Node for anybody but them. Unpack the zip into
-`%USERPROFILE%\Programs\nodejs` — no installer, no password, same as Camunda later — and use
-`%USERPROFILE%\Programs\nodejs\node.exe` from then on.
+which stops a student who is not an administrator on the first step of the first day. Nothing
+in this course needs Node for anybody but them.
 
-**Not `%LOCALAPPDATA%`, however natural that looks for a per-user install.** On some Windows
-machines this app is packaged, and then everything you write under `AppData` is redirected into
-a private container and never reaches the student. You would see the Node you installed; they
-would have no Node at all, and every later check you ran would agree with you. You cannot tell
-which kind of machine you are on until it is too late, so use `%USERPROFILE%` on all of them —
-it is outside the redirection, measured, along with `Documents`, which is why the clones work.
+**On macOS**, `xcode-select --install` for git — it ships with the command line tools — and
+`node-v24.20.0.pkg` from `nodejs.org/dist/v24.20.0/`.
 
-**Why pinned:** `api.github.com` allows sixty requests an hour from one address and a lab
-section shares one, so a class that resolves "latest" here exhausts it before anyone reaches
-the editors — and the failure looks like a network problem. The editor downloads are pinned for
-the same reason.
-
-**If a pinned address 404s, it no longer resolves, and why is not something you can know** —
+**If that macOS address 404s, it no longer resolves, and why is not something you can know** —
 withdrawn release, renamed asset, or a mistake in this file. Only then ask the project for its
 current version, take the equivalently-named asset, and say what you asked and what you found.
-Do not assert a cause.
+Not the API first: it allows sixty requests an hour from one address and a lab section shares
+one, so a class that resolves "latest" exhausts it and the failure looks like a network
+problem.
+
+### On Windows, `winget` is not a preference. Anything else installs nothing.
+
+**A program you launch does not install onto the student's machine.** This app runs in a
+container and every process you start inherits it, so an installer you download and run puts
+its files where only you can see them and reports success. Escalated permissions do not change
+that — measured — because it is not about permissions but about **who does the work**. `winget`
+hands it to a Windows service outside the container, which can reach the real machine.
+
+**Never test for `winget` by running `winget --version`.** It answers _"not recognized"_ on a
+machine where `winget install` works perfectly, because `winget.exe` sits inside the redirected
+region and a version check is not the kind of command this app escalates. Believe it and you
+will fall back to a download-and-run install that silently installs nothing. Run the install
+command and let it report. Do not assert a cause.
 
 **A password prompt is not a blocked machine.** Three situations, and only the last ends the
 day:
@@ -104,17 +109,29 @@ Work through the first two with them, in plain words, as many times as it takes.
 a machine as blocked because a dialog appeared — check first whether they can answer it.
 
 **`PATH` does not update in a session that is already running.** After installing, `git` and
-`node` will still not be found by name. That is not a failed install and **not a reason to
-install again** — use the full path for the rest of the session:
+`node` may still not be found by name. That is not a failed install and **not a reason to
+install again**. On macOS both are on `PATH` once installed.
 
-```
-Windows:  & 'C:\Program Files\Git\cmd\git.exe'
-          & "$env:USERPROFILE\Programs\nodejs\node.exe"
-macOS:    git and node are on PATH once installed
+**On Windows, do not guess at the path either.** A `winget` install places things where that
+service chooses, and those locations are inside the region this app cannot see — so the paths
+that would work for the student may not resolve for you, and `Test-Path` returning false here
+proves nothing about their machine. Ask `winget` where it put things rather than reasoning
+about it:
+
+```powershell
+winget list --id Git.Git
+winget list --id OpenJS.NodeJS.LTS
 ```
 
-**The macOS row is untested** — both trial machines already had git and Node. If it fails
-there, say so and stop rather than improvising an install.
+**If you still cannot run `node` after installing it, stop and say so.** Do not install it a
+second time, do not download it, and do not report the phase as done — the setup check is a
+Node script, so a Node you cannot run is a phase you cannot finish. Say what you tried and hand
+the student the setup check instructions for their own terminal.
+
+**This is the least-tested part of this skill.** Both trial machines already had git and Node
+before any run, on both platforms, so neither install path has been exercised end to end. If
+something here does not match what you see, believe the machine and report it rather than
+improvising an install.
 
 **3. Clone all three repositories — or update them if they are already here.** A student may be
 re-running this after a failure, and the point of a re-run is usually that a fix has been
