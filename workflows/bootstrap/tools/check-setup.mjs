@@ -263,14 +263,18 @@ const editors = phase(6, "Editors");
 // there. On Windows there is no single answer, so look in every place the student could
 // plausibly have ended up and pass if any of them exists:
 //
-//   - Zettlr's installer is NSIS with perMachine:false, so its default is the per-user
-//     %LOCALAPPDATA%\Programs\Zettlr. But it also sets allowElevation and
-//     allowToChangeInstallationDirectory, so a student who clicked through the wizard rather
-//     than taking the silent install may have put it in Program Files instead. Both are a
-//     working install; neither should fail this check.
-//   - Camunda ships no Windows installer at all, only a zip, so its location is entirely
-//     whatever `setup-editors` chose to unpack it to. Keep these two in step: if that skill's
-//     destination changes, this is the other end of the same decision.
+//   - %USERPROFILE%\Programs is where `setup-editors` installs both. Keep these two in step:
+//     if that skill's destination changes, this is the other end of the same decision.
+//   - Program Files, for a student who clicked through Zettlr's wizard rather than taking the
+//     silent install. That is a working install and should not fail this check.
+//
+// %LOCALAPPDATA%\Programs is deliberately NOT here, and that is the whole point of this list.
+// The Codex Windows app is packaged, so everything it writes under AppData is redirected into
+// %LOCALAPPDATA%\Packages\OpenAI.Codex_*\LocalCache\ and is invisible to the student. An agent
+// installing there sees its own work and so does this check when the agent runs it — so the
+// phase passed while the student had no editor at all. Looking in the redirected location is
+// how this program came to certify an empty machine, and adding it back would restore exactly
+// that. Anything found under AppData is evidence about the sandbox, not about the student.
 //
 // Anything that is neither macOS nor Windows is not a platform this course supports, and
 // saying so is more use than a check that silently passes.
@@ -280,7 +284,7 @@ const windows = platform() === "win32";
 
 const programsRoots = () =>
   [
-    process.env.LOCALAPPDATA && join(process.env.LOCALAPPDATA, "Programs"),
+    process.env.USERPROFILE && join(process.env.USERPROFILE, "Programs"),
     process.env.PROGRAMFILES,
   ].filter(Boolean);
 

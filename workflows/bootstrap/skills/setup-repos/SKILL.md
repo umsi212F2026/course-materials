@@ -30,8 +30,8 @@ Windows `git --version` fails whether or not git exists, because it is not on th
 
 ```
 Windows:  C:\Program Files\Git\cmd\git.exe
-          %LOCALAPPDATA%\Programs\Git\cmd\git.exe
-          %LOCALAPPDATA%\Programs\nodejs\node.exe
+          %USERPROFILE%\Programs\Git\cmd\git.exe
+          %USERPROFILE%\Programs\nodejs\node.exe
           C:\Program Files\nodejs\node.exe
 macOS:    git and node on PATH is a fair test
 ```
@@ -69,8 +69,15 @@ for all users of the machine.
 ```
 
 Nothing in this course needs Node for anybody but them. Unpack the zip into
-`%LOCALAPPDATA%\Programs\nodejs` — no installer, no password, same as Camunda later — and use
-`%LOCALAPPDATA%\Programs\nodejs\node.exe` from then on.
+`%USERPROFILE%\Programs\nodejs` — no installer, no password, same as Camunda later — and use
+`%USERPROFILE%\Programs\nodejs\node.exe` from then on.
+
+**Not `%LOCALAPPDATA%`, however natural that looks for a per-user install.** On some Windows
+machines this app is packaged, and then everything you write under `AppData` is redirected into
+a private container and never reaches the student. You would see the Node you installed; they
+would have no Node at all, and every later check you ran would agree with you. You cannot tell
+which kind of machine you are on until it is too late, so use `%USERPROFILE%` on all of them —
+it is outside the redirection, measured, along with `Documents`, which is why the clones work.
 
 **Why pinned:** `api.github.com` allows sixty requests an hour from one address and a lab
 section shares one, so a class that resolves "latest" here exhausts it before anyone reaches
@@ -102,7 +109,7 @@ install again** — use the full path for the rest of the session:
 
 ```
 Windows:  & 'C:\Program Files\Git\cmd\git.exe'
-          & "$env:LOCALAPPDATA\Programs\nodejs\node.exe"
+          & "$env:USERPROFILE\Programs\nodejs\node.exe"
 macOS:    git and node are on PATH once installed
 ```
 

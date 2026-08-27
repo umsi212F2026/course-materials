@@ -60,8 +60,13 @@ not assert a cause. Do not reach for the API first: it allows sixty requests an 
 address, and a room full of students shares one.
 
 On a Mac this is a `.dmg` to mount, with one application to copy into `/Applications`. On
-Windows the `.exe` is a wizard; `/S` runs it without one, installing under the student's own
-account.
+Windows the `.exe` is a wizard; `/S` runs it without one, and **`/D=` must name the
+destination** — see the Windows rule below. `/D=` takes no quotes and has to be last on the
+line:
+
+```powershell
+& "$env:TEMP\Zettlr-4.7.0-x64.exe" /S /D=$env:USERPROFILE\Programs\Zettlr
+```
 
 **Neither platform should need an administrator password**, and on Windows the installer's
 offer to install for all users is the one thing that asks — take the default instead.
@@ -92,40 +97,46 @@ offer to install for all users is the one thing that asks — take the default i
 Same 404 rule as Zettlr, against `camunda/camunda-modeler`.
 
 **On Windows this is a zip, not an installer** — Camunda ships no Windows installer at all.
-Unpack it to `%LOCALAPPDATA%\Programs\camunda-modeler`, alongside where Zettlr installs itself,
-so there is one place to look for either of them.
-
-**Then register it for `.bpmn` — on Windows, every time, whether or not you just unpacked it.**
-This is the part the missing installer would have done, and it is the one step here that is not
-about getting files onto the machine: a zip registers nothing, so without it a student who
-double-clicks a diagram is offered Notepad and a browser, with Camunda not in the list at all.
-Finding Camunda already installed tells you nothing about whether it is registered, so run this
-in that case too. It overwrites its own previous result harmlessly. Nothing else on a Windows
-machine claims `.bpmn`, so there is no competing choice to override:
-
-```powershell
-$exe = "$env:LOCALAPPDATA\Programs\camunda-modeler\Camunda Modeler.exe"
-$prog = "HKCU:\Software\Classes\CamundaModeler.bpmn"
-New-Item -Path "$prog\shell\open\command" -Force | Out-Null
-Set-ItemProperty -Path $prog -Name "(Default)" -Value "BPMN Diagram"
-Set-ItemProperty -Path "$prog\shell\open\command" -Name "(Default)" -Value "`"$exe`" `"%1`""
-New-Item -Path "HKCU:\Software\Classes\.bpmn" -Force | Out-Null
-Set-ItemProperty -Path "HKCU:\Software\Classes\.bpmn" -Name "(Default)" -Value "CamundaModeler.bpmn"
-cmd /c assoc .bpmn
-```
-
-`assoc` should answer `.bpmn=CamundaModeler.bpmn`. If it does not, say so and carry on — step 5
-opens Camunda by path and does not depend on this.
-
-This writes only under the student's own account, needs no administrator rights, and is not the
-protected setting: what Windows hash-protects is the user's choice **between** applications
-claiming a type, and here there are no others.
-
-macOS needs none of this. `.bpmn` has no declared file type, so Camunda is its only claimant
-and wins by default the moment it is installed.
+Unpack it to `%USERPROFILE%\Programs\camunda-modeler`, alongside Zettlr, so there is one place
+to look for either of them.
 
 It is not needed for weeks, so if it fails, that is the least costly failure in the whole
 setup.
+
+### On Windows, install to `%USERPROFILE%\Programs` and nowhere else
+
+**Anything you write under `AppData` may not exist for the student, and you cannot tell from in
+here.** On some Windows installations this app is packaged, and then your writes to
+`%LOCALAPPDATA%` and `%APPDATA%` are redirected into a private container —
+`%LOCALAPPDATA%\Packages\OpenAI.Codex_*\LocalCache\`. You will see them afterwards. They will
+not. An installation there launches for nobody, a config file written there configures nothing,
+and the setup check run from in here reports it all as present.
+
+You have no way to know which kind of machine you are on before you install, and the failure is
+silent on the kind that redirects — so treat every Windows machine as though it does.
+
+Measured on Windows 11, one file written from in here to each location and then looked for from
+the student's own shell:
+
+| you write to              | the student sees |
+| ------------------------- | ---------------- |
+| `%USERPROFILE%\Programs`  | yes              |
+| `%USERPROFILE%\Documents` | yes              |
+| `%LOCALAPPDATA%`          | **no**           |
+| `%APPDATA%`               | **no**           |
+
+So: `%USERPROFILE%\Programs\Zettlr` and `%USERPROFILE%\Programs\camunda-modeler`. It needs no
+administrator rights, it is not a hidden folder, and it is the same place `check-setup.mjs`
+looks — which now refuses to look under `AppData` at all, precisely so that an install into the
+container cannot pass.
+
+**And the registry goes the same way, which is why you do not touch file associations.** A
+packaged app's `HKCU` writes are redirected too, so `assoc`, `ftype`, and anything written to
+`HKCU:\Software\Classes` are invisible outside this app however carefully they are aimed. On
+Windows the student's own **Open with → Always** is not a fallback for doing it yourself. It is
+the only registry write that happens outside the container, so it is the only one that counts.
+
+None of this applies to macOS, where you write to the real filesystem.
 
 **4. Have them make Zettlr the application that opens `.md` files, by opening one.** From here
 on their notes and goals are `.md`, and **Zettlr will not win that on its own.** Markdown is a
@@ -134,10 +145,11 @@ browsers to Word — and Zettlr's bundle declares no priority for it at all, so 
 installed opens their notes for the rest of the term. This is not a quirk of one machine. Do it
 on every one.
 
-Neither platform lets you set it from a command. macOS has no supported way short of an extra
-tool, and Windows hash-protects the user's choice against `assoc` and `ftype`. It is theirs to
-do, and that is the point: setting it opens the file, and opening the file is the first thing
-in this course they do without an agent in between.
+Neither platform lets you set it from a command, for different reasons. macOS has no supported
+way short of an extra tool; on Windows every registry write you make is redirected into this
+app's container and never reaches them. It is theirs to do, and that is the point: setting it
+opens the file, and opening the file is the first thing in this course they do without an agent
+in between.
 
 The file is the one the smoke test wrote — `<parent>/learning-topics/setup.md`. It names the
 two directories their machine now knows about, so it is worth the look on its own.
@@ -149,23 +161,33 @@ On macOS, send them this, filling in the real path, and send nothing after it:
 > double-click `setup.md`. It should open in Zettlr, showing where your work lives and where
 > the course lives. Send me a screenshot of that.
 
-On Windows:
+On Windows, **Zettlr will not be in the list of applications offered**, and a student who is
+told to pick it from there will look for something that is not there. Its installer registers
+itself for `.md`, but that registration happens in here and is redirected with everything else,
+so from their side Zettlr has never announced it opens Markdown. They have to reach the program
+directly. Fill in their real user name:
 
 > In File Explorer, open `<parent>\learning-topics` and right-click `setup.md`. Choose **Open
-> with → Choose another app**, pick **Zettlr**, tick **Always use this app to open .md files**,
-> and click OK. It should open in Zettlr, showing where your work lives and where the course
+> with → Choose another app**, then scroll to the bottom and click **Choose an app on your
+> PC**. In the **File name** box, type this and press Enter:
+> `C:\Users\<them>\Programs\Zettlr\Zettlr.exe` Tick **Always use this app to open .md files**,
+> then click OK. It should open in Zettlr, showing where your work lives and where the course
 > lives. Send me a screenshot of that.
+
+**If they say Zettlr is not there, believe them and check the path.** That is the sound of an
+install that went into the container: `Test-Path` it from in here and you will find it, because
+you are inside. Ask them to confirm the folder exists in File Explorer instead.
 
 **5. Open the diagram for them, and tell them you did.** The file is the setup they have just
 been through, drawn — about something they have just done, which is what makes it their first
 readable one. There is nothing to learn from hunting for it, and on Windows they could not open
-it by hand anyway: if the registration in step 3 failed, double-clicking a `.bpmn` there offers
-Notepad and a browser and does not list Camunda at all. Open it yourself:
+it by hand anyway: nothing there claims `.bpmn`, so double-clicking one offers Notepad and a
+browser and does not list Camunda at all. Open it yourself:
 
 - macOS —
   `open -a "Camunda Modeler" "<parent>/course-materials/workflows/bootstrap/bootstrap.bpmn"`
 - Windows —
-  `Start-Process "$env:LOCALAPPDATA\Programs\camunda-modeler\Camunda Modeler.exe" -ArgumentList "<parent>\course-materials\workflows\bootstrap\bootstrap.bpmn"`
+  `Start-Process "$env:USERPROFILE\Programs\camunda-modeler\Camunda Modeler.exe" -ArgumentList "<parent>\course-materials\workflows\bootstrap\bootstrap.bpmn"`
 
 Run it first, then send this, with nothing after it:
 
