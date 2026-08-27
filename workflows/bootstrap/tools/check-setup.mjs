@@ -263,18 +263,10 @@ const editors = phase(6, "Editors");
 // there. On Windows there is no single answer, so look in every place the student could
 // plausibly have ended up and pass if any of them exists:
 //
-//   - %USERPROFILE%\Programs is where `setup-editors` installs both. Keep these two in step:
-//     if that skill's destination changes, this is the other end of the same decision.
-//   - Program Files, for a student who clicked through Zettlr's wizard rather than taking the
-//     silent install. That is a working install and should not fail this check.
-//
-// %LOCALAPPDATA%\Programs is deliberately NOT here, and that is the whole point of this list.
-// The Codex Windows app is packaged, so everything it writes under AppData is redirected into
-// %LOCALAPPDATA%\Packages\OpenAI.Codex_*\LocalCache\ and is invisible to the student. An agent
-// installing there sees its own work and so does this check when the agent runs it — so the
-// phase passed while the student had no editor at all. Looking in the redirected location is
-// how this program came to certify an empty machine, and adding it back would restore exactly
-// that. Anything found under AppData is evidence about the sandbox, not about the student.
+//   - %LOCALAPPDATA%\Programs, where a winget per-user install puts things.
+//   - Program Files, for a student who clicked through an installer's wizard rather than taking
+//     the silent install. That is a working install and should not fail this check.
+//   - %USERPROFILE%\Programs, which an older version of `setup-editors` used.
 //
 // Anything that is neither macOS nor Windows is not a platform this course supports, and
 // saying so is more use than a check that silently passes.
@@ -284,9 +276,48 @@ const windows = platform() === "win32";
 
 const programsRoots = () =>
   [
-    process.env.USERPROFILE && join(process.env.USERPROFILE, "Programs"),
+    process.env.LOCALAPPDATA && join(process.env.LOCALAPPDATA, "Programs"),
     process.env.PROGRAMFILES,
+    process.env.USERPROFILE && join(process.env.USERPROFILE, "Programs"),
   ].filter(Boolean);
+
+// FINDING AN APPLICATION IS NOT ENOUGH ON WINDOWS, and this is the check's own worst failure.
+//
+// When this runs inside the agent's app container, its file reads fall through to the real
+// machine — but so does everything the agent installed into the container, which is at the same
+// apparent path. The two are indistinguishable by asking whether a file is there. On 2026-08-27
+// that is how this program reported an editor installed on a machine where the student had
+// none: the agent had installed into the container, and the check agreed with it.
+//
+// The registry would settle it — an uninstall entry is something an installer creates and a
+// file copy cannot fake — but registry reads do NOT fall through, so from in there the entry is
+// invisible whether or not it exists. Measured, along with the file reads that do.
+//
+// What is left is to detect the bad state directly: look for the application inside the
+// container. A copy there means the install went to a place only the agent can reach, whatever
+// else is visible. That is a positive finding rather than an inference, and it is the one thing
+// about this that can be established from where this program runs.
+const sandboxed = (dirName) => {
+  const local = process.env.LOCALAPPDATA;
+  if (!local) return null;
+  const packages = join(local, "Packages");
+  let entries;
+  try {
+    entries = readdirSync(packages);
+  } catch {
+    return null; // no container here, which is the ordinary case for a student's own shell
+  }
+  for (const pkg of entries) {
+    const inside = join(packages, pkg, "LocalCache", "Local", "Programs", dirName);
+    try {
+      statSync(inside);
+      return inside;
+    } catch {
+      // not this package
+    }
+  }
+  return null;
+};
 
 // On Windows the sandbox this runs inside refuses reads INTO an installed application's folder
 // — statSync there raises EPERM — while the folder holding them lists normally. existsSync
@@ -297,6 +328,17 @@ const programsRoots = () =>
 // looking inside only if the listing is unavailable. And if neither can see, say so: a check
 // that was not allowed to look has not established that something is absent.
 const lookFor = (label, dirName, exeName) => {
+  // Before anything else: if it is in the container, the student does not have it, however
+  // convincing the rest of this looks.
+  const inContainer = sandboxed(dirName);
+  if (inContainer)
+    throw new Error(
+      `${label} was installed where only the setup agent can reach it, at ${inContainer}. ` +
+        `That is not on your machine — it is inside the assistant's own private storage, and ` +
+        `nothing you run will find it. It has to be installed again with winget. Show this ` +
+        `line to your instructor.`,
+    );
+
   const refused = [];
   for (const root of programsRoots()) {
     try {

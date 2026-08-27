@@ -1,6 +1,6 @@
 ---
 name: setup-editors
-description: Install Zettlr, make it the application that opens .md files, and watch the student open a real file in it. Runs last in first-day setup, and is required like every other phase — without an editor a student cannot read or write their own work.
+description: Install Zettlr, watch the student open a real file in it, and help them make it the application that opens .md files. Runs last in first-day setup, and is required like every other phase — without an editor a student cannot read or write their own work.
 ---
 
 # Set up the editor
@@ -118,16 +118,20 @@ Send them this, filling in the real path, and send nothing after it:
 depends on what else claims Markdown on that machine, you cannot know that in advance, and a
 student who thinks they have got it wrong will fiddle instead of showing you.
 
-**If it opened in Zettlr, this step is done.** Installing registers Zettlr for `.md`, and on a
-machine where nothing else claims the type it simply wins. Do not send them to set an
-association they already have.
+**If it opened in Zettlr, this step is done.** Do not send them to set an association they
+already have.
 
-**If it opened in something else** — a code editor, a browser, a text editor — then Markdown is
-contested on their machine and they have to choose. Common, and more so on Macs, where a dozen
-applications claim the type and Zettlr's bundle declares no priority for it at all.
+**Expect that on Windows and not on a Mac**, so that neither answer throws you. The Windows
+installer registers Zettlr for `.md`, and on a machine where nothing else claims the type it
+wins. Zettlr's macOS bundle declares no priority for the type at all, so it loses to whatever
+else claims Markdown — TextEdit or a browser on the emptiest machine, one of a dozen editors on
+a machine that has seen any development work. **On a Mac, setting the association by hand is
+the ordinary path through this step rather than the exception**, and treating it as a fault
+will tell a student something is wrong with their machine when nothing is.
 
-You cannot set it for them. macOS has no supported way short of an extra tool, and on Windows
-your registry writes may be redirected. Send whichever fits:
+**If it opened in something else,** Markdown is contested and they have to choose. You cannot
+choose for them: macOS has no supported way short of an extra tool, and on Windows your
+registry writes may be redirected. Send whichever fits:
 
 > macOS: in Finder, click once on `setup.md` — one click, not two. Press ⌘I, find **Open
 > with**, choose **Zettlr**, then click **Change All…** and confirm. Now double-click
@@ -143,6 +147,17 @@ not send them hunting for the executable by path. Say what happened and stop.
 **Look at the screenshot yourself.** You are checking that Zettlr is open with the right file
 in it — not that they say so. If it shows an empty editor, a different file, or an error, work
 through it with them rather than accepting it.
+
+**What this step needs is the file open in Zettlr. The association is worth having and is not
+worth the day.** If **Change All** or **Always** did not take — it opened in the other
+application again — try once more, and then stop trying. Send this, and send nothing after it:
+
+> Right-click `setup.md`, choose **Open With → Zettlr** — just this once, nothing about
+> "always" — and send me that screenshot.
+
+That screenshot finishes the step. Then say, in a sentence, that double-clicking a `.md` file
+will still open the other application and that they can ask for help changing it any time —
+otherwise they meet it again next week believing it was settled today.
 
 **4. Record what you saw.** Write `<parent>/.si212-editors.json`, creating or replacing it:
 
