@@ -1,6 +1,6 @@
 ---
 name: reset-bootstrap
-description: Put a test machine back to before first-day setup, so setup-workspace can be run against a folder that has not already been set up. Use between iterations of a bootstrap test run. Deletes the clones and removes the SI 212 block from ~/.codex/AGENTS.md; the installs it deliberately leaves alone. Run here, in Claude Code, never in Codex.
+description: Put a test machine back to before first-day setup, so setup-workspace can be run against a folder that has not already been set up. Use between iterations of a bootstrap test run. Deletes the clones, removes the SI 212 block from ~/.codex/AGENTS.md, and on Windows also strips the course safe.directory entry from the student's .gitconfig; the installs it deliberately leaves alone. Run here, in Claude Code, never in Codex.
 ---
 
 # Reset the first-day bootstrap
@@ -26,7 +26,7 @@ else. Two things survive it, and one of them corrupts the result:
 | `<parent>/.si212-editors.json`      | deletes — see below                                               |
 | the SI 212 block in `AGENTS.md`     | removes                                                           |
 | git, Node                           | **leaves** — phase 2 passes free on every run after the first     |
-| Zettlr, Camunda, Zettlr's autosave  | **leaves** — phase 6, same                                        |
+| Zettlr, Camunda, their settings     | **leaves** — phase 6, same; see below                             |
 | `~/.codex/config.toml`, `auth.json` | **leaves** — prompt steps 3–5 are U-M GPT's part, not this one's  |
 | the Codex project itself            | leaves, and the folder path with it, so the project keeps working |
 
@@ -36,6 +36,25 @@ Phases 2 and 6 are only ever tested once per machine, and after that need a VM s
 
 Nothing global needs undoing beyond `AGENTS.md`: `setup-repos` sets the git identity per
 repository, with `git -C <repo> config`, so it dies with the clones.
+
+**Zettlr's settings are part of what survives, and they hide its first-run onboarding.** The
+config lives outside anything above — `~/Library/Application Support/Zettlr/` on macOS,
+`%APPDATA%\Zettlr` on Windows — so once a machine has opened Zettlr, no later run sees the
+welcome flow a student sees. That is not a reason to delete it by default: leaving the installs
+alone is the whole design of this reset, and the onboarding is not what the loop is testing.
+
+**Delete it only when the first run of Zettlr itself is the thing under test**, and say that
+you have, because it makes the run's phase 6 stop being free.
+
+The file-association step in `setup-editors` survives the same way and resets by the same rule.
+On macOS a student's **Change All** writes an entry here:
+
+```
+plutil -p ~/Library/Preferences/com.apple.LaunchServices/com.apple.launchservices.secure.plist | grep -B4 markdown
+```
+
+No output means nobody has chosen, and whichever application registered the extension last is
+what opens it — which is the state a student starts in, and the reason the step exists.
 
 ## Levels
 
@@ -106,6 +125,41 @@ second one.
 
 7. **Report what survived**, from the second column of the table above, and therefore which
    phases the next run will pass without testing anything.
+
+## On Windows, two more things survive
+
+**You cannot do any of this yourself** — the VM is not reachable from here. Give Paul the
+commands and read what comes back, the same way `run-bootstrap-test` handles that machine.
+
+Everything above still applies, plus:
+
+**1. `safe.directory` entries in the student's `.gitconfig`.** Windows setup registers
+`<parent>/*` as safe, because the clones come out owned by `Administrators` and git refuses
+them otherwise. That entry lives in `C:\Users\<them>\.gitconfig`, outside anything a folder
+reset touches, and it **survives into the next run**.
+
+Left in place at the **full** level it is the same class of error as a stale `AGENTS.md` block:
+the next run's clones land at the same path, the old entry already covers them, and phase 3
+passes without the run ever having exercised the step that makes it pass. Remove it:
+
+```powershell
+$c = "$env:USERPROFILE\.gitconfig"
+Get-Content $c                                   # show it first, and say what you are removing
+(Get-Content $c) -notmatch 'si212' | Set-Content $c
+Get-Content $c                                   # confirm
+```
+
+If nothing but a `[safe]` header remains, take that too. And if the file holds anything that is
+not this course's, leave that alone — it is a personal configuration file the course is a guest
+in, exactly like `~/.codex/AGENTS.md`.
+
+**2. Probe folders from any investigation.** The ownership work on 2026-08-26 left `probe2`
+through `probe5` inside the workspace. They are clones, so a later `ls` of `<parent>` will not
+look like a clean start and the setup check may find more than it expects. Delete them by name.
+
+**What still survives on Windows**, and therefore what the next run does not test: git and
+Node, Zettlr and Camunda, `%USERPROFILE%\.codex\` — the same list as macOS, for the same
+reasons.
 
 ## Rules
 
