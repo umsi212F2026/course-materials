@@ -126,45 +126,43 @@ the only registry write that happens outside the container, so it is the only on
 
 None of this applies to macOS, where you write to the real filesystem.
 
-**3. Have them make Zettlr the application that opens `.md` files, by opening one.** From here
-on their notes and goals are `.md`, and **Zettlr will not win that on its own.** Markdown is a
-crowded type — a dozen applications on an ordinary machine claim it, from text editors to
-browsers to Word — and Zettlr's bundle declares no priority for it at all, so whatever else is
-installed opens their notes for the rest of the term. This is not a quirk of one machine. Do it
-on every one.
-
-Neither platform lets you set it from a command, for different reasons. macOS has no supported
-way short of an extra tool; on Windows every registry write you make is redirected into this
-app's container and never reaches them. It is theirs to do, and that is the point: setting it
-opens the file, and opening the file is the first thing in this course they do without an agent
-in between.
+**3. Have them open the file themselves, by double-clicking it.** From here on their notes and
+goals are `.md`, and this is the first file in the course they handle without an agent in
+between — so the move is theirs, and it is the ordinary one they already know.
 
 The file is the one the smoke test wrote — `<parent>/learning-topics/setup.md`. It names the
 two directories their machine now knows about, so it is worth the look on its own.
 
-On macOS, send them this, filling in the real path, and send nothing after it:
+Send them this, filling in the real path, and send nothing after it:
 
-> In Finder, open `<parent>/learning-topics` and click once on `setup.md` — one click, not two.
-> Press ⌘I, find **Open with**, choose **Zettlr**, then click **Change All…** and confirm. Now
-> double-click `setup.md`. It should open in Zettlr, showing where your work lives and where
-> the course lives. Send me a screenshot of that.
+> Open `<parent>/learning-topics` in your file browser and double-click `setup.md`. Send me a
+> screenshot of whatever opens — even if it is not what you expected.
 
-On Windows, **Zettlr will not be in the list of applications offered**, and a student who is
-told to pick it from there will look for something that is not there. Its installer registers
-itself for `.md`, but that registration happens in here and is redirected with everything else,
-so from their side Zettlr has never announced it opens Markdown. They have to reach the program
-directly. Fill in their real user name:
+**"Even if it is not what you expected" is doing real work there**, so keep it. What opens
+depends on what else claims Markdown on that machine, you cannot know that in advance, and a
+student who thinks they have got it wrong will fiddle instead of showing you.
 
-> In File Explorer, open `<parent>\learning-topics` and right-click `setup.md`. Choose **Open
-> with → Choose another app**, then scroll to the bottom and click **Choose an app on your
-> PC**. In the **File name** box, type this and press Enter:
-> `C:\Users\<them>\Programs\Zettlr\Zettlr.exe` Tick **Always use this app to open .md files**,
-> then click OK. It should open in Zettlr, showing where your work lives and where the course
-> lives. Send me a screenshot of that.
+**If it opened in Zettlr, this step is done.** Installing registers Zettlr for `.md`, and on a
+machine where nothing else claims the type it simply wins. Do not send them to set an
+association they already have.
 
-**If they say Zettlr is not there, believe them and check the path.** That is the sound of an
-install that went into the container: `Test-Path` it from in here and you will find it, because
-you are inside. Ask them to confirm the folder exists in File Explorer instead.
+**If it opened in something else** — a code editor, a browser, a text editor — then Markdown is
+contested on their machine and they have to choose. Common, and more so on Macs, where a dozen
+applications claim the type and Zettlr's bundle declares no priority for it at all.
+
+You cannot set it for them. macOS has no supported way short of an extra tool, and on Windows
+your registry writes may be redirected. Send whichever fits:
+
+> macOS: in Finder, click once on `setup.md` — one click, not two. Press ⌘I, find **Open
+> with**, choose **Zettlr**, then click **Change All…** and confirm. Now double-click
+> `setup.md` again and send me a screenshot.
+
+> Windows: right-click `setup.md`, choose **Open with → Zettlr**, and tick **Always use this
+> app to open .md files**. Then double-click it again and send me a screenshot.
+
+**If Zettlr is not in the Windows list at all, the install did not reach them.** Its installer
+registers the file type, so an absence here means the files went somewhere they cannot see — do
+not send them hunting for the executable by path. Say what happened and stop.
 
 **Look at the screenshot yourself.** You are checking that Zettlr is open with the right file
 in it — not that they say so. If it shows an empty editor, a different file, or an error, work
