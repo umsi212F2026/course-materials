@@ -21,7 +21,6 @@
         <bpmn:flowNodeRef>T_run</bpmn:flowNodeRef>
       </bpmn:lane>
     </bpmn:laneSet>
-
     <bpmn:startEvent id="Start_T" name="tour skill invoked&#10;with a data directory">
       <bpmn:documentation>workflows/tour/skills/tour/SKILL.md governs this plane. It is not drawn as a step because it is not one of them — it is what directs every box here.
 
@@ -30,7 +29,6 @@ Invoked by setup-addressing, its step 3, at the end of first-day setup, with the
 ONE RUN IS ONE TOUR: one student, once. It begins here and ends by handing straight back to setup-addressing. The setup check that reads the result afterwards is a box in workflows/bootstrap/bootstrap.bpmn, not here.</bpmn:documentation>
       <bpmn:outgoing>t1</bpmn:outgoing>
     </bpmn:startEvent>
-
     <bpmn:serviceTask id="T_ask" name="Ask what they want&#10;out of the course">
       <bpmn:documentation>Step 1. The framing and the question go out as ONE message, in the exact wording the skill supplies — "Send that wording, not a version of it."
 
@@ -40,7 +38,6 @@ Deliberately NOT here: the four parts. A student handed guide, skill, script, da
       <bpmn:incoming>t1</bpmn:incoming>
       <bpmn:outgoing>t2</bpmn:outgoing>
     </bpmn:serviceTask>
-
     <bpmn:userTask id="T_answer" name="Answer in their own words">
       <bpmn:documentation>The only thing in the whole setup that is theirs rather than the machine's.
 
@@ -48,7 +45,6 @@ The skill forbids coaching the answer, improving it, or asking a second question
       <bpmn:incoming>t2</bpmn:incoming>
       <bpmn:outgoing>t3</bpmn:outgoing>
     </bpmn:userTask>
-
     <bpmn:task id="T_guide" name="Read the guide together —&#10;guide, skill, script, data directory">
       <bpmn:documentation>Step 2. workflows/tour/guides/tour.md, taken one part at a time rather than pasted at them wholesale. The agent says which part it is itself, which part the file they are reading is, and which part it is about to run.
 
@@ -61,7 +57,6 @@ Also here: the agent names the data directory out loud and says it was TOLD it r
         <bpmn:sourceRef>DOR_guide</bpmn:sourceRef>
       </bpmn:dataInputAssociation>
     </bpmn:task>
-
     <bpmn:scriptTask id="T_run" name="Write the record and print what resolved&#10;tour.mjs">
       <bpmn:documentation>workflows/tour/tools/tour.mjs --dir &lt;data-dir&gt; --answer "&lt;what they said&gt;". The agent types the command; the program does the part that has to come out right every time, which is why the box sits in this lane.
 
@@ -76,7 +71,6 @@ The agent shows the output; it does not write the file. "If you find yourself co
         <bpmn:targetRef>DOR_rec_a</bpmn:targetRef>
       </bpmn:dataOutputAssociation>
     </bpmn:scriptTask>
-
     <bpmn:serviceTask id="T_open_ask" name="Give them the path, and ask&#10;them to open it themselves">
       <bpmn:documentation>Step 4 — three things in one message that needs a reply, and the skill is emphatic that they stay together.
 
@@ -86,7 +80,6 @@ Said afterwards, on their own, all three get dropped.</bpmn:documentation>
       <bpmn:incoming>t5</bpmn:incoming>
       <bpmn:outgoing>t6</bpmn:outgoing>
     </bpmn:serviceTask>
-
     <bpmn:userTask id="T_open" name="Open the file in the editor">
       <bpmn:documentation>They open it themselves, in their own editor — the agent does not read it to them.
 
@@ -99,7 +92,6 @@ This is also the step that makes the editors phase of setup non-optional.</bpmn:
         <bpmn:sourceRef>DOR_rec_b</bpmn:sourceRef>
       </bpmn:dataInputAssociation>
     </bpmn:userTask>
-
     <bpmn:serviceTask id="T_recap" name="Say what happened, and&#10;that the test passed">
       <bpmn:documentation>Step 5, in three sentences: a guide explained it, a skill directed it, a script did the exact part.
 
@@ -109,36 +101,25 @@ Then hand straight back and keep going, rather than saying it and falling silent
       <bpmn:incoming>t7</bpmn:incoming>
       <bpmn:outgoing>t8</bpmn:outgoing>
     </bpmn:serviceTask>
-
     <bpmn:endEvent id="End_T" name="the addressing is proved,&#10;in a file the student has read">
       <bpmn:documentation>The end state, not the event. What is true when a run arrives here: a skill was found by path, a manifest resolved, a script ran with the directory it was given, a write landed in a repository that is not the one the code lives in — and the student has opened the result themselves. Evidence on disk rather than an agent's account of it.
 
 The run hands back to setup-addressing, which runs the setup check and expects "reached 5 of 7 — Smoke test". That box is in workflows/bootstrap/bootstrap.bpmn.</bpmn:documentation>
       <bpmn:incoming>t8</bpmn:incoming>
     </bpmn:endEvent>
-
-    <bpmn:dataObjectReference id="DOR_guide" name="tour.md (the guide)" dataObjectRef="DO_guide">
+    <bpmn:dataObjectReference id="DOR_guide" name="workflows/tour/guides/tour.md" dataObjectRef="DO_guide">
       <bpmn:documentation>workflows/tour/guides/tour.md — course materials, the same on all forty-eight machines, arriving with the clone and changing when the instructor changes them. Read here, never written.</bpmn:documentation>
     </bpmn:dataObjectReference>
     <bpmn:dataObject id="DO_guide" />
-
-    <bpmn:dataObjectReference id="DOR_rec_a" name="&lt;data-dir&gt;/tour.md" dataObjectRef="DO_record">
+    <bpmn:dataObjectReference id="DOR_rec_a" name="&#60;data-dir&#62;/tour.md" dataObjectRef="DO_record">
       <bpmn:documentation>Written by the script into the student's learning-topics clone. Drawn twice, because its writer and its reader sit at opposite ends of this plane: one dataObject, two references.
 
 "This file is yours. Edit it, delete it, or leave it — nothing depends on it after the setup check reads it."</bpmn:documentation>
     </bpmn:dataObjectReference>
-    <bpmn:dataObjectReference id="DOR_rec_b" name="&lt;data-dir&gt;/tour.md" dataObjectRef="DO_record">
+    <bpmn:dataObjectReference id="DOR_rec_b" name="&#60;data-dir&#62;/tour.md" dataObjectRef="DO_record">
       <bpmn:documentation>The same file as the one the script wrote, three boxes to the left. One dataObject, two references — a repeat rather than a line drawn the width of the diagram.</bpmn:documentation>
     </bpmn:dataObjectReference>
     <bpmn:dataObject id="DO_record" />
-
-    <bpmn:textAnnotation id="Note_scope">
-      <bpmn:text>THIS PLANE IS THE SUCCESSFUL PATH ONLY. The skill's failure rules are real and are not drawn: if the script fails, stop and show the error unedited — do not try another directory, do not create one, do not run it again with different arguments, because "the setup check that runs next needs to see a real state, not a state you improvised your way into"; and if the script reports that the data directory sits inside the course materials, tell the student and their instructor rather than reorganising anything.
-
-AND THE LANE IS NEARLY EMPTY ON PURPOSE. Nothing adjudicates the conversation. That the given wording was sent rather than a version of it, that the answer was not coached, that it was passed through unedited — each is the agent's account and nothing else. What a program decides here is narrow and deliberate: the script refuses to run without a data directory, confirms the guide, the skill and itself are all present under the materials it resolved, and records the paths it actually used. Whether the file landed is read afterwards by check-setup.mjs, in workflows/bootstrap/bootstrap.bpmn — because an agent reporting that it finished is not evidence that it did.</bpmn:text>
-    </bpmn:textAnnotation>
-    <bpmn:association id="xa1" sourceRef="Note_scope" targetRef="T_run" />
-
     <bpmn:sequenceFlow id="t1" sourceRef="Start_T" targetRef="T_ask" />
     <bpmn:sequenceFlow id="t2" sourceRef="T_ask" targetRef="T_answer" />
     <bpmn:sequenceFlow id="t3" sourceRef="T_answer" targetRef="T_guide" />
@@ -147,22 +128,24 @@ AND THE LANE IS NEARLY EMPTY ON PURPOSE. Nothing adjudicates the conversation. T
     <bpmn:sequenceFlow id="t6" sourceRef="T_open_ask" targetRef="T_open" />
     <bpmn:sequenceFlow id="t7" sourceRef="T_open" targetRef="T_recap" />
     <bpmn:sequenceFlow id="t8" sourceRef="T_recap" targetRef="End_T" />
+    <bpmn:textAnnotation id="Note_scope">
+      <bpmn:text>THIS DIAGRAM IS THE SUCCESSFUL PATH ONLY. The failure rules are omitted for simplicity.</bpmn:text>
+    </bpmn:textAnnotation>
   </bpmn:process>
   <bpmndi:BPMNDiagram id="D_tour">
     <bpmndi:BPMNPlane id="Pl_tour" bpmnElement="C_T">
       <bpmndi:BPMNShape id="P_T_di" bpmnElement="P_T" isHorizontal="true">
         <dc:Bounds x="160" y="80" width="2300" height="690" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="LT_human_di" bpmnElement="LT_human" isHorizontal="true" color:background-color="#fdf3f7" color:border-color="#9c8490">
-        <dc:Bounds x="190" y="80" width="2270" height="250" />
+      <bpmndi:BPMNShape id="LT_program_di" bpmnElement="LT_program" isHorizontal="true" color:background-color="#eef5f4" color:border-color="#7a918d">
+        <dc:Bounds x="190" y="550" width="2270" height="220" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="LT_agent_di" bpmnElement="LT_agent" isHorizontal="true" color:background-color="#fdf7ee" color:border-color="#9c8d76">
         <dc:Bounds x="190" y="330" width="2270" height="220" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="LT_program_di" bpmnElement="LT_program" isHorizontal="true" color:background-color="#eef5f4" color:border-color="#7a918d">
-        <dc:Bounds x="190" y="550" width="2270" height="220" />
+      <bpmndi:BPMNShape id="LT_human_di" bpmnElement="LT_human" isHorizontal="true" color:background-color="#fdf3f7" color:border-color="#9c8490">
+        <dc:Bounds x="190" y="80" width="2270" height="250" />
       </bpmndi:BPMNShape>
-
       <bpmndi:BPMNShape id="Start_T_di" bpmnElement="Start_T">
         <dc:Bounds x="250" y="422" width="36" height="36" />
         <bpmndi:BPMNLabel>
@@ -203,11 +186,10 @@ AND THE LANE IS NEARLY EMPTY ON PURPOSE. Nothing adjudicates the conversation. T
           <dc:Bounds x="2280" y="465" width="160" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
-
       <bpmndi:BPMNShape id="DOR_guide_di" bpmnElement="DOR_guide" color:background-color="#e8f0fb">
         <dc:Bounds x="1002" y="115" width="36" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="950" y="169" width="140" height="14" />
+          <dc:Bounds x="930" y="169" width="180" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="DOR_rec_a_di" bpmnElement="DOR_rec_a" color:background-color="#fdeaea">
@@ -222,11 +204,10 @@ AND THE LANE IS NEARLY EMPTY ON PURPOSE. Nothing adjudicates the conversation. T
           <dc:Bounds x="1840" y="169" width="120" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
-
       <bpmndi:BPMNShape id="Note_scope_di" bpmnElement="Note_scope">
-        <dc:Bounds x="250" y="580" width="900" height="150" />
+        <dc:Bounds x="250" y="580" width="899.9999389648438" height="25.998262405395508" />
+        <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
-
       <bpmndi:BPMNEdge id="t1_di" bpmnElement="t1">
         <di:waypoint x="286" y="440" />
         <di:waypoint x="340" y="440" />
@@ -271,7 +252,6 @@ AND THE LANE IS NEARLY EMPTY ON PURPOSE. Nothing adjudicates the conversation. T
         <di:waypoint x="2280" y="440" />
         <di:waypoint x="2360" y="440" />
       </bpmndi:BPMNEdge>
-
       <bpmndi:BPMNEdge id="a_guide_di" bpmnElement="a_guide">
         <di:waypoint x="1038" y="140" />
         <di:waypoint x="1080" y="140" />
@@ -285,10 +265,6 @@ AND THE LANE IS NEARLY EMPTY ON PURPOSE. Nothing adjudicates the conversation. T
         <di:waypoint x="1918" y="140" />
         <di:waypoint x="1960" y="140" />
         <di:waypoint x="1960" y="210" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="xa1_di" bpmnElement="xa1">
-        <di:waypoint x="1150" y="690" />
-        <di:waypoint x="1230" y="680" />
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
