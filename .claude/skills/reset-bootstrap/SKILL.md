@@ -9,8 +9,8 @@ Codex runs the setup; this undoes it. Run it here between iterations of a test r
 `workflows/bootstrap/skills/setup-workspace/SKILL.md`.
 
 **A new Codex project pointed at a new folder is not a reset**, which is the reason this
-exists. A fresh folder isolates the clones and the smoke-test receipt — phases 3 and 5 — and
-nothing else. Two things survive it, and one of them corrupts the result:
+exists. A fresh folder isolates the clones and the tour artifact — phases 3 and 5 — and nothing
+else. Two things survive it, and one of them corrupts the result:
 
 - `~/.codex/AGENTS.md` is machine-global, and `setup-addressing` is told to merge into it
   rather than overwrite. The second run finds the first run's block still there.
@@ -22,11 +22,11 @@ nothing else. Two things survive it, and one of them corrupts the result:
 
 | survives a new folder               | this skill                                                        |
 | ----------------------------------- | ----------------------------------------------------------------- |
-| the three clones, `setup.md`        | deletes                                                           |
+| the three clones, `tour.md`         | deletes                                                           |
 | `<parent>/.si212-editors.json`      | deletes — see below                                               |
 | the SI 212 block in `AGENTS.md`     | removes                                                           |
 | git, Node                           | **leaves** — phase 2 passes free on every run after the first     |
-| Zettlr, Camunda, their settings     | **leaves** — phase 6, same; see below                             |
+| Zettlr and its settings             | **leaves** — phase 6, same; see below                             |
 | `~/.codex/config.toml`, `auth.json` | **leaves** — prompt steps 3–5 are U-M GPT's part, not this one's  |
 | the Codex project itself            | leaves, and the folder path with it, so the project keeps working |
 
@@ -60,11 +60,11 @@ what opens it — which is the state a student starts in, and the reason the ste
 
 Ask which, unless the conversation already settled it. Default to **full**.
 
-| level               | removes                                              | next run's setup check | what that tests                                                                           |
-| ------------------- | ---------------------------------------------------- | ---------------------- | ----------------------------------------------------------------------------------------- |
-| **full**            | all three clones, `setup.md`, `hello.txt`, the block | nothing cloned         | the whole thing: the URL→disk boundary, every skill in order                              |
-| **from addressing** | the block and `setup.md`; keeps the clones           | reached 3 of 7         | the resume path, and `setup-repos` updating instead of cloning                            |
-| **from smoke**      | `setup.md` only                                      | reached 4 of 7         | that `setup-addressing` **merges** into an existing `AGENTS.md` rather than clobbering it |
+| level               | removes                                             | next run's setup check | what that tests                                                                           |
+| ------------------- | --------------------------------------------------- | ---------------------- | ----------------------------------------------------------------------------------------- |
+| **full**            | all three clones, `tour.md`, `hello.txt`, the block | nothing cloned         | the whole thing: the URL→disk boundary, every skill in order                              |
+| **from addressing** | the block and `tour.md`; keeps the clones           | reached 3 of 7         | the resume path, and `setup-repos` updating instead of cloning                            |
+| **from smoke**      | `tour.md` only                                      | reached 4 of 7         | that `setup-addressing` **merges** into an existing `AGENTS.md` rather than clobbering it |
 
 Both partial levels re-enter at `setup-addressing`, which owns phases 4 and 5. The difference
 between them is whether `AGENTS.md` already exists, and that difference is the point of the
@@ -91,7 +91,7 @@ second one.
    a git checkout. A test parent is a plain folder holding three clones.
 
 4. **Check it is a test folder and not real work.** `ls -A <parent>` — if it holds anything
-   other than the three clones, `setup.md`'s repository, and the step-7 `hello.txt`, name what
+   other than the three clones, `tour.md`'s repository, and the step-7 `hello.txt`, name what
    else is there and ask before going on. Then, for `learning-topics` and `assignments`:
 
    ```
@@ -99,7 +99,7 @@ second one.
    git -C <parent>/<repo> log --oneline @{upstream}..HEAD
    ```
 
-   `learning-topics/setup.md` shows up untracked and is expected. Commits, or anything else
+   `learning-topics/tour.md` shows up untracked and is expected. Commits, or anything else
    modified, mean this is not a folder that exists to be thrown away — stop and say so.
 
 5. **Show the exact list of paths you are about to delete and get a yes.** Delete each named
@@ -108,9 +108,9 @@ second one.
 
    **`<parent>/.si212-editors.json` goes with them.** It is not a clone, so a folder reset
    leaves it, and it holds `setup-editors`' record that it watched the student open a file in
-   each editor. Left in place, the next run's setup check reports both editors `CONFIRMED`
-   without anyone having opened anything — a pass carried over from a previous student on a
-   previous day.
+   Zettlr. Left in place, the next run's setup check reports that line `CONFIRMED` without
+   anyone having opened anything — a pass carried over from a previous student on a previous
+   day.
 
 6. **Strip the SI 212 block from `~/.codex/AGENTS.md`**, in place: from the `# SI 212` heading
    to the next top-level heading or the end of the file. Leave everything else exactly as it
@@ -157,9 +157,8 @@ in, exactly like `~/.codex/AGENTS.md`.
 through `probe5` inside the workspace. They are clones, so a later `ls` of `<parent>` will not
 look like a clean start and the setup check may find more than it expects. Delete them by name.
 
-**What still survives on Windows**, and therefore what the next run does not test: git and
-Node, Zettlr and Camunda, `%USERPROFILE%\.codex\` — the same list as macOS, for the same
-reasons.
+**What still survives on Windows**, and therefore what the next run does not test: git and Node
+and Zettlr, `%USERPROFILE%\.codex\` — the same list as macOS, for the same reasons.
 
 ## Rules
 
@@ -181,6 +180,6 @@ next run's setup check cannot tell you which it got.
 - Written 2026-08-25, before the first repeat run. The `AGENTS.md` precedence in step 6 is read
   off `check-setup.mjs`, not observed — if the setup check's handling of that file changes,
   this changes with it.
-- The public `course-materials` repository must actually contain the skills and the tools
-  before any of this is worth running. As of writing it holds the config and the bootstrap
+- The public `course-materials` repository must actually contain the skills, the tools and the
+  tour before any of this is worth running. As of writing it holds the config and the bootstrap
   prompt only, so step 8 of the prompt fetches a 404.

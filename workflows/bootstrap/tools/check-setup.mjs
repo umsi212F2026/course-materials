@@ -335,22 +335,15 @@ editors(
   installed("Zettlr", "/Applications/Zettlr.app", "Zettlr", "Zettlr.exe"),
 );
 
-editors(
-  "BPMN editor",
-  installed(
-    "Camunda Modeler",
-    "/Applications/Camunda Modeler.app",
-    "camunda-modeler",
-    "Camunda Modeler.exe",
-  ),
-);
+// Camunda Modeler is NOT checked here. It moved out of first-day setup to the workflows unit,
+// which installs it in the week it is first used. A check for it here would fail every machine
+// on day one and be right to.
 
 // What the student did, rather than what is on disk.
 //
 // Installing an editor is not the point; being able to open your own work in it is, and no
 // program can establish that from here. `setup-editors` walks them through opening a real file
-// in each editor, sees a screenshot of the result, and records its verdict. This reads that
-// record.
+// in it, sees a screenshot of the result, and records its verdict. This reads that record.
 //
 // It is taken on trust, and the report says so rather than blurring it into the checks this
 // program made itself.
@@ -376,7 +369,6 @@ const opened = (label, key, what) =>
   );
 
 opened("you opened a file in Zettlr", "zettlr", "open one of your own notes in Zettlr");
-opened("you opened a diagram in Camunda", "camunda", "open a .bpmn file in Camunda Modeler");
 
 // --- 7. Remote -------------------------------------------------------------
 

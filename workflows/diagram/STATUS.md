@@ -20,11 +20,37 @@ use; it is not a design.
 
 Students will draw their own workflow diagrams. When they do, the diagram lives in their
 repository rather than this one, and the skill takes a data directory like every other skill.
-The first-day setup already installs the editor and the validators on student machines, so the
-thing that uses them is owed.
 
 Whether that is this skill widened or a second one beside it is open. Deferred deliberately —
 the first-day bootstrap comes first.
+
+## This unit owes an install
+
+**Camunda Modeler is no longer installed on day one.** It was, and it did not earn the place:
+an application first opened in this unit, installed a week or more earlier, alongside a
+screenshot of a diagram nobody had a reason to read yet. It belongs here, in the week it is
+first used, with a diagram in hand as the reason.
+
+So this unit gains a step that installs it. What the bootstrap work already established, so it
+does not have to be learned twice:
+
+- **Pinned to 5.50.1**, from
+  `https://github.com/camunda/camunda-modeler/releases/download/v5.50.1/` —
+  `camunda-modeler-5.50.1-mac-arm64.dmg`, `-mac-x64.dmg`, `-win-x64.zip`. Pinned rather than
+  "latest" because `api.github.com` allows sixty requests an hour from one address and a lab
+  section shares one.
+- **There is no Windows installer**, only a zip holding a portable `.exe`. Nothing registers
+  `.bpmn` on Windows, so a student who double-clicks a diagram is offered Notepad and a browser
+  with Camunda not in the list. That is true however it is installed, including through
+  `winget`, whose manifest is the same zip. **So the skill opens diagrams for them, by path.**
+- **On Windows, install to `%USERPROFILE%\Programs`**, never under `AppData` — see the rule in
+  `setup-editors`, which explains why, and `check-setup.mjs`, which looks in the same place.
+- On macOS a `.dmg` into `/Applications` is enough; `.bpmn` has no declared file type there, so
+  Camunda becomes its only claimant and wins by default.
+
+`.si212-editors.json` used to carry a `camunda` key recording that a student had opened a
+diagram. The setup check no longer reads it. If this unit wants the same evidence, it is a
+reasonable shape to reuse.
 
 ## What this means for checks and edits
 

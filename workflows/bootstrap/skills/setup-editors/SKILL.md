@@ -1,23 +1,26 @@
 ---
 name: setup-editors
-description: Install the Markdown editor and the BPMN editor, make Zettlr the application that opens .md files, and watch the student open a real file in each. Runs last in first-day setup, and is required like every other phase — without an editor a student cannot read or write their own work.
+description: Install Zettlr, make it the application that opens .md files, and watch the student open a real file in it. Runs last in first-day setup, and is required like every other phase — without an editor a student cannot read or write their own work.
 ---
 
-# Set up the editors
+# Set up the editor
 
 The **Editors** phase, sixth of seven.
 
-Two applications, and they matter more than they look. `study` has the student writing
-`notes.md` while the agent prompts; the diagram work needs Camunda. Without these, a student
-can watch an agent describe their own work and never read or write it — so this is not the
-optional trimming it might seem.
+One application, and it matters more than it looks. `study` has the student writing `notes.md`
+while the agent prompts. Without it, a student can watch an agent describe their own work and
+never read or write it — so this is not the optional trimming it might seem.
 
-**Installing them is half the phase.** The other half is watching the student open a real file
-in each, which is the only thing that establishes they can actually use them.
+**Installing it is half the phase.** The other half is watching the student open a real file in
+it, which is the only thing that establishes they can actually use it.
+
+**The BPMN editor is not installed here.** Camunda Modeler belongs to the workflows unit, which
+installs it in the week it is first used, with a diagram in hand as the reason. Do not install
+it today and do not offer to.
 
 ## Operates on
 
-You install applications, and you write one small file — `<parent>/.si212-editors.json` —
+You install one application, and you write one small file — `<parent>/.si212-editors.json` —
 recording what you watched the student do.
 
 ## What you do, in order
@@ -28,11 +31,10 @@ download, install and open before you speak, and let the message be the end of t
 a short restatement after a quoted block below replaces it — the student gets the restatement
 and not the block, and the block is where the path is.
 
-**1. Say what these are for, in two sentences,** before installing anything. Zettlr is for
-reading and writing their own notes and goals directly, rather than only ever seeing them
-through an agent. Camunda Modeler is for drawing workflow diagrams later in the term.
+**1. Say what it is for, in a sentence,** before installing anything. Zettlr is for reading and
+writing their own notes and goals directly, rather than only ever seeing them through an agent.
 
-**2. Install Zettlr.** Download and install; they open it in step 4.
+**2. Install Zettlr.** Download and install; they open it in step 3.
 
 **Say what you are about to do in one sentence, then do it. Do not ask.** "Installing Zettlr
 now" — not _may I install Zettlr?_ The machine puts up its own prompt if permission is needed,
@@ -54,8 +56,7 @@ and downloading one gets you HTML named like an installer.
 **If a pinned address returns 404, it no longer resolves — and why is not something you can
 know.** Withdrawn release, renamed asset, or a mistake in this file; same remedy for all three.
 Only then, ask `https://api.github.com/repos/Zettlr/Zettlr/releases/latest` for the current
-version and take the equivalently-named asset — and carry that version number into step 3,
-which needs to match what you actually installed. Say what you asked and what you found, and do
+version and take the equivalently-named asset. Say what you asked and what you found, and do
 not assert a cause. Do not reach for the API first: it allows sixty requests an hour from one
 address, and a room full of students shares one.
 
@@ -85,24 +86,6 @@ offer to install for all users is the one thing that asks — take the default i
 - **A password they do not have.** Stop; see the rule below. The distinction is whether the
   password exists and they know it, not whether a box appeared.
 
-**3. Install Camunda Modeler.** Same pinned shape, from
-`https://github.com/camunda/camunda-modeler/releases/download/v5.50.1/`:
-
-| Platform           | File                                   |
-| ------------------ | -------------------------------------- |
-| Mac, Apple Silicon | `camunda-modeler-5.50.1-mac-arm64.dmg` |
-| Mac, Intel         | `camunda-modeler-5.50.1-mac-x64.dmg`   |
-| Windows            | `camunda-modeler-5.50.1-win-x64.zip`   |
-
-Same 404 rule as Zettlr, against `camunda/camunda-modeler`.
-
-**On Windows this is a zip, not an installer** — Camunda ships no Windows installer at all.
-Unpack it to `%USERPROFILE%\Programs\camunda-modeler`, alongside Zettlr, so there is one place
-to look for either of them.
-
-It is not needed for weeks, so if it fails, that is the least costly failure in the whole
-setup.
-
 ### On Windows, install to `%USERPROFILE%\Programs` and nowhere else
 
 **Anything you write under `AppData` may not exist for the student, and you cannot tell from in
@@ -131,10 +114,9 @@ reach the student, while an ordinary file beside it did not — so a student can
 Start-menu entry for a program that is not there. You cannot tell by writing something and
 looking, because you are on the wrong side of the boundary to look from.
 
-So: `%USERPROFILE%\Programs\Zettlr` and `%USERPROFILE%\Programs\camunda-modeler`. It needs no
-administrator rights, it is not a hidden folder, and it is the same place `check-setup.mjs`
-looks — which now refuses to look under `AppData` at all, precisely so that an install into the
-container cannot pass.
+So: `%USERPROFILE%\Programs\Zettlr`. It needs no administrator rights, it is not a hidden
+folder, and it is the same place `check-setup.mjs` looks — which now refuses to look under
+`AppData` at all, precisely so that an install into the container cannot pass.
 
 **And the registry goes the same way, which is why you do not touch file associations.** A
 packaged app's `HKCU` writes are redirected too, so `assoc`, `ftype`, and anything written to
@@ -144,7 +126,7 @@ the only registry write that happens outside the container, so it is the only on
 
 None of this applies to macOS, where you write to the real filesystem.
 
-**4. Have them make Zettlr the application that opens `.md` files, by opening one.** From here
+**3. Have them make Zettlr the application that opens `.md` files, by opening one.** From here
 on their notes and goals are `.md`, and **Zettlr will not win that on its own.** Markdown is a
 crowded type — a dozen applications on an ordinary machine claim it, from text editors to
 browsers to Word — and Zettlr's bundle declares no priority for it at all, so whatever else is
@@ -184,43 +166,25 @@ directly. Fill in their real user name:
 install that went into the container: `Test-Path` it from in here and you will find it, because
 you are inside. Ask them to confirm the folder exists in File Explorer instead.
 
-**5. Open the diagram for them, and tell them you did.** The file is the setup they have just
-been through, drawn — about something they have just done, which is what makes it their first
-readable one. There is nothing to learn from hunting for it, and on Windows they could not open
-it by hand anyway: nothing there claims `.bpmn`, so double-clicking one offers Notepad and a
-browser and does not list Camunda at all. Open it yourself:
+**Look at the screenshot yourself.** You are checking that Zettlr is open with the right file
+in it — not that they say so. If it shows an empty editor, a different file, or an error, work
+through it with them rather than accepting it.
 
-- macOS —
-  `open -a "Camunda Modeler" "<parent>/course-materials/workflows/bootstrap/bootstrap.bpmn"`
-- Windows —
-  `Start-Process "$env:USERPROFILE\Programs\camunda-modeler\Camunda Modeler.exe" -ArgumentList "<parent>\course-materials\workflows\bootstrap\bootstrap.bpmn"`
-
-Run it first, then send this, with nothing after it:
-
-> I have opened Camunda Modeler for you, with `bootstrap.bpmn` in it — that diagram is the
-> setup you have just been through. Send me a screenshot when it is on screen.
-
-**Look at both screenshots yourself.** You are checking that the application is open with the
-right file in it — not that they say so. If a screenshot shows an empty editor, a different
-file, or an error, work through it with them rather than accepting it.
-
-**6. Record what you saw.** Write `<parent>/.si212-editors.json`, creating or replacing it:
+**4. Record what you saw.** Write `<parent>/.si212-editors.json`, creating or replacing it:
 
 ```json
-{
-  "zettlr": { "opened": "learning-topics/setup.md", "on": "YYYY-MM-DD" },
-  "camunda": { "opened": "workflows/bootstrap/bootstrap.bpmn", "on": "YYYY-MM-DD" }
-}
+{ "zettlr": { "opened": "learning-topics/setup.md", "on": "YYYY-MM-DD" } }
 ```
 
-**Only write an entry for a screenshot you actually saw.** The setup check reads this file and
-reports those two lines as `CONFIRMED` rather than `PASS`, because they are your word rather
-than something it established. Writing an entry for something you did not see puts a false
-statement into a report an instructor uses to decide who needs help.
+**Write it only if you actually saw the screenshot.** The setup check reads this file and
+reports that line as `CONFIRMED` rather than `PASS`, because it is your word rather than
+something it established. Writing an entry for something you did not see puts a false statement
+into a report an instructor uses to decide who needs help.
 
-If one editor worked and the other did not, write the one that did and leave the other out.
+**If they never got it open, write nothing** and say so. A missing file is the honest answer,
+and the phase not passing is the correct outcome.
 
-**7. Check the phase.** Run `node course-materials/workflows/bootstrap/tools/check-setup.mjs`
+**5. Check the phase.** Run `node course-materials/workflows/bootstrap/tools/check-setup.mjs`
 and read the last line it prints.
 
 - **`Reached 6 of 7 — Editors`** — hand back to `setup-workspace`.
@@ -251,8 +215,8 @@ with them, in plain words, as many times as it takes.
 
 ## When you cannot finish
 
-Say which application failed and show the error, and have them submit the setup check output to
-the Canvas assignment.
+Say what failed and show the error, and have them submit the setup check output to the Canvas
+assignment.
 
 Be accurate about where it leaves them, because the gap is real but narrow: everything the
 agent does for them works, and what they cannot yet do is open their own files. That is worth
@@ -263,5 +227,3 @@ their instructor knowing today rather than in week three.
 - [`study`](workflows/learn/skills/study/SKILL.md) — skill
 - [`setup-workspace`](workflows/bootstrap/skills/setup-workspace/SKILL.md) — skill
 - [`check-setup.mjs`](workflows/bootstrap/tools/check-setup.mjs) — tool
-- [`bootstrap.bpmn`](workflows/bootstrap/bootstrap.bpmn) — diagram, the one they open in
-  Camunda

@@ -96,8 +96,8 @@ you need to read what they tell you.
    then runs the smoke test. From here on, read from the clone. Should reach **5 of 7, Smoke
    test**.
 
-3. **`workflows/bootstrap/skills/setup-editors/SKILL.md`** — Zettlr and Camunda Modeler. Should
-   reach **6 of 7, Editors**.
+3. **`workflows/bootstrap/skills/setup-editors/SKILL.md`** — Zettlr, and the student opening a
+   file in it. Should reach **6 of 7, Editors**.
 
 **Stop at the first one whose checkpoint does not pass.** All three block, editors included: a
 student who cannot open their own files can watch an agent describe their work but never read
