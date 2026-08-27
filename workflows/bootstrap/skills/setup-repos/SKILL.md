@@ -31,9 +31,12 @@ Windows `git --version` fails whether or not git exists, because it is not on th
 ```
 Windows:  C:\Program Files\Git\cmd\git.exe
           %LOCALAPPDATA%\Programs\Git\cmd\git.exe
+          %LOCALAPPDATA%\Programs\nodejs\node.exe
           C:\Program Files\nodejs\node.exe
 macOS:    git and node on PATH is a fair test
 ```
+
+Both Node locations, because a machine may already have one installed either way.
 
 Install nothing yet.
 
@@ -48,13 +51,26 @@ needs supervising for its own instructions.
 
 **Download from these addresses. Do not ask an API which version is current.**
 
-| Platform | git                                                                         | Node                                                     |
-| -------- | --------------------------------------------------------------------------- | -------------------------------------------------------- |
-| Windows  | `Git-2.55.0.5-64-bit.exe` from git-for-windows' `v2.55.0.windows.5` release | `node-v24.20.0-x64.msi` from `nodejs.org/dist/v24.20.0/` |
-| macOS    | `xcode-select --install` — git ships with the command line tools            | `node-v24.20.0.pkg` from the same path                   |
+| Platform | git                                                                         | Node                                                         |
+| -------- | --------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| Windows  | `Git-2.55.0.5-64-bit.exe` from git-for-windows' `v2.55.0.windows.5` release | `node-v24.20.0-win-x64.zip` from `nodejs.org/dist/v24.20.0/` |
+| macOS    | `xcode-select --install` — git ships with the command line tools            | `node-v24.20.0.pkg` from the same path                       |
 
 Four version components in the git filename is correct, not a typo: Git for Windows folds the
 `.windows.5` of the tag into the file's own version.
+
+**On Windows, Node is the zip and not the `.msi` — this matters.** The installer writes to
+`Program Files` for every account on the machine, so it asks for an administrator password and
+stops dead without one:
+
+```
+Error 1925. You do not have sufficient privileges to complete this installation
+for all users of the machine.
+```
+
+Nothing in this course needs Node for anybody but them. Unpack the zip into
+`%LOCALAPPDATA%\Programs\nodejs` — no installer, no password, same as Camunda later — and use
+`%LOCALAPPDATA%\Programs\nodejs\node.exe` from then on.
 
 **Why pinned:** `api.github.com` allows sixty requests an hour from one address and a lab
 section shares one, so a class that resolves "latest" here exhausts it before anyone reaches
@@ -66,12 +82,27 @@ withdrawn release, renamed asset, or a mistake in this file. Only then ask the p
 current version, take the equivalently-named asset, and say what you asked and what you found.
 Do not assert a cause.
 
+**A password prompt is not a blocked machine.** Three situations, and only the last ends the
+day:
+
+- **A password box they can fill in.** Say what it is — the machine asking permission to
+  install a program — and have them type their own login password. Say it will not show as they
+  type. Ordinary, not a failure.
+- **A security warning about an unrecognised app.** Windows SmartScreen offers **More info**
+  and then **Run anyway**; on macOS, right-click and choose **Open**. Once per program.
+- **A password that does not exist**, because the machine is not theirs to install on. Now
+  stop: that is the loaner conversation with their instructor.
+
+Work through the first two with them, in plain words, as many times as it takes. Do not report
+a machine as blocked because a dialog appeared — check first whether they can answer it.
+
 **`PATH` does not update in a session that is already running.** After installing, `git` and
 `node` will still not be found by name. That is not a failed install and **not a reason to
 install again** — use the full path for the rest of the session:
 
 ```
-Windows:  & 'C:\Program Files\Git\cmd\git.exe'      & 'C:\Program Files\nodejs\node.exe'
+Windows:  & 'C:\Program Files\Git\cmd\git.exe'
+          & "$env:LOCALAPPDATA\Programs\nodejs\node.exe"
 macOS:    git and node are on PATH once installed
 ```
 

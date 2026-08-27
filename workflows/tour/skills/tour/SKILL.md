@@ -69,18 +69,18 @@ node workflows/tour/tools/tour.mjs --dir <data-dir> --answer "<what they said>"
 Show its output. It prints the paths it actually resolved, and those are the point: the course
 materials found relative to the script itself, the data directory taken as an argument.
 
-**4. Have them open the file, and say what happens after.** It is at `<data-dir>/tour.md`. They
-open it themselves, in their editor — you do not read it to them. This is the first time they
-will look at one of their own files directly, and it is worth the thirty seconds.
+**4. Have them open the file, and say what happens after.** They open it themselves, in their
+editor — you do not read it to them. This is the first time they will look at one of their own
+files directly, and it is worth the thirty seconds.
 
-> Open it yourself in your editor and tell me when you have — then there's one last thing to
-> install and you're done.
+> Your file is at `<data-dir>/tour.md` — open it yourself in your editor and tell me when you
+> have. Then there's one last thing to install and you're done.
 
-**Both halves matter, and the first one more.** _Tell me when you have_ is what makes the pause
-visible: without it you have asked for something and then gone quiet, and the student cannot
-tell whether you are waiting, working, or finished. And _one last thing to install_ stops them
-concluding the setup is over. Say both here, in the message that needs a reply — said
-afterwards, on their own, they get dropped.
+**Fill in the real path, and keep all three parts in the one message.** The path, because "open
+it" names nothing a student can act on. _Tell me when you have_, because without it you have
+asked for something and gone quiet, and they cannot tell whether you are waiting, working or
+finished. _One last thing to install_, because otherwise they conclude the setup is over. Say
+them here, in the message that needs a reply — said afterwards, on their own, they get dropped.
 
 **5. Once they say they have opened it, say what just happened, in three sentences.** A guide
 explained it, a skill directed it, a script did the exact part. Say the test passed, in those
