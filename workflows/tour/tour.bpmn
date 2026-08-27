@@ -1,0 +1,295 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:color="http://www.omg.org/spec/BPMN/non-normative/color/1.0" id="Definitions_tour" targetNamespace="http://si212.umich.edu/schema/bpmn">
+  <bpmn:collaboration id="C_T">
+    <bpmn:participant id="P_T" name="The tour — one student, once, at the end of first-day setup" processRef="Proc_T" />
+  </bpmn:collaboration>
+  <bpmn:process id="Proc_T" name="Tour" isExecutable="false">
+    <bpmn:laneSet id="LS_T">
+      <bpmn:lane id="LT_human" name="HUMAN operator">
+        <bpmn:flowNodeRef>T_answer</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_open</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="LT_agent" name="AI AGENT">
+        <bpmn:flowNodeRef>Start_T</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_ask</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_guide</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_open_ask</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_recap</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_T</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="LT_program" name="PROGRAM">
+        <bpmn:flowNodeRef>T_run</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+
+    <bpmn:startEvent id="Start_T" name="tour skill invoked&#10;with a data directory">
+      <bpmn:documentation>workflows/tour/skills/tour/SKILL.md governs this plane. It is not drawn as a step because it is not one of them — it is what directs every box here.
+
+Invoked by setup-addressing, its step 3, at the end of first-day setup, with the data directory already established: the student's clone of learning-topics. The skill will not choose it and will not guess it from the working directory — "whatever invoked you established it already".
+
+ONE RUN IS ONE TOUR: one student, once. It begins here and ends by handing straight back to setup-addressing. The setup check that reads the result afterwards is a box in workflows/bootstrap/bootstrap.bpmn, not here.</bpmn:documentation>
+      <bpmn:outgoing>t1</bpmn:outgoing>
+    </bpmn:startEvent>
+
+    <bpmn:serviceTask id="T_ask" name="Ask what they want&#10;out of the course">
+      <bpmn:documentation>Step 1. The framing and the question go out as ONE message, in the exact wording the skill supplies — "Send that wording, not a version of it."
+
+Fused on purpose. As two steps the framing gets dropped and the question asked bare, because the answer is needed and nothing needs the framing; fused, it cannot be dropped without losing the answer.
+
+Deliberately NOT here: the four parts. A student handed guide, skill, script, data directory before they know why has been given a taxonomy of nothing. That vocabulary lands at the next step, on something that has just happened to them.</bpmn:documentation>
+      <bpmn:incoming>t1</bpmn:incoming>
+      <bpmn:outgoing>t2</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:userTask id="T_answer" name="Answer in their own words">
+      <bpmn:documentation>The only thing in the whole setup that is theirs rather than the machine's.
+
+The skill forbids coaching the answer, improving it, or asking a second question — and forbids editing it afterwards: not for spelling, not to make it a full sentence, not to make it sound more like a goal.</bpmn:documentation>
+      <bpmn:incoming>t2</bpmn:incoming>
+      <bpmn:outgoing>t3</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:task id="T_guide" name="Read the guide together —&#10;guide, skill, script, data directory">
+      <bpmn:documentation>Step 2. workflows/tour/guides/tour.md, taken one part at a time rather than pasted at them wholesale. The agent says which part it is itself, which part the file they are reading is, and which part it is about to run.
+
+A PLAIN TASK, with no type marker, because this is not simply one kind of performer: the agent walks, the student reads. Drawn across both bands for the same reason, and declared in AI AGENT because that is the band it mostly overlaps and the role accountable for it.
+
+Also here: the agent names the data directory out loud and says it was TOLD it rather than finding it itself. That asymmetry — materials addressed relative to the repository, data named absolutely and passed in — is what the whole workflow exists to teach.</bpmn:documentation>
+      <bpmn:incoming>t3</bpmn:incoming>
+      <bpmn:outgoing>t4</bpmn:outgoing>
+      <bpmn:dataInputAssociation id="a_guide">
+        <bpmn:sourceRef>DOR_guide</bpmn:sourceRef>
+      </bpmn:dataInputAssociation>
+    </bpmn:task>
+
+    <bpmn:scriptTask id="T_run" name="Write the record and print what resolved&#10;tour.mjs">
+      <bpmn:documentation>workflows/tour/tools/tour.mjs --dir &lt;data-dir&gt; --answer "&lt;what they said&gt;". The agent types the command; the program does the part that has to come out right every time, which is why the box sits in this lane.
+
+It records the paths it ACTUALLY resolved rather than the ones it was supposed to: the course materials found relative to the script itself, the data directory taken as an argument. It refuses to run without --dir, because "a tool that guessed could write your work somewhere you would not find it". It also checks that the guide, the skill and itself are all present under the materials it resolved, and says so if they are not.
+
+It deliberately does not merely echo the answer back — a script that repeated what the agent said would prove nothing a bare agent could not do.
+
+The agent shows the output; it does not write the file. "If you find yourself composing tour.md, something has gone wrong — the whole point is that a program made the record, so that the record is evidence rather than a claim."</bpmn:documentation>
+      <bpmn:incoming>t4</bpmn:incoming>
+      <bpmn:outgoing>t5</bpmn:outgoing>
+      <bpmn:dataOutputAssociation id="a_rec_out">
+        <bpmn:targetRef>DOR_rec_a</bpmn:targetRef>
+      </bpmn:dataOutputAssociation>
+    </bpmn:scriptTask>
+
+    <bpmn:serviceTask id="T_open_ask" name="Give them the path, and ask&#10;them to open it themselves">
+      <bpmn:documentation>Step 4 — three things in one message that needs a reply, and the skill is emphatic that they stay together.
+
+The real path, because "open it" names nothing a student can act on. "Tell me when you have", because without it the agent has asked for something and gone quiet, and they cannot tell whether it is waiting, working or finished. "One last thing to install", because otherwise they conclude the setup is over.
+
+Said afterwards, on their own, all three get dropped.</bpmn:documentation>
+      <bpmn:incoming>t5</bpmn:incoming>
+      <bpmn:outgoing>t6</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:userTask id="T_open" name="Open the file in the editor">
+      <bpmn:documentation>They open it themselves, in their own editor — the agent does not read it to them.
+
+The first time a student looks at one of their own files directly rather than watching an agent describe it, and worth the thirty seconds: "getting used to reading your own work directly is most of what makes the rest of this course legible."
+
+This is also the step that makes the editors phase of setup non-optional.</bpmn:documentation>
+      <bpmn:incoming>t6</bpmn:incoming>
+      <bpmn:outgoing>t7</bpmn:outgoing>
+      <bpmn:dataInputAssociation id="a_rec_in">
+        <bpmn:sourceRef>DOR_rec_b</bpmn:sourceRef>
+      </bpmn:dataInputAssociation>
+    </bpmn:userTask>
+
+    <bpmn:serviceTask id="T_recap" name="Say what happened, and&#10;that the test passed">
+      <bpmn:documentation>Step 5, in three sentences: a guide explained it, a skill directed it, a script did the exact part.
+
+"Say the test passed, in those words" — the tour opened by calling it a test, and a test nobody is told the result of is just a chore.
+
+Then hand straight back and keep going, rather than saying it and falling silent: a student has no way to tell a finished setup from a stalled one, and they have one phase left.</bpmn:documentation>
+      <bpmn:incoming>t7</bpmn:incoming>
+      <bpmn:outgoing>t8</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:endEvent id="End_T" name="the addressing is proved,&#10;in a file the student has read">
+      <bpmn:documentation>The end state, not the event. What is true when a run arrives here: a skill was found by path, a manifest resolved, a script ran with the directory it was given, a write landed in a repository that is not the one the code lives in — and the student has opened the result themselves. Evidence on disk rather than an agent's account of it.
+
+The run hands back to setup-addressing, which runs the setup check and expects "reached 5 of 7 — Smoke test". That box is in workflows/bootstrap/bootstrap.bpmn.</bpmn:documentation>
+      <bpmn:incoming>t8</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <bpmn:dataObjectReference id="DOR_guide" name="tour.md (the guide)" dataObjectRef="DO_guide">
+      <bpmn:documentation>workflows/tour/guides/tour.md — course materials, the same on all forty-eight machines, arriving with the clone and changing when the instructor changes them. Read here, never written.</bpmn:documentation>
+    </bpmn:dataObjectReference>
+    <bpmn:dataObject id="DO_guide" />
+
+    <bpmn:dataObjectReference id="DOR_rec_a" name="&lt;data-dir&gt;/tour.md" dataObjectRef="DO_record">
+      <bpmn:documentation>Written by the script into the student's learning-topics clone. Drawn twice, because its writer and its reader sit at opposite ends of this plane: one dataObject, two references.
+
+"This file is yours. Edit it, delete it, or leave it — nothing depends on it after the setup check reads it."</bpmn:documentation>
+    </bpmn:dataObjectReference>
+    <bpmn:dataObjectReference id="DOR_rec_b" name="&lt;data-dir&gt;/tour.md" dataObjectRef="DO_record">
+      <bpmn:documentation>The same file as the one the script wrote, three boxes to the left. One dataObject, two references — a repeat rather than a line drawn the width of the diagram.</bpmn:documentation>
+    </bpmn:dataObjectReference>
+    <bpmn:dataObject id="DO_record" />
+
+    <bpmn:textAnnotation id="Note_scope">
+      <bpmn:text>THIS PLANE IS THE SUCCESSFUL PATH ONLY. The skill's failure rules are real and are not drawn: if the script fails, stop and show the error unedited — do not try another directory, do not create one, do not run it again with different arguments, because "the setup check that runs next needs to see a real state, not a state you improvised your way into"; and if the script reports that the data directory sits inside the course materials, tell the student and their instructor rather than reorganising anything.
+
+AND THE LANE IS NEARLY EMPTY ON PURPOSE. Nothing adjudicates the conversation. That the given wording was sent rather than a version of it, that the answer was not coached, that it was passed through unedited — each is the agent's account and nothing else. What a program decides here is narrow and deliberate: the script refuses to run without a data directory, confirms the guide, the skill and itself are all present under the materials it resolved, and records the paths it actually used. Whether the file landed is read afterwards by check-setup.mjs, in workflows/bootstrap/bootstrap.bpmn — because an agent reporting that it finished is not evidence that it did.</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="xa1" sourceRef="Note_scope" targetRef="T_run" />
+
+    <bpmn:sequenceFlow id="t1" sourceRef="Start_T" targetRef="T_ask" />
+    <bpmn:sequenceFlow id="t2" sourceRef="T_ask" targetRef="T_answer" />
+    <bpmn:sequenceFlow id="t3" sourceRef="T_answer" targetRef="T_guide" />
+    <bpmn:sequenceFlow id="t4" sourceRef="T_guide" targetRef="T_run" />
+    <bpmn:sequenceFlow id="t5" sourceRef="T_run" targetRef="T_open_ask" />
+    <bpmn:sequenceFlow id="t6" sourceRef="T_open_ask" targetRef="T_open" />
+    <bpmn:sequenceFlow id="t7" sourceRef="T_open" targetRef="T_recap" />
+    <bpmn:sequenceFlow id="t8" sourceRef="T_recap" targetRef="End_T" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="D_tour">
+    <bpmndi:BPMNPlane id="Pl_tour" bpmnElement="C_T">
+      <bpmndi:BPMNShape id="P_T_di" bpmnElement="P_T" isHorizontal="true">
+        <dc:Bounds x="160" y="80" width="2300" height="690" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="LT_human_di" bpmnElement="LT_human" isHorizontal="true" color:background-color="#fdf3f7" color:border-color="#9c8490">
+        <dc:Bounds x="190" y="80" width="2270" height="250" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="LT_agent_di" bpmnElement="LT_agent" isHorizontal="true" color:background-color="#fdf7ee" color:border-color="#9c8d76">
+        <dc:Bounds x="190" y="330" width="2270" height="220" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="LT_program_di" bpmnElement="LT_program" isHorizontal="true" color:background-color="#eef5f4" color:border-color="#7a918d">
+        <dc:Bounds x="190" y="550" width="2270" height="220" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Start_T_di" bpmnElement="Start_T">
+        <dc:Bounds x="250" y="422" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="204" y="465" width="130" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_ask_di" bpmnElement="T_ask">
+        <dc:Bounds x="340" y="400" width="200" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_answer_di" bpmnElement="T_answer">
+        <dc:Bounds x="620" y="210" width="200" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_guide_di" bpmnElement="T_guide">
+        <dc:Bounds x="900" y="300" width="220" height="110" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_run_di" bpmnElement="T_run">
+        <dc:Bounds x="1220" y="600" width="250" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_open_ask_di" bpmnElement="T_open_ask">
+        <dc:Bounds x="1520" y="400" width="200" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_open_di" bpmnElement="T_open">
+        <dc:Bounds x="1800" y="210" width="200" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_recap_di" bpmnElement="T_recap">
+        <dc:Bounds x="2080" y="400" width="200" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_T_di" bpmnElement="End_T">
+        <dc:Bounds x="2360" y="422" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2280" y="465" width="160" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="DOR_guide_di" bpmnElement="DOR_guide" color:background-color="#e8f0fb">
+        <dc:Bounds x="1002" y="115" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="950" y="169" width="140" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_rec_a_di" bpmnElement="DOR_rec_a" color:background-color="#fdeaea">
+        <dc:Bounds x="1312" y="695" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1270" y="749" width="120" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_rec_b_di" bpmnElement="DOR_rec_b" color:background-color="#fdeaea">
+        <dc:Bounds x="1882" y="115" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1840" y="169" width="120" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Note_scope_di" bpmnElement="Note_scope">
+        <dc:Bounds x="250" y="580" width="900" height="150" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNEdge id="t1_di" bpmnElement="t1">
+        <di:waypoint x="286" y="440" />
+        <di:waypoint x="340" y="440" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="t2_di" bpmnElement="t2">
+        <di:waypoint x="540" y="440" />
+        <di:waypoint x="580" y="440" />
+        <di:waypoint x="580" y="250" />
+        <di:waypoint x="620" y="250" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="t3_di" bpmnElement="t3">
+        <di:waypoint x="820" y="250" />
+        <di:waypoint x="860" y="250" />
+        <di:waypoint x="860" y="355" />
+        <di:waypoint x="900" y="355" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="t4_di" bpmnElement="t4">
+        <di:waypoint x="1120" y="355" />
+        <di:waypoint x="1170" y="355" />
+        <di:waypoint x="1170" y="640" />
+        <di:waypoint x="1220" y="640" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="t5_di" bpmnElement="t5">
+        <di:waypoint x="1470" y="640" />
+        <di:waypoint x="1480" y="640" />
+        <di:waypoint x="1480" y="440" />
+        <di:waypoint x="1520" y="440" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="t6_di" bpmnElement="t6">
+        <di:waypoint x="1720" y="440" />
+        <di:waypoint x="1760" y="440" />
+        <di:waypoint x="1760" y="250" />
+        <di:waypoint x="1800" y="250" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="t7_di" bpmnElement="t7">
+        <di:waypoint x="2000" y="250" />
+        <di:waypoint x="2040" y="250" />
+        <di:waypoint x="2040" y="440" />
+        <di:waypoint x="2080" y="440" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="t8_di" bpmnElement="t8">
+        <di:waypoint x="2280" y="440" />
+        <di:waypoint x="2360" y="440" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="a_guide_di" bpmnElement="a_guide">
+        <di:waypoint x="1038" y="140" />
+        <di:waypoint x="1080" y="140" />
+        <di:waypoint x="1080" y="300" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="a_rec_out_di" bpmnElement="a_rec_out">
+        <di:waypoint x="1330" y="680" />
+        <di:waypoint x="1330" y="695" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="a_rec_in_di" bpmnElement="a_rec_in">
+        <di:waypoint x="1918" y="140" />
+        <di:waypoint x="1960" y="140" />
+        <di:waypoint x="1960" y="210" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="xa1_di" bpmnElement="xa1">
+        <di:waypoint x="1150" y="690" />
+        <di:waypoint x="1230" y="680" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
