@@ -540,11 +540,18 @@ runtime("Codex configuration", () => {
 const gating = (p) => p.checks.filter((c) => !c.advisory);
 const failed = phases.flatMap((p) => gating(p).filter((c) => c.state === FAIL));
 
-// The frontier is the last phase whose checks all passed, counting from the first. A phase with
-// anything `not yet` stops the count — that is what "contiguous" means here.
+// A gate is satisfied by `CONFIRMED` as well as by `PASS`. An attested check is weaker
+// evidence, and the report keeps the two visibly apart for exactly that reason — but a phase
+// whose only remaining evidence is the student's word is a phase they have completed, and a
+// gate that can never be satisfied is not a gate. Phase 6 has two attested checks and no other
+// kind, so testing for `PASS` alone puts the frontier permanently at 5.
+const satisfied = (c) => c.state === OK || c.state === SAID;
+
+// The frontier is the last phase whose checks are all satisfied, counting from the first. A
+// phase with anything `not yet` stops the count — that is what "contiguous" means here.
 let frontier = phases[0];
 for (const p of phases) {
-  if (gating(p).every((c) => c.state === OK)) frontier = p;
+  if (gating(p).every(satisfied)) frontier = p;
   else break;
 }
 
@@ -553,12 +560,8 @@ for (const p of phases) {
 // the whole content of the warning.
 const frontierIndex = phases.indexOf(frontier);
 const after = phases.slice(frontierIndex + 1);
-const leapfrogged = after.filter(
-  (p) => gating(p).length && gating(p).every((c) => c.state === OK),
-);
-const skipped = after.filter(
-  (p) => gating(p).length && !gating(p).every((c) => c.state === OK),
-);
+const leapfrogged = after.filter((p) => gating(p).length && gating(p).every(satisfied));
+const skipped = after.filter((p) => gating(p).length && !gating(p).every(satisfied));
 
 const width = Math.max(...phases.flatMap((p) => p.checks.map((c) => c.label.length)));
 const lines = [
