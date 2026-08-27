@@ -1,6 +1,6 @@
 ---
 name: setup-editors
-description: Install the Markdown editor and the BPMN editor, and set Zettlr to save automatically. Runs last in first-day setup, and is required like every other phase — without an editor a student cannot read or write their own work.
+description: Install the Markdown editor and the BPMN editor, make Zettlr the application that opens .md files, and watch the student open a real file in each. Runs last in first-day setup, and is required like every other phase — without an editor a student cannot read or write their own work.
 ---
 
 # Set up the editors
@@ -21,6 +21,12 @@ You install applications, and you write one small file — `<parent>/.si212-edit
 recording what you watched the student do.
 
 ## What you do, in order
+
+**Do the work first, then say one thing.** The app shows the student only the **last** message
+of your turn; everything before it collapses into `Worked for 31s` and is never seen. So check,
+download, install and open before you speak, and let the message be the end of the turn. Adding
+a short restatement after a quoted block below replaces it — the student gets the restatement
+and not the block, and the block is where the path is.
 
 **1. Say what these are for, in two sentences,** before installing anything. Zettlr is for
 reading and writing their own notes and goals directly, rather than only ever seeing them
@@ -83,33 +89,86 @@ offer to install for all users is the one thing that asks — take the default i
 | Mac, Intel         | `camunda-modeler-5.50.1-mac-x64.dmg`   |
 | Windows            | `camunda-modeler-5.50.1-win-x64.zip`   |
 
-Same 404 rule as Zettlr, against `camunda/camunda-modeler`. No configuration to write here.
+Same 404 rule as Zettlr, against `camunda/camunda-modeler`.
 
 **On Windows this is a zip, not an installer** — Camunda ships no Windows installer at all.
 Unpack it to `%LOCALAPPDATA%\Programs\camunda-modeler`, alongside where Zettlr installs itself,
 so there is one place to look for either of them.
 
+**Then register it for `.bpmn` — on Windows, every time, whether or not you just unpacked it.**
+This is the part the missing installer would have done, and it is the one step here that is not
+about getting files onto the machine: a zip registers nothing, so without it a student who
+double-clicks a diagram is offered Notepad and a browser, with Camunda not in the list at all.
+Finding Camunda already installed tells you nothing about whether it is registered, so run this
+in that case too. It overwrites its own previous result harmlessly. Nothing else on a Windows
+machine claims `.bpmn`, so there is no competing choice to override:
+
+```powershell
+$exe = "$env:LOCALAPPDATA\Programs\camunda-modeler\Camunda Modeler.exe"
+$prog = "HKCU:\Software\Classes\CamundaModeler.bpmn"
+New-Item -Path "$prog\shell\open\command" -Force | Out-Null
+Set-ItemProperty -Path $prog -Name "(Default)" -Value "BPMN Diagram"
+Set-ItemProperty -Path "$prog\shell\open\command" -Name "(Default)" -Value "`"$exe`" `"%1`""
+New-Item -Path "HKCU:\Software\Classes\.bpmn" -Force | Out-Null
+Set-ItemProperty -Path "HKCU:\Software\Classes\.bpmn" -Name "(Default)" -Value "CamundaModeler.bpmn"
+cmd /c assoc .bpmn
+```
+
+`assoc` should answer `.bpmn=CamundaModeler.bpmn`. If it does not, say so and carry on — step 5
+opens Camunda by path and does not depend on this.
+
+This writes only under the student's own account, needs no administrator rights, and is not the
+protected setting: what Windows hash-protects is the user's choice **between** applications
+claiming a type, and here there are no others.
+
+macOS needs none of this. `.bpmn` has no declared file type, so Camunda is its only claimant
+and wins by default the moment it is installed.
+
 It is not needed for weeks, so if it fails, that is the least costly failure in the whole
 setup.
 
-**4. Have them open their own file in Zettlr.** Installing an editor proves nothing; opening
-your own work in it is the thing that matters, and it is the first time in this course they
-handle a file without an agent in between.
+**4. Have them make Zettlr the application that opens `.md` files, by opening one.** From here
+on their notes and goals are `.md`, and **Zettlr will not win that on its own.** Markdown is a
+crowded type — a dozen applications on an ordinary machine claim it, from text editors to
+browsers to Word — and Zettlr's bundle declares no priority for it at all, so whatever else is
+installed opens their notes for the rest of the term. This is not a quirk of one machine. Do it
+on every one.
+
+Neither platform lets you set it from a command. macOS has no supported way short of an extra
+tool, and Windows hash-protects the user's choice against `assoc` and `ftype`. It is theirs to
+do, and that is the point: setting it opens the file, and opening the file is the first thing
+in this course they do without an agent in between.
 
 The file is the one the tour wrote — `<parent>/learning-topics/tour.md`, with their own words
-in it. They have already read it in whatever their machine opens `.md` files with. This is the
-same file in the editor they will use all term.
+in it.
 
-Send them this, filling in the real path:
+On macOS, send them this, filling in the real path, and send nothing after it:
 
-> Open Zettlr, then open `<parent>/learning-topics/tour.md` in it — File → Open, or drag the
-> file onto the window. When you can see your own words on screen, send me a screenshot of it.
+> In Finder, open `<parent>/learning-topics` and click once on `tour.md` — one click, not two.
+> Press ⌘I, find **Open with**, choose **Zettlr**, then click **Change All…** and confirm. Now
+> double-click `tour.md`. It should open in Zettlr with your own words in it. Send me a
+> screenshot of that.
 
-**5. Have them open a diagram in Camunda Modeler.** The same move, and the file is deliberately
-this one:
+On Windows:
 
-> Now open Camunda Modeler and open
-> `<parent>/course-materials/workflows/bootstrap/bootstrap.bpmn` in it. That diagram is the
+> In File Explorer, open `<parent>\learning-topics` and right-click `tour.md`. Choose **Open
+> with → Choose another app**, pick **Zettlr**, tick **Always use this app to open .md files**,
+> and click OK. It should open in Zettlr with your own words in it. Send me a screenshot of
+> that.
+
+**5. Open the diagram for them, and tell them you did.** There is nothing to learn from hunting
+for a file they have never seen, and on Windows they could not open it by hand anyway — the
+Camunda zip registers nothing, so double-clicking a `.bpmn` there offers Notepad and a browser
+and does not list Camunda at all. Open it yourself:
+
+- macOS —
+  `open -a "Camunda Modeler" "<parent>/course-materials/workflows/bootstrap/bootstrap.bpmn"`
+- Windows —
+  `Start-Process "$env:LOCALAPPDATA\Programs\camunda-modeler\Camunda Modeler.exe" -ArgumentList "<parent>\course-materials\workflows\bootstrap\bootstrap.bpmn"`
+
+Run it first, then send this, with nothing after it:
+
+> I have opened Camunda Modeler for you, with `bootstrap.bpmn` in it — that diagram is the
 > setup you have just been through. Send me a screenshot when it is on screen.
 
 **Look at both screenshots yourself.** You are checking that the application is open with the
@@ -132,10 +191,16 @@ statement into a report an instructor uses to decide who needs help.
 
 If one editor worked and the other did not, write the one that did and leave the other out.
 
-**7. Check the phase.** Run `node course-materials/workflows/bootstrap/tools/check-setup.mjs`.
-It should report **reached 6 of 7 — Editors**.
+**7. Check the phase.** Run `node course-materials/workflows/bootstrap/tools/check-setup.mjs`
+and read the last line it prints.
 
-Then hand back to `setup-workspace`.
+- **`Reached 6 of 7 — Editors`** — hand back to `setup-workspace`.
+- **Anything else** — stop, and show the student the output as it came out.
+
+**Never say what the check would have said.** The number is the one thing here that is not your
+judgment, and the only way to have it is to have run the program. Reporting a frontier you
+worked out yourself is indistinguishable from a real one to everybody downstream, including the
+instructor deciding whether this student needs help.
 
 ## Rules
 
