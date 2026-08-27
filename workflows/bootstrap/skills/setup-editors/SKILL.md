@@ -156,20 +156,21 @@ On Windows:
 > and click OK. It should open in Zettlr with your own words in it. Send me a screenshot of
 > that.
 
-**5. Open the diagram for them, and tell them you did.** There is nothing to learn from hunting
-for a file they have never seen, and on Windows they could not open it by hand anyway — the
-Camunda zip registers nothing, so double-clicking a `.bpmn` there offers Notepad and a browser
-and does not list Camunda at all. Open it yourself:
+**5. Open the diagram for them, and tell them you did.** The file is the tour they ran a few
+minutes ago, drawn — the simplest diagram in the course, and about something they have just
+done, which is what makes it their first readable one. There is nothing to learn from hunting
+for it, and on Windows they could not open it by hand anyway: if the registration in step 3
+failed, double-clicking a `.bpmn` there offers Notepad and a browser and does not list Camunda
+at all. Open it yourself:
 
-- macOS —
-  `open -a "Camunda Modeler" "<parent>/course-materials/workflows/bootstrap/bootstrap.bpmn"`
+- macOS — `open -a "Camunda Modeler" "<parent>/course-materials/workflows/tour/tour.bpmn"`
 - Windows —
-  `Start-Process "$env:LOCALAPPDATA\Programs\camunda-modeler\Camunda Modeler.exe" -ArgumentList "<parent>\course-materials\workflows\bootstrap\bootstrap.bpmn"`
+  `Start-Process "$env:LOCALAPPDATA\Programs\camunda-modeler\Camunda Modeler.exe" -ArgumentList "<parent>\course-materials\workflows\tour\tour.bpmn"`
 
 Run it first, then send this, with nothing after it:
 
-> I have opened Camunda Modeler for you, with `bootstrap.bpmn` in it — that diagram is the
-> setup you have just been through. Send me a screenshot when it is on screen.
+> I have opened Camunda Modeler for you, with `tour.bpmn` in it — that diagram is the tour you
+> ran a few minutes ago. Send me a screenshot when it is on screen.
 
 **Look at both screenshots yourself.** You are checking that the application is open with the
 right file in it — not that they say so. If a screenshot shows an empty editor, a different
@@ -180,7 +181,7 @@ file, or an error, work through it with them rather than accepting it.
 ```json
 {
   "zettlr": { "opened": "learning-topics/tour.md", "on": "YYYY-MM-DD" },
-  "camunda": { "opened": "workflows/bootstrap/bootstrap.bpmn", "on": "YYYY-MM-DD" }
+  "camunda": { "opened": "workflows/tour/tour.bpmn", "on": "YYYY-MM-DD" }
 }
 ```
 
@@ -234,5 +235,4 @@ their instructor knowing today rather than in week three.
 - [`study`](workflows/learn/skills/study/SKILL.md) — skill
 - [`setup-workspace`](workflows/bootstrap/skills/setup-workspace/SKILL.md) — skill
 - [`check-setup.mjs`](workflows/bootstrap/tools/check-setup.mjs) — tool
-- [`bootstrap.bpmn`](workflows/bootstrap/bootstrap.bpmn) — diagram, the one they open in
-  Camunda
+- [`tour.bpmn`](workflows/tour/tour.bpmn) — diagram, the one they open in Camunda
