@@ -1,11 +1,12 @@
 ---
 name: setup-editors
-description: Install Zettlr, watch the student open a real file in it, and help them make it the application that opens .md files. Runs last in first-day setup, and is required like every other phase — without an editor a student cannot read or write their own work.
+description: Install Zettlr, watch the student open a real file in it, and help them make it the application that opens .md files. The whole of Installation 2, the second of the three setup sessions, and required like every other phase — without an editor a student cannot read or write their own work.
 ---
 
 # Set up the editor
 
-The **Editors** phase, sixth of seven.
+The **Editors** phase, sixth of seven, and the whole of **Installation 2** — the second of the
+three setup sessions, on its own class day. Nothing else runs today.
 
 One application, and it matters more than it looks. `study` has the student writing `notes.md`
 while the agent prompts. Without it, a student can watch an agent describe their own work and
@@ -74,22 +75,27 @@ address, and a room full of students shares one.
 - **A password they do not have.** Stop; see the rule below. The distinction is whether the
   password exists and they know it, not whether a box appeared.
 
-### On Windows, `winget` is not a preference. Anything else installs nothing.
+### On Windows, install with `winget` and nothing else
 
-**A program you launch does not install onto the student's machine.** On Windows this app runs
-in a container, and every process you start inherits it — so an installer you download and run
-puts its files somewhere only you can see, registers its file types somewhere only you can see,
-and reports success. The student gets nothing, and the setup check run from in here agrees with
-you because it is inside too.
+It is what OpenAI documents for installing developer tools from inside this app.
 
-**Escalated permissions do not change this**, which is the part worth knowing before you try:
-measured on Windows 11, the same Zettlr installer run escalated as a child process landed in
-the container, while `winget install` in the same session landed in the student's real profile.
-It is not about permissions. It is about **who does the work** — `winget` hands it to a Windows
-service outside the container, and that service can reach the real machine.
+**Do not download an installer and run it.** Windows installers mostly default to
+`%LOCALAPPDATA%\Programs` — Zettlr's does — and a write there from inside this app does not
+reach the student's machine. It succeeds, reports success, and is not there afterwards, so the
+student gets nothing and the setup check run from in here agrees with you.
 
-So a downloaded `.exe`, an unpacked zip, `Start-Process`, `HKCU:\Software\Classes`, `assoc` and
-`ftype` are all equally useless here, however carefully aimed.
+**It is not permissions, and not a setting anyone can change.** Measured 2026-08-27: a file
+written by the agent to `%USERPROFILE%\Programs` was visible from the student's own PowerShell
+and one written to `%LOCALAPPDATA%\Programs` was not, with the same account and the same temp
+directory in both contexts and Codex's `elevated` sandbox configured throughout. It is the
+app's MSIX packaging, which redirects AppData writes into a private per-app store. An
+administrator password does not help, and neither does anything in `config.toml`.
+
+**A packaged app's `HKCU` writes go the same way**, so *you* cannot register a file type from in
+here at any path — `HKCU:\Software\Classes`, `assoc` and `ftype` are all equally useless,
+however carefully aimed. Do not try. Zettlr's own installer registers `.md` perfectly well when
+`winget` runs it, because that runs outside the package; if the type still opens something else,
+the student sets it by hand in step 3.
 
 **Never test for `winget` by running `winget --version`.** It will say _"not recognized"_ on a
 machine where `winget install` works perfectly, because `winget.exe` lives inside the
@@ -204,8 +210,8 @@ with them, in plain words, as many times as it takes.
 
 ## When you cannot finish
 
-Say what failed and show the error, and have them submit the setup check output to the Canvas
-assignment.
+Say what failed and show the error, and have them submit the setup check output to the
+**Installation 2** assignment on Canvas.
 
 Be accurate about where it leaves them, because the gap is real but narrow: everything the
 agent does for them works, and what they cannot yet do is open their own files. That is worth

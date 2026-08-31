@@ -180,8 +180,9 @@ submit:
 > way.** Your best guess, stated as a guess.
 
 Keep it under 200 words and do not include the API key, even partially. Tell them to submit it
-to the Canvas assignment and that their instructor will follow up. Make clear that submitting a
-report of being stuck is the correct thing to do and not a failure.
+to the **Installation 1** assignment on Canvas — there are three, one per class day, and today
+is the first — and that their instructor will follow up. Make clear that submitting a report of
+being stuck is the correct thing to do and not a failure.
 
 ## When you don't know an exact detail
 
@@ -576,6 +577,6 @@ at the end of its own setup and tells them what to do with it — do not duplica
 instruction and do not predict what it will say.
 
 If you did not, write the stuck report described in **When to stop** above and have them submit
-that to the Canvas assignment. A report saying where it stalled is exactly as useful to their
-instructor as one saying it worked, and it is how the instructor knows to come and find them.
-Say so plainly: students hide failures by default.
+that to the **Installation 1** assignment on Canvas. A report saying where it stalled is exactly
+as useful to their instructor as one saying it worked, and it is how the instructor knows to
+come and find them. Say so plainly: students hide failures by default.

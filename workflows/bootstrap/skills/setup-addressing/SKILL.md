@@ -1,11 +1,12 @@
 ---
 name: setup-addressing
-description: Record where the course repositories are so that every later session can find them, then run the smoke test to prove the whole chain works. Runs during first-day setup, after setup-repos has cloned the student's repositories.
+description: Record where the course repositories are so that every later session can find them, then run the smoke test to prove the whole chain works. Runs in Installation 1, after setup-repos has cloned the student's repositories, and is what that session ends on.
 ---
 
 # Set up addressing
 
-The **Addressing** phase, fourth of seven, and then the **Smoke test**, fifth.
+The **Addressing** phase, fourth of seven, and then the **Smoke test**, fifth. Together they are
+the second half of **Installation 1**, and the smoke test is where that session ends.
 
 You write one small file and then run one program. The file is what makes every future session
 able to find anything; the program is what proves it worked, in a way that is a file on disk
@@ -101,7 +102,8 @@ their instructor knowing and is not yours to fix mid-setup.
 ## When you cannot finish
 
 Say which step stopped and show the error unedited. Run the setup check and have them submit
-its output to the Canvas assignment. Submitting a failure is the correct action.
+its output to the **Installation 1** assignment on Canvas. Submitting a failure is the correct
+action.
 
 ## Depends on
 

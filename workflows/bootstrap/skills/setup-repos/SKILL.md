@@ -1,12 +1,12 @@
 ---
 name: setup-repos
-description: Install git and Node, clone the three course repositories, and set up the student's git identity — so that everything after this can be read from their own disk instead of the network. The first skill run on a student's first day, and the one that has to be fetched by URL.
+description: Install git and Node, clone the three course repositories, and set up the student's git identity — so that everything after this can be read from their own disk instead of the network. The first skill of Installation 1, on a student's first day, and the one that has to be fetched by URL.
 ---
 
 # Set up the repositories
 
-The **Runtime** and **Repositories** phases, second and third of seven. `setup-workspace`
-handed off to you.
+The **Runtime** and **Repositories** phases, second and third of seven, and the first half of
+**Installation 1** — the first of the three setup sessions. `setup-workspace` handed off to you.
 
 **You are the skill that ends the network.** Everything before you — including you — is fetched
 from a raw GitHub URL, because there is nothing on the student's disk to read. Everything after
@@ -80,13 +80,25 @@ Not the API first: it allows sixty requests an hour from one address and a lab s
 one, so a class that resolves "latest" exhausts it and the failure looks like a network
 problem.
 
-### On Windows, `winget` is not a preference. Anything else installs nothing.
+### On Windows, install with `winget` and nothing else
 
-**A program you launch does not install onto the student's machine.** This app runs in a
-container and every process you start inherits it, so an installer you download and run puts
-its files where only you can see them and reports success. Escalated permissions do not change
-that — measured — because it is not about permissions but about **who does the work**. `winget`
-hands it to a Windows service outside the container, which can reach the real machine.
+It is what OpenAI documents for installing developer tools from inside this app, and the package
+IDs above are theirs.
+
+**Do not download an installer and run it.** Windows installers mostly default to
+`%LOCALAPPDATA%\Programs`, and a write there from inside this app does not reach the student's
+machine — it succeeds, reports success, and is not there afterwards. Measured 2026-08-27: one
+file written to `%USERPROFILE%\Programs` and one to `%LOCALAPPDATA%\Programs` in the same
+session; from the student's own PowerShell, only the first existed.
+
+**It is not permissions, and not a setting anyone can change.** In that same measurement the
+agent's account and temp directory were identical to the student's, and Codex's `elevated`
+sandbox was configured throughout. It is the app's own MSIX packaging, which redirects AppData
+writes into a private per-app store. Nothing in `config.toml` reaches it, and an administrator
+password does not either.
+
+`%USERPROFILE%` writes through. That is the whole rule, and it is why the clones and
+`AGENTS.md` have always worked.
 
 **Never test for `winget` by running `winget --version`.** It answers _"not recognized"_ on a
 machine where `winget install` works perfectly, because `winget.exe` sits inside the redirected
@@ -284,7 +296,8 @@ by a student who will not think about that.
 ## When you cannot finish
 
 Say which step stopped and show the error unedited. Run the setup check anyway if you got far
-enough for it to run, and have them submit its output to the Canvas assignment.
+enough for it to run, and have them submit its output to the **Installation 1** assignment on
+Canvas.
 
 Submitting a failure is the correct action. It is how their instructor finds out who is stuck,
 and it is the only way they find out.

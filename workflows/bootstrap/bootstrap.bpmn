@@ -7,14 +7,13 @@
     <bpmn:laneSet id="LS_B">
       <bpmn:lane id="LB_human" name="HUMAN operator">
         <bpmn:flowNodeRef>Start_B</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>Sub_stage1</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>Gate_running</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>Gate_blocked</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>Task_report_status</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>Task_report_blocked</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>End_blocked</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>Task_report_ok</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>End_ready</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Sub_stage1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gate_blocked</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gate_running</bpmn:flowNodeRef>
       </bpmn:lane>
       <bpmn:lane id="LB_agent" name="AI AGENT">
         <bpmn:flowNodeRef>Gate_merge</bpmn:flowNodeRef>
@@ -129,17 +128,6 @@
         <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">every checklist item is done</bpmn:conditionExpression>
       </bpmn:sequenceFlow>
     </bpmn:subProcess>
-    <bpmn:exclusiveGateway id="Gate_running" name="Codex&#10;running?" default="b13">
-      <bpmn:documentation>Stage 1 ends one of two ways, and a subprocess's outgoing flow carries no outcome — so this gateway reads the outcome off the status report rather than off the flow. That is the one place in this diagram where following the arrows does not tell you where the value came from.</bpmn:documentation>
-      <bpmn:incoming>b2</bpmn:incoming>
-      <bpmn:outgoing>b12</bpmn:outgoing>
-      <bpmn:outgoing>b13</bpmn:outgoing>
-    </bpmn:exclusiveGateway>
-    <bpmn:userTask id="Task_report_status" name="Submit status report&#10;on Canvas">
-      <bpmn:documentation>Same Canvas assignment as the other two submissions. A student who never got Codex running has no setup-check output to submit, so what goes up is the coach's account of where it stalled.</bpmn:documentation>
-      <bpmn:incoming>b13</bpmn:incoming>
-      <bpmn:outgoing>b14</bpmn:outgoing>
-    </bpmn:userTask>
     <bpmn:exclusiveGateway id="Gate_merge">
       <bpmn:incoming>b12</bpmn:incoming>
       <bpmn:incoming>b6</bpmn:incoming>
@@ -153,34 +141,15 @@
     <bpmn:exclusiveGateway id="Gate_fix" name="Able to&#10;complete?" default="b9">
       <bpmn:documentation>The subprocess stopped at one of its checkpoints. This asks whether there is a way forward at all, and "yes" means RE-RUNNING once a fix has been published — not repairing in the session.
 
-Each skill inside calls the setup check only when it believes it has finished, so a failing check is the skill's account and the program's account disagreeing, not an operation that might work on a second attempt. Running the same steps again against a disagreement discards the one interesting fact, which is why nothing inside loops. The repair path is a commit: the instructor pushes a fix, the student runs setup-workspace again, setup-repos pulls it, and the orchestrator resumes at the phase that failed.
+Each skill inside calls the setup check only when it believes it has finished, so a failing check is the skill's account and the program's account disagreeing, not an operation that might work on a second attempt. Running the same steps again against a disagreement discards the one interesting fact, which is why nothing inside loops. The repair path is a commit: the instructor pushes a fix, the student runs setup-workspace again, the update at the top of the run pulls it, and "how far did I get previously?" resumes at the phase that failed rather than at the beginning.
+
+A failed checkpoint stops the whole run, not only the session it happened in. The frontier the setup check reports is contiguous, so getting on with the next session over the top of a broken one is not a state that exists.
 
 What that cannot reach is a bad or missing key, or a machine the student has no rights to install on. Those take the "no" branch.</bpmn:documentation>
       <bpmn:incoming>b4</bpmn:incoming>
       <bpmn:outgoing>b8</bpmn:outgoing>
       <bpmn:outgoing>b9</bpmn:outgoing>
     </bpmn:exclusiveGateway>
-    <bpmn:userTask id="Task_report_blocked" name="Submit status report&#10;on Canvas">
-      <bpmn:documentation>The same Canvas assignment as on the success branch, drawn twice because the two outcomes end in different states. This is the only thing that tells the instructor which of the 48 got stuck, and where.</bpmn:documentation>
-      <bpmn:incoming>b9</bpmn:incoming>
-      <bpmn:outgoing>b10</bpmn:outgoing>
-    </bpmn:userTask>
-    <bpmn:exclusiveGateway id="Gate_blocked">
-      <bpmn:incoming>b10</bpmn:incoming>
-      <bpmn:incoming>b14</bpmn:incoming>
-      <bpmn:outgoing>b15</bpmn:outgoing>
-    </bpmn:exclusiveGateway>
-    <bpmn:endEvent id="End_blocked" name="blocked — instructor will help">
-      <bpmn:incoming>b15</bpmn:incoming>
-    </bpmn:endEvent>
-    <bpmn:userTask id="Task_report_ok" name="Submit setup report&#10;on Canvas">
-      <bpmn:documentation>Same assignment as the blocked branch. Submitting on success is what turns "the student says it works" into something the instructor can count.</bpmn:documentation>
-      <bpmn:incoming>b7</bpmn:incoming>
-      <bpmn:outgoing>b11</bpmn:outgoing>
-    </bpmn:userTask>
-    <bpmn:endEvent id="End_ready" name="workspace ready">
-      <bpmn:incoming>b11</bpmn:incoming>
-    </bpmn:endEvent>
     <bpmn:dataObjectReference id="DOR_key" name="U-M API key" dataObjectRef="DO_key" />
     <bpmn:dataObject id="DO_key" />
     <bpmn:sequenceFlow id="b1" sourceRef="Start_B" targetRef="Sub_stage1" />
@@ -188,8 +157,6 @@ What that cannot reach is a bad or missing key, or a machine the student has no 
     <bpmn:sequenceFlow id="b12" name="success" sourceRef="Gate_running" targetRef="Gate_merge">
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">the checklist finished and Codex answers with the U-M key</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
-    <bpmn:sequenceFlow id="b13" name="stuck" sourceRef="Gate_running" targetRef="Task_report_status" />
-    <bpmn:sequenceFlow id="b14" sourceRef="Task_report_status" targetRef="Gate_blocked" />
     <bpmn:sequenceFlow id="b3" sourceRef="Gate_merge" targetRef="Task_workspace" />
     <bpmn:sequenceFlow id="b4" sourceRef="Task_workspace" targetRef="Gate_fix" />
     <bpmn:sequenceFlow id="b5" sourceRef="Prog_doctor" targetRef="Gate_ok" />
@@ -200,43 +167,53 @@ What that cannot reach is a bad or missing key, or a machine the student has no 
     <bpmn:sequenceFlow id="b8" name="yes" sourceRef="Gate_fix" targetRef="Prog_doctor">
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">the failing check names something Codex can install or correct</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
-    <bpmn:sequenceFlow id="b9" name="no" sourceRef="Gate_fix" targetRef="Task_report_blocked" />
-    <bpmn:sequenceFlow id="b10" sourceRef="Task_report_blocked" targetRef="Gate_blocked" />
-    <bpmn:sequenceFlow id="b15" sourceRef="Gate_blocked" targetRef="End_blocked" />
+    <bpmn:sequenceFlow id="b9" name="no" sourceRef="Gate_fix" targetRef="Gate_blocked" />
+    <bpmn:sequenceFlow id="b10" sourceRef="Task_report_blocked" targetRef="End_blocked" />
     <bpmn:sequenceFlow id="b11" sourceRef="Task_report_ok" targetRef="End_ready" />
     <bpmn:subProcess id="Task_workspace" name="Set up the workspace">
       <bpmn:documentation>workflows/bootstrap/skills/setup-workspace/SKILL.md — an orchestrator, and only that: it installs nothing and clones nothing itself. Each skill inside does its own work and ends by running the setup check, which is why every box in the AI AGENT lane below is followed by one in PROGRAM.
 
 The label has no second line because there is a level below; the path lives here instead.
 
-Deliberately absent: setup-github, phase 7. It needs a GitHub account and runs in week 2, and day 1 finishing without one is the design. It is not drawn here because it is not part of this run.
+INSIDE IT ARE THREE SESSIONS, normally on three class days: Installation 1 (repositories, addressing, smoke test), Installation 2 (the editor), Installation 3 (GitHub). Each ends with the student submitting the setup check's report to a Canvas assignment of its own, and the next session does not start until that has happened — because the setup check reports the machine as it is now, so starting the next session destroys the report the last one produced.
+
+One run of this subprocess is a student's whole workspace setup, however many sittings that takes. The sessions run in order from wherever the setup check says they got to; a student may do more than one in a sitting, and stopping after any of them is the ordinary case rather than a failure.
 
 The skills are addressed two ways. Until "Install tools and clone the repositories" finishes there is no clone to read from, so setup-workspace and setup-repos are both fetched from raw.githubusercontent.com; everything after is read from disk by repo-relative path.</bpmn:documentation>
       <bpmn:incoming>b3</bpmn:incoming>
       <bpmn:outgoing>b4</bpmn:outgoing>
       <bpmn:laneSet id="LS_W">
+        <bpmn:lane id="LW_h" name="HUMAN operator">
+          <bpmn:flowNodeRef>Sub_i1</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Sub_i2</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Sub_i3</bpmn:flowNodeRef>
+        </bpmn:lane>
         <bpmn:lane id="LW_a" name="AI AGENT">
           <bpmn:flowNodeRef>Start_W</bpmn:flowNodeRef>
           <bpmn:flowNodeRef>W_repos</bpmn:flowNodeRef>
           <bpmn:flowNodeRef>W_addr</bpmn:flowNodeRef>
           <bpmn:flowNodeRef>G_m2</bpmn:flowNodeRef>
-            <bpmn:flowNodeRef>G_m3</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>G_m3</bpmn:flowNodeRef>
           <bpmn:flowNodeRef>W_edit</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>G_m4</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>W_github</bpmn:flowNodeRef>
           <bpmn:flowNodeRef>End_W_ok</bpmn:flowNodeRef>
         </bpmn:lane>
         <bpmn:lane id="LW_p" name="PROGRAM">
           <bpmn:flowNodeRef>Prog_w1</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>G_w1</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>G_resume</bpmn:flowNodeRef>
           <bpmn:flowNodeRef>Prog_w2</bpmn:flowNodeRef>
           <bpmn:flowNodeRef>G_w2</bpmn:flowNodeRef>
           <bpmn:flowNodeRef>Prog_smoke</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>Prog_w3</bpmn:flowNodeRef>
-          <bpmn:flowNodeRef>G_w3</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Prog_w3</bpmn:flowNodeRef>
           <bpmn:flowNodeRef>Prog_w4</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Prog_w5</bpmn:flowNodeRef>
           <bpmn:flowNodeRef>G_w_stop</bpmn:flowNodeRef>
-          <bpmn:flowNodeRef>G_w1</bpmn:flowNodeRef>
-          <bpmn:flowNodeRef>G_resume</bpmn:flowNodeRef>
           <bpmn:flowNodeRef>G_w4</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>G_w5</bpmn:flowNodeRef>
           <bpmn:flowNodeRef>End_W_stop</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>G_w3</bpmn:flowNodeRef>
         </bpmn:lane>
       </bpmn:laneSet>
       <bpmn:startEvent id="Start_W" name="setup-workspace skill invoked">
@@ -263,13 +240,16 @@ It runs on every attempt, including a re-run, because a repository that already 
         <bpmn:outgoing>w5</bpmn:outgoing>
       </bpmn:exclusiveGateway>
       <bpmn:exclusiveGateway id="G_resume" name="how far&#10;did I get&#10;previously?" default="r1">
-        <bpmn:documentation>A re-run resumes rather than starting over, and this reads the phase off the setup check output that "Check the repositories" just produced — which is what "reached N of 7" is for, and why the setup check reports a number rather than a pass or a fail.
+        <bpmn:documentation>Setup is three sessions, normally on three class days, and this is where a run joins them. It reads the phase off the setup check output that "Check the repositories" just produced — which is what "reached N of 7" is for, and why the setup check reports a number rather than a pass or a fail.
 
-Note what is NOT skipped: the repositories step above always runs, so an update always arrives. Only the phases already reached are jumped past.</bpmn:documentation>
+The three sessions are Installation 1 (repositories, addressing, smoke test), Installation 2 (the editor) and Installation 3 (GitHub). Nobody is asked which class day it is: a student on day 2 who never finished day 1 needs day 1, and the machine is the only thing that knows.
+
+Note what is NOT skipped: the repositories step above always runs, so an update always arrives. Only the phases already reached are jumped past — and note where the "Installation 1 done" branch lands, AFTER that session's submission rather than before it, so that resuming never asks for a report that has already gone in.</bpmn:documentation>
         <bpmn:incoming>w4</bpmn:incoming>
         <bpmn:outgoing>r1</bpmn:outgoing>
         <bpmn:outgoing>r2</bpmn:outgoing>
         <bpmn:outgoing>r3</bpmn:outgoing>
+        <bpmn:outgoing>r4</bpmn:outgoing>
       </bpmn:exclusiveGateway>
       <bpmn:serviceTask id="W_addr" name="Record where things live&#10;setup-addressing">
         <bpmn:documentation>workflows/bootstrap/skills/setup-addressing/SKILL.md — writes an AGENTS.md into the student's Codex home directory, which is the one place the install location is recorded. Everything downstream reads the paths from there rather than assuming them.</bpmn:documentation>
@@ -292,11 +272,11 @@ Note what is NOT skipped: the repositories step above always runs, so an update 
         <bpmn:outgoing>m2</bpmn:outgoing>
       </bpmn:exclusiveGateway>
       <bpmn:scriptTask id="Prog_smoke" name="Write the receipt&#10;smoke-test.mjs">
-        <bpmn:documentation>workflows/bootstrap/tools/smoke-test.mjs --dir &lt;parent&gt;/learning-topics — run by setup-addressing once the addressing file in the student&#39;s Codex home exists.
+        <bpmn:documentation>workflows/bootstrap/tools/smoke-test.mjs --dir &lt;parent&gt;/learning-topics — run by setup-addressing once the addressing file in the student's Codex home exists.
 
 It reads the entry-point index, resolves every repo-relative path in it against this machine, and writes what it found into learning-topics. That is the only evidence that the addressing works end to end: a path written once for forty-eight machines landing on a real file on this one, and a write landing in a repository that is not the one the code lives in.
 
-It was a whole workflow until it wasn&#39;t. The tour ran here, asked the student what they wanted from the course, and wrote the answer into the same file — which made a warmer artifact and proved nothing further, since the check never read the answer and any string satisfied it. Orientation became a workflow of its own and this became a receipt, which is why the AI AGENT lane above this column is now empty: nothing at the smoke test needs a conversation.</bpmn:documentation>
+It was a whole workflow until it wasn't. The tour ran here, asked the student what they wanted from the course, and wrote the answer into the same file — which made a warmer artifact and proved nothing further, since the check never read the answer and any string satisfied it. Orientation became a workflow of its own and this became a receipt, which is why the AI AGENT lane above this column is now empty: nothing at the smoke test needs a conversation.</bpmn:documentation>
         <bpmn:incoming>m2</bpmn:incoming>
         <bpmn:outgoing>w10</bpmn:outgoing>
       </bpmn:scriptTask>
@@ -311,32 +291,81 @@ It was a whole workflow until it wasn&#39;t. The tour ran here, asked the studen
         <bpmn:outgoing>w13</bpmn:outgoing>
       </bpmn:exclusiveGateway>
       <bpmn:exclusiveGateway id="G_m3">
-        <bpmn:incoming>w12</bpmn:incoming>
+        <bpmn:incoming>i2</bpmn:incoming>
         <bpmn:incoming>r3</bpmn:incoming>
         <bpmn:outgoing>m3</bpmn:outgoing>
       </bpmn:exclusiveGateway>
-      <bpmn:serviceTask id="W_edit" name="Install the editors&#10;setup-editors">
-        <bpmn:documentation>workflows/bootstrap/skills/setup-editors/SKILL.md — Zettlr and Camunda Modeler, and Zettlr's autosave setting.</bpmn:documentation>
+      <bpmn:serviceTask id="W_edit" name="Install the editor&#10;setup-editors">
+        <bpmn:documentation>workflows/bootstrap/skills/setup-editors/SKILL.md — Zettlr, and the student opening one of their own files in it. The whole of Installation 2.
+
+Camunda Modeler used to be installed here and is not any more: it moved to the workflows unit, which installs it in the week it is first used, with a diagram in hand as the reason. See workflows/diagram/STATUS.md.
+
+Installing is only half of it. The other half is watching the student double-click a real file and open it, which is the only thing that establishes they can use it — and which no program can check, so the skill records what it saw and the setup check reports that line as CONFIRMED rather than PASS.</bpmn:documentation>
         <bpmn:incoming>m3</bpmn:incoming>
         <bpmn:outgoing>w14</bpmn:outgoing>
       </bpmn:serviceTask>
-      <bpmn:scriptTask id="Prog_w4" name="Check the editors&#10;check-setup.mjs">
-        <bpmn:documentation>Expects phase 6, and nothing branches on the answer — that is the point. The editors phase is optional: a student without them can still do coursework, because the agent reads and writes the files either way. A check with no gateway after it is how this diagram says "reported, not gating".</bpmn:documentation>
+      <bpmn:scriptTask id="Prog_w4" name="Check the editor&#10;check-setup.mjs">
+        <bpmn:documentation>Expects "reached 6 of 7 — Editors". Two checks: that Zettlr is on disk, and that the skill recorded watching the student open a file in it.</bpmn:documentation>
         <bpmn:incoming>w14</bpmn:incoming>
         <bpmn:outgoing>w15</bpmn:outgoing>
       </bpmn:scriptTask>
-      <bpmn:exclusiveGateway id="G_w4" name="editors&#10;installed?" default="e2">
-        <bpmn:documentation>Here so that "installed and checked" is not claimed when the editors are not installed. Without this the run ended there either way, which was false.
+      <bpmn:exclusiveGateway id="G_w4" name="editor&#10;installed?" default="e2">
+        <bpmn:documentation>Here so that "installed and checked" is not claimed when the editor is not installed. Without this the run ended there either way, which was false.
 
 The "no" branch joins the same end as the earlier checkpoints because it is the same kind of thing: a checkpoint that did not pass. This phase blocks like the rest.
 
-An earlier draft made it optional, on the reasoning that the agent reads and writes the files either way. True, and beside the point — setup-editors ends by having the student open setup.md themselves, study has them writing notes.md, and the diagram work needs Camunda. A student who cannot open their own files can watch an agent describe their work and never read or write it, which is not ready.</bpmn:documentation>
+An earlier draft made it optional, on the reasoning that the agent reads and writes the files either way. True, and beside the point — setup-editors ends by having the student open setup.md themselves, and study has them writing notes.md. A student who cannot open their own files can watch an agent describe their work and never read or write it, which is not ready.</bpmn:documentation>
         <bpmn:incoming>w15</bpmn:incoming>
         <bpmn:outgoing>e1</bpmn:outgoing>
         <bpmn:outgoing>e2</bpmn:outgoing>
       </bpmn:exclusiveGateway>
-      <bpmn:endEvent id="End_W_ok" name="installed and checked">
+      <bpmn:userTask id="Sub_i1" name="Submit Installation 1&#10;on Canvas">
+        <bpmn:documentation>The student pastes the setup check's report into the Installation 1 assignment. One of three assignments, one per session, and this is the first.
+
+WHY THIS IS A STEP RATHER THAN A NOTE, and why the next session does not start until it is done. The setup check reports the machine AS IT IS, not as it was. The moment setup-editors installs anything, the report that was true at the end of Installation 1 stops being true and cannot be recovered — so the report is collected while it is still the truth. That is the constraint the ordering here encodes; the class-day boundary is a convention on top of it.
+
+It is in HUMAN because it waits on the student. The agent prints the report and names the assignment; nobody else can paste it.</bpmn:documentation>
+        <bpmn:incoming>w12</bpmn:incoming>
+        <bpmn:outgoing>i2</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:userTask id="Sub_i2" name="Submit Installation 2&#10;on Canvas">
+        <bpmn:documentation>The same step for the second session, and it is drawn again rather than looped back to because it is a different assignment with a different report in it.</bpmn:documentation>
         <bpmn:incoming>e1</bpmn:incoming>
+        <bpmn:outgoing>i4</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:exclusiveGateway id="G_m4">
+        <bpmn:incoming>i4</bpmn:incoming>
+        <bpmn:incoming>r4</bpmn:incoming>
+        <bpmn:outgoing>m4</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:serviceTask id="W_github" name="Publish the repositories&#10;setup-github">
+        <bpmn:documentation>workflows/bootstrap/skills/setup-github/SKILL.md — a GitHub account, the two student repositories published as the student's own private copies, and the teaching team added to the one they hand work in through. The whole of Installation 3.
+
+It is the only part of setup that needs an account, which is why it is last and why day 1 finishes without one. The slow step is two-factor authentication on a phone, and nobody can do it for them.
+
+Adding the teaching team is the one grant in the whole design that positively must happen, and the student is the only person who can ever repair it: a repository owned by a personal account has two tiers, owner and collaborator, and nobody can add themselves to someone else's. That is why the check after this verifies it rather than trusting it.</bpmn:documentation>
+        <bpmn:incoming>m4</bpmn:incoming>
+        <bpmn:outgoing>w18</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:scriptTask id="Prog_w5" name="Check the remote&#10;check-setup.mjs">
+        <bpmn:documentation>Expects "reached 7 of 7 — Remote", and prints the assignments URL, which is how the instructor knows which repository belongs to which student.
+
+It checks the collaborator grant through the GitHub API rather than taking the skill's word for it, and counts an unaccepted invitation as done — the student's obligation is discharged when the call succeeds, and they should not fail a check only their instructor can clear.</bpmn:documentation>
+        <bpmn:incoming>w18</bpmn:incoming>
+        <bpmn:outgoing>w19</bpmn:outgoing>
+      </bpmn:scriptTask>
+      <bpmn:exclusiveGateway id="G_w5" name="remote&#10;set up?" default="w17">
+        <bpmn:incoming>w19</bpmn:incoming>
+        <bpmn:outgoing>i5</bpmn:outgoing>
+        <bpmn:outgoing>w17</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:userTask id="Sub_i3" name="Submit Installation 3&#10;on Canvas">
+        <bpmn:documentation>The last of the three. This report carries the assignments URL, so it is the submission that maps a student to the repository their work will be graded from.</bpmn:documentation>
+        <bpmn:incoming>i5</bpmn:incoming>
+        <bpmn:outgoing>i6</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:endEvent id="End_W_ok" name="set up, checked and submitted">
+        <bpmn:incoming>i6</bpmn:incoming>
       </bpmn:endEvent>
       <bpmn:endEvent id="End_W_stop" name="stopped at a checkpoint">
         <bpmn:documentation>A subprocess's outgoing flow carries no outcome, so the parent cannot tell which of these two ends fired. It reads the answer off the setup check output at "Able to complete?" instead — the same pattern, and the same cost, as "Codex running?" after stage 1.</bpmn:documentation>
@@ -352,8 +381,11 @@ An earlier draft made it optional, on the reasoning that the agent reads and wri
       <bpmn:sequenceFlow id="r2" name="addressing done" sourceRef="G_resume" targetRef="G_m2">
         <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">the setup check already reported phase 4</bpmn:conditionExpression>
       </bpmn:sequenceFlow>
-      <bpmn:sequenceFlow id="r3" name="smoke test already ran" sourceRef="G_resume" targetRef="G_m3">
+      <bpmn:sequenceFlow id="r3" name="Installation 1 done" sourceRef="G_resume" targetRef="G_m3">
         <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">the setup check already reported phase 5</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="r4" name="Installation 2 done" sourceRef="G_resume" targetRef="G_m4">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">the setup check already reported phase 6</bpmn:conditionExpression>
       </bpmn:sequenceFlow>
       <bpmn:sequenceFlow id="w6" sourceRef="W_addr" targetRef="Prog_w2" />
       <bpmn:sequenceFlow id="w7" sourceRef="Prog_w2" targetRef="G_w2" />
@@ -362,14 +394,24 @@ An earlier draft made it optional, on the reasoning that the agent reads and wri
       </bpmn:sequenceFlow>
       <bpmn:sequenceFlow id="w10" sourceRef="Prog_smoke" targetRef="Prog_w3" />
       <bpmn:sequenceFlow id="w11" sourceRef="Prog_w3" targetRef="G_w3" />
-      <bpmn:sequenceFlow id="w12" name="yes" sourceRef="G_w3" targetRef="G_m3">
+      <bpmn:sequenceFlow id="w12" name="yes" sourceRef="G_w3" targetRef="Sub_i1">
         <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">the smoke test left a dated receipt in learning-topics</bpmn:conditionExpression>
       </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="i2" sourceRef="Sub_i1" targetRef="G_m3" />
       <bpmn:sequenceFlow id="w14" sourceRef="W_edit" targetRef="Prog_w4" />
       <bpmn:sequenceFlow id="w15" sourceRef="Prog_w4" targetRef="G_w4" />
-      <bpmn:sequenceFlow id="e1" name="yes" sourceRef="G_w4" targetRef="End_W_ok">
-        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">both editors are installed</bpmn:conditionExpression>
+      <bpmn:sequenceFlow id="e1" name="yes" sourceRef="G_w4" targetRef="Sub_i2">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">Zettlr is installed and the skill watched the student open a file in it</bpmn:conditionExpression>
       </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="i4" sourceRef="Sub_i2" targetRef="G_m4" />
+      <bpmn:sequenceFlow id="m4" sourceRef="G_m4" targetRef="W_github" />
+      <bpmn:sequenceFlow id="w18" sourceRef="W_github" targetRef="Prog_w5" />
+      <bpmn:sequenceFlow id="w19" sourceRef="Prog_w5" targetRef="G_w5" />
+      <bpmn:sequenceFlow id="i5" name="yes" sourceRef="G_w5" targetRef="Sub_i3">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">both repositories are published and the teaching team can read assignments</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="i6" sourceRef="Sub_i3" targetRef="End_W_ok" />
+      <bpmn:sequenceFlow id="w17" name="no" sourceRef="G_w5" targetRef="G_w_stop" />
       <bpmn:sequenceFlow id="e2" name="no" sourceRef="G_w4" targetRef="G_w_stop" />
       <bpmn:sequenceFlow id="m2" sourceRef="G_m2" targetRef="Prog_smoke" />
       <bpmn:sequenceFlow id="m3" sourceRef="G_m3" targetRef="W_edit" />
@@ -378,6 +420,7 @@ An earlier draft made it optional, on the reasoning that the agent reads and wri
         <bpmn:incoming>w9</bpmn:incoming>
         <bpmn:incoming>w5</bpmn:incoming>
         <bpmn:incoming>e2</bpmn:incoming>
+        <bpmn:incoming>w17</bpmn:incoming>
         <bpmn:outgoing>w16</bpmn:outgoing>
       </bpmn:exclusiveGateway>
       <bpmn:sequenceFlow id="w16" sourceRef="G_w_stop" targetRef="End_W_stop" />
@@ -390,20 +433,55 @@ An earlier draft made it optional, on the reasoning that the agent reads and wri
       <bpmn:incoming>b8</bpmn:incoming>
       <bpmn:outgoing>b5</bpmn:outgoing>
     </bpmn:scriptTask>
+    <bpmn:userTask id="Task_report_blocked" name="Report being stuck&#10;on Canvas">
+      <bpmn:documentation>Whichever of the three assignments the stalled session belongs to — the agent names it, because it is the one thing the setup check deliberately will not say. Both ways of getting stuck arrive here, because there is only one thing to do about either: tell the instructor where you got to.
+
+THE TWO BRANCHES CARRY DIFFERENT EVIDENCE, which is worth knowing when reading one. From "Codex running? — stuck" there is no setup check output at all: the check is a node script inside a clone that was never made, so what goes up is U-M GPT's own account of where the student stalled. From "Able to complete? — no" the check has run, and its report is what goes up. This step submits whichever of the two exists.
+
+This is the only thing that tells the instructor which of the 48 got stuck, and where. A student who submits a failure has done the right thing; a student who submits nothing is indistinguishable from one who is fine.</bpmn:documentation>
+      <bpmn:incoming>b14</bpmn:incoming>
+      <bpmn:outgoing>b10</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="End_blocked" name="blocked — instructor will help">
+      <bpmn:incoming>b10</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:userTask id="Task_report_ok" name="Submit each session&#39;s report&#10;on Canvas">
+      <bpmn:documentation>Three submissions, to three Canvas assignments — Installation 1, 2 and 3. Drawn once here as the summary; the drill-down shows all three, each closing out its own session. Same convention as "Check the install" beside it.
+
+Submitting on success is what turns "the student says it works" into something the instructor can count. The Installation 3 report additionally carries the assignments URL, which is how a student is mapped to the repository their work is graded from.</bpmn:documentation>
+      <bpmn:incoming>b7</bpmn:incoming>
+      <bpmn:outgoing>b11</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="End_ready" name="workspace ready">
+      <bpmn:incoming>b11</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="b13" name="stuck" sourceRef="Gate_running" targetRef="Gate_blocked" />
+    <bpmn:exclusiveGateway id="Gate_blocked">
+      <bpmn:incoming>b9</bpmn:incoming>
+      <bpmn:incoming>b13</bpmn:incoming>
+      <bpmn:outgoing>b14</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:exclusiveGateway id="Gate_running" name="Codex&#10;running?" default="b13">
+      <bpmn:documentation>Stage 1 ends one of two ways, and a subprocess's outgoing flow carries no outcome — so this gateway reads the outcome off the status report rather than off the flow. That is the one place in this diagram where following the arrows does not tell you where the value came from.</bpmn:documentation>
+      <bpmn:incoming>b2</bpmn:incoming>
+      <bpmn:outgoing>b12</bpmn:outgoing>
+      <bpmn:outgoing>b13</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="b14" sourceRef="Gate_blocked" targetRef="Task_report_blocked" />
   </bpmn:process>
   <bpmndi:BPMNDiagram id="D_boot">
     <bpmndi:BPMNPlane id="Pl_boot" bpmnElement="C_B">
       <bpmndi:BPMNShape id="P_B_di" bpmnElement="P_B" isHorizontal="true">
-        <dc:Bounds x="160" y="80" width="1820" height="520" />
+        <dc:Bounds x="160" y="80" width="1880" height="520" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="LB_program_di" bpmnElement="LB_program" isHorizontal="true" color:background-color="#eef5f4" color:border-color="#7a918d">
-        <dc:Bounds x="190" y="460" width="1790" height="140" />
+        <dc:Bounds x="190" y="460" width="1850" height="140" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="LB_agent_di" bpmnElement="LB_agent" isHorizontal="true" color:background-color="#fdf7ee" color:border-color="#9c8d76">
-        <dc:Bounds x="190" y="230" width="1790" height="230" />
+        <dc:Bounds x="190" y="230" width="1850" height="230" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="LB_human_di" bpmnElement="LB_human" isHorizontal="true" color:background-color="#fdf3f7" color:border-color="#9c8490">
-        <dc:Bounds x="190" y="80" width="1790" height="150" />
+        <dc:Bounds x="190" y="80" width="1850" height="150" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Start_B_di" bpmnElement="Start_B">
         <dc:Bounds x="252" y="132" width="36" height="36" />
@@ -413,16 +491,6 @@ An earlier draft made it optional, on the reasoning that the agent reads and wri
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Sub_stage1_di" bpmnElement="Sub_stage1" isExpanded="false">
         <dc:Bounds x="340" y="120" width="200" height="180" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Gate_running_di" bpmnElement="Gate_running" isMarkerVisible="true">
-        <dc:Bounds x="620" y="125" width="50" height="50" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="588" y="106" width="43" height="27" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Task_report_status_di" bpmnElement="Task_report_status">
-        <dc:Bounds x="760" y="120" width="200" height="80" />
-        <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Gate_merge_di" bpmnElement="Gate_merge" isMarkerVisible="true">
         <dc:Bounds x="620" y="315" width="50" height="50" />
@@ -439,29 +507,6 @@ An earlier draft made it optional, on the reasoning that the agent reads and wri
           <dc:Bounds x="1034" y="306" width="51" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Task_report_blocked_di" bpmnElement="Task_report_blocked">
-        <dc:Bounds x="1180" y="120" width="200" height="80" />
-        <bpmndi:BPMNLabel />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Gate_blocked_di" bpmnElement="Gate_blocked" isMarkerVisible="true">
-        <dc:Bounds x="1420" y="135" width="50" height="50" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="End_blocked_di" bpmnElement="End_blocked">
-        <dc:Bounds x="1520" y="142" width="36" height="36" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="1495" y="185" width="88" height="27" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Task_report_ok_di" bpmnElement="Task_report_ok">
-        <dc:Bounds x="1620" y="120" width="200" height="80" />
-        <bpmndi:BPMNLabel />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="End_ready_di" bpmnElement="End_ready">
-        <dc:Bounds x="1880" y="132" width="36" height="36" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="1862" y="175" width="73" height="14" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="DOR_key_di" bpmnElement="DOR_key" color:background-color="#fdeaea">
         <dc:Bounds x="352" y="350" width="36" height="50" />
         <bpmndi:BPMNLabel>
@@ -474,34 +519,51 @@ An earlier draft made it optional, on the reasoning that the agent reads and wri
       <bpmndi:BPMNShape id="Prog_doctor_di" bpmnElement="Prog_doctor">
         <dc:Bounds x="760" y="490" width="220" height="80" />
       </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_report_blocked_di" bpmnElement="Task_report_blocked">
+        <dc:Bounds x="1240" y="120" width="200" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_blocked_di" bpmnElement="End_blocked">
+        <dc:Bounds x="1580" y="142" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1555" y="185" width="88" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_report_ok_di" bpmnElement="Task_report_ok">
+        <dc:Bounds x="1680" y="120" width="200" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_ready_di" bpmnElement="End_ready">
+        <dc:Bounds x="1940" y="132" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1917" y="175" width="84" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gate_blocked_di" bpmnElement="Gate_blocked" isMarkerVisible="true">
+        <dc:Bounds x="1155" y="135" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gate_running_di" bpmnElement="Gate_running" isMarkerVisible="true">
+        <dc:Bounds x="620" y="135" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="588" y="116" width="43" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="b1_di" bpmnElement="b1">
         <di:waypoint x="288" y="150" />
         <di:waypoint x="340" y="150" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="b2_di" bpmnElement="b2">
         <di:waypoint x="540" y="150" />
-        <di:waypoint x="620" y="150" />
+        <di:waypoint x="580" y="150" />
+        <di:waypoint x="580" y="160" />
+        <di:waypoint x="620" y="160" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="b12_di" bpmnElement="b12">
-        <di:waypoint x="645" y="175" />
+        <di:waypoint x="645" y="185" />
         <di:waypoint x="645" y="315" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="660" y="243" width="40" height="14" />
+          <dc:Bounds x="660" y="248" width="40" height="14" />
         </bpmndi:BPMNLabel>
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="b13_di" bpmnElement="b13">
-        <di:waypoint x="670" y="150" />
-        <di:waypoint x="760" y="150" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="702" y="129" width="26" height="14" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="b14_di" bpmnElement="b14">
-        <di:waypoint x="960" y="160" />
-        <di:waypoint x="1020" y="160" />
-        <di:waypoint x="1020" y="100" />
-        <di:waypoint x="1445" y="100" />
-        <di:waypoint x="1445" y="135" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="b3_di" bpmnElement="b3">
         <di:waypoint x="670" y="340" />
@@ -526,10 +588,10 @@ An earlier draft made it optional, on the reasoning that the agent reads and wri
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="b7_di" bpmnElement="b7">
         <di:waypoint x="1130" y="530" />
-        <di:waypoint x="1720" y="530" />
-        <di:waypoint x="1720" y="200" />
+        <di:waypoint x="1780" y="530" />
+        <di:waypoint x="1780" y="200" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1145" y="510" width="40" height="14" />
+          <dc:Bounds x="1160" y="513" width="40" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="b8_di" bpmnElement="b8">
@@ -543,23 +605,30 @@ An earlier draft made it optional, on the reasoning that the agent reads and wri
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="b9_di" bpmnElement="b9">
         <di:waypoint x="1130" y="340" />
-        <di:waypoint x="1280" y="340" />
-        <di:waypoint x="1280" y="200" />
+        <di:waypoint x="1180" y="340" />
+        <di:waypoint x="1180" y="185" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1192" y="346" width="13" height="14" />
+          <dc:Bounds x="1146" y="346" width="13" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="b10_di" bpmnElement="b10">
-        <di:waypoint x="1380" y="160" />
-        <di:waypoint x="1420" y="160" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="b15_di" bpmnElement="b15">
-        <di:waypoint x="1470" y="160" />
-        <di:waypoint x="1520" y="160" />
+        <di:waypoint x="1440" y="160" />
+        <di:waypoint x="1580" y="160" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="b11_di" bpmnElement="b11">
-        <di:waypoint x="1820" y="160" />
         <di:waypoint x="1880" y="160" />
+        <di:waypoint x="1940" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="b13_di" bpmnElement="b13">
+        <di:waypoint x="670" y="160" />
+        <di:waypoint x="1155" y="160" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="702" y="139" width="26" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="b14_di" bpmnElement="b14">
+        <di:waypoint x="1205" y="160" />
+        <di:waypoint x="1240" y="160" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="a_key_di" bpmnElement="a_key">
         <di:waypoint x="370" y="350" />
@@ -722,237 +791,322 @@ An earlier draft made it optional, on the reasoning that the agent reads and wri
   <bpmndi:BPMNDiagram id="D_stage2">
     <bpmndi:BPMNPlane id="Pl_stage2" bpmnElement="Task_workspace">
       <bpmndi:BPMNShape id="LW_p_di" bpmnElement="LW_p" isHorizontal="true" color:background-color="#eef4fb" color:border-color="#7d8fa6">
-        <dc:Bounds x="160" y="320" width="1960" height="240" />
+        <dc:Bounds x="160" y="500" width="2560" height="260" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="LW_a_di" bpmnElement="LW_a" isHorizontal="true" color:background-color="#fdf7ee" color:border-color="#9c8d76">
-        <dc:Bounds x="160" y="80" width="1960" height="240" />
+        <dc:Bounds x="160" y="260" width="2560" height="240" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="LW_h_di" bpmnElement="LW_h" isHorizontal="true" color:background-color="#fdf3f7" color:border-color="#9c8490">
+        <dc:Bounds x="160" y="80" width="2560" height="180" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Start_W_di" bpmnElement="Start_W">
-        <dc:Bounds x="240" y="202" width="36" height="36" />
+        <dc:Bounds x="240" y="382" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="216" y="245" width="84" height="27" />
+          <dc:Bounds x="216" y="425" width="84" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="W_repos_di" bpmnElement="W_repos">
-        <dc:Bounds x="340" y="170" width="210" height="100" />
+        <dc:Bounds x="340" y="350" width="210" height="100" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Prog_w1_di" bpmnElement="Prog_w1">
-        <dc:Bounds x="340" y="370" width="210" height="100" />
+        <dc:Bounds x="340" y="550" width="210" height="100" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="G_w1_di" bpmnElement="G_w1" isMarkerVisible="true">
-        <dc:Bounds x="585" y="395" width="50" height="50" />
+        <dc:Bounds x="585" y="575" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="556" y="377" width="47" height="27" />
+          <dc:Bounds x="556" y="557" width="47" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="G_resume_di" bpmnElement="G_resume" isMarkerVisible="true">
-        <dc:Bounds x="660" y="395" width="50" height="50" />
+        <dc:Bounds x="660" y="575" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="623" y="360" width="56" height="40" />
+          <dc:Bounds x="623" y="540" width="56" height="40" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="W_addr_di" bpmnElement="W_addr">
-        <dc:Bounds x="740" y="170" width="210" height="100" />
+        <dc:Bounds x="740" y="350" width="210" height="100" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Prog_w2_di" bpmnElement="Prog_w2">
-        <dc:Bounds x="740" y="370" width="210" height="100" />
+        <dc:Bounds x="740" y="550" width="210" height="100" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="G_w2_di" bpmnElement="G_w2" isMarkerVisible="true">
-        <dc:Bounds x="985" y="395" width="50" height="50" />
+        <dc:Bounds x="985" y="575" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="970" y="376" width="41" height="27" />
+          <dc:Bounds x="970" y="556" width="41" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="G_m2_di" bpmnElement="G_m2" isMarkerVisible="true">
-        <dc:Bounds x="985" y="195" width="50" height="50" />
+        <dc:Bounds x="985" y="375" width="50" height="50" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Prog_smoke_di" bpmnElement="Prog_smoke">
-        <dc:Bounds x="1060" y="332" width="210" height="68" />
+        <dc:Bounds x="1140" y="512" width="210" height="68" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Prog_w3_di" bpmnElement="Prog_w3">
-        <dc:Bounds x="1060" y="408" width="210" height="68" />
+        <dc:Bounds x="1140" y="588" width="210" height="68" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="G_w3_di" bpmnElement="G_w3" isMarkerVisible="true">
-        <dc:Bounds x="1305" y="395" width="50" height="50" />
+        <dc:Bounds x="1385" y="575" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1258" y="372" width="45" height="27" />
+          <dc:Bounds x="1348" y="566" width="40" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="G_m3_di" bpmnElement="G_m3" isMarkerVisible="true">
-        <dc:Bounds x="1305" y="195" width="50" height="50" />
+        <dc:Bounds x="1545" y="375" width="50" height="50" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="W_edit_di" bpmnElement="W_edit">
-        <dc:Bounds x="1380" y="170" width="210" height="100" />
+        <dc:Bounds x="1625" y="350" width="210" height="100" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Prog_w4_di" bpmnElement="Prog_w4">
-        <dc:Bounds x="1380" y="370" width="210" height="100" />
+        <dc:Bounds x="1625" y="550" width="210" height="100" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="G_w4_di" bpmnElement="G_w4" isMarkerVisible="true">
-        <dc:Bounds x="1660" y="395" width="50" height="50" />
+        <dc:Bounds x="1905" y="575" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1626" y="376" width="47" height="27" />
+          <dc:Bounds x="1871" y="556" width="47" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="End_W_ok_di" bpmnElement="End_W_ok">
-        <dc:Bounds x="1790" y="202" width="36" height="36" />
+      <bpmndi:BPMNShape id="Sub_i1_di" bpmnElement="Sub_i1">
+        <dc:Bounds x="1305" y="140" width="210" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Sub_i2_di" bpmnElement="Sub_i2">
+        <dc:Bounds x="1825" y="140" width="210" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_m4_di" bpmnElement="G_m4" isMarkerVisible="true">
+        <dc:Bounds x="2065" y="375" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="W_github_di" bpmnElement="W_github">
+        <dc:Bounds x="2145" y="350" width="210" height="100" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Prog_w5_di" bpmnElement="Prog_w5">
+        <dc:Bounds x="2145" y="550" width="210" height="100" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_w5_di" bpmnElement="G_w5" isMarkerVisible="true">
+        <dc:Bounds x="2425" y="575" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1829" y="206" width="62" height="27" />
+          <dc:Bounds x="2396" y="556" width="37" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Sub_i3_di" bpmnElement="Sub_i3">
+        <dc:Bounds x="2345" y="140" width="210" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_W_ok_di" bpmnElement="End_W_ok">
+        <dc:Bounds x="2585" y="382" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2565" y="425" width="78" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="End_W_stop_di" bpmnElement="End_W_stop">
-        <dc:Bounds x="1852" y="382" width="36" height="36" />
+        <dc:Bounds x="2587" y="562" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1849" y="346" width="61" height="27" />
+          <dc:Bounds x="2584" y="526" width="61" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="G_w_stop_di" bpmnElement="G_w_stop" isMarkerVisible="true">
-        <dc:Bounds x="1845" y="455" width="50" height="50" />
+        <dc:Bounds x="2580" y="635" width="50" height="50" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="w1_di" bpmnElement="w1">
-        <di:waypoint x="276" y="220" />
-        <di:waypoint x="340" y="220" />
+        <di:waypoint x="276" y="400" />
+        <di:waypoint x="340" y="400" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="w2_di" bpmnElement="w2">
-        <di:waypoint x="445" y="270" />
-        <di:waypoint x="445" y="370" />
+        <di:waypoint x="445" y="450" />
+        <di:waypoint x="445" y="550" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="w3_di" bpmnElement="w3">
-        <di:waypoint x="550" y="420" />
-        <di:waypoint x="585" y="420" />
+        <di:waypoint x="550" y="600" />
+        <di:waypoint x="585" y="600" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="w4_di" bpmnElement="w4">
-        <di:waypoint x="635" y="420" />
-        <di:waypoint x="660" y="420" />
+        <di:waypoint x="635" y="600" />
+        <di:waypoint x="660" y="600" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="642" y="423" width="18" height="14" />
+          <dc:Bounds x="642" y="603" width="18" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="r1_di" bpmnElement="r1">
-        <di:waypoint x="685" y="395" />
-        <di:waypoint x="685" y="220" />
-        <di:waypoint x="740" y="220" />
+        <di:waypoint x="685" y="575" />
+        <di:waypoint x="685" y="400" />
+        <di:waypoint x="740" y="400" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="689" y="233" width="42" height="14" />
+          <dc:Bounds x="689" y="413" width="42" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="r2_di" bpmnElement="r2">
-        <di:waypoint x="685" y="395" />
-        <di:waypoint x="685" y="128" />
-        <di:waypoint x="1010" y="128" />
-        <di:waypoint x="1010" y="195" />
+        <di:waypoint x="685" y="575" />
+        <di:waypoint x="685" y="308" />
+        <di:waypoint x="1010" y="308" />
+        <di:waypoint x="1010" y="375" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="695" y="133" width="82" height="14" />
+          <dc:Bounds x="695" y="313" width="82" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="r3_di" bpmnElement="r3">
-        <di:waypoint x="685" y="395" />
-        <di:waypoint x="685" y="104" />
-        <di:waypoint x="1330" y="104" />
-        <di:waypoint x="1330" y="195" />
+        <di:waypoint x="685" y="575" />
+        <di:waypoint x="685" y="284" />
+        <di:waypoint x="1520" y="284" />
+        <di:waypoint x="1520" y="400" />
+        <di:waypoint x="1545" y="400" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="696" y="82" width="118" height="14" />
+          <dc:Bounds x="713" y="262" width="90" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="r4_di" bpmnElement="r4">
+        <di:waypoint x="685" y="575" />
+        <di:waypoint x="685" y="110" />
+        <di:waypoint x="2090" y="110" />
+        <di:waypoint x="2090" y="375" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="714" y="88" width="90" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="w6_di" bpmnElement="w6">
-        <di:waypoint x="845" y="270" />
-        <di:waypoint x="845" y="370" />
+        <di:waypoint x="845" y="450" />
+        <di:waypoint x="845" y="550" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="w7_di" bpmnElement="w7">
-        <di:waypoint x="950" y="420" />
-        <di:waypoint x="985" y="420" />
+        <di:waypoint x="950" y="600" />
+        <di:waypoint x="985" y="600" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="w8_di" bpmnElement="w8">
-        <di:waypoint x="1010" y="395" />
-        <di:waypoint x="1010" y="245" />
+        <di:waypoint x="1010" y="575" />
+        <di:waypoint x="1010" y="425" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1017" y="300" width="18" height="14" />
+          <dc:Bounds x="1017" y="480" width="18" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="w10_di" bpmnElement="w10">
-        <di:waypoint x="1165" y="400" />
-        <di:waypoint x="1165" y="408" />
+        <di:waypoint x="1245" y="580" />
+        <di:waypoint x="1245" y="588" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="w11_di" bpmnElement="w11">
-        <di:waypoint x="1270" y="442" />
-        <di:waypoint x="1288" y="442" />
-        <di:waypoint x="1288" y="420" />
-        <di:waypoint x="1305" y="420" />
+        <di:waypoint x="1350" y="622" />
+        <di:waypoint x="1368" y="622" />
+        <di:waypoint x="1368" y="600" />
+        <di:waypoint x="1385" y="600" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="w12_di" bpmnElement="w12">
-        <di:waypoint x="1330" y="395" />
-        <di:waypoint x="1330" y="245" />
+        <di:waypoint x="1410" y="575" />
+        <di:waypoint x="1410" y="220" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1337" y="300" width="18" height="14" />
+          <dc:Bounds x="1417" y="460" width="18" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="i2_di" bpmnElement="i2">
+        <di:waypoint x="1515" y="180" />
+        <di:waypoint x="1570" y="180" />
+        <di:waypoint x="1570" y="375" />
+      </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="w14_di" bpmnElement="w14">
-        <di:waypoint x="1485" y="270" />
-        <di:waypoint x="1485" y="370" />
+        <di:waypoint x="1730" y="450" />
+        <di:waypoint x="1730" y="550" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="w15_di" bpmnElement="w15">
-        <di:waypoint x="1590" y="420" />
-        <di:waypoint x="1660" y="420" />
+        <di:waypoint x="1835" y="600" />
+        <di:waypoint x="1905" y="600" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e1_di" bpmnElement="e1">
-        <di:waypoint x="1685" y="395" />
-        <di:waypoint x="1685" y="220" />
-        <di:waypoint x="1790" y="220" />
+        <di:waypoint x="1930" y="575" />
+        <di:waypoint x="1930" y="220" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1692" y="300" width="18" height="14" />
+          <dc:Bounds x="1937" y="460" width="18" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="i4_di" bpmnElement="i4">
+        <di:waypoint x="2035" y="180" />
+        <di:waypoint x="2050" y="180" />
+        <di:waypoint x="2050" y="400" />
+        <di:waypoint x="2065" y="400" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="m4_di" bpmnElement="m4">
+        <di:waypoint x="2115" y="400" />
+        <di:waypoint x="2145" y="400" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="w18_di" bpmnElement="w18">
+        <di:waypoint x="2250" y="450" />
+        <di:waypoint x="2250" y="550" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="w19_di" bpmnElement="w19">
+        <di:waypoint x="2355" y="600" />
+        <di:waypoint x="2425" y="600" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="i5_di" bpmnElement="i5">
+        <di:waypoint x="2450" y="575" />
+        <di:waypoint x="2450" y="220" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2457" y="460" width="18" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="i6_di" bpmnElement="i6">
+        <di:waypoint x="2555" y="180" />
+        <di:waypoint x="2603" y="180" />
+        <di:waypoint x="2603" y="382" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="w17_di" bpmnElement="w17">
+        <di:waypoint x="2450" y="625" />
+        <di:waypoint x="2450" y="660" />
+        <di:waypoint x="2580" y="660" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2459" y="633" width="13" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e2_di" bpmnElement="e2">
-        <di:waypoint x="1685" y="445" />
-        <di:waypoint x="1685" y="480" />
-        <di:waypoint x="1845" y="480" />
+        <di:waypoint x="1930" y="625" />
+        <di:waypoint x="1930" y="660" />
+        <di:waypoint x="2580" y="660" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1694" y="453" width="13" height="14" />
+          <dc:Bounds x="1939" y="633" width="13" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="m2_di" bpmnElement="m2">
-        <di:waypoint x="1010" y="245" />
-        <di:waypoint x="1010" y="366" />
-        <di:waypoint x="1060" y="366" />
+        <di:waypoint x="1035" y="400" />
+        <di:waypoint x="1090" y="400" />
+        <di:waypoint x="1090" y="546" />
+        <di:waypoint x="1140" y="546" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="m3_di" bpmnElement="m3">
-        <di:waypoint x="1355" y="220" />
-        <di:waypoint x="1380" y="220" />
+        <di:waypoint x="1595" y="400" />
+        <di:waypoint x="1625" y="400" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="w16_di" bpmnElement="w16">
-        <di:waypoint x="1870" y="455" />
-        <di:waypoint x="1870" y="418" />
+        <di:waypoint x="2605" y="635" />
+        <di:waypoint x="2605" y="598" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="w13_di" bpmnElement="w13">
-        <di:waypoint x="1330" y="445" />
-        <di:waypoint x="1330" y="480" />
-        <di:waypoint x="1845" y="480" />
+        <di:waypoint x="1410" y="625" />
+        <di:waypoint x="1410" y="660" />
+        <di:waypoint x="2580" y="660" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1339" y="453" width="13" height="14" />
+          <dc:Bounds x="1419" y="633" width="13" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="w9_di" bpmnElement="w9">
-        <di:waypoint x="1010" y="445" />
-        <di:waypoint x="1010" y="480" />
-        <di:waypoint x="1845" y="480" />
+        <di:waypoint x="1010" y="625" />
+        <di:waypoint x="1010" y="660" />
+        <di:waypoint x="2580" y="660" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1019" y="453" width="13" height="14" />
+          <dc:Bounds x="1019" y="633" width="13" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="w5_di" bpmnElement="w5">
-        <di:waypoint x="610" y="445" />
-        <di:waypoint x="610" y="480" />
-        <di:waypoint x="1845" y="480" />
+        <di:waypoint x="610" y="625" />
+        <di:waypoint x="610" y="660" />
+        <di:waypoint x="2580" y="660" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="613" y="453" width="13" height="14" />
+          <dc:Bounds x="613" y="633" width="13" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>

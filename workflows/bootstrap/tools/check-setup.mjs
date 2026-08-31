@@ -15,6 +15,16 @@
 // later phase passing while an earlier one fails is reported loudly, because it means the
 // machine is in a state nobody designed.
 //
+// SESSIONS. Those phases are grouped into three class-day sessions, and each one ends with the
+// student pasting this report into a different Canvas assignment — Installation 1, 2 and 3. So
+// the report says where all THREE stand, every time.
+//
+// It never names the one they are handing in today, and cannot: a finished Installation 1 and a
+// failed Installation 2 both leave the frontier at 5, and what separates them is what happened
+// in the session rather than anything on disk. Guessing is worse than not saying, because a
+// student sent to the wrong assignment has no way to know they were. Reporting all three makes
+// the same block correct in whichever one it is pasted into.
+//
 // NOT YET IS NOT FAILURE. A phase that has not been reached yet reports `not yet` and does not
 // set a failure exit code — a machine part-way through setup is incomplete, not broken. Only a
 // check that is actually wrong fails the run. The skill that called this knows which phase it
@@ -283,19 +293,29 @@ const programsRoots = () =>
 
 // FINDING AN APPLICATION IS NOT ENOUGH ON WINDOWS, and this is the check's own worst failure.
 //
-// When this runs inside the agent's app container, its file reads fall through to the real
-// machine — but so does everything the agent installed into the container, which is at the same
-// apparent path. The two are indistinguishable by asking whether a file is there. On 2026-08-27
-// that is how this program reported an editor installed on a machine where the student had
-// none: the agent had installed into the container, and the check agreed with it.
+// The app is MSIX-packaged, and a write it makes under AppData is redirected into a private
+// per-app store instead of landing where it says. Measured 2026-08-27: the agent wrote one file
+// to `%USERPROFILE%\Programs` and one to `%LOCALAPPDATA%\Programs`, reporting success for both;
+// from the student's own PowerShell only the first existed. `%USERPROFILE%` writes through and
+// AppData does not, which is why the roots above are searched and AppData is not among them.
 //
-// The registry would settle it — an uninstall entry is something an installer creates and a
-// file copy cannot fake — but registry reads do NOT fall through, so from in there the entry is
-// invisible whether or not it exists. Measured, along with the file reads that do.
+// So an install aimed at AppData reaches nobody, and on 2026-08-27 this program reported an
+// editor installed on a machine where the student had none.
 //
-// What is left is to detect the bad state directly: look for the application inside the
-// container. A copy there means the install went to a place only the agent can reach, whatever
-// else is visible. That is a positive finding rather than an inference, and it is the one thing
+// AND READS FALL THROUGH INTO A MERGED VIEW, which is why this helper exists rather than a
+// simple existence test. Measured the same day: listing `%LOCALAPPDATA%\Programs` from inside
+// the app returned both a file the agent had written there — invisible to the student — and a
+// file the student had written there, which really existed. Same apparent path, no way to tell
+// which was which. Listing it from the student's own shell returned only their own.
+//
+// So a file check here cannot distinguish a real install from a redirected one, and asking
+// harder does not help. The registry would settle it — an uninstall entry is something an
+// installer creates and a file copy cannot fake — but a packaged app's registry reads are
+// redirected too, so from in here the entry is invisible whether or not it exists.
+//
+// What is left is to detect the bad state directly: look for the application in the package
+// store. A copy there means the install went where only the agent can reach it, whatever else
+// is visible. That is a positive finding rather than an inference, and it is the one thing
 // about this that can be established from where this program runs.
 const sandboxed = (dirName) => {
   const local = process.env.LOCALAPPDATA;
@@ -573,6 +593,90 @@ runtime("Codex configuration", () => {
   return `U-M gateway, model ${top ? top[1] : "not set"}, effort ${effort ? effort[1] : "not set"}`;
 });
 
+// --- the sandbox, reported alongside Runtime -------------------------------
+//
+// WINDOWS ONLY, and advisory. This gates nothing and can never fail: it is telemetry,
+// collected because forty-eight Canvas submissions are the only sample of real machines this
+// course will ever get.
+//
+// WHY IT IS HERE. Codex runs commands inside a sandbox, and on Windows there are two
+// implementations of it — `elevated`, which needs an administrator to set up, and `unelevated`,
+// which is what a machine falls back to when that is unavailable or fails. Nothing in this
+// course chooses between them, so every machine negotiates its own, and NOTHING RECORDS WHICH.
+//
+// That is how "Windows machines behave differently" became something believed rather than
+// measured. Two setup runs disagreed about where an installer's files landed, and with no
+// record of the mode either machine was in, the difference got written up as an undetectable
+// property of the platform. It may be. It may equally be one machine in each mode. This line
+// exists so the next disagreement comes with the one fact that would tell them apart.
+//
+// It is deliberately NOT reported on macOS: there is one Seatbelt sandbox, no fork to record,
+// and a line that always says the same thing trains people to skip it.
+//
+// WHAT IT CANNOT ESTABLISH, and this is most of it. `.codex-global-state.json` is the app's own
+// undocumented internal state, not an interface — it can change shape in any update, and this
+// reads it defensively and reports nothing rather than guessing. Worse, the policy it records
+// (`workspaceWrite` and friends) is a DIFFERENT AXIS from the elevated/unelevated
+// implementation, and whether that implementation is written down anywhere a program can read
+// has not been established on a Windows machine. So this reports what it can see and says so;
+// where it says `not recorded`, that is a fact about this check, not about the machine.
+
+if (windows)
+  runtime(
+    "Codex sandbox",
+    () => {
+      const parts = [];
+
+      // What the config ASKED for. Absent on every student machine today, because the course
+      // config does not set it — which is the point of reporting it.
+      const cfg = join(codexHome, "config.toml");
+      if (existsSync(cfg)) {
+        const w = /\[windows\]([\s\S]*?)(?=\n\[|$)/.exec(readFileSync(cfg, "utf8"));
+        const asked = w && /^\s*sandbox\s*=\s*"([^"]+)"/m.exec(w[1]);
+        parts.push(asked ? `config asks for ${asked[1]}` : "config asks for nothing");
+      }
+
+      // What the app actually applied. Report the DISTINCT set rather than picking a thread:
+      // the entries are keyed by thread id with no ordering to read, and on the one machine
+      // this was written against they were all background threads. A wrong pick reported
+      // confidently is worse than a set.
+      const state = join(codexHome, ".codex-global-state.json");
+      if (existsSync(state)) {
+        try {
+          const seen = new Set();
+          const walk = (o) => {
+            if (!o || typeof o !== "object") return;
+            if (typeof o.sandboxPolicy?.type === "string") seen.add(o.sandboxPolicy.type);
+            for (const v of Object.values(o)) walk(v);
+          };
+          walk(JSON.parse(readFileSync(state, "utf8")));
+          if (seen.size) parts.push(`policy ${[...seen].sort().join(", ")}`);
+        } catch {
+          // Unreadable or reshaped by an update. Not worth a word to the student.
+        }
+      }
+
+      // WHO RAN THIS is the question the whole Windows investigation kept failing to answer,
+      // and this program CANNOT ANSWER IT. Recorded here so that nobody spends another
+      // afternoon looking: measured 2026-08-27 on the ARM64 test machine, a command run by the
+      // agent and the same command pasted into the student's own PowerShell reported the same
+      // `whoami` (`<host>\a11y`, not a dedicated sandbox user) and the same `TEMP`
+      // (`%LOCALAPPDATA%\Temp`, nothing under `\Packages\OpenAI.`).
+      //
+      // So there is no environment signature separating the two contexts. A draft of this check
+      // tested TEMP for the package path and would have reported every agent run as a student
+      // run — confidently, and wrongly, which is the failure mode this whole program exists to
+      // prevent. If a signature is ever found, this is where it goes.
+      //
+      // NOTE WHAT THAT MEASUREMENT ALSO SAYS: config.toml asked for `elevated`, and the agent's
+      // command showed no sandbox identity at all. Either the mode was not in force, or it does
+      // not work the way it is documented to. Unresolved.
+
+      return parts.join("; ") || "not recorded";
+    },
+    { advisory: true },
+  );
+
 // --- report ----------------------------------------------------------------
 
 const gating = (p) => p.checks.filter((c) => !c.advisory);
@@ -601,9 +705,37 @@ const after = phases.slice(frontierIndex + 1);
 const leapfrogged = after.filter((p) => gating(p).length && gating(p).every(satisfied));
 const skipped = after.filter((p) => gating(p).length && !gating(p).every(satisfied));
 
+// --- the three class-day sessions ------------------------------------------
+//
+// Which phases belong to which Canvas assignment. `through` is the last phase of a session, so
+// a session is done exactly when the frontier has reached it — no separate notion of done, and
+// nothing here that can disagree with the number above.
+//
+// FAIL is reported separately from `not yet` because they are different things to an instructor
+// reading forty-eight of these: `not yet` is a student who has not got to that class day, and
+// FAIL is one who did and whose machine said no.
+
+const sessions = [
+  { n: 1, through: 5 },
+  { n: 2, through: 6 },
+  { n: 3, through: 7 },
+];
+
+let firstPhase = 0;
+const sessionRows = sessions.map((s) => {
+  const covered = phases.filter((p) => p.n > firstPhase && p.n <= s.through);
+  firstPhase = s.through;
+  const broke = covered.some((p) => gating(p).some((c) => c.state === FAIL));
+  return {
+    label: `Installation ${s.n}`,
+    covers: covered.map((p) => p.name).join(", "),
+    state: frontier.n >= s.through ? "done" : broke ? FAIL : NOTYET,
+  };
+});
+
 const width = Math.max(...phases.flatMap((p) => p.checks.map((c) => c.label.length)));
 const lines = [
-  "SI 212 — first-day setup check",
+  "SI 212 — setup check",
   `${new Date().toISOString().slice(0, 10)}  ${platform()}  node ${process.version}`,
   "",
 ];
@@ -627,6 +759,12 @@ if (leapfrogged.length)
   );
 if (failed.length)
   lines.push(`${failed.length} check${failed.length === 1 ? "" : "s"} failed.`);
+
+const covWidth = Math.max(...sessionRows.map((r) => r.covers.length));
+lines.push("");
+for (const r of sessionRows)
+  lines.push(`${r.label}  ${r.covers.padEnd(covWidth)}  ${r.state}`);
+
 if (phases.some((p) => p.checks.some((c) => c.state === SAID)))
   lines.push(
     "",
@@ -634,7 +772,12 @@ if (phases.some((p) => p.checks.some((c) => c.state === SAID)))
     "has no way to check for itself.",
   );
 
-lines.push("", "Copy everything above into the Canvas assignment — including if it failed.");
+lines.push(
+  "",
+  "Copy everything above into today's Canvas assignment — Installation 1, 2 or 3, whichever",
+  "one you are handing in. Paste all of it, including if something failed: the Installation",
+  "lines say how far you have got, and that is what your instructor is reading it for.",
+);
 
 console.log(lines.join("\n"));
 
