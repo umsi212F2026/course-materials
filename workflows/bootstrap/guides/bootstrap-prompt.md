@@ -254,16 +254,32 @@ First ask whether they already have it. Some will.
 
   **Do not have them open it yet.** Step 3 comes first.
 
-- **Windows:** the same page, **learn.chatgpt.com/docs/app**, has a **Download for Windows**
-  button. Clicking it hands off to the **Microsoft Store**, which does the installing — there
-  is no separate installer file to find and run, even though the browser shows a download.
+- **Windows:** send them straight to the Store listing, and nowhere else:
 
-  It is done when the Store stops offering to install it and offers to **open** it instead. The
-  exact wording changes; what does not change is that the install button is replaced by an
-  **Open** button.
+  ```
+  https://apps.microsoft.com/detail/9plm9xgg6vks
+  ```
 
-  Some students already have this app from the Store, in which case the Store shows **Open**
-  straight away and there is nothing to do.
+  They click **Get**. It is done when that button becomes **Open**. Some students already have
+  it, in which case it says **Open** straight away and there is nothing to do.
+
+  **Do not send them to learn.chatgpt.com for this.** That page's Windows button downloaded an
+  `.exe` installer on a machine tested 2026-08-31, rather than handing off to the Store as this
+  document used to claim. A student who runs it ends up with an install nobody else in the class
+  has, and one who is told to expect the Store and gets a download decides the instructions are
+  wrong — on the first thing they are asked to do.
+
+  **Never have them search the Store for "Codex."** Nothing the student can see is called Codex:
+  the Store listing, the Start menu entry and the window are all **ChatGPT**, and the name Codex
+  exists only inside the package. Searching it returns *CodexApp Pro* and *Codex - QR Reader &
+  Generator*, neither of them OpenAI's. OpenAI's own Windows documentation suggests
+  `winget install Codex -s msstore`, which lands on one of those. Do not use it.
+
+  **If that link is dead**, have them search the Store for **ChatGPT** and check that the
+  **publisher is OpenAI** before installing anything. That is the reliable test, not the name:
+  the Store page also offers *ChatGPT Classic*, *ChatGPT (Beta)* and several third-party *AI
+  Chat Hub* apps, all seen on 2026-08-31. The right listing's description mentions both ChatGPT
+  Work and Codex.
 
   **Do not have them open it yet.** Step 3 comes first.
 

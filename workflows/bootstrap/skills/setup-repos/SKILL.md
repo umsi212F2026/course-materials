@@ -136,13 +136,33 @@ day:
 Work through the first two with them, in plain words, as many times as it takes. Do not report
 a machine as blocked because a dialog appeared — check first whether they can answer it.
 
-**`PATH` does not update in a session that is already running.** After installing, `git` and
-`node` may still not be found by name. That is not a failed install and **not a reason to
-install again**. On macOS both are on `PATH` once installed.
+### `PATH` does not update in a session that is already running
 
-**On Windows, do not guess at the path either.** A `winget` install goes where that service
-chooses — user scope and machine scope land in different places, and the package decides which
-it offers. Ask `winget` rather than reasoning about it:
+**Expect this, and reload it — do not conclude the install failed.** After a `winget` install,
+`git` and `node` are not found by name in your session. The install is fine; your environment is
+stale. On macOS none of this applies: both are on `PATH` once installed.
+
+**On Windows, reload `PATH` in your own session before concluding anything:**
+
+```powershell
+$env:Path = [Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [Environment]::GetEnvironmentVariable("Path","User")
+```
+
+Then try `git --version` and `node --version` again.
+
+**Do this after every install, not just Node**, and before any check that depends on the thing
+you just installed.
+
+**Measured 2026-08-31, and it stopped a run dead.** `winget` puts a shim in
+`%LOCALAPPDATA%\Microsoft\WinGet\Links` and adds that directory to the user `PATH`. A terminal
+opened afterwards found `node --version` → `v24.19.0` immediately, while the session that had
+just installed it could not run Node at all — so the setup check, which is a Node script, could
+not run, and Installation 1 ended with nothing cloned on a machine where everything had actually
+worked. Without the line above that is the outcome on every Windows machine.
+
+**Still do not guess at install locations.** A `winget` install goes where that service chooses —
+user scope and machine scope land in different places, and the package decides which it offers.
+Ask `winget` rather than reasoning about it:
 
 ```powershell
 winget list --id Git.Git
