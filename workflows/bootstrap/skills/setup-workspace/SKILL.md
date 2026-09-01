@@ -141,7 +141,7 @@ are part-way through, including these, which is confusing in a way nothing will 
 Once per run, not once per session. Two sessions in the same sitting are one update.
 
 On the first day there is nothing to update — `setup-repos` clones all three itself, as its
-step 4.
+step 3.
 
 ## Installation 1 — the repositories, and proof they can be found
 

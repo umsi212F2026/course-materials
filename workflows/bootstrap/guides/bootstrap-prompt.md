@@ -231,13 +231,21 @@ Before anything is downloaded. The download is around 600 MB, and on the wrong m
   (Windows 11 Pro 24H2 is what this was tested on). There is no chip requirement to check as
   there is on a Mac.
 
-  Do not ask them to prove they have administrator rights; they usually will not know, and the
-  answer arrives on its own during the install. If Windows asks for an administrator password
-  they don't have, or refuses the install, _that_ is the loaner case.
+  **Then check that they are an administrator on this machine, and treat it as a requirement.**
+  Settings → Accounts → Your info: under their name it should say **Administrator**. If it says
+  something else, or the laptop is administered by somebody else, stop — that is the loaner
+  case.
+
+  **Ask this here, not later.** The course installs git and Node machine-wide into
+  `Program Files`, because the assistant's sandbox can only run programs from there; both
+  installs put up a password box, and a student who cannot answer it cannot finish setup. Found
+  now it costs one question. Found at the install it costs them an hour and a 600 MB download
+  first.
 
 - **Anything else** — Chromebook, iPad, phone: stop, loaner case.
 
-**Worked when:** they've told you the chip and the version, and both pass.
+**Worked when:** they've told you the chip and the version, and both pass — and, on Windows,
+that their account says **Administrator**.
 
 ### 2. Install the app
 

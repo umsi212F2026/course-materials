@@ -24,47 +24,31 @@ what you cloned.
 
 ## What you do, in order
 
-**1. On Windows, reload `PATH` before you check anything.** First thing, every run, whether or
-not you intend to install:
-
-```powershell
-$env:Path = [Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [Environment]::GetEnvironmentVariable("Path","User")
-```
-
-**Your session can be older than the machine's installs.** The app has usually been running
-since before any of this happened, and every command you run inherits its stale environment. Skip
-this and each check below lies to you in the same direction: it reports missing whatever is
-already installed, and you go on to install it again.
-
-On macOS there is nothing to reload.
-
-**2. Check what is already here, by running it.**
-
-```powershell
-git --version
-node --version
-```
-
-If either is not found, ask `winget` before concluding anything:
+**1. Check what is already here.** On Windows:
 
 ```powershell
 winget list --id Git.Git
 winget list --id OpenJS.NodeJS.LTS
+Test-Path 'C:\Program Files\Git\cmd\git.exe'
+Test-Path 'C:\Program Files\nodejs\node.exe'
 ```
 
-**`winget list` is the authority. A path test is not.** In particular, **never test for
-`C:\Program Files\nodejs\node.exe`** — that is where the `.msi` puts Node, and this course
-installs the portable zip precisely so that it does not elevate, so that path is empty on every
-machine this course has ever set up. Measured 2026-08-31: that test reported Node missing on a
-machine where `node --version` answered `v24.19.0`, and the run went on to reinstall it, ask for
-a permission it did not need, and stop when the student declined.
+**Those two paths are constants, not discoveries.** Everything this course installs goes
+machine-wide into `Program Files` — see the Windows rule below for why nothing here installs
+per-user.
 
-A machine may also have had either installed some other way — by an administrator, or by the
-student last year — and reinstalling over a working program is a waste of their morning.
+**Do not judge by `git --version` or `node --version` in your own session.** `PATH` does not
+update in a process that is already running, and yours started before any of this, so both answer
+"not found" whether or not the program is there. Believe `winget list` and the paths.
+
+A machine may already have had either installed some other way — by the student last year, or by
+whoever set the laptop up — and reinstalling over a working program is a waste of their morning.
+
+On macOS, `git --version` and `node --version` are a fair test and none of the above applies.
 
 Install nothing yet.
 
-**3. Install what is missing** — git and Node, nothing else. git first: without it there is
+**2. Install what is missing** — git and Node, nothing else. git first: without it there is
 nothing to clone with.
 
 **Say what you are about to do in one sentence, then do it. Do not ask.** "Installing git,
@@ -73,25 +57,21 @@ for a reply. If permission is needed the machine puts up its own prompt, which i
 question in the chat stops the student until they notice it, and makes the agent look like it
 needs supervising for its own instructions.
 
-**On Windows, install both with `winget`.** The flags are not decoration — each one picks the
-variant that does not need an administrator password:
+**On Windows, install both with `winget`, machine-wide, and no flags beyond the silent ones:**
 
 ```powershell
-winget install --id Git.Git --scope user --silent --accept-package-agreements --accept-source-agreements
-winget install --id OpenJS.NodeJS.LTS --installer-type zip --silent --accept-package-agreements --accept-source-agreements
+winget install --id Git.Git --silent --accept-package-agreements --accept-source-agreements
+winget install --id OpenJS.NodeJS.LTS --silent --accept-package-agreements --accept-source-agreements
 ```
 
-**`--scope user` on git**, because its installer ships in both scopes and the machine one
-elevates. **`--installer-type zip` on Node**, because its package offers a machine-scope `.msi`
-that elevates and a portable zip that does not; without the flag you get the `.msi` and this:
+**Expect a Windows administrator prompt for each, and say so before it appears.** It is the
+machine asking permission to install a program; they answer it with their own login password,
+which will not show as they type. This is required, not incidental — see the Windows rule below.
 
-```
-Error 1925. You do not have sufficient privileges to complete this installation
-for all users of the machine.
-```
-
-which stops a student who is not an administrator on the first step of the first day. Nothing
-in this course needs Node for anybody but them.
+**Do not reach for `--scope user` or `--installer-type zip`.** Both exist, both avoid the
+password prompt, and both install under `%LOCALAPPDATA%`, where your sandbox cannot execute what
+you just installed. This skill told you to use them until 2026-08-31, and on the first clean
+machine that ever ran it, Installation 1 could not be finished at all.
 
 **On macOS**, `xcode-select --install` for git — it ships with the command line tools — and
 `node-v24.20.0.pkg` from `nodejs.org/dist/v24.20.0/`.
@@ -119,7 +99,19 @@ Everything under `%USERPROFILE%` outside `AppData` is untouched. That is why the
 `.gitconfig` and `~/.codex/AGENTS.md` have always worked, and it is not a coincidence to be
 grateful for — it is the documented boundary.
 
-Two things follow, and they are the whole of it.
+**And a second, separate mechanism restricts what your commands may run.** Codex's Windows
+sandbox grants read and execute on `C:\Windows`, `C:\Program Files`, `C:\Program Files (x86)`
+and `C:\ProgramData` — and nowhere else. A tool installed per-user under `%LOCALAPPDATA%` sits on
+the student's `PATH`, runs perfectly in their own terminal, and fails for you with _Access is
+denied_.
+
+**Do not confuse the two.** They both involve `AppData`, which is why they look like one thing.
+Redirection is about where **your writes** go. The sandbox is about what **commands you run** may
+touch. Nothing in `config.toml` changes the second, and it is reported as
+[openai/codex#27171](https://github.com/openai/codex/issues/27171) with the same remedy given
+here.
+
+Three things follow, and they are the whole of it.
 
 **1. Install through `winget`, never by downloading an installer and running it.** Installers
 default to `%LOCALAPPDATA%\Programs`, which is inside the redirected zone: the install succeeds,
@@ -133,9 +125,11 @@ does not help. If something must be confirmed, have the student check from their
 which is not in the package — or look in the store directly, which is what `check-setup.mjs`
 does.
 
-**`--scope user` and `--installer-type zip` are a separate matter.** Those flags avoid an
-**administrator prompt**; `winget` avoids the **package store**. Neither substitutes for the
-other, and a package with no user-scope variant is fine — it just prompts.
+**3. Install machine-wide, and accept the administrator prompt.** Never `--scope user`, never
+`--installer-type zip`. Those flags avoid the password box and put the tool where your sandbox
+cannot execute it, which trades a prompt the student can answer for a failure nobody can. That
+is why **a local administrator is a prerequisite for this course on Windows**, checked in the
+bootstrap prompt before anything is downloaded rather than discovered at install time.
 
 **Never test for `winget` by running `winget --version`.** It answers _"not recognized"_ on a
 machine where `winget install` works perfectly. Believe it and you will fall back to a
@@ -161,38 +155,37 @@ a machine as blocked because a dialog appeared — check first whether they can 
 
 ### `PATH` does not update in a session that is already running
 
-**Reload it again after installing — the same line as step 1** — and before any check that
-depends on what you just installed. A `winget` install does not reach a process that is already
-running, and yours is. Do not conclude an install failed until you have reloaded and retried. On
-macOS there is nothing to reload.
+**So for the rest of this session, call them by their full paths.** Windows adds `Program Files`
+entries to the machine `PATH`, but a process that is already running never sees that, and you
+are one. Do not conclude an install failed because a bare `git` or `node` is not found.
 
-**Measured 2026-08-31, and it ended a run.** `winget` puts a shim in
-`%LOCALAPPDATA%\Microsoft\WinGet\Links` and adds that directory to the user `PATH`. A terminal
-opened afterwards ran `node --version` → `v24.19.0` immediately, while the session that had just
-installed it could not run Node at all — so the setup check, which is a Node script, could not
-run, and Installation 1 ended with nothing cloned on a machine where every install had actually
-succeeded.
-
-**Still do not guess at install locations.** A `winget` install goes where that service chooses —
-user scope and machine scope land in different places, and the package decides which it offers.
-Ask `winget` rather than reasoning about it:
-
-```powershell
-winget list --id Git.Git
-winget list --id OpenJS.NodeJS.LTS
+```
+"C:\Program Files\Git\cmd\git.exe"
+"C:\Program Files\nodejs\node.exe"
 ```
 
-**If you still cannot run `node` after installing it, stop and say so.** Do not install it a
-second time, do not download it, and do not report the phase as done — the setup check is a
-Node script, so a Node you cannot run is a phase you cannot finish. Say what you tried and hand
-the student the setup check instructions for their own terminal.
+Those are fixed, which is the point of installing machine-wide — you do not have to find them.
+Use the second one for the setup check too:
 
-**This is the least-tested part of this skill.** Both trial machines already had git and Node
-before any run, on both platforms, so neither install path has been exercised end to end. If
-something here does not match what you see, believe the machine and report it rather than
-improvising an install.
+```powershell
+& "C:\Program Files\nodejs\node.exe" course-materials\workflows\bootstrap\tools\check-setup.mjs
+```
 
-**4. Clone all three repositories — or update them if they are already here.** A student may be
+**Do not try to reload `PATH` instead.** Reading it back from the registry looks like the obvious
+fix and does not work: measured 2026-08-31, `[Environment]::GetEnvironmentVariable("Path","User")`
+returned a stale view from inside the app, missing an entry the student's own PowerShell showed —
+so the reload sets `PATH` from something that was never right, confidently.
+
+**Later sessions do not need any of this.** Installations 2 and 3 run in an app started after the
+installs, so `git` and `node` work by name there.
+
+**If a full path still will not run, stop and say so.** Do not install a second time, do not
+download anything, and do not report the phase as done — the setup check is a Node script, so a
+Node you cannot run is a phase you cannot finish. Say what you tried and quote what came back.
+
+**On macOS none of this applies**; both are on `PATH` once installed.
+
+**3. Clone all three repositories — or update them if they are already here.** A student may be
 re-running this after a failure, and the point of a re-run is usually that a fix has been
 published since. For each repository that already exists, follow
 [`update`](workflows/update/skills/update/SKILL.md) on it instead of cloning, and say what
@@ -245,7 +238,7 @@ the ownership is cosmetic once git accepts it. Do not change ownership, do not r
 
 **On macOS none of this applies.**
 
-**5. Rename the remote on the two student repositories.** Not on `course-materials`:
+**4. Rename the remote on the two student repositories.** Not on `course-materials`:
 
 ```
 git -C learning-topics remote rename origin upstream
@@ -259,7 +252,7 @@ undone then.
 `course-materials` keeps its `origin` and never gains a personal remote — it is pull-only for
 the whole term.
 
-**6. Set their git identity.** In each of the two student repositories:
+**5. Set their git identity.** In each of the two student repositories:
 
 ```
 git -C <repo> config user.name  "<their name>"
@@ -284,13 +277,13 @@ Both in one breath reads as one question with two halves and gets answered as ne
 **Build the address from the uniqname; do not ask for an email.** Without an identity git
 refuses to record their first piece of work, or invents one from the machine's hostname.
 
-**7. Check the phases.** Run `node course-materials/workflows/bootstrap/tools/check-setup.mjs`
+**6. Check the phases.** Run `node course-materials/workflows/bootstrap/tools/check-setup.mjs`
 and show its complete output, unedited. It should report **reached 3 of 7 — Repositories**.
 
 That single run covers both your phases. Runtime is self-verifying: the setup check is a Node
 script inside the clone, so if it runs at all, git and Node work and the clone succeeded.
 
-**8. Say what these three are for**, in three sentences, because it is the first time a student
+**7. Say what these three are for**, in three sentences, because it is the first time a student
 sees that their work and the course files are different things. `course-materials` is the
 instructor's and they never edit it; `learning-topics` is theirs and private; `assignments` is
 what they hand in, and the teaching team can read it. Each has a README saying more.
