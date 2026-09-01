@@ -276,7 +276,6 @@ const editors = phase(6, "Editors");
 //   - %LOCALAPPDATA%\Programs, where a winget per-user install puts things.
 //   - Program Files, for a student who clicked through an installer's wizard rather than taking
 //     the silent install. That is a working install and should not fail this check.
-//   - %USERPROFILE%\Programs, which an older version of `setup-editors` used.
 //
 // Anything that is neither macOS nor Windows is not a platform this course supports, and
 // saying so is more use than a check that silently passes.
@@ -288,35 +287,22 @@ const programsRoots = () =>
   [
     process.env.LOCALAPPDATA && join(process.env.LOCALAPPDATA, "Programs"),
     process.env.PROGRAMFILES,
-    process.env.USERPROFILE && join(process.env.USERPROFILE, "Programs"),
   ].filter(Boolean);
 
 // FINDING AN APPLICATION IS NOT ENOUGH ON WINDOWS, and this is the check's own worst failure.
 //
-// The app is MSIX-packaged, and a write it makes under AppData is redirected into a private
-// per-app store instead of landing where it says. Measured 2026-08-27: the agent wrote one file
-// to `%USERPROFILE%\Programs` and one to `%LOCALAPPDATA%\Programs`, reporting success for both;
-// from the student's own PowerShell only the first existed. `%USERPROFILE%` writes through and
-// AppData does not, which is why the roots above are searched and AppData is not among them.
+// When this runs inside the packaged app, a file it created under AppData went to a private
+// per-package store, and a read of that path is served from the store first and only then from
+// the real location. So an existence test cannot tell a real install from a redirected one —
+// both answer yes. See the Windows section of `setup-repos` for the rule and the reference.
 //
-// So an install aimed at AppData reaches nobody, and on 2026-08-27 this program reported an
-// editor installed on a machine where the student had none.
+// That is not hypothetical: on 2026-08-27 this program reported an editor installed on a
+// machine where the student had none.
 //
-// AND READS FALL THROUGH INTO A MERGED VIEW, which is why this helper exists rather than a
-// simple existence test. Measured the same day: listing `%LOCALAPPDATA%\Programs` from inside
-// the app returned both a file the agent had written there — invisible to the student — and a
-// file the student had written there, which really existed. Same apparent path, no way to tell
-// which was which. Listing it from the student's own shell returned only their own.
-//
-// So a file check here cannot distinguish a real install from a redirected one, and asking
-// harder does not help. The registry would settle it — an uninstall entry is something an
-// installer creates and a file copy cannot fake — but a packaged app's registry reads are
-// redirected too, so from in here the entry is invisible whether or not it exists.
-//
-// What is left is to detect the bad state directly: look for the application in the package
-// store. A copy there means the install went where only the agent can reach it, whatever else
-// is visible. That is a positive finding rather than an inference, and it is the one thing
-// about this that can be established from where this program runs.
+// So detect the bad state directly instead of trying to confirm the good one. The redirect
+// target is a documented path — %LOCALAPPDATA%\Packages\<package>\LocalCache\Local\... — so
+// look there. A copy in the package store means the install went where only the agent can
+// reach it, whatever else is visible. That is a positive finding rather than an inference.
 const sandboxed = (dirName) => {
   const local = process.env.LOCALAPPDATA;
   if (!local) return null;
@@ -524,9 +510,9 @@ remote("teaching team can read assignments", () => {
   const wanted = teachingTeam.map((n) => n.toLowerCase());
   const missing = wanted.filter((n) => !have.includes(n) && !invited.includes(n));
   if (missing.length === wanted.length)
-    notYet("not added yet — this is step 5 of setup-github");
+    notYet("not added yet — this is step 6 of setup-github");
   if (missing.length)
-    throw new Error(`${missing.join(", ")} still missing — re-run step 5 of setup-github`);
+    throw new Error(`${missing.join(", ")} still missing — re-run step 6 of setup-github`);
 
   const pending = wanted.filter((n) => !have.includes(n));
   if (pending.length) return `invited ${pending.join(", ")} — not accepted yet, which is fine`;

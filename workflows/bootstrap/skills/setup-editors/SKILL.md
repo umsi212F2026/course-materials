@@ -77,31 +77,22 @@ address, and a room full of students shares one.
 
 ### On Windows, install with `winget` and nothing else
 
-It is what OpenAI documents for installing developer tools from inside this app.
+**The rule and the reference are in
+[`setup-repos`](workflows/bootstrap/skills/setup-repos/SKILL.md).** In short: a file this app
+creates under `AppData` goes to a private per-package store, `%LOCALAPPDATA%\Programs` is where
+Zettlr's installer wants to put itself, and a read of that path is served from the store first —
+so a download-and-run install succeeds, reports success, reaches nobody, and the setup check run
+from in here agrees with you. `winget` hands the install to a service outside the package, which
+is why it lands.
 
-**Do not download an installer and run it.** Windows installers mostly default to
-`%LOCALAPPDATA%\Programs` — Zettlr's does — and a write there from inside this app does not
-reach the student's machine. It succeeds, reports success, and is not there afterwards, so the
-student gets nothing and the setup check run from in here agrees with you.
+**Never test for `winget` by running `winget --version`** — it says _"not recognized"_ on a
+machine where `winget install` works perfectly. Run the install command; let it report.
 
-**It is not permissions, and not a setting anyone can change.** Measured 2026-08-27: a file
-written by the agent to `%USERPROFILE%\Programs` was visible from the student's own PowerShell
-and one written to `%LOCALAPPDATA%\Programs` was not, with the same account and the same temp
-directory in both contexts and Codex's `elevated` sandbox configured throughout. It is the
-app's MSIX packaging, which redirects AppData writes into a private per-app store. An
-administrator password does not help, and neither does anything in `config.toml`.
-
-**A packaged app's `HKCU` writes go the same way**, so *you* cannot register a file type from in
-here at any path — `HKCU:\Software\Classes`, `assoc` and `ftype` are all equally useless,
-however carefully aimed. Do not try. Zettlr's own installer registers `.md` perfectly well when
-`winget` runs it, because that runs outside the package; if the type still opens something else,
-the student sets it by hand in step 3.
-
-**Never test for `winget` by running `winget --version`.** It will say _"not recognized"_ on a
-machine where `winget install` works perfectly, because `winget.exe` lives inside the
-redirected region and a version check is not the kind of command this app escalates. Believe
-that answer and you will fall back to the download-and-run install that silently fails. Run the
-install command; let it report.
+**You cannot register a file type from in here.** `HKCU` writes go to the package store the same
+way, so `HKCU:\Software\Classes`, `assoc` and `ftype` are all equally useless however carefully
+aimed. Do not try. Zettlr's own installer registers `.md` perfectly well when `winget` runs it,
+because that runs outside the package; if the type still opens something else, the student sets
+it by hand in step 3.
 
 **If the install itself fails**, say what it said and stop. Do not download the installer
 instead.
@@ -221,4 +212,5 @@ their instructor knowing today rather than in week three.
 
 - [`study`](workflows/learn/skills/study/SKILL.md) — skill
 - [`setup-workspace`](workflows/bootstrap/skills/setup-workspace/SKILL.md) — skill
+- [`setup-repos`](workflows/bootstrap/skills/setup-repos/SKILL.md) — skill
 - [`check-setup.mjs`](workflows/bootstrap/tools/check-setup.mjs) — tool

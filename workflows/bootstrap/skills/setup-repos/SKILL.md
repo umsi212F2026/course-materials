@@ -80,31 +80,47 @@ Not the API first: it allows sixty requests an hour from one address and a lab s
 one, so a class that resolves "latest" exhausts it and the failure looks like a network
 problem.
 
-### On Windows, install with `winget` and nothing else
+### The Windows rule — what this app can and cannot write
 
-It is what OpenAI documents for installing developer tools from inside this app, and the package
-IDs above are theirs.
+**This is the canonical statement. Everything else in the course that touches it points here.**
 
-**Do not download an installer and run it.** Windows installers mostly default to
-`%LOCALAPPDATA%\Programs`, and a write there from inside this app does not reach the student's
-machine — it succeeds, reports success, and is not there afterwards. Measured 2026-08-27: one
-file written to `%USERPROFILE%\Programs` and one to `%LOCALAPPDATA%\Programs` in the same
-session; from the student's own PowerShell, only the first existed.
+The Windows app is installed from the Microsoft Store, so it is MSIX-packaged, and Windows
+virtualizes part of what a packaged app writes. **Two locations, and nothing else:**
 
-**It is not permissions, and not a setting anyone can change.** In that same measurement the
-agent's account and temp directory were identical to the student's, and Codex's `elevated`
-sandbox was configured throughout. It is the app's own MSIX packaging, which redirects AppData
-writes into a private per-app store. Nothing in `config.toml` reaches it, and an administrator
-password does not either.
+- **`AppData`** — both `Local` and `Roaming`. A file the app **creates** there is written to a
+  private per-package store instead. Opening that path afterwards is served **from the store
+  first**, and only falls back to the real location if the store has no copy.
+- **`HKCU`** — registry writes, the same way.
 
-`%USERPROFILE%` writes through. That is the whole rule, and it is why the clones and
-`AGENTS.md` have always worked.
+Everything under `%USERPROFILE%` outside `AppData` is untouched. That is why the clones,
+`.gitconfig` and `~/.codex/AGENTS.md` have always worked, and it is not a coincidence to be
+grateful for — it is the documented boundary.
+
+Two things follow, and they are the whole of it.
+
+**1. Install through `winget`, never by downloading an installer and running it.** Installers
+default to `%LOCALAPPDATA%\Programs`, which is inside the redirected zone: the install succeeds,
+reports success, and the student has nothing. `winget` hands the work to a service outside the
+package, so what it installs lands on the real machine. It is also what OpenAI documents for
+installing developer tools from inside this app, and the package IDs above are theirs.
+
+**2. You cannot check your own work there.** Because a read is served from the store first, a
+file you created and then looked for is found whether or not the student has it. Asking harder
+does not help. If something must be confirmed, have the student check from their own PowerShell,
+which is not in the package — or look in the store directly, which is what `check-setup.mjs`
+does.
+
+**`--scope user` and `--installer-type zip` are a separate matter.** Those flags avoid an
+**administrator prompt**; `winget` avoids the **package store**. Neither substitutes for the
+other, and a package with no user-scope variant is fine — it just prompts.
 
 **Never test for `winget` by running `winget --version`.** It answers _"not recognized"_ on a
-machine where `winget install` works perfectly, because `winget.exe` sits inside the redirected
-region and a version check is not the kind of command this app escalates. Believe it and you
-will fall back to a download-and-run install that silently installs nothing. Run the install
-command and let it report. Do not assert a cause.
+machine where `winget install` works perfectly. Believe it and you will fall back to a
+download-and-run install that silently installs nothing. Run the install command and let it
+report. Do not assert a cause.
+
+Reference: Microsoft, [_Understanding how packaged desktop apps run on Windows_](https://learn.microsoft.com/en-us/windows/msix/desktop/desktop-to-uwp-behind-the-scenes)
+— see "AppData operations on Windows 10, version 1903 and later" and the registry table.
 
 **A password prompt is not a blocked machine.** Three situations, and only the last ends the
 day:
@@ -124,11 +140,9 @@ a machine as blocked because a dialog appeared — check first whether they can 
 `node` may still not be found by name. That is not a failed install and **not a reason to
 install again**. On macOS both are on `PATH` once installed.
 
-**On Windows, do not guess at the path either.** A `winget` install places things where that
-service chooses, and those locations are inside the region this app cannot see — so the paths
-that would work for the student may not resolve for you, and `Test-Path` returning false here
-proves nothing about their machine. Ask `winget` where it put things rather than reasoning
-about it:
+**On Windows, do not guess at the path either.** A `winget` install goes where that service
+chooses — user scope and machine scope land in different places, and the package decides which
+it offers. Ask `winget` rather than reasoning about it:
 
 ```powershell
 winget list --id Git.Git

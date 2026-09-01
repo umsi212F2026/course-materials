@@ -1,12 +1,13 @@
 ---
 name: setup-github
-description: Give a student a GitHub account and publish their two course repositories as their own private copies, adding the teaching team to the one they hand work in through. Runs in week 2, before the first submission, and is the only part of setup that needs an account.
+description: Give a student a GitHub account and publish their two course repositories as their own private copies, adding the teaching team to the one they hand work in through. Runs as the Installation 3 Canvas assignment, and is the only part of setup that needs an account.
 ---
 
 # Set up GitHub
 
-The **Remote** phase, seventh of seven, and **not part of the first day**. It runs in week 2,
-ahead of the first thing due in week 3.
+The **Remote** phase, seventh of seven, and the whole of **Installation 3** — the last of the
+three setup sessions. **Not part of the first day**: it runs after the other two, ahead of the
+first thing due in week 3.
 
 Until now everything has been local, and deliberately so: day 1 finished without a single new
 account because all three course repositories are public and cloning needs no credentials. That
@@ -30,17 +31,53 @@ slowest step and there is no way around it.
 Their username is theirs to choose and will be visible to the teaching team. Say so before they
 choose, in case that changes what they pick.
 
-**2. Install the GitHub CLI**, and sign in:
+**2. Install the GitHub CLI.**
+
+**On Windows:**
+
+```powershell
+winget install --id GitHub.cli --silent --accept-package-agreements --accept-source-agreements
+```
+
+`winget` and nothing else — the rule and the reason are in
+[`setup-repos`](workflows/bootstrap/skills/setup-repos/SKILL.md). **Unlike git and Node, expect
+an administrator prompt**: this package has no user-scope variant, so no flag avoids it. That is
+the ordinary case, not a wall.
+
+**On macOS**, download `gh_2.83.1_macOS_arm64.pkg` (Apple Silicon) or `gh_2.83.1_macOS_amd64.pkg`
+(Intel) from `https://github.com/cli/cli/releases/download/v2.83.1/` and open it. **Not
+Homebrew** — this course does not put a package manager on a student's machine to get one
+program.
+
+If that address 404s it no longer resolves, and why is not something you can know. Only then ask
+`https://api.github.com/repos/cli/cli/releases/latest` for the current version and take the
+equivalently-named asset. Not the API first: sixty requests an hour from one address, and a lab
+section shares one.
+
+**`PATH` does not update in a session that is already running**, so `gh` may not be found by name
+straight afterwards. Not a failed install, and not a reason to install again.
+
+**3. Have the student sign in, in their own terminal. Not you.**
 
 ```
 gh auth login
 ```
 
-Choose **HTTPS** for git operations and let it authenticate git. It offers a device flow: a
-code to paste into a browser page. That is normal — it is how a program gets permission without
-ever seeing their password.
+Choose **HTTPS** for git operations and let it authenticate git. It offers a device flow — a
+code to paste into a browser page. That is normal, and it is how a program gets permission
+without ever seeing their password.
 
-**3. Warn them about the keychain prompt before it happens.** On a Mac, the first push puts up
+**Why it has to be them.** `gh` keeps its token in `%AppData%\GitHub CLI`, which is the one place
+this course touches that Windows redirects for a packaged app — see the Windows rule in
+`setup-repos`. Created by you, the token goes to the package store: your own `gh` commands would
+work, and no `git push` they ever run in their own terminal would find it. Created by them, it is
+an ordinary file, and everything you do afterwards reads and updates it normally.
+
+Have them run `gh auth status` in that same terminal and read you the result before you go on.
+
+On macOS nothing is redirected and it is still theirs to run, because it is their credential.
+
+**4. Warn them about the credential prompt before it happens.** On a Mac, the first push puts up
 a system dialog:
 
 > "git-credential-osxkeychain" wants to use your confidential information stored in
@@ -56,7 +93,12 @@ box arriving minutes after they were told this credential matters, which is exac
 thing they should otherwise stop at. A student who picks Deny gets a push that fails for
 reasons the error message will not explain.
 
-**4. Publish each repository, one at a time.** From inside each clone:
+**On Windows there is usually no such box**, because `gh auth login` sets git up to ask `gh` for
+the credential and `gh` already has it. If one does appear it is Windows Credential Manager
+asking to store the token, and the answer is yes. Do not go looking for the Mac dialog there,
+and do not tell a Windows student to expect one — the absence is correct.
+
+**5. Publish each repository, one at a time.** From inside each clone:
 
 ```
 gh repo create si212-learning-topics-<uniqname> --private --source=. --remote=origin --push
@@ -66,12 +108,31 @@ gh repo create si212-assignments-<uniqname>     --private --source=. --remote=or
 Both **private**. The prefix is there because these live in their personal account, which has
 no organisation name to scope them.
 
+**If the repository already exists, this errors, and that is not a failure.** A student is
+usually back here because something further down stopped last time, so check before creating:
+
+```
+gh repo view si212-assignments-<uniqname>
+```
+
+Found means the create already happened. Do not create it again and do not create it under
+another name — make sure the clone points at it and push whatever is new:
+
+```
+git -C <repo> remote add origin https://github.com/<username>/si212-assignments-<uniqname>.git
+git -C <repo> push -u origin main
+```
+
+Skip the `remote add` if `origin` is already there; `git -C <repo> remote -v` says. Getting this
+wrong is how a student ends up owning two repositories with nearly the same name, one of which
+the teaching team has been added to and the other of which holds their work.
+
 `upstream` is untouched and still points at the course copies, so `git pull upstream main`
 keeps bringing new assignments and corrections. Because their clone carries the real history
 rather than a fresh copy of the files, that merge works from the first day with nothing to
 reconcile.
 
-**5. Add the teaching team to `assignments` only.**
+**6. Add the teaching team to `assignments` only.**
 
 ```
 gh api -X PUT repos/<username>/si212-assignments-<uniqname>/collaborators/presnick \
@@ -94,17 +155,27 @@ the student alone can repair: nobody on the teaching team can add themselves to 
 a student's account afterwards. A failure discovered now costs one retry; discovered at grading
 in week 3 it costs an email to that student and a late submission.
 
+**Running it twice is harmless**, so a student coming back does it again rather than working out
+whether it took. Adding somebody who is already a collaborator, or who has an invitation
+outstanding, succeeds and changes nothing.
+
 **Do not offer to do the same for `learning-topics`, and do not ask whether they want to.**
 That repository is theirs and the teaching team does not see it. It is a record of learning,
 not work being graded, and that is a property of the design rather than a courtesy.
 
-**6. Check the phase.** Run `node course-materials/workflows/bootstrap/tools/check-setup.mjs`.
+**7. Check the phase.** Run `node course-materials/workflows/bootstrap/tools/check-setup.mjs`.
 It should report **reached 7 of 7 — Remote**, and print the `assignments` URL.
 
-**7. Have them submit that output to Canvas.** The `assignments` URL in it is how their
-instructor knows which repository is theirs.
+**8. Have them submit that output to the Installation 3 assignment on Canvas.** The
+`assignments` URL in it is how their instructor knows which repository is theirs.
 
 ## Rules
+
+**Never run `gh auth login` yourself, not even to check whether it is needed.** On Windows the
+first one to create `%AppData%\GitHub CLI` wins: a copy in the package store is served ahead of
+the real file for every later read of yours, so one stray sign-in leaves you reading a token the
+student does not have, permanently and invisibly. `gh auth status`, run by them, is how you find
+out where things stand.
 
 **Both repositories are private.** If either was created public, say so immediately and fix it
 — `gh repo edit <repo> --visibility private`. A student's coursework being world-readable is
@@ -133,14 +204,18 @@ points at the course copy, which they cannot write to, so an attempt will fail c
 
 ## When you cannot finish
 
-Say which step stopped and show the error. The most likely one is authentication, and the most
-likely cause is a Deny on the keychain prompt — `gh auth status` will say whether git is
-authenticated.
+Say which step stopped and show the error. The most likely one is authentication, and
+`gh auth status` — **run in the student's own terminal, not by you** — is what says whether it
+took. On a Mac the usual cause is a Deny on the keychain prompt. On Windows, suspect that the
+sign-in happened on the wrong side of the app's private store, and see step 3.
 
-Have them submit the setup check output to Canvas either way. A student who is stuck here still
-has every local thing working and has lost nothing; they just have no backup yet, which is
-worth saying out loud so they are not worried.
+Have them submit the setup check output to the **Installation 3** assignment on Canvas either
+way. A student who is stuck here still has every local thing working and has lost nothing; they
+just have no backup yet, which is worth saying out loud so they are not worried.
 
 ## Depends on
 
+- [`setup-workspace`](workflows/bootstrap/skills/setup-workspace/SKILL.md) — skill
+- [`setup-repos`](workflows/bootstrap/skills/setup-repos/SKILL.md) — skill
+- [`setup-editors`](workflows/bootstrap/skills/setup-editors/SKILL.md) — skill
 - [`check-setup.mjs`](workflows/bootstrap/tools/check-setup.mjs) — tool
