@@ -237,10 +237,11 @@ Before anything is downloaded. The download is around 600 MB, and on the wrong m
   case.
 
   **Ask this here, not later.** The course installs git and Node machine-wide into
-  `Program Files`, because the assistant's sandbox can only run programs from there; both
-  installs put up a password box, and a student who cannot answer it cannot finish setup. Found
-  now it costs one question. Found at the install it costs them an hour and a 600 MB download
-  first.
+  `Program Files`, because the assistant's sandbox can only run programs from there, and that
+  needs administrator rights. A student who has them may never see a password box — the app
+  often already holds the rights and installs straight through. A student who does not have them
+  cannot finish setup at all. Found now it costs one question; found at the install it costs them
+  an hour and a 600 MB download first.
 
 - **Anything else** — Chromebook, iPad, phone: stop, loaner case.
 

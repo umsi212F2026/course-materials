@@ -64,9 +64,13 @@ winget install --id Git.Git --silent --accept-package-agreements --accept-source
 winget install --id OpenJS.NodeJS.LTS --silent --accept-package-agreements --accept-source-agreements
 ```
 
-**Expect a Windows administrator prompt for each, and say so before it appears.** It is the
-machine asking permission to install a program; they answer it with their own login password,
-which will not show as they type. This is required, not incidental — see the Windows rule below.
+**A Windows administrator prompt may appear for each. Say so before installing, and do not
+promise it.** If it comes, it is the machine asking permission to install a program, answered
+with their own login password, which will not show as they type. Measured 2026-08-31: on a
+machine whose user was already an administrator, neither install prompted at all — Codex's
+`elevated` sandbox already holds the rights, so it installs straight through. Both outcomes are
+normal; a student told to expect a password box that never arrives decides the instructions are
+wrong.
 
 **Do not reach for `--scope user` or `--installer-type zip`.** Both exist, both avoid the
 password prompt, and both install under `%LOCALAPPDATA%`, where your sandbox cannot execute what
