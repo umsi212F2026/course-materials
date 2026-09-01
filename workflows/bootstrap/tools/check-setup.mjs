@@ -44,7 +44,7 @@
 // Exit code 1 if any check fails.
 
 import { execFileSync } from "node:child_process";
-import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
+import { existsSync, readFileSync, statSync } from "node:fs";
 import { platform, homedir } from "node:os";
 import { join, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -261,127 +261,30 @@ smoke("the smoke test ran", () => {
 //
 // Blocking, like every other phase. An earlier draft made this optional on the reasoning that
 // the agent reads and writes the files either way — which is true and beside the point. The
-// smoke test ends by having the student open setup.md themselves, `study` has them writing
-// notes.md, and the diagram work needs Camunda. Without an editor they can watch an agent
+// smoke test ends by having the student open setup.md themselves and `study` has them writing
+// notes.md. Without an editor they can watch an agent
 // describe their own work and never read or write it, which is not ready.
 
 const editors = phase(6, "Editors");
 
-// Where an installed application lives, per platform.
-//
-// On a Mac both are an app bundle dragged into /Applications, and `setup-editors` puts them
-// there. On Windows there is no single answer, so look in every place the student could
-// plausibly have ended up and pass if any of them exists:
-//
-//   - %LOCALAPPDATA%\Programs, where a winget per-user install puts things.
-//   - Program Files, for a student who clicked through an installer's wizard rather than taking
-//     the silent install. That is a working install and should not fail this check.
-//
-// Anything that is neither macOS nor Windows is not a platform this course supports, and
-// saying so is more use than a check that silently passes.
-
-const mac = platform() === "darwin";
 const windows = platform() === "win32";
 
-const programsRoots = () =>
-  [
-    process.env.LOCALAPPDATA && join(process.env.LOCALAPPDATA, "Programs"),
-    process.env.PROGRAMFILES,
-  ].filter(Boolean);
-
-// FINDING AN APPLICATION IS NOT ENOUGH ON WINDOWS, and this is the check's own worst failure.
+// NOTHING ABOUT THE EDITOR CAN BE CHECKED FROM HERE, and the attempt was removed rather than
+// weakened. This program runs inside the agent's sandbox, which grants read and execute only on
+// C:\Windows, C:\Program Files, C:\Program Files (x86) and C:\ProgramData. Zettlr's installer is
+// per-user and there is no machine-scope variant, so it lands under %LOCALAPPDATA%\Programs and
+// every read of it — including a listing of the parent directory — comes back EPERM. Measured
+// 2026-09-01; see openai/codex#27171.
 //
-// When this runs inside the packaged app, a file it created under AppData went to a private
-// per-package store, and a read of that path is served from the store first and only then from
-// the real location. So an existence test cannot tell a real install from a redirected one —
-// both answer yes. See the Windows section of `setup-repos` for the rule and the reference.
+// WHAT REPLACES IT IS BETTER, WHICH IS WHY THIS IS NOT A LOSS. The check below reads the record
+// setup-editors writes after watching the student open one of their own files in Zettlr. A
+// student who did that has a working editor — which is more than a folder's existence ever
+// proved — and it catches the failure the old file check was added for: an install that reached
+// only the agent's private storage is an install the student cannot open a file in, so no
+// record gets written and the phase fails, correctly.
 //
-// That is not hypothetical: on 2026-08-27 this program reported an editor installed on a
-// machine where the student had none.
-//
-// So detect the bad state directly instead of trying to confirm the good one. The redirect
-// target is a documented path — %LOCALAPPDATA%\Packages\<package>\LocalCache\Local\... — so
-// look there. A copy in the package store means the install went where only the agent can
-// reach it, whatever else is visible. That is a positive finding rather than an inference.
-const sandboxed = (dirName) => {
-  const local = process.env.LOCALAPPDATA;
-  if (!local) return null;
-  const packages = join(local, "Packages");
-  let entries;
-  try {
-    entries = readdirSync(packages);
-  } catch {
-    return null; // no container here, which is the ordinary case for a student's own shell
-  }
-  for (const pkg of entries) {
-    const inside = join(packages, pkg, "LocalCache", "Local", "Programs", dirName);
-    try {
-      statSync(inside);
-      return inside;
-    } catch {
-      // not this package
-    }
-  }
-  return null;
-};
-
-// On Windows the sandbox this runs inside refuses reads INTO an installed application's folder
-// — statSync there raises EPERM — while the folder holding them lists normally. existsSync
-// cannot tell that refusal from an absence: it answers false to both, so asking it directly
-// reports a correctly installed application as missing.
-//
-// So look for the folder's NAME in the parent listing, which is permitted, and fall back to
-// looking inside only if the listing is unavailable. And if neither can see, say so: a check
-// that was not allowed to look has not established that something is absent.
-const lookFor = (label, dirName, exeName) => {
-  // Before anything else: if it is in the container, the student does not have it, however
-  // convincing the rest of this looks.
-  const inContainer = sandboxed(dirName);
-  if (inContainer)
-    throw new Error(
-      `${label} was installed where only the setup agent can reach it, at ${inContainer}. ` +
-        `That is not on your machine — it is inside the assistant's own private storage, and ` +
-        `nothing you run will find it. It has to be installed again with winget. Show this ` +
-        `line to your instructor.`,
-    );
-
-  const refused = [];
-  for (const root of programsRoots()) {
-    try {
-      if (readdirSync(root).includes(dirName)) return label;
-      continue; // the folder listed and this is not in it — a real absence, try the next root
-    } catch (err) {
-      if (err.code !== "ENOENT") refused.push(`${root} (${err.code})`);
-    }
-    try {
-      statSync(join(root, dirName, exeName));
-      return label;
-    } catch (err) {
-      if (err.code !== "ENOENT") refused.push(`${join(root, dirName)} (${err.code})`);
-    }
-  }
-  if (refused.length)
-    throw new Error(
-      `cannot tell whether ${label} is installed — this check was not allowed to read ` +
-        `${refused.join(", ")}. That is a limit on this check, not a fault of yours; ` +
-        `show this line to your instructor.`,
-    );
-  notYet(`${label} not installed`);
-};
-
-const installed = (label, macPath, dirName, exeName) => () => {
-  if (mac) {
-    if (!existsSync(macPath)) notYet(`${label} not installed`);
-    return label;
-  }
-  if (windows) return lookFor(label, dirName, exeName);
-  notYet(`${platform()} is not a supported platform — tell your instructor`);
-};
-
-editors(
-  "Markdown editor",
-  installed("Zettlr", "/Applications/Zettlr.app", "Zettlr", "Zettlr.exe"),
-);
+// So phase 6 is attested and nothing else. The report says CONFIRMED rather than PASS, which is
+// the honest word for it.
 
 // Camunda Modeler is NOT checked here. It moved out of first-day setup to the workflows unit,
 // which installs it in the week it is first used. A check for it here would fail every machine
