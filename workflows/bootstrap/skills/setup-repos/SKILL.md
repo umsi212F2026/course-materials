@@ -24,24 +24,47 @@ what you cloned.
 
 ## What you do, in order
 
-**1. Check what is already here.** On macOS, `git --version` and `node --version` are a fair
-test. On Windows they are not: a missing name on `PATH` is what you get whether or not the
-program exists, so ask `winget` and look in `Program Files`:
+**1. On Windows, reload `PATH` before you check anything.** First thing, every run, whether or
+not you intend to install:
+
+```powershell
+$env:Path = [Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [Environment]::GetEnvironmentVariable("Path","User")
+```
+
+**Your session can be older than the machine's installs.** The app has usually been running
+since before any of this happened, and every command you run inherits its stale environment. Skip
+this and each check below lies to you in the same direction: it reports missing whatever is
+already installed, and you go on to install it again.
+
+On macOS there is nothing to reload.
+
+**2. Check what is already here, by running it.**
+
+```powershell
+git --version
+node --version
+```
+
+If either is not found, ask `winget` before concluding anything:
 
 ```powershell
 winget list --id Git.Git
 winget list --id OpenJS.NodeJS.LTS
-Test-Path 'C:\Program Files\Git\cmd\git.exe'
-Test-Path 'C:\Program Files\nodejs\node.exe'
 ```
 
-`Program Files` as well as `winget`, because a machine may have had either installed some other
-way — by an administrator, or by the student last year — and reinstalling over a working
-program is a waste of their morning.
+**`winget list` is the authority. A path test is not.** In particular, **never test for
+`C:\Program Files\nodejs\node.exe`** — that is where the `.msi` puts Node, and this course
+installs the portable zip precisely so that it does not elevate, so that path is empty on every
+machine this course has ever set up. Measured 2026-08-31: that test reported Node missing on a
+machine where `node --version` answered `v24.19.0`, and the run went on to reinstall it, ask for
+a permission it did not need, and stop when the student declined.
+
+A machine may also have had either installed some other way — by an administrator, or by the
+student last year — and reinstalling over a working program is a waste of their morning.
 
 Install nothing yet.
 
-**2. Install what is missing** — git and Node, nothing else. git first: without it there is
+**3. Install what is missing** — git and Node, nothing else. git first: without it there is
 nothing to clone with.
 
 **Say what you are about to do in one sentence, then do it. Do not ask.** "Installing git,
@@ -138,27 +161,17 @@ a machine as blocked because a dialog appeared — check first whether they can 
 
 ### `PATH` does not update in a session that is already running
 
-**Expect this, and reload it — do not conclude the install failed.** After a `winget` install,
-`git` and `node` are not found by name in your session. The install is fine; your environment is
-stale. On macOS none of this applies: both are on `PATH` once installed.
+**Reload it again after installing — the same line as step 1** — and before any check that
+depends on what you just installed. A `winget` install does not reach a process that is already
+running, and yours is. Do not conclude an install failed until you have reloaded and retried. On
+macOS there is nothing to reload.
 
-**On Windows, reload `PATH` in your own session before concluding anything:**
-
-```powershell
-$env:Path = [Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [Environment]::GetEnvironmentVariable("Path","User")
-```
-
-Then try `git --version` and `node --version` again.
-
-**Do this after every install, not just Node**, and before any check that depends on the thing
-you just installed.
-
-**Measured 2026-08-31, and it stopped a run dead.** `winget` puts a shim in
+**Measured 2026-08-31, and it ended a run.** `winget` puts a shim in
 `%LOCALAPPDATA%\Microsoft\WinGet\Links` and adds that directory to the user `PATH`. A terminal
-opened afterwards found `node --version` → `v24.19.0` immediately, while the session that had
-just installed it could not run Node at all — so the setup check, which is a Node script, could
-not run, and Installation 1 ended with nothing cloned on a machine where everything had actually
-worked. Without the line above that is the outcome on every Windows machine.
+opened afterwards ran `node --version` → `v24.19.0` immediately, while the session that had just
+installed it could not run Node at all — so the setup check, which is a Node script, could not
+run, and Installation 1 ended with nothing cloned on a machine where every install had actually
+succeeded.
 
 **Still do not guess at install locations.** A `winget` install goes where that service chooses —
 user scope and machine scope land in different places, and the package decides which it offers.
@@ -179,7 +192,7 @@ before any run, on both platforms, so neither install path has been exercised en
 something here does not match what you see, believe the machine and report it rather than
 improvising an install.
 
-**3. Clone all three repositories — or update them if they are already here.** A student may be
+**4. Clone all three repositories — or update them if they are already here.** A student may be
 re-running this after a failure, and the point of a re-run is usually that a fix has been
 published since. For each repository that already exists, follow
 [`update`](workflows/update/skills/update/SKILL.md) on it instead of cloning, and say what
@@ -232,7 +245,7 @@ the ownership is cosmetic once git accepts it. Do not change ownership, do not r
 
 **On macOS none of this applies.**
 
-**4. Rename the remote on the two student repositories.** Not on `course-materials`:
+**5. Rename the remote on the two student repositories.** Not on `course-materials`:
 
 ```
 git -C learning-topics remote rename origin upstream
@@ -246,7 +259,7 @@ undone then.
 `course-materials` keeps its `origin` and never gains a personal remote — it is pull-only for
 the whole term.
 
-**5. Set their git identity.** In each of the two student repositories:
+**6. Set their git identity.** In each of the two student repositories:
 
 ```
 git -C <repo> config user.name  "<their name>"
@@ -271,13 +284,13 @@ Both in one breath reads as one question with two halves and gets answered as ne
 **Build the address from the uniqname; do not ask for an email.** Without an identity git
 refuses to record their first piece of work, or invents one from the machine's hostname.
 
-**6. Check the phases.** Run `node course-materials/workflows/bootstrap/tools/check-setup.mjs`
+**7. Check the phases.** Run `node course-materials/workflows/bootstrap/tools/check-setup.mjs`
 and show its complete output, unedited. It should report **reached 3 of 7 — Repositories**.
 
 That single run covers both your phases. Runtime is self-verifying: the setup check is a Node
 script inside the clone, so if it runs at all, git and Node work and the clone succeeded.
 
-**7. Say what these three are for**, in three sentences, because it is the first time a student
+**8. Say what these three are for**, in three sentences, because it is the first time a student
 sees that their work and the course files are different things. `course-materials` is the
 instructor's and they never edit it; `learning-topics` is theirs and private; `assignments` is
 what they hand in, and the teaching team can read it. Each has a README saying more.
@@ -323,6 +336,21 @@ failed. A check that fails is a disagreement, not a hiccup — see above.
 **If an install needs administrator rights the student does not have, stop and say so.** Loaner
 laptops are available from the instructor; that is the fix, not a workaround. Do not attempt a
 portable build or an install under another account.
+
+**Report what failed. Do not report why you think it failed.** Quote what the command said. A
+cause you did not establish is worse than no cause at all, because it is confident, it is
+indistinguishable from a diagnosis, and the student will act on it.
+
+**And do not end your turn asking them to approve something.** Whatever prompt there was is gone
+from their screen; there is nothing left to click. Say what you tried, show what came back, and
+tell them that starting the setup again will offer it once more.
+
+Measured 2026-08-31, in one turn: a run reported _"Node.js installation was blocked because
+permission was denied"_ and ended with _"Please approve the Node.js installation and rerun this
+request"_ — on a machine where nothing had been denied, no approval was pending, and Node was
+already installed and answering `node --version` with `v24.19.0`. Every clause of that was
+invented. The same run had earlier explained a failure as _"the bundled setup file is one
+directory higher than the skill reference implied"_, which describes nothing that exists.
 
 **Never print the API key**, or any part of it. The setup check output gets pasted into Canvas
 by a student who will not think about that.
