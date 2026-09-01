@@ -127,6 +127,20 @@ Skip the `remote add` if `origin` is already there; `git -C <repo> remote -v` sa
 wrong is how a student ends up owning two repositories with nearly the same name, one of which
 the teaching team has been added to and the other of which holds their work.
 
+**TO VERIFY — delete this note once a Windows run has settled it.** Windows only, and it should
+not happen. If this errors as **not authenticated** while the student's `gh auth status` in step
+3 said they *were* signed in, those two facts are not in conflict: their token is real and you
+cannot read it, which would mean the fall-back read described in the Windows rule is not
+happening for `%AppData%`.
+
+**Do not run `gh auth login` to fix it.** That is the one move that makes it permanent — see the
+Rules.
+
+Have them run this step and step 6 in their own terminal instead. Expect the setup check to stop
+at **6 of 7** afterwards for the same reason, and report that rather than working around it: it
+is their instructor's to hear about, not the student's to repair. Say plainly that the
+repositories are published and nothing is lost.
+
 `upstream` is untouched and still points at the course copies, so `git pull upstream main`
 keeps bringing new assignments and corrections. Because their clone carries the real history
 rather than a fresh copy of the files, that merge works from the first day with nothing to
