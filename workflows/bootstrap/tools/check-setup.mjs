@@ -286,15 +286,22 @@ const windows = platform() === "win32";
 // So phase 6 is attested and nothing else. The report says CONFIRMED rather than PASS, which is
 // the honest word for it.
 
-// Camunda Modeler is NOT checked here. It moved out of first-day setup to the workflows unit,
-// which installs it in the week it is first used. A check for it here would fail every machine
-// on day one and be right to.
+// CAMUNDA IS CHECKED THE SAME WAY, AND ONLY THAT WAY. It is installed in this session again —
+// Installation 2 is the class session about workflows, so the diagram is the day's material.
+//
+// Unlike Zettlr it COULD be checked on disk: setup-editors installs it to
+// C:\Program Files\Camunda Modeler on Windows and /Applications on macOS, and the sandbox can
+// read both. Not doing it is a choice, and the same one made for Zettlr on 2026-08-31 — the
+// attested check below subsumes a path test rather than merely resembling one, and here it
+// claims MORE than a path test could. The line means the student double-clicked a .bpmn and
+// Camunda opened it, which on Windows also establishes that they claimed a file type no
+// installer registers. A folder existing establishes neither.
 
 // What the student did, rather than what is on disk.
 //
 // Installing an editor is not the point; being able to open your own work in it is, and no
 // program can establish that from here. `setup-editors` walks them through opening a real file
-// in it, sees a screenshot of the result, and records its verdict. This reads that record.
+// in each, sees a screenshot of the result, and records its verdict. This reads that record.
 //
 // It is taken on trust, and the report says so rather than blurring it into the checks this
 // program made itself.
@@ -320,6 +327,11 @@ const opened = (label, key, what) =>
   );
 
 opened("you opened a file in Zettlr", "zettlr", "open one of your own notes in Zettlr");
+opened(
+  "you opened a diagram in Camunda",
+  "camunda",
+  "double-click a .bpmn file and have Camunda Modeler open it",
+);
 
 // --- 7. Remote -------------------------------------------------------------
 

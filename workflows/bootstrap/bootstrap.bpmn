@@ -175,7 +175,7 @@ What that cannot reach is a bad or missing key, or a machine the student has no 
 
 The label has no second line because there is a level below; the path lives here instead.
 
-INSIDE IT ARE THREE SESSIONS, normally on three class days: Installation 1 (repositories, addressing, smoke test), Installation 2 (the editor), Installation 3 (GitHub). Each ends with the student submitting the setup check's report to a Canvas assignment of its own, and the next session does not start until that has happened — because the setup check reports the machine as it is now, so starting the next session destroys the report the last one produced.
+INSIDE IT ARE THREE SESSIONS, normally on three class days: Installation 1 (repositories, addressing, smoke test), Installation 2 (the editors), Installation 3 (GitHub). Each ends with the student submitting the setup check's report to a Canvas assignment of its own, and the next session does not start until that has happened — because the setup check reports the machine as it is now, so starting the next session destroys the report the last one produced.
 
 One run of this subprocess is a student's whole workspace setup, however many sittings that takes. The sessions run in order from wherever the setup check says they got to; a student may do more than one in a sitting, and stopping after any of them is the ordinary case rather than a failure.
 
@@ -242,7 +242,7 @@ It runs on every attempt, including a re-run, because a repository that already 
       <bpmn:exclusiveGateway id="G_resume" name="how far&#10;did I get&#10;previously?" default="r1">
         <bpmn:documentation>Setup is three sessions, normally on three class days, and this is where a run joins them. It reads the phase off the setup check output that "Check the repositories" just produced — which is what "reached N of 7" is for, and why the setup check reports a number rather than a pass or a fail.
 
-The three sessions are Installation 1 (repositories, addressing, smoke test), Installation 2 (the editor) and Installation 3 (GitHub). Nobody is asked which class day it is: a student on day 2 who never finished day 1 needs day 1, and the machine is the only thing that knows.
+The three sessions are Installation 1 (repositories, addressing, smoke test), Installation 2 (the editors) and Installation 3 (GitHub). Nobody is asked which class day it is: a student on day 2 who never finished day 1 needs day 1, and the machine is the only thing that knows.
 
 Note what is NOT skipped: the repositories step above always runs, so an update always arrives. Only the phases already reached are jumped past — and note where the "Installation 1 done" branch lands, AFTER that session's submission rather than before it, so that resuming never asks for a report that has already gone in.</bpmn:documentation>
         <bpmn:incoming>w4</bpmn:incoming>
@@ -295,22 +295,24 @@ It was a whole workflow until it wasn't. The tour ran here, asked the student wh
         <bpmn:incoming>r3</bpmn:incoming>
         <bpmn:outgoing>m3</bpmn:outgoing>
       </bpmn:exclusiveGateway>
-      <bpmn:serviceTask id="W_edit" name="Install the editor&#10;setup-editors">
-        <bpmn:documentation>workflows/bootstrap/skills/setup-editors/SKILL.md — Zettlr, and the student opening one of their own files in it. The whole of Installation 2.
+      <bpmn:serviceTask id="W_edit" name="Install the editors&#10;setup-editors">
+        <bpmn:documentation>workflows/bootstrap/skills/setup-editors/SKILL.md — Zettlr and Camunda Modeler, and the student opening a real file in each. The whole of Installation 2.
 
-Camunda Modeler used to be installed here and is not any more: it moved to the workflows unit, which installs it in the week it is first used, with a diagram in hand as the reason. See workflows/diagram/STATUS.md.
+Camunda belongs here because Installation 2 is the class session about workflows: the diagram they open at the end is that day's material, and it is the setup they have just been through, drawn. It was taken out of setup once, when it sat on day one and was an application first opened weeks later. The session order changed and the reason went with it.
 
-Installing is only half of it. The other half is watching the student double-click a real file and open it, which is the only thing that establishes they can use it — and which no program can check, so the skill records what it saw and the setup check reports that line as CONFIRMED rather than PASS.</bpmn:documentation>
+Installing is only half of it. The other half is watching the student double-click a real file of each kind and open it. That is the only thing that establishes they can use these, and no program can check it, so the skill records what it saw and the setup check reports those lines as CONFIRMED rather than PASS.
+
+THE DIAGRAM CARRIES AN EXTRA OBLIGATION, and it is the reason this step is not just "install two things". Nothing claims .bpmn on Windows and no installer can, because Camunda ships a zip; the agent cannot register it either, since its own HKCU writes are redirected. So the STUDENT claims the type, by browsing to C:\Program Files\Camunda Modeler — which is possible only because the install names that location instead of letting winget choose. Skipped, the student's only route to a diagram next week is an executable path nobody remembers.</bpmn:documentation>
         <bpmn:incoming>m3</bpmn:incoming>
         <bpmn:outgoing>w14</bpmn:outgoing>
       </bpmn:serviceTask>
-      <bpmn:scriptTask id="Prog_w4" name="Check the editor&#10;check-setup.mjs">
-        <bpmn:documentation>Expects "reached 6 of 7 — Editors". Two checks: that Zettlr is on disk, and that the skill recorded watching the student open a file in it.</bpmn:documentation>
+      <bpmn:scriptTask id="Prog_w4" name="Check the editors&#10;check-setup.mjs">
+        <bpmn:documentation>Expects "reached 6 of 7 — Editors". Two checks, and both are attested rather than established: that the skill recorded watching the student open a file in Zettlr, and a diagram in Camunda. Nothing is looked for on disk — the sandbox this runs in cannot read where either application lands.</bpmn:documentation>
         <bpmn:incoming>w14</bpmn:incoming>
         <bpmn:outgoing>w15</bpmn:outgoing>
       </bpmn:scriptTask>
-      <bpmn:exclusiveGateway id="G_w4" name="editor&#10;installed?" default="e2">
-        <bpmn:documentation>Here so that "installed and checked" is not claimed when the editor is not installed. Without this the run ended there either way, which was false.
+      <bpmn:exclusiveGateway id="G_w4" name="editors&#10;installed?" default="e2">
+        <bpmn:documentation>Here so that "installed and checked" is not claimed when an editor is not installed. Without this the run ended there either way, which was false.
 
 The "no" branch joins the same end as the earlier checkpoints because it is the same kind of thing: a checkpoint that did not pass. This phase blocks like the rest.
 

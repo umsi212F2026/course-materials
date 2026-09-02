@@ -24,33 +24,42 @@ repository rather than this one, and the skill takes a data directory like every
 Whether that is this skill widened or a second one beside it is open. Deferred deliberately —
 the first-day bootstrap comes first.
 
-## This unit owes an install
+## This unit does not install Camunda, and inherits a machine that has it
 
-**Camunda Modeler is no longer installed on day one.** It was, and it did not earn the place:
-an application first opened in this unit, installed a week or more earlier, alongside a
-screenshot of a diagram nobody had a reason to read yet. It belongs here, in the week it is
-first used, with a diagram in hand as the reason.
+**Camunda Modeler is installed in Installation 2**, by `setup-editors`, along with Zettlr. It
+was moved out of setup once and moved back when the session order changed: Installation 2 is now
+the class session about workflows, so the diagram opened at the end of it is that day's material
+rather than an application installed weeks before anyone has a use for it. **Do not add an
+install step here**, and do not write skills that check for one — by the time anything in this
+unit runs, a student who finished setup has it.
 
-So this unit gains a step that installs it. What the bootstrap work already established, so it
-does not have to be learned twice:
+What that leaves this unit holding, so none of it is learned twice:
 
 - **Pinned to 5.50.1**, from
   `https://github.com/camunda/camunda-modeler/releases/download/v5.50.1/` —
-  `camunda-modeler-5.50.1-mac-arm64.dmg`, `-mac-x64.dmg`, `-win-x64.zip`. Pinned rather than
-  "latest" because `api.github.com` allows sixty requests an hour from one address and a lab
-  section shares one.
-- **There is no Windows installer**, only a zip holding a portable `.exe`. Nothing registers
-  `.bpmn` on Windows, so a student who double-clicks a diagram is offered Notepad and a browser
-  with Camunda not in the list. That is true however it is installed, including through
-  `winget`, whose manifest is the same zip. **So the skill opens diagrams for them, by path.**
-- **On Windows, install to `%USERPROFILE%\Programs`**, never under `AppData` — see the rule in
-  `setup-editors`, which explains why, and `check-setup.mjs`, which looks in the same place.
-- On macOS a `.dmg` into `/Applications` is enough; `.bpmn` has no declared file type there, so
-  Camunda becomes its only claimant and wins by default.
+  `camunda-modeler-5.50.1-mac-arm64.dmg`, `-mac-x64.dmg`, `-win-x64.zip`; on Windows through
+  `winget` as `Camunda.Modeler`, whose manifest is that same zip. Pinned rather than "latest"
+  because `api.github.com` allows sixty requests an hour from one address and a lab section
+  shares one.
+- **No installer registers `.bpmn` on Windows**, because there is no Windows installer — only a
+  zip holding a portable `.exe`. **`setup-editors` has the student claim the type by hand**,
+  browsing to the path above, and does not pass the phase until a double-click opens the
+  diagram. So a student who finished Installation 2 can open a `.bpmn` by double-clicking it on
+  either platform, and skills here can say "open this diagram" rather than opening it for them.
+  Opening by path stays the fallback for a machine where it did not take.
+- **On Windows it is at `C:\Program Files\Camunda Modeler\Camunda Modeler.exe`**, a constant,
+  and skills here should name it the way `setup-repos` names git and Node. It takes a
+  `--location` to get there, because a `winget` portable left to itself unpacks into a
+  `WinGet\Packages` directory named for the package source — unnameable in advance, and
+  unreachable by the agent when it goes per-user under `%LOCALAPPDATA%`. Use the full path
+  rather than `PATH`, which does not update inside a running session.
+- On macOS a `.dmg` into `/Applications` is enough, and double-clicking a diagram works —
+  `.bpmn` has no declared file type there, so Camunda becomes its only claimant and wins by
+  default.
 
-`.si212-editors.json` used to carry a `camunda` key recording that a student had opened a
-diagram. The setup check no longer reads it. If this unit wants the same evidence, it is a
-reasonable shape to reuse.
+`.si212-editors.json` carries a `camunda` key recording that the student was watched opening a
+diagram, and `check-setup.mjs` reads it as an attested line. If this unit wants evidence of its
+own, that is the shape to follow.
 
 ## What this means for checks and edits
 

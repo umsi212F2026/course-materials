@@ -26,7 +26,7 @@ else. Two things survive it, and one of them corrupts the result:
 | `<parent>/.si212-editors.json`      | deletes — see below                                               |
 | the SI 212 block in `AGENTS.md`     | removes                                                           |
 | git, Node                           | **leaves** — phase 2 passes free on every run after the first     |
-| Zettlr and its settings             | **leaves** — phase 6, same; see below                             |
+| Zettlr, Camunda, their settings     | **leaves** — phase 6, same; see below                             |
 | `~/.codex/config.toml`, `auth.json` | **leaves** — prompt steps 3–5 are U-M GPT's part, not this one's  |
 | the Codex project itself            | leaves, and the folder path with it, so the project keeps working |
 
@@ -55,6 +55,19 @@ plutil -p ~/Library/Preferences/com.apple.LaunchServices/com.apple.launchservice
 
 No output means nobody has chosen, and whichever application registered the extension last is
 what opens it — which is the state a student starts in, and the reason the step exists.
+
+**On Windows the `.bpmn` association matters more, because that step now has to take.** The
+student's choice lands in `HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.bpmn`,
+which no folder reset touches. Left there, the next run's step 5 passes on a double-click nobody
+in that run set up — and unlike Markdown there is no second application to make the omission
+visible. Remove the key when the association is what is under test:
+
+```powershell
+Remove-Item -Recurse "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.bpmn"
+```
+
+Nothing to reset on macOS: `.bpmn` has no other claimant there, so Camunda wins by default and
+there is no choice recorded.
 
 ## Levels
 
@@ -108,9 +121,9 @@ second one.
 
    **`<parent>/.si212-editors.json` goes with them.** It is not a clone, so a folder reset
    leaves it, and it holds `setup-editors`' record that it watched the student open a file in
-   Zettlr. Left in place, the next run's setup check reports that line `CONFIRMED` without
-   anyone having opened anything — a pass carried over from a previous student on a previous
-   day.
+   each editor. Left in place, the next run's setup check reports both editors `CONFIRMED`
+   without anyone having opened anything — a pass carried over from a previous student on a
+   previous day.
 
 6. **Strip the SI 212 block from `~/.codex/AGENTS.md`**, in place: from the `# SI 212` heading
    to the next top-level heading or the end of the file. Leave everything else exactly as it
@@ -157,8 +170,8 @@ in, exactly like `~/.codex/AGENTS.md`.
 through `probe5` inside the workspace. They are clones, so a later `ls` of `<parent>` will not
 look like a clean start and the setup check may find more than it expects. Delete them by name.
 
-**What still survives on Windows**, and therefore what the next run does not test: git and Node
-and Zettlr, `%USERPROFILE%\.codex\` — the same list as macOS, for the same reasons.
+**What still survives on Windows**, and therefore what the next run does not test: git and Node,
+Zettlr and Camunda, `%USERPROFILE%\.codex\` — the same list as macOS, for the same reasons.
 
 ## Rules
 

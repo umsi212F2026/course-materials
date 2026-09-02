@@ -37,7 +37,7 @@ there is no way back to it, and the student has nothing left to paste into Insta
 each report is collected while it is still the truth, and only then does the next session start.
 
 Say that, in one sentence, when you ask. "Paste this into Installation 1 first — once we start
-on the editor this report changes." A student who understands why will do it; one told merely
+on the editors this report changes." A student who understands why will do it; one told merely
 to submit first will offer to do it afterwards, which is the one thing that does not work.
 
 ## Where to read the other skills from
@@ -158,10 +158,10 @@ you need to read what they tell you.
 
 Then close the session out — **Installation 1** — before anything else happens.
 
-## Installation 2 — an editor they can open their own files in
+## Installation 2 — editors they can open their own files in
 
-3. **`workflows/bootstrap/skills/setup-editors/SKILL.md`** — Zettlr, and the student opening a
-   file in it. Should reach **6 of 7, Editors**.
+3. **`workflows/bootstrap/skills/setup-editors/SKILL.md`** — Zettlr and Camunda Modeler, and the
+   student opening a real file in each. Should reach **6 of 7, Editors**.
 
 This blocks like everything else: a student who cannot open their own files can watch an agent
 describe their work but never read or write it, which is not ready to start the course.
@@ -229,11 +229,11 @@ that is not on their machine.
 Once it is submitted, the next session is available and the decision is theirs.
 
 **Ask plainly and take no for an answer.** "That's Installation 1 done and submitted. We can
-carry on to the editor now, or leave it for the next class." Then do what they say. A student
+carry on to the editors now, or leave it for the next class." Then do what they say. A student
 who stops here has lost nothing and is exactly where the course expects them to be.
 
-**Say what the next one costs before they choose**, in a sentence. The editor is a download and
-a couple of clicks. Installation 3 is not: it needs a GitHub account with two-factor
+**Say what the next one costs before they choose**, in a sentence. The editors are two
+downloads and a couple of clicks. Installation 3 is not: it needs a GitHub account with two-factor
 authentication on a phone, and starting it at the end of a long afternoon is how a student ends
 up half-way through an account signup with the class over.
 

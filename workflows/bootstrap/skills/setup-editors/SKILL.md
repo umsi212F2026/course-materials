@@ -1,27 +1,25 @@
 ---
 name: setup-editors
-description: Install Zettlr, watch the student open a real file in it, and help them make it the application that opens .md files. The whole of Installation 2, the second of the three setup sessions, and required like every other phase — without an editor a student cannot read or write their own work.
+description: Install Zettlr and Camunda Modeler, watch the student open a real file in each, and get .md opening in Zettlr and .bpmn opening in Camunda. The whole of Installation 2, the second of the three setup sessions, and required like every other phase — without an editor a student cannot read or write their own work.
 ---
 
-# Set up the editor
+# Set up the editors
 
 The **Editors** phase, sixth of seven, and the whole of **Installation 2** — the second of the
 three setup sessions, on its own class day. Nothing else runs today.
 
-One application, and it matters more than it looks. `study` has the student writing `notes.md`
-while the agent prompts. Without it, a student can watch an agent describe their own work and
+Two applications, and they matter more than they look. `study` has the student writing
+`notes.md` while the agent prompts, and the class session this runs in is the one about
+workflows — so the diagram at the end of it is the day's material rather than a file produced
+to be screenshotted. Without these, a student can watch an agent describe their own work and
 never read or write it — so this is not the optional trimming it might seem.
 
-**Installing it is half the phase.** The other half is watching the student open a real file in
-it, which is the only thing that establishes they can actually use it.
-
-**The BPMN editor is not installed here.** Camunda Modeler belongs to the workflows unit, which
-installs it in the week it is first used, with a diagram in hand as the reason. Do not install
-it today and do not offer to.
+**Installing them is half the phase.** The other half is watching the student open a real file
+in each, which is the only thing that establishes they can actually use them.
 
 ## Operates on
 
-You install one application, and you write one small file — `<parent>/.si212-editors.json` —
+You install two applications, and you write one small file — `<parent>/.si212-editors.json` —
 recording what you watched the student do.
 
 ## What you do, in order
@@ -32,10 +30,12 @@ download, install and open before you speak, and let the message be the end of t
 a short restatement after a quoted block below replaces it — the student gets the restatement
 and not the block, and the block is where the path is.
 
-**1. Say what it is for, in a sentence,** before installing anything. Zettlr is for reading and
-writing their own notes and goals directly, rather than only ever seeing them through an agent.
+**1. Say what these are for, in two sentences,** before installing anything. Zettlr is for
+reading and writing their own notes and goals directly, rather than only ever seeing them
+through an agent. Camunda Modeler is for the workflow diagrams this course is built out of,
+starting with the one they open at the end of today.
 
-**2. Install Zettlr.** Download and install; they open it in step 3.
+**2. Install Zettlr.** Download and install; they open it in step 4.
 
 **Say what you are about to do in one sentence, then do it. Do not ask.** "Installing Zettlr
 now" — not _may I install Zettlr?_ The machine puts up its own prompt if permission is needed,
@@ -59,7 +59,8 @@ version and take the equivalently-named asset. Say what you asked and what you f
 not assert a cause. Do not reach for the API first: it allows sixty requests an hour from one
 address, and a room full of students shares one.
 
-**Neither platform should need an administrator password.**
+**Zettlr should not need an administrator password on either platform.** Camunda on Windows
+may; step 3 says why.
 
 **But a prompt is not a blocked machine.** Three situations, and only the last stops the day:
 
@@ -74,6 +75,52 @@ address, and a room full of students shares one.
   students think they broke something.
 - **A password they do not have.** Stop; see the rule below. The distinction is whether the
   password exists and they know it, not whether a box appeared.
+
+**3. Install Camunda Modeler**, pinned to 5.50.1.
+
+**On Windows, with `winget`, machine-wide, and tell it where to put things:**
+
+```powershell
+winget install --id Camunda.Modeler --version 5.50.1 --scope machine --location "C:\Program Files\Camunda Modeler" --silent --accept-package-agreements --accept-source-agreements
+```
+
+**This is the only install in the course that names a location, and the reason is that Camunda
+ships no installer** — the package is a zip holding a portable `.exe`. git and Node need no such
+flag because their installers already land in `Program Files` on their own. Left to itself with
+a portable, `winget` unpacks into
+`…\WinGet\Packages\Camunda.Modeler_Microsoft.Winget.Source_8wekyb3d8bbwe\` — a path carrying the
+package source, which no file can state in advance, and which is the shape that broke Node on
+2026-08-31. Naming the location buys Camunda what git and Node get for free.
+
+The zip has no wrapping folder — measured 2026-09-01, its first entry is `Camunda Modeler.exe` —
+so what lands is exactly `C:\Program Files\Camunda Modeler\Camunda Modeler.exe`. **That is a
+constant, like `C:\Program Files\Git\cmd\git.exe`.** Step 5 hands it to the student to point
+Windows at, and runs it directly if it has to. Do not go searching for it.
+
+**`--scope machine` belongs with it.** `Program Files` needs the elevation it asks for, and a
+per-user portable would land under `%LOCALAPPDATA%`, where your sandbox can neither read nor
+execute what you just installed — the rule `setup-repos` states, and the reason it says never
+`--scope user`.
+
+**The flags are read off the package manifest and that rule rather than measured on a student
+machine**, so say what actually happened the first time you run this. If `winget` rejects the
+combination, stop and say so — do not retry without them. A per-user Camunda in a folder nobody
+can name looks like success and fails step 5.
+
+**A Windows administrator prompt may appear here, and may not. Say so before installing, and do
+not promise it.** Machine scope needs the right; whether a box appears depends on whether the
+sandbox already holds it, and both outcomes are normal. This is the same prerequisite
+`setup-repos` states for git and Node, checked in the bootstrap prompt before anything is
+downloaded — so a student who has no such password is the loaner conversation, not a reason to
+retry per-user.
+
+**On macOS**, download `camunda-modeler-5.50.1-mac-arm64.dmg` (Apple Silicon) or
+`camunda-modeler-5.50.1-mac-x64.dmg` (Intel) from
+`https://github.com/camunda/camunda-modeler/releases/download/v5.50.1/`, mount it, and copy the
+one application into `/Applications`. Same 404 rule as Zettlr, against `camunda/camunda-modeler`.
+
+The "Apple cannot check it" dialog above comes again for this one, at its first launch in step
+5, and it is the same right-click **Open**.
 
 ### On Windows, install with `winget` and nothing else
 
@@ -92,14 +139,20 @@ machine where `winget install` works perfectly. Run the install command; let it 
 way, so `HKCU:\Software\Classes`, `assoc` and `ftype` are all equally useless however carefully
 aimed. Do not try. Zettlr's own installer registers `.md` perfectly well when `winget` runs it,
 because that runs outside the package; if the type still opens something else, the student sets
-it by hand in step 3.
+it by hand in step 4.
+
+**No installer registers `.bpmn` on Windows, and you cannot register it either.** Camunda's
+package is a zip, so nothing runs that would claim the type, and your own `HKCU` writes go to
+the package store like every other one. **So the student claims it, from Explorer or Settings,
+and that is step 5.** It is the one association in this phase that has to take, because unlike
+Markdown there is no second application that would open the file anyway.
 
 **If the install itself fails**, say what it said and stop. Do not download the installer
 instead.
 
 None of this applies to macOS, where you install onto the real machine directly.
 
-**3. Have them open the file themselves, by double-clicking it.** From here on their notes and
+**4. Have them open the file themselves, by double-clicking it.** From here on their notes and
 goals are `.md`, and this is the first file in the course they handle without an agent in
 between — so the move is theirs, and it is the ordinary one they already know.
 
@@ -156,21 +209,95 @@ That screenshot finishes the step. Then say, in a sentence, that double-clicking
 will still open the other application and that they can ask for help changing it any time —
 otherwise they meet it again next week believing it was settled today.
 
-**4. Record what you saw.** Write `<parent>/.si212-editors.json`, creating or replacing it:
+**5. Have them open the diagram themselves — which on Windows means claiming `.bpmn` first.**
+The file is `workflows/bootstrap/bootstrap.bpmn` in their `course-materials` clone: the setup
+they have just been through, drawn, which is what makes it a diagram they can read rather than
+one they are shown.
+
+**Why the association is the step rather than a nicety.** After today a diagram is something
+they meet on their own. If double-clicking one does nothing, the only way in is an executable
+path inside `Program Files` — and nobody remembers that a week later. Doing it once now, with
+you supplying the path, is exactly what means they never need the path again.
+
+**On macOS there is nothing to set**: `.bpmn` has no other claimant, so Camunda wins by default.
+Send this, and send nothing after it:
+
+> Open `<parent>/course-materials/workflows/bootstrap` in Finder and double-click
+> `bootstrap.bpmn`. Send me a screenshot of whatever opens.
+
+**If nothing opens on a Mac, it is Gatekeeper at first launch** — the same dialog as Zettlr's,
+and the most common way a student decides an install failed. Right-click **Camunda Modeler** in
+Applications, **Open**, **Open** again, then double-click the diagram once more.
+
+**On Windows they claim the type first, and Camunda will not be in the list** — a zip has no
+installer to register it, so the offer is Notepad and a browser. That leaves the browse route,
+which works only because step 3 put the application somewhere a person can navigate to:
+
+> Right-click `bootstrap.bpmn` → **Open with** → **Choose another app**. Camunda will not be
+> listed, so scroll down for **Look for another app on this PC** and choose
+> `C:\Program Files\Camunda Modeler\Camunda Modeler.exe`. Tick **Always use this app** if you
+> are offered it — on newer Windows, choosing it this way sets it by itself. Then double-click
+> `bootstrap.bpmn` and send me a screenshot.
+
+**If it opened but the association did not take** — the next double-click offers the list again
+— **send them to Settings, which has not moved between builds:**
+
+> **Settings → Apps → Default apps**, type `.bpmn` into **Set a default for a file type**, and
+> choose Camunda Modeler. Then double-click `bootstrap.bpmn` and send me a screenshot.
+
+**Look at the screenshot yourself**, the way you looked at the first one: the diagram open in
+Camunda, not a file browser, not an error, not an empty editor.
+
+**If Camunda does not open at all, establish which of two things failed before doing anything
+else.** Open it yourself, by path:
+
+- macOS —
+  `open -a "Camunda Modeler" "<parent>/course-materials/workflows/bootstrap/bootstrap.bpmn"`
+- Windows —
+
+  ```powershell
+  Start-Process "C:\Program Files\Camunda Modeler\Camunda Modeler.exe" -ArgumentList "<parent>\course-materials\workflows\bootstrap\bootstrap.bpmn"
+  ```
+
+  **The full path, not the bare name.** `PATH` does not update in a session that is already
+  running and yours started before the install — the same rule `setup-repos` states for git and
+  Node.
+
+**If that opens it, the install is fine and the association is what failed.** Say so in those
+words and work the association with them. **If it does not open it either**, the install did not
+land where it was told: say what happened and stop. Do not go hunting under `AppData` or
+`WinGet\Packages` for a copy to run instead — a Camunda the student cannot find is the outcome
+step 3 exists to prevent.
+
+**What this step needs is the diagram opening when they double-click it, and that is stricter
+than the Markdown association above on purpose.** A `.md` that opens in the wrong editor still
+opens, and Markdown has a dozen claimants; a `.bpmn` claimed by nothing does not open at all.
+If you cannot get there, write no record for Camunda and say plainly what is outstanding — an
+instructor is in the room today, which is the cheapest hour in the term to fix it.
+
+**6. Record what you saw.** Write `<parent>/.si212-editors.json`, creating or replacing it:
 
 ```json
-{ "zettlr": { "opened": "learning-topics/setup.md", "on": "YYYY-MM-DD" } }
+{
+  "zettlr": { "opened": "learning-topics/setup.md", "on": "YYYY-MM-DD" },
+  "camunda": { "opened": "workflows/bootstrap/bootstrap.bpmn", "on": "YYYY-MM-DD" }
+}
 ```
 
-**Write it only if you actually saw the screenshot.** The setup check reads this file and
-reports that line as `CONFIRMED` rather than `PASS`, because it is your word rather than
-something it established. Writing an entry for something you did not see puts a false statement
-into a report an instructor uses to decide who needs help.
+**Only write an entry for a screenshot you actually saw.** The setup check reads this file and
+reports those two lines as `CONFIRMED` rather than `PASS`, because they are your word rather
+than something it established. Writing an entry for something you did not see puts a false
+statement into a report an instructor uses to decide who needs help.
 
-**If they never got it open, write nothing** and say so. A missing file is the honest answer,
-and the phase not passing is the correct outcome.
+**The Camunda entry means they double-clicked the diagram and it opened**, not that you opened
+it for them. If you had to launch it by path, the install works and the association does not,
+and that is not what this line claims.
 
-**5. Check the phase.** Run `node course-materials/workflows/bootstrap/tools/check-setup.mjs`
+**If one editor worked and the other did not, write the one that did and leave the other out.**
+The phase does not pass on half, which is the correct outcome, and the report then says which
+half it was. If neither opened, write nothing and say so — a missing file is the honest answer.
+
+**7. Check the phase.** Run `node course-materials/workflows/bootstrap/tools/check-setup.mjs`
 and read the last line it prints.
 
 - **`Reached 6 of 7 — Editors`** — hand back to `setup-workspace`.
@@ -190,7 +317,8 @@ when they are not — a machine that half-works is worse than one that visibly d
 **Do not substitute a different application.** If Zettlr will not install, the student does not
 get a Markdown editor today. They do not get Obsidian, or a browser-based editor, or TextEdit
 proposed as an equivalent — a student set up differently from everyone else is a support
-problem that surfaces in week five, when nobody remembers this conversation.
+problem that surfaces in week five, when nobody remembers this conversation. The same goes for
+Camunda: no other modeller, and no web page that draws the diagram instead.
 
 **If an install needs an administrator password the student does not have, stop and say so.**
 That is a loaner-laptop conversation with their instructor, not something to work around.
@@ -201,8 +329,8 @@ with them, in plain words, as many times as it takes.
 
 ## When you cannot finish
 
-Say what failed and show the error, and have them submit the setup check output to the
-**Installation 2** assignment on Canvas.
+Say which application failed and show the error, and have them submit the setup check output to
+the **Installation 2** assignment on Canvas.
 
 Be accurate about where it leaves them, because the gap is real but narrow: everything the
 agent does for them works, and what they cannot yet do is open their own files. That is worth
@@ -214,3 +342,5 @@ their instructor knowing today rather than in week three.
 - [`setup-workspace`](workflows/bootstrap/skills/setup-workspace/SKILL.md) — skill
 - [`setup-repos`](workflows/bootstrap/skills/setup-repos/SKILL.md) — skill
 - [`check-setup.mjs`](workflows/bootstrap/tools/check-setup.mjs) — tool
+- [`bootstrap.bpmn`](workflows/bootstrap/bootstrap.bpmn) — diagram, the one they open in
+  Camunda
