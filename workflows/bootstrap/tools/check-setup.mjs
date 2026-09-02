@@ -317,7 +317,9 @@ const opened = (label, key, what) =>
       try {
         record = JSON.parse(readFileSync(verdicts, "utf8"));
       } catch {
-        throw new Error(`${verdicts} is not valid JSON — re-run setup-editors`);
+        throw new Error(
+          `${verdicts} is not valid JSON — it was probably written twice; rewrite it as one object`,
+        );
       }
       const entry = record[key];
       if (!entry?.opened) notYet(`not confirmed yet — ${what}`);

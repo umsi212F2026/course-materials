@@ -102,10 +102,9 @@ per-user portable would land under `%LOCALAPPDATA%`, where your sandbox can neit
 execute what you just installed — the rule `setup-repos` states, and the reason it says never
 `--scope user`.
 
-**The flags are read off the package manifest and that rule rather than measured on a student
-machine**, so say what actually happened the first time you run this. If `winget` rejects the
-combination, stop and say so — do not retry without them. A per-user Camunda in a folder nobody
-can name looks like success and fails step 5.
+**Measured 2026-09-02 on Windows 11**: the combination is accepted and the executable lands at
+that path. If a machine ever rejects it, stop and say so — do not retry without the flags. A
+per-user Camunda in a folder nobody can name looks like success and fails step 5.
 
 **A Windows administrator prompt may appear here, and may not. Say so before installing, and do
 not promise it.** Machine scope needs the right; whether a box appears depends on whether the
@@ -234,10 +233,12 @@ installer to register it, so the offer is Notepad and a browser. That leaves the
 which works only because step 3 put the application somewhere a person can navigate to:
 
 > Right-click `bootstrap.bpmn` → **Open with** → **Choose another app**. Camunda will not be
-> listed, so scroll down for **Look for another app on this PC** and choose
-> `C:\Program Files\Camunda Modeler\Camunda Modeler.exe`. Tick **Always use this app** if you
-> are offered it — on newer Windows, choosing it this way sets it by itself. Then double-click
-> `bootstrap.bpmn` and send me a screenshot.
+> listed, so click **Choose an app on your PC** — older builds call it **Look for another app on
+> this PC** — and pick `C:\Program Files\Camunda Modeler\Camunda Modeler.exe`. Tick **Always use
+> this app** if you are offered it. Then double-click `bootstrap.bpmn` and send me a screenshot.
+
+That is the whole of it on Windows 11 — measured 2026-09-02, where the dialog said **Choose an
+app on your PC** and picking the executable set the association without a separate checkbox.
 
 **If it opened but the association did not take** — the next double-click offers the list again
 — **send them to Settings, which has not moved between builds:**
@@ -284,6 +285,14 @@ instructor is in the room today, which is the cheapest hour in the term to fix i
 }
 ```
 
+**One file, one JSON object, written once — after both screenshots, not after each.** Writing
+it when Zettlr opened and again when Camunda did leaves two objects end to end, which is not
+JSON, and the check then fails **both** lines for two editors that both worked. Measured
+2026-09-02, on the first machine ever to run this step.
+
+**If the file already exists** — a resumed session, or a second attempt — **read it, change the
+object, and write the whole thing back.** Never append to it.
+
 **Only write an entry for a screenshot you actually saw.** The setup check reads this file and
 reports those two lines as `CONFIRMED` rather than `PASS`, because they are your word rather
 than something it established. Writing an entry for something you did not see puts a false
@@ -301,6 +310,10 @@ half it was. If neither opened, write nothing and say so — a missing file is t
 and read the last line it prints.
 
 - **`Reached 6 of 7 — Editors`** — hand back to `setup-workspace`.
+- **`is not valid JSON`** — you wrote the record twice, or appended to it. Rewrite it as one
+  object holding both entries and run the check again. This is the one failure here you repair
+  rather than report: it is a file you got wrong a minute ago, not the machine disagreeing with
+  you, and nothing about the student's setup changes.
 - **Anything else** — stop, and show the student the output as it came out.
 
 **Never say what the check would have said.** The number is the one thing here that is not your
