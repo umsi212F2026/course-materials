@@ -233,9 +233,16 @@ Send this, and send nothing after it:
 and the most common way a student decides an install failed. Right-click **Camunda Modeler** in
 Applications, **Open**, **Open** again, then double-click the diagram once more.
 
-**On Windows they claim the type first, and Camunda will not be in the list** — a zip has no
-installer to register it, so the offer is Notepad and a browser. That leaves the browse route,
-which works only because step 3 put the application somewhere a person can navigate to:
+**On Windows, check the executable is there before you send them anywhere** —
+`Test-Path "C:\Program Files\Camunda Modeler\Camunda Modeler.exe"`. If it is not, step 3 did not
+happen: go and do it, then come back. A missing application here is a step you skipped, not an
+install that failed, and it is only worth reporting as a failure once step 3 has actually run.
+Sending a student to browse to something that was never installed costs them the trip and reads
+as their machine being broken.
+
+**Then they claim the type, and Camunda will not be in the list** — a zip has no installer to
+register it, so the offer is Notepad and a browser. That leaves the browse route, which works
+only because step 3 put the application somewhere a person can navigate to:
 
 > Right-click `bootstrap.bpmn` → **Open with** → **Choose another app**. Camunda will not be
 > listed, so click **Choose an app on your PC** — older builds call it **Look for another app on
