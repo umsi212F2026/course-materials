@@ -146,8 +146,13 @@ the package store like every other one. **So the student claims it, from Explore
 and that is step 5.** It is the one association in this phase that has to take, because unlike
 Markdown there is no second application that would open the file anyway.
 
-**If the install itself fails**, say what it said and stop. Do not download the installer
-instead.
+**If `winget` comes back "not recognized", run the same command again with escalated
+permissions** — it is an alias under `%LOCALAPPDATA%`, which your sandbox refuses to read, and
+that refusal reaches PowerShell as "not recognized" rather than as a denial. `setup-repos` has
+the full statement. One retry, then believe it.
+
+**If the install fails for any other reason**, say what it said and stop. Do not download the
+installer instead.
 
 None of this applies to macOS, where you install onto the real machine directly.
 

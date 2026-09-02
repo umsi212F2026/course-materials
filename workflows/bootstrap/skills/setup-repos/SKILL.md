@@ -140,6 +140,16 @@ machine where `winget install` works perfectly. Believe it and you will fall bac
 download-and-run install that silently installs nothing. Run the install command and let it
 report. Do not assert a cause.
 
+**If the install itself says `winget` is not recognized, run it again with escalated
+permissions.** `winget` is an alias under `%LOCALAPPDATA%`, so it is inside the one zone your
+sandbox refuses — and a refused read surfaces in PowerShell as _"not recognized"_ rather than as
+a permission error, which is why it does not look like what it is. The command works when it
+escapes the sandbox, which is how every install in this course has ever run. Measured
+2026-09-02: the identical command failed, then succeeded unchanged on an escalated retry.
+
+**So ask for the escalation rather than reporting a failed install.** One retry, not a loop. If
+it fails escalated too, that is a real failure and the rules below apply.
+
 Reference: Microsoft, [_Understanding how packaged desktop apps run on Windows_](https://learn.microsoft.com/en-us/windows/msix/desktop/desktop-to-uwp-behind-the-scenes)
 — see "AppData operations on Windows 10, version 1903 and later" and the registry table.
 
