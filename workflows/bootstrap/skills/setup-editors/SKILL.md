@@ -106,6 +106,13 @@ execute what you just installed — the rule `setup-repos` states, and the reaso
 that path. If a machine ever rejects it, stop and say so — do not retry without the flags. A
 per-user Camunda in a folder nobody can name looks like success and fails step 5.
 
+**If `winget` answers "already installed" and the executable is not at that path, run the same
+command again with `--force`.** A record without files is what a half-finished install leaves,
+and `winget` will not act on a package it believes is present — so it reports success, installs
+nothing, and step 5 then sends a student browsing to a folder that is not there. `--force` is
+right here and nowhere else in this course: it repairs a record rather than overriding a
+decision.
+
 **A Windows administrator prompt may appear here, and may not. Say so before installing, and do
 not promise it.** Machine scope needs the right; whether a box appears depends on whether the
 sandbox already holds it, and both outcomes are normal. This is the same prerequisite

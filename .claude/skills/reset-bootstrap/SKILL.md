@@ -62,7 +62,18 @@ which no folder reset touches. Left there, the next run's step 5 passes on a dou
 in that run set up — and unlike Markdown there is no second application to make the omission
 visible. Remove the key when the association is what is under test:
 
-**It lands in one of two places, so clear both and then confirm.** Choosing among applications
+**Uninstalling Camunda takes an elevated shell, and a partial one is worse than none.**
+`setup-editors` installs it `--scope machine`, so a `winget uninstall` from an ordinary
+PowerShell removes the files and leaves the package record. The next install then answers
+"already installed", does nothing, and the run fails at step 5 in a way that looks like a bad
+install path. Measured 2026-09-02, which is how the evening ended. Do it elevated and confirm:
+
+```powershell
+winget uninstall --id Camunda.Modeler --scope machine
+winget list --id Camunda.Modeler
+```
+
+**The `.bpmn` association lands in one of two places, so clear both and then confirm.** Choosing among applications
 Windows already knows writes a `UserChoice` under `FileExts`; browsing to an executable for an
 extension nothing has ever claimed — which is what `.bpmn` is — writes the older per-user
 association under `Software\Classes` instead. Measured 2026-09-02: `FileExts\.bpmn` did not
