@@ -62,9 +62,22 @@ which no folder reset touches. Left there, the next run's step 5 passes on a dou
 in that run set up — and unlike Markdown there is no second application to make the omission
 visible. Remove the key when the association is what is under test:
 
+**It lands in one of two places, so clear both and then confirm.** Choosing among applications
+Windows already knows writes a `UserChoice` under `FileExts`; browsing to an executable for an
+extension nothing has ever claimed — which is what `.bpmn` is — writes the older per-user
+association under `Software\Classes` instead. Measured 2026-09-02: `FileExts\.bpmn` did not
+exist on a machine where the association was demonstrably working, so do not read its absence as
+evidence of anything.
+
 ```powershell
-Remove-Item -Recurse "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.bpmn"
+Remove-Item -Recurse -ErrorAction SilentlyContinue "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.bpmn"
+Remove-Item -Recurse -ErrorAction SilentlyContinue "HKCU:\Software\Classes\.bpmn"
+Remove-Item -Recurse -ErrorAction SilentlyContinue "HKCU:\Software\Classes\Applications\Camunda Modeler.exe"
 ```
+
+**Then check, rather than assuming the removals covered it** — `cmd /c assoc .bpmn` should say
+the file association is not found. If it still names something, that is what the next run will
+pass on.
 
 Nothing to reset on macOS: `.bpmn` has no other claimant there, so Camunda wins by default and
 there is no choice recorded.

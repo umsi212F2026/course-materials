@@ -235,13 +235,25 @@ which works only because step 3 put the application somewhere a person can navig
 > Right-click `bootstrap.bpmn` → **Open with** → **Choose another app**. Camunda will not be
 > listed, so click **Choose an app on your PC** — older builds call it **Look for another app on
 > this PC** — and pick `C:\Program Files\Camunda Modeler\Camunda Modeler.exe`. Tick **Always use
-> this app** if you are offered it. Then double-click `bootstrap.bpmn` and send me a screenshot.
+> this app** if the dialog offers it. Camunda will open the diagram.
+>
+> Now **close Camunda**, and double-click `bootstrap.bpmn` again. Send me a screenshot of what
+> happens this time.
 
-That is the whole of it on Windows 11 — measured 2026-09-02, where the dialog said **Choose an
-app on your PC** and picking the executable set the association without a separate checkbox.
+**The second double-click is the evidence, and it is not the same event as the first.** Choosing
+an application in that dialog opens the file once whether or not it also sets the default, so a
+screenshot taken while Camunda is still up from choosing it proves nothing about next week. Ask
+for it with the app closed, and say in a few words why — otherwise it reads as not believing
+them.
 
-**If it opened but the association did not take** — the next double-click offers the list again
-— **send them to Settings, which has not moved between builds:**
+**Measured 2026-09-02**: the dialog said **Choose an app on your PC**, picking the executable did
+set the default, and a fresh double-click afterwards opened the diagram. Two events all the
+same, because the screenshot has to show the association working and one taken while Camunda is
+still up from choosing it cannot — the two look identical on screen.
+
+**If the dialog comes back instead of the diagram, the choice did not stick.** Expect that
+rather than treating it as a fault, and send them to Settings, which has not moved between
+builds:
 
 > **Settings → Apps → Default apps**, type `.bpmn` into **Set a default for a file type**, and
 > choose Camunda Modeler. Then double-click `bootstrap.bpmn` and send me a screenshot.
