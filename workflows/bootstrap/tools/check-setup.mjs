@@ -471,13 +471,25 @@ remote(
 
 // --- config.toml, reported alongside Runtime -------------------------------
 
+// A PERSONAL ACCOUNT PASSES THIS CHECK. Taking the course on a personal ChatGPT or Claude Code
+// plan instead of the U-M gateway is a fine way to do it, so the absence of a gateway config is
+// not an unfinished step and must not be reported as one.
+//
+// IT USED TO CALL notYet HERE, AND THAT WAS EXPENSIVE. `not yet` holds the phase frontier back,
+// so a student on a personal plan was pinned at 2 Runtime however much they had actually done.
+// Worse, the frontier then sat below phases that had passed, which fired the leapfrog note:
+// "something was run out of sequence or has stopped working since. Show this to your
+// instructor." Measured on the first 29 submissions of Installation 1, 2026-09-03: five of the
+// six students who saw that note stopped and submitted at that point rather than finishing
+// Addressing, against a 4-in-22 stop rate for everyone who did not see it. The line said
+// "expected" and the program treated it as a fault, and the students believed the program.
 runtime("Codex configuration", () => {
   const cfg = join(codexHome, "config.toml");
   if (!existsSync(cfg))
-    notYet("no ~/.codex/config.toml — expected if you use a personal account");
+    return "personal account, no ~/.codex/config.toml. That is fine, carry on.";
   const text = readFileSync(cfg, "utf8");
   if (!/api\.toolkit\.umgpt\.umich\.edu/.test(text))
-    notYet("no U-M gateway configured — expected if you use a personal account");
+    return "personal account, no U-M gateway configured. That is fine, carry on.";
 
   // The ITS documentation nests `model` inside [model_providers.toolkit], where Codex's schema
   // does not read it. That mistake costs about 2.5x in tokens. Neither value is
