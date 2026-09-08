@@ -130,10 +130,10 @@ argument.
 
    `supply: vocabulary` — the entry is a stamp, and the task is a move from
    [`../goal-setting/references/vocabulary-moves.md`](../goal-setting/references/vocabulary-moves.md).
-   Pick one whose label isn't near the front of `served`. **Prefer APPLY or LOCATE.** Both draw
-   on work that didn't exist when the word was first met, so neither can be answered from
-   memory of answering before. That's exactly the property a review wants and the other moves
-   don't have.
+   Pick one whose label isn't near the front of `served`. **Prefer APPLY.** It draws on work
+   that didn't exist when the word was first met, so it can't be answered from memory of
+   answering before. That's exactly the property a review wants and the other moves don't
+   have.
 
    Either way, **don't say what the criterion is.** Just give them the task.
 

@@ -115,9 +115,10 @@ const entry = [
   `- **supply:** vocabulary`,
   `- **bar:** one production pass`,
   `- **group:** vocabulary`,
+  // Only the field every word has. `nearest confusable` and `synonyms` are added by whoever
+  // fills the entry in, and a word that has neither carries neither line: an empty optional
+  // field is a default written down, which is the thing the comment above is about.
   `- **what it names:**`,
-  `- **when it bites:**`,
-  `- **nearest confusable:**`,
 ];
 
 const lines = readFileSync(file, 'utf8').split('\n');
