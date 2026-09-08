@@ -1,4 +1,4 @@
-// Record one lifecycle event in evidence/status.jsonl.
+// Record one lifecycle event in status.jsonl.
 //
 //   node workflows/learn/tools/record-status.mjs <topic> goal-added <goal-id>
 //   node workflows/learn/tools/record-status.mjs <topic> curated    <goal-id>

@@ -21,7 +21,7 @@
 //
 // There is no progress.md and no review.json. Where a topic stands is derived from
 // evidence/attempts.jsonl by workflows/learn/tools/survey.mjs; what it is waiting on is folded out of
-// evidence/status.jsonl; when each goal comes back is folded out of the attempt log by
+// status.jsonl; when each goal comes back is folded out of the attempt log by
 // workflows/learn/tools/review-due.mjs.
 //
 // Refuses to overwrite. A second pass at the same subject in a later month gets its own
@@ -97,4 +97,4 @@ for (const goal of shipped) appendStatus(dir, 'goal-added', { goal: goal.id });
 console.log(dir);
 for (const name of TEMPLATES) console.log(`  ${name}`);
 for (const sub of SUBDIRS) console.log(`  ${sub}/`);
-console.log(`  evidence/status.jsonl  — created${shipped.length ? `, ${shipped.map((g) => g.id).join(', ')} awaiting curation` : ''}`);
+console.log(`  status.jsonl  — created${shipped.length ? `, ${shipped.map((g) => g.id).join(', ')} awaiting curation` : ''}`);

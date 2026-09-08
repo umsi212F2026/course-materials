@@ -52,7 +52,7 @@ Open an individual file only when the survey doesn't carry what you need. What e
 | `goals.md`                | what they wanted, and the depth                                                                                                           |
 | `activities.md`           | the Coverage table — what's live, what's blocked                                                                                          |
 | `evidence/attempts.jsonl` | nothing, ever. Where everything derived is derived from, by the survey. A program's file                                                  |
-| `evidence/status.jsonl`   | nothing directly. The topic's lifecycle — what's outstanding, whether they gave it up — and the survey folds it for you. A program's file |
+| `status.jsonl`            | nothing directly. The topic's lifecycle — what's outstanding, whether they gave it up — and the survey folds it for you. A program's file |
 | `notes.md`                | don't read it unless they ask for it; it's theirs                                                                                         |
 
 There is no `progress.md` and no `review.json`. Both were files that remembered things the logs

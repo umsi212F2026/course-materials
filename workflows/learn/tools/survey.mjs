@@ -12,7 +12,7 @@
 // evidence/attempts.jsonl. There is no table to disagree with, and no cache to go stale. Ask
 // this instead of looking for a number in a file.
 //
-// What it can't derive it folds out of the other log: evidence/status.jsonl, which says what is
+// What it can't derive it folds out of the other log: status.jsonl, which says what is
 // outstanding and whether the learner is needed for it. Nobody can compute a decision to give a
 // topic up, or a judgement that a criterion can't be checked by anything constructible.
 //

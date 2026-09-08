@@ -14,7 +14,7 @@
 
   IDS LIVE HERE, in the Goals section below, and this is the only place they are assigned.
   Everything downstream keys on them: activities.md's `serves` and `checks`, and every line
-  of evidence/attempts.jsonl and evidence/status.jsonl.
+  of evidence/attempts.jsonl and status.jsonl.
 
   The rule:
 
@@ -78,7 +78,7 @@
   orientation are the same kind of thing here and reach every tool through one code path;
   what differs between them is which SLOTS they carry.
 
-  THE SEVEN SLOTS, what each one asks, and every value in use, are in
+  THE EIGHT SLOTS, what each one asks, and every value in use, are in
   workflows/learn/skills/goal-setting/references/slots.md. Read it before writing a slot you haven't written
   before; a value nothing implements is refused at read time, by name. Every slot takes exactly
   one value.

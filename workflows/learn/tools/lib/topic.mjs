@@ -171,7 +171,7 @@ export function readActivities(dir) {
 export const liveActivities = (dir) => readActivities(dir).filter((e) => !e.dropped);
 
 // --- the lifecycle log -------------------------------------------------------
-// evidence/status.jsonl, folded. Its shape and the fold are in status.mjs; this is where the
+// status.jsonl, folded. Its shape and the fold are in status.mjs; this is where the
 // rest of the system asks. progress.md is gone and both of these used to be read out of it.
 
 export const statusOf = (dir) => foldStatus(readStatus(dir));
@@ -382,7 +382,7 @@ export function idProblems(dir, status = statusOf(dir)) {
   // event fires, and the work never queues — nothing would ever curate it and nothing would say
   // why. See lib/status.mjs.
   if (!status.created) {
-    found.push(`no evidence/status.jsonl — this folder was never recorded as a topic`);
+    found.push(`no status.jsonl — this folder was never recorded as a topic`);
   } else {
     for (const goal of goals)
       if (goal.id && !status.announced.has(goal.id))

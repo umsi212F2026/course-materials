@@ -1,4 +1,4 @@
-# Goal slots — the seven questions, and the three contracts
+# Goal slots — the eight questions, and the three contracts
 
 This file carries the rules and the contracts, and no argument — the reasoning behind them is
 recorded outside this repository.
@@ -12,7 +12,7 @@ system asks of any of them.
 the four that differ from the default; an orientation carries five. There are no named types:
 nothing in the system says "this is a word", only that this goal's `supply` is `vocabulary`.
 
-## The seven slots
+## The eight slots
 
 | slot          | question                                           | consumer                                         | default                  |
 | ------------- | -------------------------------------------------- | ------------------------------------------------ | ------------------------ |
@@ -22,6 +22,7 @@ nothing in the system says "this is a word", only that this goal's `supply` is `
 | `bar`         | what accumulation of rulings makes the claim true? | `met()`, in `workflows/learn/tools/lib/bars.mjs` | `one unaided pass`       |
 | `recurrence`  | does it come back once met?                        | the scheduler                                    | `spaced`                 |
 | `is_required` | must this be met for the topic to be finished?     | _nothing pending_, in `derivePhase`              | `yes`                    |
+| `origin`      | who set this goal?                                 | the quiz generator, outside this workflow        | `learner`                |
 | `group`       | what is it reported alongside?                     | the report                                       | `capabilities`           |
 
 Offering is not a slot — it falls out of `supply`. If activities come from a shared generator,
@@ -37,6 +38,7 @@ The three shapes in use:
 | `bar`         | `one unaided pass`   | `one production pass` | `did it once` |
 | `recurrence`  | `spaced`             | `spaced`              | `never`       |
 | `is_required` | `yes`                | `yes`                 | `no`          |
+| `origin`      | `learner`            | `learner`             | `learner`     |
 | `group`       | _(default)_          | `vocabulary`          | `orientation` |
 
 They override different subsets, and share only "not the default criterion." Don't reach for
@@ -48,7 +50,7 @@ the pattern; read the row.
 | --------------------- | ------------------------------ | ---------------------------------------------------------------------------------------------------------------- |
 | **data or reference** | `criterion`, `group`           | literal text, or a pointer to shared text. Nothing invokes it; something reads it and hands it to an adjudicator |
 | **strategy**          | `supply`, `adjudicator`, `bar` | always an implementation, always invoked                                                                         |
-| **flag**              | `recurrence`, `is_required`    | read as data by one consumer                                                                                     |
+| **flag**              | `recurrence`, `is_required`, `origin` | read as data by one consumer                                                                                     |
 
 `recurrence` is a flag rather than a strategy because it only says whether the scheduler runs.
 The intervals are system-wide, in `workflows/learn/tools/lib/schedule.mjs`, not per goal.
@@ -225,6 +227,20 @@ won't land, and `met()` applies it above the bar dispatch rather than inside any
 
 `yes` _(default)_ or `no`. Read only by _nothing pending_: a topic is finished when every
 **required** goal is met. An optional stretch capability, and an orientation, both live here.
+
+### `origin` — flag
+
+`learner` _(default)_ or `course`. **Nothing in this workflow reads it.** Its one consumer is the
+quiz generator, which sits outside the learn loop: the course's rule is that what it set is what
+may be examined, and this is what says which goals those are. Words carry it like anything else.
+
+**It is stamped when a topic is published, not chosen while it is authored**, which is why no
+shape above overrides it. A course-seeded topic is otherwise indistinguishable from one a learner
+built, deliberately — the course runs goal setting and curation itself and ships the same files, so
+nothing in the learning phase behaves differently. This slot is the single exception.
+
+**`learner` is the default because it fails in the safe direction.** A goal wrongly left out of a
+quiz is a smaller wrong than a student examined on something they set for themselves.
 
 ### `group` — data
 

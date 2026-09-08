@@ -90,7 +90,7 @@ It's in its own group and doesn't count as goal setting having happened.)
 ## Naming a word
 
 Every word entry carries an id, and **you choose it** — the script won't guess. It keys every
-attempt that word ever produces, in `evidence/attempts.jsonl` and `evidence/status.jsonl`, for
+attempt that word ever produces, in `evidence/attempts.jsonl` and `status.jsonl`, for
 as long as the topic lives.
 
 Name it the way you'd name a variable:
