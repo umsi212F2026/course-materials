@@ -10,8 +10,9 @@ description: Run one learning topic — work out which phase it needs next, do t
 `<topic-dir>` — one topic folder, named `<area>-<yyyy>-<mm>/`, inside the student's
 learning-topics clone.
 
-You are told this directory. Do not choose it, and do not guess it from the working directory —
-whatever invoked you established it already.
+You are told this directory, and the `<data-dir>` it sits in. Do not choose either, and do not
+guess one from the other or from the working directory — whatever invoked you established both
+already, and `learn` passes both when it hands off.
 
 One folder. You decide what it needs next and start it. You don't teach, judge, or curate — you
 work out which of those should be happening.
@@ -30,7 +31,7 @@ arrives with an empty template where it should have arrived with the learner's o
 the files say it. Don't work it out yourself; run
 
 ```
-node workflows/learn/tools/survey.mjs <topic-folder>
+node workflows/learn/tools/survey.mjs --dir <data-dir> <topic-folder>
 ```
 
 and read the phase off it. `learn` and the progress report run the same program over the same
@@ -96,6 +97,19 @@ Which is ordinary, not an edge case. The phase is derived from the files; an out
 is somebody reporting that those files are wrong. A topic derives as _studying_ while the queue
 says a goal needs revising — study is what the files support, and the item is the note saying
 not to trust them.
+
+**A topic at _nothing has started_ goes to goal setting, whatever the queue says.** A fresh
+folder always carries an outstanding `needs: curation` for its orientation entry, because
+`new-topic.mjs` queues one when it makes the folder. Curation cannot act on it: its precondition
+is a goal in the default group, and that is exactly what _not started_ means there isn't. So the
+item is real but unsatisfiable, and it clears itself once goal setting has run and curation
+follows. Don't go and read curation to work this out, and don't spawn it to watch it decline.
+
+There is a second reason, and it is the better one: curation reads _What I already have_ to decide
+whether an orienting activity is worth building at all, and on a fresh folder that section is an
+empty template comment. Running it first would have it guess at the one input that governs the
+goal it was invited for. The wait is not a delay, it is the difference between an orienting
+activity built for this learner and one built for nobody.
 
 **Work upstream.** A defect in `goals.md` makes everything derived from it suspect, and the
 activities are what studying runs on:
