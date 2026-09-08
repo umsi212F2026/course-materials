@@ -38,6 +38,14 @@ const target = argv.find((a) => !a.startsWith('--'));
 function topicFolders() {
   if (!existsSync(learning)) return [];
   return readdirSync(learning)
+    // Every learning-topics is a clone, so .git is always there, and without this every student's
+    // first survey reports it as a topic with no status.jsonl. PROBLEMS are meant to be rare and
+    // always worth acting on, so one that is always present and never actionable trains the agent
+    // to skim them.
+    //
+    // DOT-DIRECTORIES, NOT "has goals.md". Filtering on content would also silence the case this
+    // check exists for: a folder somebody made by hand, which is a real topic missing its log.
+    .filter((name) => !name.startsWith('.'))
     .map((name) => join(learning, name))
     .filter((p) => statSync(p).isDirectory())
     .sort();
