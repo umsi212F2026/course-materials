@@ -220,19 +220,7 @@ couldn't tell — that's `unclear`. Two cases, and both are ordinary:
 So **whether to invoke an adjudicator is your judgement, not a rule.** Invoke one when the
 attempt might establish something. `unchecked` is the honest record of the times it wouldn't.
 
-### What survives from the old ladder
-
-Nothing in the record. `not started`, `started`, `met with help` and `met unaided` were four
-rungs on one scale that every goal shared, and a scale only worked while every goal was met the
-same way. A word passed unaided at DEFINE reported _met with help_ — a label asserting help
-nobody gave.
-
-What replaced them: **each goal's own `bar`, returning true or false.** A bar, once true, stays
-true. What `survey.mjs` prints is what happened — how many attempts, and how the most recent
-one was ruled — which is generic across any bar in a way the rungs were not.
-
-The four phrases survive only as things you might say. _"You've done that one, but with help"_
-is a fine sentence. It just isn't a rung any more, and nothing branches on it.
+### When a bar is met
 
 **Congratulate the first time a goal's bar is met**, and say what happens next: this one starts
 coming back for review, the first time in about three days, and it comes back on its own

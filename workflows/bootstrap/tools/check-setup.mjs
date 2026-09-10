@@ -203,6 +203,41 @@ for (const [name, dir] of Object.entries(repos)) {
   });
 }
 
+repositories("pull strategy on the student repos", () => {
+  // Since git 2.34 `git pull` REFUSES to run when both sides have commits and no strategy is
+  // configured: `fatal: Need to specify how to reconcile divergent branches`, then three
+  // options. Whatever is driving the session then picks one of them, and observed 2026-09-10 an
+  // agent read that hint and offered to rebase without mentioning merge.
+  //
+  // Merge is what this course wants. A rebase rewrites the commits it replays, so a student who
+  // has pushed to their own `origin` finds their next push rejected as non-fast-forward; and
+  // their side is many small commits over notes.md and evidence/attempts.jsonl, so a replay can
+  // meet the same conflict once per commit where a merge resolves it once.
+  //
+  // Set per-repository so their other projects are untouched — which is exactly why it is
+  // checked here. Repository-local config lives in .git/config, so a re-clone drops it with no
+  // warning, and the failure then surfaces weeks later as a pull that will not run.
+  const wrong = [];
+  for (const [name, dir] of Object.entries(repos)) {
+    if (name === "course-materials") continue; // pull-only, never diverges
+    if (!existsSync(dir)) notYet(`${name} not cloned yet`);
+    let val;
+    try {
+      val = gitIn(dir, ["config", "--local", "pull.rebase"]);
+    } catch {
+      val = ""; // git config exits non-zero when the key is unset
+    }
+    if (val !== "false") wrong.push(`${name} is ${val || "unset"}`);
+  }
+  if (wrong.length)
+    throw new Error(
+      `${wrong.join(", ")} — "git pull upstream main" will refuse to run once you have ` +
+        `commits of your own. Re-running the setup fixes it, or: ` +
+        `git -C <repo> config pull.rebase false`,
+    );
+  return "merge, on both";
+});
+
 repositories("course-materials unmodified", () => {
   // A pull-only clone, so anything local is either an accidental edit or an agent that was
   // told not to write here and did. Free detection beats prevention the sandbox cannot give.
