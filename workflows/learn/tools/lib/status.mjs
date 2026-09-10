@@ -87,6 +87,32 @@ import { join } from 'node:path';
 // rule — "everything except their evidence" — quietly wrong about the one file that must ship.
 export const statusFile = (dir) => join(dir, 'status.jsonl');
 
+// WHERE IT USED TO LIVE, AND WHY THAT PATH IS STILL READ.
+//
+// Every topic made before the move has its log here, and a student's own topics cannot be
+// migrated by the course at all: they were made by their new-topic.mjs, they live in their
+// clone, and no commit the instructor can push reaches them. Only the seeded topic can be
+// moved from upstream, so a hard cutover would strand every topic a student made themselves.
+const legacyStatusFile = (dir) => join(dir, 'evidence', 'status.jsonl');
+
+// THE ROOT WINS, AND THE OLD PATH IS USED ONLY WHEN IT IS THE WHOLE LOG. A topic that has
+// both is already migrated and the root is the live file; falling back would resurrect a
+// stale one. A topic that has neither is new, and gets the root.
+//
+// WRITING GOES WHERE THE LOG ALREADY IS. This is the half that matters. Appending to the root
+// of an un-migrated topic would leave the real history sitting in evidence/ and start a second
+// one beside it, and when the move then arrived from upstream git would meet two unrelated
+// files claiming the same path — an add/add conflict in a machine-written log, landing on a
+// student who has never been told the file exists. Verified against a simulated pull, 2026-09-10.
+//
+// Written this way the move is a pure rename with no local edit, which git replays onto the
+// student's own appends by itself, and the two repositories can be updated in either order.
+export const statusFileFor = (dir) => {
+  if (existsSync(statusFile(dir))) return statusFile(dir);
+  if (existsSync(legacyStatusFile(dir))) return legacyStatusFile(dir);
+  return statusFile(dir);
+};
+
 // THE ONLY WRITER. workflows/learn/tools/record-status.mjs is the command line onto this; new-topic.mjs and
 // new-word.mjs call it directly, because a program that has just created the thing shouldn't
 // shell out to announce it. One writer, so there is one place the closed sets are enforced.
@@ -145,12 +171,12 @@ export function appendStatus(dir, kindName, { goal, needs, why, reason } = {}) {
   }
 
   mkdirSync(dir, { recursive: true });
-  appendFileSync(statusFile(dir), JSON.stringify(event) + '\n');
+  appendFileSync(statusFileFor(dir), JSON.stringify(event) + '\n');
   return event;
 }
 
 export function readStatus(dir) {
-  const file = statusFile(dir);
+  const file = statusFileFor(dir);
   if (!existsSync(file)) return [];
   return readFileSync(file, 'utf8')
     .split('\n')
