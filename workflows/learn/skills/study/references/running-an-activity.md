@@ -170,8 +170,8 @@ analysis than that to drop the activity.
 The two aren't the same fact. `dropped` says don't offer this again; the logged attempt says
 this was tried and didn't finish. Only the second accumulates — three activities abandoned on
 one goal says something about the criterion or the depth that no single entry's status can
-show, and a word abandoned on LOCATE three times usually means nobody's been blocked by it yet,
-or its confusable is badly chosen. The next tutor sees that in the log, and in what
+show, and a word abandoned on APPLY three times usually means it hasn't come up in their own
+work yet, or on DISTINGUISH that its confusable is badly chosen. The next tutor sees that in the log, and in what
 `served.mjs` hands back.
 
 When you do drop one, make the reason specific enough to be useful. "Didn't work" tells

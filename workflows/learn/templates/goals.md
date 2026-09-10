@@ -14,7 +14,7 @@
 
   IDS LIVE HERE, in the Goals section below, and this is the only place they are assigned.
   Everything downstream keys on them: activities.md's `serves` and `checks`, and every line
-  of evidence/attempts.jsonl and evidence/status.jsonl.
+  of evidence/attempts.jsonl and status.jsonl.
 
   The rule:
 
@@ -78,7 +78,7 @@
   orientation are the same kind of thing here and reach every tool through one code path;
   what differs between them is which SLOTS they carry.
 
-  THE SEVEN SLOTS, what each one asks, and every value in use, are in
+  THE EIGHT SLOTS, what each one asks, and every value in use, are in
   workflows/learn/skills/goal-setting/references/slots.md. Read it before writing a slot you haven't written
   before; a value nothing implements is refused at read time, by name. Every slot takes exactly
   one value.
@@ -106,24 +106,33 @@
       - **bar:** one production pass
       - **group:** vocabulary
       - **what it names:** the promised shape of the thing, not the thing
-      - **when it bites:** when two systems have to agree before either can run
       - **nearest confusable:** type
+      - **synonyms:** DDL
 
   The last three are not slots — they are INPUTS TO THE VOCABULARY SUPPLY, which reads them
-  when it instantiates a move. DEFINE checks against *what it names*; DISTINGUISH needs the
-  confusable; LOCATE relates to *when it bites*. Any future supply will want its own fields,
-  and they go the same way: bullets nothing else reads.
+  when it instantiates a move. DEFINE checks against *what it names* and rejects a bare
+  synonym as an answer; DISTINGUISH needs the confusable and is never aimed at a synonym;
+  INTERPRET may set its sentence using one. Any future supply will want its own fields, and
+  they go the same way: bullets nothing else reads.
 
   WHAT IT NAMES is a pointer, not a definition — "the promised shape", not what a schema is.
   Topology, the same latitude the interview has: enough to recognize the word when it turns
   up, never enough to pass DEFINE with.
 
-  WHEN IT BITES is the situation that sends someone here. On a seeded entry it's the course's
-  guess. It is NOT an answer to LOCATE, which asks for theirs, about their own work — same
-  distinction as APPLY. A learner reciting this line has not met the word.
+  NEAREST CONFUSABLE is one or more things the word sometimes gets confused with. Optional,
+  and OMIT THE LINE rather than leaving it empty: an empty optional field is a default written
+  down. The agent supplies it from its own knowledge rather than asking the learner.
 
-  NEAREST CONFUSABLE is one or more things the word sometimes gets confused with. Optional.
-  The agent supplies it from its own knowledge rather than asking the learner.
+  SYNONYMS are OTHER NAMES for the same thing, the ones a learner will meet outside this
+  course. Optional on the same terms: omit the line when there is none. They do three jobs.
+  DEFINE rejects one as an answer, because "an AI agent is a bot" names the thing again rather
+  than saying what it is. DISTINGUISH is never aimed at one: there is no difference to name,
+  so a learner who says exactly that would be right and would fail anyway. And INTERPRET may
+  set its unseen sentence using one, so the word has to be recognised under a name the lecture
+  never used.
+
+  Put only names here. A phrase that reads like a definition rather than a label is not a
+  synonym, and DEFINE would then reject the very answer it should accept.
 
   A word may carry a further line where this learner has a specific wrong idea waiting for
   them — `- **watch for:** thinks an API key is a password`. Rare. It is a HINT TO WHOEVER

@@ -27,7 +27,7 @@ that's what happens next, because one day it will.
 | `notes.md`      | their current understanding, in their words. They write; you prompt.                                                                |
 
 **You write to two logs and never to a prose file.** `evidence/attempts.jsonl` takes what
-happened, through `record-attempt.mjs`. `evidence/status.jsonl` takes what still needs doing,
+happened, through `record-attempt.mjs`. `status.jsonl` takes what still needs doing,
 through `record-status.mjs`. Both append, so a review sitting can be inside this topic at the
 same time as you and neither of you can lose the other's line.
 
@@ -46,7 +46,7 @@ an attempt, what accumulation of rulings makes the claim true. Read them off the
 work out what kind of thing you're looking at, because nothing in the system does.
 
 [`../goal-setting/references/slots.md`](../goal-setting/references/slots.md) is the reference:
-the seven slots, the three contracts, and every value in use. Three of them decide what you do:
+the eight slots, the three contracts, and every value in use. Three of them decide what you do:
 
 | slot          | what it changes for you                                                                                                        |
 | ------------- | ------------------------------------------------------------------------------------------------------------------------------ |

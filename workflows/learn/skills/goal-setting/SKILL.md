@@ -258,10 +258,12 @@ reason this field is cheap; a per-word criterion conversation would take longer 
 the words. If they ask, say what the bar is in a sentence and carry on.
 
 **Three fields are yours to fill in afterwards, and none of them costs a turn.** The script
-leaves them blank. _What it names_ and _when it bites_ are pointers, not definitions — the
-topology latitude, enough to recognise the word when it turns up. _Nearest confusable_ you
-supply where there is one, and plenty of words haven't got a good one; leave it empty rather
-than reaching. All three are facts about the subject rather than about them, so fill them
+writes only _what it names_, and leaves it blank: it is a pointer, not a definition, the
+topology latitude, enough to recognise the word when it turns up. _Nearest confusable_ and
+_synonyms_ are lines you add where there is something to put in them, and plenty of words
+haven't got either; omit the line rather than reaching, since an empty optional field is a
+default written down. All three are facts about the subject rather than about them, so fill
+them
 silently and don't narrate it. They are read by the vocabulary supply and by nothing else.
 
 **Moves**

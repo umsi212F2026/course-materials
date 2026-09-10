@@ -1,4 +1,4 @@
-// evidence/status.jsonl — a topic's lifecycle, as a work queue.
+// status.jsonl — a topic's lifecycle, as a work queue.
 //
 // The second append-only log per topic, beside attempts.jsonl. It replaces progress.md, and it
 // is A WORK QUEUE, NOT A DIARY: every line says something needs doing, or says that something
@@ -79,7 +79,13 @@ export const KINDS = {
 import { readFileSync, existsSync, appendFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 
-export const statusFile = (dir) => join(dir, 'evidence', 'status.jsonl');
+// AT THE TOPIC ROOT, NOT UNDER evidence/. This is a work queue about the topic's structure, and
+// it has to agree with goals.md; evidence/ is the record of learning, which is attempts.jsonl and
+// nothing else — the learning-topics README describes that directory to students in exactly those
+// words. The two are also shipped differently: a course-seeded topic ships its status log and
+// ships attempts.jsonl blank, so a layout that filed them together made the obvious publishing
+// rule — "everything except their evidence" — quietly wrong about the one file that must ship.
+export const statusFile = (dir) => join(dir, 'status.jsonl');
 
 // THE ONLY WRITER. workflows/learn/tools/record-status.mjs is the command line onto this; new-topic.mjs and
 // new-word.mjs call it directly, because a program that has just created the thing shouldn't
@@ -138,7 +144,7 @@ export function appendStatus(dir, kindName, { goal, needs, why, reason } = {}) {
     event.reason = reason;
   }
 
-  mkdirSync(join(dir, 'evidence'), { recursive: true });
+  mkdirSync(dir, { recursive: true });
   appendFileSync(statusFile(dir), JSON.stringify(event) + '\n');
   return event;
 }

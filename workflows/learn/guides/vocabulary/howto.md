@@ -22,7 +22,7 @@ words that come with the territory.
 Every word answers to the same one-sentence standard: **you use it well — correctly, and in a
 way that shows you're not reading it off a definition.**
 
-There are six ways you might be asked to show that. You don't pick; the tutor does, and it
+There are five ways you might be asked to show that. You don't pick; the tutor does, and it
 picks something you haven't had recently.
 
 |                 | what you do                                                               |
@@ -32,30 +32,21 @@ picks something you haven't had recently.
 | **DISTINGUISH** | say what separates it from something it gets confused with                |
 | **CATCH**       | find what's wrong in a sentence that misuses it                           |
 | **APPLY**       | use it about something that actually happened in your own work            |
-| **LOCATE**      | say what situation you'd be in where not having this word would block you |
 
 In class, you'll also play a game, sort of like Taboo or Catch Phrase, where you have to
 describe a concept and get your classmates to say the word.
 
-**Doing any of the last four marks a word as done.** After that, it will come back for
+**Doing any of the last three marks a word as done.** After that, it will come back for
 [review](../review/howto.md) like anything else.
 
 ## Why the first two don't count
 
 DEFINE and INTERPRET can both be passed from having been told the word ten seconds earlier. The
-other four can't: each needs something _you_ bring — a distinction you drew, an error you
-spotted, your own work, your own situation.
+other three can't: each needs something _you_ bring: a distinction you drew, an error you
+spotted, your own work.
 
-So a word is finished by one of the bottom four. **The top two are still worth doing** and get
+So a word is finished by one of the bottom three. **The top two are still worth doing** and get
 recorded; they just don't close it out.
-
-## LOCATE is the one worth sitting with
-
-_What situation would you be in where not having this word would block you?_
-
-It's the strangest of the six and it's the one that tells you whether a word is worth having at
-all. A word you can define but can't place is a word you'll never reach for. If you genuinely
-can't answer, that's real information — sometimes about you, sometimes about the word.
 
 ## Things to say
 

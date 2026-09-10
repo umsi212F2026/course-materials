@@ -1,4 +1,4 @@
-// The seven slots, their defaults, and the closed sets they are refused against.
+// The eight slots, their defaults, and the closed sets they are refused against.
 //
 // One module because this is the definition site. A second copy of "what values does `bar`
 // take" is a second answer to what the system can be asked to do, and the gap between them is
@@ -40,6 +40,22 @@ export const RECURRENCES = {
 export const REQUIREDNESS = {
   yes: 'the topic is not finished until this is met',
   no: 'the topic can be finished without it',
+};
+
+// WHO SET THE GOAL, and it exists for one consumer outside this workflow: the quiz generator.
+// The course's rule is that what it set is what may be examined, so something has to say which
+// goals those are — including the words, which are examinable like anything else.
+//
+// A COURSE-SEEDED TOPIC IS OTHERWISE INDISTINGUISHABLE from one a learner built, deliberately:
+// the course runs goal setting and curation itself and ships the same files, so nothing in the
+// learning phase behaves differently. This slot is the single exception, and it is stamped when a
+// topic is published rather than typed while it is authored.
+//
+// `learner` IS THE DEFAULT BECAUSE IT FAILS IN THE SAFE DIRECTION. A goal wrongly left out of a
+// quiz is a smaller wrong than a student examined on something they set for themselves.
+export const ORIGINS = {
+  learner: 'the learner set it, and it is theirs alone',
+  course: 'the course set it, and it may be examined',
 };
 
 // Criterion values that are pointers to shared text rather than the learner's own words. A
@@ -92,6 +108,7 @@ export const SLOTS = {
   bar: { default: 'one unaided pass', values: BARS, kind: 'strategy' },
   recurrence: { default: 'spaced', values: RECURRENCES, kind: 'flag' },
   is_required: { default: 'yes', values: REQUIREDNESS, kind: 'flag' },
+  origin: { default: 'learner', values: ORIGINS, kind: 'flag' },
   group: { default: 'capabilities', values: null, kind: 'data' },
 };
 

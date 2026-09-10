@@ -80,17 +80,23 @@ and nothing complains. Here a mistake can only be one entry wide.
 Each script prints what it made — read it back before the next call.
 
 **Write nothing yourself.** The script makes the folder and the word entries; you don't touch
-`goals.md`. No capabilities, no criteria, no depth, no use. A folder they asked for and one the
-course shipped are the same thing on the day they're made — both at _not started_, both with no
-goal in the default group — because realising you'll need something isn't starting it.
+`goals.md`. No capabilities, no criteria, no depth, no use. What it leaves is _not started_, with
+no goal in the default group, because realising you'll need something isn't starting it.
 
 (A fresh folder does carry one entry: the orientation goal, which the template ships filled in.
 It's in its own group and doesn't count as goal setting having happened.)
 
+**A topic the course assigned is not this, and never comes through here.** The course runs goal
+setting and curation itself and publishes the result, so an assigned topic arrives already past
+both, with goals in the default group and activities waiting. Nothing you do makes one: this skill
+only ever leaves a folder at _not started_. If a learner names something the course already
+assigned, that is the _it already exists_ case above — hand them the topic, don't make a second
+folder beside it.
+
 ## Naming a word
 
 Every word entry carries an id, and **you choose it** — the script won't guess. It keys every
-attempt that word ever produces, in `evidence/attempts.jsonl` and `evidence/status.jsonl`, for
+attempt that word ever produces, in `evidence/attempts.jsonl` and `status.jsonl`, for
 as long as the topic lives.
 
 Name it the way you'd name a variable:

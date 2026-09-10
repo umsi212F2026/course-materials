@@ -52,7 +52,7 @@ Open an individual file only when the survey doesn't carry what you need. What e
 | `goals.md`                | what they wanted, and the depth                                                                                                           |
 | `activities.md`           | the Coverage table — what's live, what's blocked                                                                                          |
 | `evidence/attempts.jsonl` | nothing, ever. Where everything derived is derived from, by the survey. A program's file                                                  |
-| `evidence/status.jsonl`   | nothing directly. The topic's lifecycle — what's outstanding, whether they gave it up — and the survey folds it for you. A program's file |
+| `status.jsonl`            | nothing directly. The topic's lifecycle — what's outstanding, whether they gave it up — and the survey folds it for you. A program's file |
 | `notes.md`                | don't read it unless they ask for it; it's theirs                                                                                         |
 
 There is no `progress.md` and no `review.json`. Both were files that remembered things the logs
@@ -74,11 +74,19 @@ Everything derives from these. There's no cross-topic state file, and adding one
 second source of truth about things the folders already know — which is exactly why the survey
 is a program that recomputes rather than a file that remembers.
 
-**There is no separate list of what the course suggests.** The topics it suggests are folders
-under `<data-dir>` like any other, shipped with their word entries filled in and nothing in the
-default group — which is exactly what _nothing has started_ means. So "or start something new"
-is answered by the same scan as everything else, and a topic nobody has opened is
-indistinguishable in kind from one they made themselves. That's the point.
+**There is no separate list of what the course assigns.** An assigned topic is a folder under
+`<data-dir>` like any other, and the same scan finds it. That's the point: nothing here asks where
+a topic came from, and nothing should.
+
+**But it does not arrive at _nothing has started_.** The course runs goal setting and curation
+itself and publishes the result, so an assigned topic lands already past both — goals in the
+default group, activities to work on, and its own `status.jsonl` agreeing with them. It reads as
+`studying` from the first survey, and the learner's first sitting in it is a study sitting.
+
+That is deliberate, and it is why nothing above needs to know: a topic the course assigned and one
+the learner took through goal setting last week are the same shape by the time either is studied.
+The only thing that tells them apart is each goal's `origin`, which no phase of this workflow
+reads — it is there for the quiz generator, outside the loop.
 
 ## 1. Start pending work, in the background
 
