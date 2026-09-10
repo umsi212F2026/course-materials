@@ -252,11 +252,14 @@ the ownership is cosmetic once git accepts it. Do not change ownership, do not r
 
 **On macOS none of this applies.**
 
-**4. Rename the remote on the two student repositories.** Not on `course-materials`:
+**4. Rename the remote on the two student repositories, and say how a pull is reconciled.** Not
+on `course-materials`:
 
 ```
 git -C learning-topics remote rename origin upstream
 git -C assignments     remote rename origin upstream
+git -C learning-topics config pull.rebase false
+git -C assignments     config pull.rebase false
 ```
 
 Say why, in one sentence: `upstream` is where updates come from, and `origin` is being left
@@ -265,6 +268,33 @@ undone then.
 
 `course-materials` keeps its `origin` and never gains a personal remote — it is pull-only for
 the whole term.
+
+**`pull.rebase false` is not a style preference, and leaving it unset breaks the update path.**
+Since git 2.34, `git pull` **refuses to run** when both sides have commits and no strategy is
+configured. Verified on git 2.52, it exits 128 with:
+
+```
+hint: You have divergent branches and need to specify how to reconcile them.
+hint:   git config pull.rebase false  # merge
+hint:   git config pull.rebase true   # rebase
+hint:   git config pull.ff only       # fast-forward only
+fatal: Need to specify how to reconcile divergent branches.
+```
+
+A student who has done their own work and then pulls an update hits exactly that, and whatever
+is driving the session picks one of the three for them. Observed 2026-09-10: an agent read that
+hint and offered to rebase, without mentioning merge.
+
+**Merge is the right answer here, and it is worth knowing why.** A rebase rewrites the commits
+it replays, so a student who has already pushed to their own `origin` finds their next push
+rejected as non-fast-forward, needing `--force-with-lease` to get past it. And their side of a
+divergence is many small commits over `notes.md` and `evidence/attempts.jsonl`, so a replay can
+meet the same conflict once per commit where a merge resolves it once. The linear history a
+rebase buys is worth nothing in a private, ungraded record nobody reviews.
+
+**Set it per repository, never `--global`** — their other projects keep whatever they had. That
+also means a re-clone drops it silently, which is why the setup check asserts it rather than
+trusting that this ran.
 
 **5. Set their git identity.** In each of the two student repositories:
 
