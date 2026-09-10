@@ -258,8 +258,7 @@ on `course-materials`:
 ```
 git -C learning-topics remote rename origin upstream
 git -C assignments     remote rename origin upstream
-git -C learning-topics config pull.rebase false
-git -C assignments     config pull.rebase false
+git config --global pull.rebase false
 ```
 
 Say why, in one sentence: `upstream` is where updates come from, and `origin` is being left
@@ -292,9 +291,15 @@ divergence is many small commits over `notes.md` and `evidence/attempts.jsonl`, 
 meet the same conflict once per commit where a merge resolves it once. The linear history a
 rebase buys is worth nothing in a private, ungraded record nobody reviews.
 
-**Set it per repository, never `--global`** — their other projects keep whatever they had. That
-also means a re-clone drops it silently, which is why the setup check asserts it rather than
-trusting that this ran.
+**Use `--global` here, and that is deliberate.** Repository-local config lives in `.git/config`,
+so a re-clone or a hard reset drops it silently and the failure resurfaces weeks later as a pull
+that will not run. A global setting survives both, and it also covers the repositories their
+tooling creates for them later in the term. Almost everyone on this course installed git this
+term, so there is no prior preference being overwritten, and merge on pull is git's own long
+standing behaviour rather than an opinion this course is imposing.
+
+The setup check asserts the **effective** value inside each student repository rather than the
+global one, so a student who has set it per repository instead still passes.
 
 **5. Set their git identity.** In each of the two student repositories:
 
