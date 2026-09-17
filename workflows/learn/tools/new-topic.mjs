@@ -6,8 +6,14 @@
 // is an argument and not derived from where this file happens to live.
 //
 // Makes <d>/<area-slug>-<yyyy>-<mm>/ from everything in workflows/learn/templates/,
-// plus empty tasks/ and evidence/ directories. The templates still come from this
-// repository: only the data directory moved out, not the course materials.
+// plus an empty tasks/ directory and an evidence/ directory holding an empty attempts.jsonl.
+// The templates still come from this repository: only the data directory moved out, not the
+// course materials.
+//
+// ATTEMPTS.JSONL EXISTS FROM THE START, EMPTY. Nothing reads an empty log differently from a
+// missing one, and record-attempt.mjs only ever appends. What the empty file buys is that git can
+// track it: evidence/ survives a commit before the first attempt, and a course-assigned topic can
+// have the file committed and marked skip-worktree before its author records anything.
 //
 // The goals.md it copies is not empty: it ships the orientation goal, filled in, because every
 // topic needs orienting and nothing about that entry is the learner's to negotiate. Everything
@@ -77,6 +83,7 @@ const title = slug.replace(/-/g, ' ');
 
 mkdirSync(dir, { recursive: true });
 for (const sub of SUBDIRS) mkdirSync(join(dir, sub));
+writeFileSync(join(dir, 'evidence', 'attempts.jsonl'), '');
 
 for (const name of TEMPLATES) {
   const source = join(materials, 'workflows/learn/templates', name);
@@ -97,4 +104,5 @@ for (const goal of shipped) appendStatus(dir, 'goal-added', { goal: goal.id });
 console.log(dir);
 for (const name of TEMPLATES) console.log(`  ${name}`);
 for (const sub of SUBDIRS) console.log(`  ${sub}/`);
+console.log('  evidence/attempts.jsonl');
 console.log(`  status.jsonl  — created${shipped.length ? `, ${shipped.map((g) => g.id).join(', ')} awaiting curation` : ''}`);
