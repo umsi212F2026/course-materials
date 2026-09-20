@@ -76,13 +76,17 @@ function page(items, source) {
   const body = items
     .map((it, i) => {
       const field =
+        // NO NUMBERS ON THE CHOICES, because the real quiz has none: its ItemMcq renders a
+        // radio and the text, and nothing else. Numbering them here would teach a student to
+        // think of "option 3" and then not offer them one on the day. It also put two markers
+        // on every row, a list number and a radio, which is what made this look wrong.
         it.type === "mcq"
-          ? `<ol class=choices>${(it.choices ?? [])
+          ? `<ul class=choices>${(it.choices ?? [])
               .map(
                 (c, j) =>
-                  `<li><label><input type=radio name="${esc(it.id)}" value="${j}"> ${esc(c)}</label></li>`,
+                  `<li><label><input type=radio name="${esc(it.id)}" value="${j}"><span>${esc(c)}</span></label></li>`,
               )
-              .join("")}</ol>`
+              .join("")}</ul>`
           : `<textarea name="${esc(it.id)}" rows=5 placeholder="Your answer, in your own words"></textarea>`;
       return `<section><h2>Question ${i + 1} of ${items.length}</h2><p class=prompt>${esc(it.prompt)}</p>${field}</section>`;
     })
@@ -100,8 +104,15 @@ function page(items, source) {
  h2{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#6b6b6b;margin:0 0 10px}
  .prompt{margin:0 0 14px;white-space:pre-wrap}
  textarea{width:100%;box-sizing:border-box;padding:10px;border:1px solid #dcdcd8;border-radius:5px;font:inherit}
- ol.choices{margin:0;padding-left:26px} ol.choices li{padding:3px 0}
- ol.choices label{cursor:pointer}
+ ul.choices{margin:0;padding:0;list-style:none}
+ ul.choices li{margin:0 0 2px}
+ /* A flex row so a choice that wraps lines up under its own text rather than under the radio,
+    and so the whole row is the click target rather than just the words. */
+ ul.choices label{display:flex;gap:11px;align-items:flex-start;cursor:pointer;
+   padding:7px 10px;border-radius:5px}
+ ul.choices label:hover{background:#f2f4f7}
+ ul.choices input{flex:0 0 auto;margin:6px 0 0}
+ ul.choices span{flex:1}
  button{padding:11px 26px;border:0;border-radius:6px;background:#2f6bb0;color:#fff;font:inherit;font-weight:600;cursor:pointer}
  #done{display:none;padding:22px;background:#eaf5ee;border:1px solid #a8cfb8;border-radius:6px}
 </style>
