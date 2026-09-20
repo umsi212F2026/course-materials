@@ -61,13 +61,26 @@ The topic is on the pool's line from step 1. Read `groups`, and count the goals 
 
 **If everything required is met, say so in one line and go to step 3.** Nothing to offer.
 
-**If anything is pending, name those goals and make the offer**, then stop and wait:
+**If four or fewer are pending, name them and make the offer**, then stop and wait:
 
-> You have not met these yet: **`<goal>` (`<text>`), `<goal>` (`<text>`)**. A quiz can draw on
-> any of them, so you would be answering questions about things you have not studied. Studying
-> first usually makes the practice worth more.
+> You have not met these yet: **repository**, **history**. A quiz can draw on either, so you
+> would be answering questions about things you have not studied. Studying first usually makes
+> the practice worth more.
 >
 > Do you want to study those first, or sit the quiz now?
+
+**If more are pending, give the count and the shape of it instead**, which is the whole of a
+topic nobody has started yet:
+
+> You have not started this topic: **8 of its 9 goals are unmet**, and the quiz draws on all of
+> them. Sitting it now tells you where you stand and very little else, because there is nothing
+> yet for it to find.
+>
+> Do you want to study first, or sit it anyway to see the questions?
+
+**Listing nine goal ids is not the offer, it is a wall to scroll past.** A learner who has not
+started a topic already knows they have not started it; what they need is the number and a
+straight answer about what a quiz would be worth today.
 
 **Take whichever they pick, with no second attempt at persuading them.** Studying first is the
 better order and saying so once is the whole of your part in it; a learner who wants to know
