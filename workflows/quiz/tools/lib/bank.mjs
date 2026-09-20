@@ -152,6 +152,12 @@ export function readBank(dir, label = '') {
       if (r.goal) recording.goal = r.goal;
       if (r.move) recording.move = r.move;
 
+      // `rubric` joins the model answer and the credit line, because that is the single string
+      // the grader wants. Feedback wants only the first half: telling a student "Full credit for
+      // saying X, do not accept Y" reads as marking instructions rather than as an answer. So the
+      // model answer travels separately too, and nothing has to split the joined string back up.
+      if (r.answer) recording.expected = r.answer;
+
       if (type === 'mcq') {
         if (!choices) {
           problems.push(`${s.id} is type mcq but its question carries no numbered choices`);

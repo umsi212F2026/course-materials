@@ -76,7 +76,7 @@ they come apart.
 
 ## What to return
 
-Five things, and no summary verdict on top of them.
+Six things, and no summary verdict on top of them.
 
 - **`item`** — the id you were given, echoed back
 - **`credit`** — `full`, `half` or `none`, against the credit line as written. Half only where
@@ -88,11 +88,15 @@ Five things, and no summary verdict on top of them.
   `not met` otherwise, except on a capability item where it is `unchecked` either way.
   `unaided` is `yes` for a quiz taken in class, and for practice it is what the transcript
   shows: `no` if the answer was discussed or looked up before it was given
-- **`flag`** — `true` when this credit is worth a person's eye, with one clause saying why.
-  Three cases and no others: the answer is close enough to the line that a reasonable person
-  could mark it either way; it contradicts something the credit line says not to accept but
-  appears to be right anyway; or the item is a capability item, where the mark and the evidence
-  disagree by construction
+- **`flag`** — `true` when this credit is worth a person's eye. Three cases and no others: the
+  answer is close enough to the line that a reasonable person could mark it either way; it
+  contradicts something the credit line says not to accept but appears to be right anyway; or
+  the item is a capability item, where the mark and the evidence disagree by construction
+- **`flag_reason`** — one clause saying why, written to the person reviewing rather than to the
+  student. Required whenever `flag` is true, and empty otherwise. **It is not `missed`.** That
+  field belongs to the student and is empty on full credit, so a flag on a correct answer has
+  nowhere else to put its reason and arrives silent: marked for attention with nothing saying
+  what for. That happened to three of the first thirty-one flags.
 
 **One JSON object per answer, and nothing outside them.** A batch returns an array. The runner
 parses this directly, and prose it would have to interpret is the thing this shape exists to
@@ -104,7 +108,8 @@ avoid.
   "credit": "half",
   "missed": "You said a commit keeps your work, which is right, but not what it keeps that saving does not: the earlier state stays reachable afterwards.",
   "axes": { "unaided": "yes", "criterion": "not met" },
-  "flag": false
+  "flag": false,
+  "flag_reason": ""
 }
 ```
 
