@@ -149,4 +149,4 @@ mark. Neither of those is your call.
 
 ## Depends on
 
-- [`quiz-day.bpmn`](workflows/quiz/quiz-day.bpmn) — diagram
+- [`quiz-day.bpmn`](workflows/quiz/quiz-day.bpmn) - diagram

@@ -17,8 +17,13 @@
 //
 //   ## Depends on
 //
-//   - [`topic`](workflows/learn/skills/topic/SKILL.md) — skill
-//   - [`survey.mjs`](workflows/learn/tools/survey.mjs) — tool
+//   - [`topic`](workflows/learn/skills/topic/SKILL.md) - skill
+//   - [`survey.mjs`](workflows/learn/tools/survey.mjs) - tool
+//
+// The separator may be a hyphen, an en dash or an em dash. A hyphen is what to
+// write; the other two are accepted because the manifests predate that and a
+// formatter may yet produce them. Do not narrow this back to one character: it
+// would fail files that are correct.
 //
 // Paths are relative to the repository root, so the string is identical on every
 // machine regardless of where anyone cloned (§6). Kind is inferred from the path
@@ -100,7 +105,7 @@ const provisional = new Set();
 const agentsMd = join(root, 'AGENTS.md');
 const indexText = existsSync(agentsMd) ? readFileSync(agentsMd, 'utf8') : '';
 const entryPoints = new Map(
-  [...indexText.matchAll(/^-\s+\*\*([a-z][\w-]*)\*\*\s+—\s+([\s\S]*?)`([^`]+SKILL\.md)`/gm)].map(
+  [...indexText.matchAll(/^-\s+\*\*([a-z][\w-]*)\*\*\s+[—–-]\s+([\s\S]*?)`([^`]+SKILL\.md)`/gm)].map(
     (m) => [m[1], { description: m[2].replace(/\s+/g, ' ').trim(), path: m[3] }],
   ),
 );
@@ -155,7 +160,7 @@ for (const s of skills) {
       .filter(Boolean);
     for (const line of items) {
       if (!line.startsWith('-')) continue;
-      const m = /^\s*-\s*\[([^\]]*)\]\(([^)]+)\)\s*—\s*(\w+)/.exec(line);
+      const m = /^\s*-\s*\[([^\]]*)\]\(([^)]+)\)\s*[—–-]\s*(\w+)/.exec(line);
       if (!m) {
         fail(s.rel, `unparseable manifest line: ${line.trim()}`);
         continue;
