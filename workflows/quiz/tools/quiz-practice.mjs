@@ -24,12 +24,12 @@
 // evidence, which is the course's existing record of what happened. The draw and the answers
 // are the paperwork that produced it, and they go in tmp/.
 
-import { readFileSync, writeFileSync, appendFileSync, existsSync, mkdirSync } from "node:fs";
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { createServer } from "node:http";
 import { resolve, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { drawPractice, loadPool, listPools } from "./quiz-draw.mjs";
-import { collectAnswers, settleMcq, buildQueue, mergeGrades, CREDIT_VALUE } from "./lib/grade.mjs";
+import { collectAnswers, buildQueue, mergeGrades, CREDIT_VALUE } from "./lib/grade.mjs";
 // THE LEARN WORKFLOW'S READER, not a second one. What a practice quiz leaves behind is an
 // attempt in a topic's log, so this tool already lives on the far side of that boundary; a
 // private copy of how goals.md parses would be one more thing to keep in step with it.
@@ -130,8 +130,9 @@ function page(items, source) {
 </script>`;
 }
 
-/** Write the draw, the answers, the settled multiple choice and the work left for the agent,
- *  all in the shapes the real quiz uses. */
+/** Write the draw, the answers and the work left for the agent, all in the shapes the real
+ *  quiz uses. Multiple choice is counted here and written nowhere: scoring settles it again
+ *  from the draw. */
 function record(dir, source, items, answers) {
   mkdirSync(dir, { recursive: true });
   const now = new Date().toISOString();
@@ -208,23 +209,16 @@ function record(dir, source, items, answers) {
     JSON.stringify({ date, goals: examined, items: queue }, null, 2) + "\n",
   );
 
-  // Multiple choice is settled here, in code, exactly as it is for a real quiz. It never
-  // reaches the skill, which is why it costs nothing and can never disagree with itself.
+  // MULTIPLE CHOICE IS SETTLED IN CODE AND WRITTEN NOWHERE, exactly as it is for a real quiz.
+  // mergeGrades settles it again from the draw and the answer when the run is scored, so a
+  // verdict here would be a second copy of a decision nothing reads, and a second copy is the
+  // only way the two could ever disagree.
+  //
+  // It was written here once, and it broke scoring: mergeGrades marks a key used only on the
+  // path that consumes a verdict, which multiple choice is not, so every mcq verdict came back
+  // as "matches no answered item" and the run refused to score. The instructor's runner never
+  // hit it because its verdicts file only ever holds the skill's rulings.
   const mcq = rows.filter((r) => r.item.type === "mcq");
-  for (const r of mcq) {
-    appendFileSync(
-      join(dir, "verdicts.jsonl"),
-      JSON.stringify({
-        item: r.item.id,
-        uniqname: "me",
-        credit: settleMcq(r.item, r.text),
-        missed: "",
-        flag: false,
-        flag_reason: "",
-        at: now,
-      }) + "\n",
-    );
-  }
   return { queue, mcq: mcq.length, date };
 }
 

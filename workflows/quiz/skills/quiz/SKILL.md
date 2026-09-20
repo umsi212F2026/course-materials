@@ -119,9 +119,13 @@ will see every one of them in a moment, and reading them now is how a conversati
 material starts by accident.
 
 **When they come back, read `/tmp/practice.log`.** Its last lines name the directory holding
-`queue.json`, and `verdicts.jsonl` where multiple choice was settled in code. If the log does
-not name a directory yet, the submission has not arrived: say so and ask them to press Submit,
-rather than grading an empty queue.
+`queue.json`. If the log does not name a directory yet, the submission has not arrived: say so
+and ask them to press Submit, rather than grading an empty queue.
+
+**Multiple choice is settled in code and is not in the queue.** The log says how many, and
+scoring settles them again from the draw. There is nothing for you to do about them and
+nothing to write: a verdict of yours on one would be a second copy of a decision nothing
+reads.
 
 ### 4. Say which goals are capabilities, once
 
