@@ -8,3 +8,8 @@ workflows/*/*.png
 
 # Claude Code machine-local settings — absolute paths, never shared.
 .claude/settings.local.json
+
+# A practice quiz's draw, answers and verdicts while it is being graded. Transient by design:
+# what lasts from a practice run is the attempt recorded in the topic's evidence, not the
+# paperwork that produced it.
+tmp/
