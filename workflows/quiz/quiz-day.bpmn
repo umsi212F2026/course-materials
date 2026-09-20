@@ -1,0 +1,360 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:color="http://www.omg.org/spec/BPMN/non-normative/color/1.0" id="Definitions_quiz" targetNamespace="http://si212.umich.edu/schema/bpmn">
+  <bpmn:collaboration id="C_quiz">
+    <bpmn:participant id="P_day" name="Quiz day — one run per quiz date" processRef="Proc_day" />
+    <bpmn:participant id="P_student" name="A student taking the quiz in class">
+      <bpmn:documentation>A black box on purpose. What happens inside is the web app and the student, and this diagram makes no claim about it beyond the two messages. The three bars say there is one run of this per student, and the run of Quiz day does not wait for any of them: the quiz closes on the clock, which is why the export has to carry drafts as well as submissions.</bpmn:documentation>
+      <bpmn:participantMultiplicity minimum="1" />
+    </bpmn:participant>
+    <bpmn:messageFlow id="m_serve" name="the draw, one per student" sourceRef="T_open" targetRef="P_student" />
+    <bpmn:messageFlow id="m_answers" name="answers and drafts" sourceRef="P_student" targetRef="T_export" />
+  </bpmn:collaboration>
+  <bpmn:process id="Proc_day" name="Quiz day" isExecutable="false">
+    <bpmn:laneSet id="LS_day">
+      <bpmn:lane id="L_human" name="HUMAN operator">
+        <bpmn:flowNodeRef>Start_day</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_curate</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_publish</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_pool</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_open</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_close</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_review</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="L_agent" name="AI AGENT">
+        <bpmn:flowNodeRef>T_draft</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Sub_grade</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="L_program" name="PROGRAM">
+        <bpmn:flowNodeRef>T_bake</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_seed</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_export</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_push</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_scores</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:sequenceFlow id="f1" sourceRef="Start_day" targetRef="T_draft" />
+    <bpmn:sequenceFlow id="f2" sourceRef="T_draft" targetRef="T_curate" />
+    <bpmn:sequenceFlow id="f3" sourceRef="T_curate" targetRef="T_publish" />
+    <bpmn:sequenceFlow id="f4" sourceRef="T_publish" targetRef="T_pool" />
+    <bpmn:sequenceFlow id="f5" sourceRef="T_pool" targetRef="T_bake" />
+    <bpmn:sequenceFlow id="f6" sourceRef="T_bake" targetRef="T_seed" />
+    <bpmn:sequenceFlow id="f7" sourceRef="T_seed" targetRef="T_open" />
+    <bpmn:sequenceFlow id="f8" sourceRef="T_open" targetRef="T_close" />
+    <bpmn:sequenceFlow id="f9" sourceRef="T_close" targetRef="T_export" />
+    <bpmn:sequenceFlow id="f10" sourceRef="T_export" targetRef="Sub_grade" />
+    <bpmn:sequenceFlow id="f11" sourceRef="Sub_grade" targetRef="T_review" />
+    <bpmn:sequenceFlow id="f12" sourceRef="T_review" targetRef="T_push" />
+    <bpmn:sequenceFlow id="f13" sourceRef="T_push" targetRef="End_scores" />
+    <bpmn:startEvent id="Start_day" name="calendar names&#10;a quiz date">
+      <bpmn:documentation>The instructor's term calendar is the only file that knows a date. It names which session carries a quiz and what that quiz is on.</bpmn:documentation>
+      <bpmn:outgoing>f1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="T_draft" name="Draft bank items">
+      <bpmn:documentation>Overproduced deliberately: about forty items drafted for twenty to twenty-five kept. There is no skill file for this; it is an ordinary drafting conversation against the source's goals and activities. The draft lands in the source's tasks/ and rubrics/ on a branch.</bpmn:documentation>
+      <bpmn:incoming>f1</bpmn:incoming>
+      <bpmn:outgoing>f2</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:userTask id="T_curate" name="Curate the bank">
+      <bpmn:documentation>The instructor keeps the items worth asking and cuts the rest. This is the step that makes a drafted bank an examinable one, and nothing adjudicates it but the instructor.</bpmn:documentation>
+      <bpmn:incoming>f2</bpmn:incoming>
+      <bpmn:outgoing>f3</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="T_publish" name="Publish the bank to students">
+      <bpmn:documentation>The items are public and the selection is private. Publishing is a release and follows whichever route the source uses: a learning topic is merged and pushed as topic release does it, and an assignment follow-up bank is pushed with the assignment. Students then have every question they could be asked, which is what makes studying the source and studying for the quiz the same act.</bpmn:documentation>
+      <bpmn:incoming>f3</bpmn:incoming>
+      <bpmn:outgoing>f4</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="T_pool" name="Write the session's pool file">
+      <bpmn:documentation>course-private/data/quiz-bank/session-&lt;n&gt;.pool.json — instructor only, not in this repository. It names the sources and how many to draw from each of their tasks files. The selection is the private half: which questions are fair on one date is a judgment about one session.</bpmn:documentation>
+      <bpmn:incoming>f4</bpmn:incoming>
+      <bpmn:outgoing>f5</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:scriptTask id="T_bake" name="Bake a draw for every student&#10;on the roster&#10;quiz-bake.mjs">
+      <bpmn:documentation>umsi212F2026/course-private:tools/quiz-bake.mjs — instructor only, not in this repository. It reads the pool file, resolves each source to a folder with tasks/ and rubrics/, and draws per student. The roster comes from that date's seating chart; there is no second roster source. The draw is deterministic, seeded from the date and the uniqname, so fixing a typo and re-baking does not reshuffle everyone's quiz. It shares its draw library with the practice front end.</bpmn:documentation>
+      <bpmn:incoming>f5</bpmn:incoming>
+      <bpmn:outgoing>f6</bpmn:outgoing>
+    </bpmn:scriptTask>
+    <bpmn:scriptTask id="T_seed" name="Seed the draws into the app&#10;quiz-seed.mjs">
+      <bpmn:documentation>umsi212F2026/course-private:tools/quiz-seed.mjs — instructor only, not in this repository. An upsert keyed on date and uniqname, so re-baking after a fix is just running it again. Refused once the quiz is open unless forced, because the same upsert would replace items under students who are mid-quiz.</bpmn:documentation>
+      <bpmn:incoming>f6</bpmn:incoming>
+      <bpmn:outgoing>f7</bpmn:outgoing>
+    </bpmn:scriptTask>
+    <bpmn:userTask id="T_open" name="Open the quiz">
+      <bpmn:documentation>One button on the app's admin page. The answer and the rubric are stripped on the student path, so a draw that carries its own answers cannot be read out of the page.</bpmn:documentation>
+      <bpmn:incoming>f7</bpmn:incoming>
+      <bpmn:outgoing>f8</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="T_close" name="Close the quiz">
+      <bpmn:documentation>On the clock, not on everyone having finished. That is why this run never waits on the student pool, and why the export has to carry drafts: a student who typed answers and never pressed Submit is a third state, distinct from one who submitted and one who did nothing.</bpmn:documentation>
+      <bpmn:incoming>f8</bpmn:incoming>
+      <bpmn:outgoing>f9</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:scriptTask id="T_export" name="Export the submissions&#10;NOT WRITTEN YET">
+      <bpmn:documentation>Writes course-private/data/quizzes/&lt;date&gt;-submissions.json — the latest submission per student, plus a drafts array for answers that were typed and never submitted. The grader reads this file and never reads the database.</bpmn:documentation>
+      <bpmn:incoming>f9</bpmn:incoming>
+      <bpmn:outgoing>f10</bpmn:outgoing>
+    </bpmn:scriptTask>
+    <bpmn:subProcess id="Sub_grade" name="Grade one answer">
+      <bpmn:documentation>workflows/quiz/skills/quiz/grade/SKILL.md — NOT WRITTEN YET. One set of grading instructions, two runners. The batch runner here is the instructor's quiz-grade.mjs; the practice runner is the student's own agent, following the same skill in a fresh context. Consistency comes from the recorded rubric rather than from which model runs it. Drawn a second time in workflows/learn/learn.bpmn, where the practice quiz calls it; the two planes are the same phase and have to be kept in step by hand.</bpmn:documentation>
+      <bpmn:incoming>f10</bpmn:incoming>
+      <bpmn:outgoing>f11</bpmn:outgoing>
+      <bpmn:multiInstanceLoopCharacteristics isSequential="true" />
+      <bpmn:laneSet id="LS_grade">
+        <bpmn:lane id="L_g_human" name="HUMAN operator">
+          <bpmn:documentation>Empty on purpose. Nobody is in the loop on one answer. The instructor reviews whole scripts one level up, after every answer has a credit, which is a different act from adjudicating an item.</bpmn:documentation>
+        </bpmn:lane>
+        <bpmn:lane id="L_g_agent" name="AI AGENT">
+          <bpmn:flowNodeRef>T_judge</bpmn:flowNodeRef>
+        </bpmn:lane>
+        <bpmn:lane id="L_g_program" name="PROGRAM">
+          <bpmn:flowNodeRef>Start_g</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>G_kind</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>T_mcq</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>G_gjoin</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>End_g</bpmn:flowNodeRef>
+        </bpmn:lane>
+      </bpmn:laneSet>
+      <bpmn:sequenceFlow id="g1" sourceRef="Start_g" targetRef="G_kind" />
+      <bpmn:sequenceFlow id="g2" name="mcq" sourceRef="G_kind" targetRef="T_mcq">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">the rubric entry says type: mcq</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="g3" name="free" sourceRef="G_kind" targetRef="T_judge" />
+      <bpmn:sequenceFlow id="g4" sourceRef="T_mcq" targetRef="G_gjoin" />
+      <bpmn:sequenceFlow id="g5" sourceRef="T_judge" targetRef="G_gjoin" />
+      <bpmn:sequenceFlow id="g6" sourceRef="G_gjoin" targetRef="End_g" />
+      <bpmn:startEvent id="Start_g" name="an answer&#10;to grade">
+        <bpmn:outgoing>g1</bpmn:outgoing>
+      </bpmn:startEvent>
+      <bpmn:exclusiveGateway id="G_kind" name="what kind&#10;of item?" default="g3">
+        <bpmn:incoming>g1</bpmn:incoming>
+        <bpmn:outgoing>g2</bpmn:outgoing>
+        <bpmn:outgoing>g3</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:scriptTask id="T_mcq" name="Compare the chosen text">
+        <bpmn:documentation>Not a model call, in either runner. The app stores the chosen option as text, so an mcq is right when that text equals the answer. Both runners do this in code, which is what makes multiple choice cost nothing and never disagree with itself.</bpmn:documentation>
+        <bpmn:incoming>g2</bpmn:incoming>
+        <bpmn:outgoing>g4</bpmn:outgoing>
+      </bpmn:scriptTask>
+      <bpmn:serviceTask id="T_judge" name="Judge against the rubric&#10;quiz/grade — NOT WRITTEN YET">
+        <bpmn:documentation>workflows/quiz/skills/quiz/grade/SKILL.md — NOT WRITTEN YET. Rules on one answer to one item, given the prompt, its rubric entry and the answer. Returns the credit (full, half or none), what the answer missed, the two axes for the log, and a flag when the credit is close enough to be worth a person's eye. Nothing branches on the flag yet: the instructor reviews every script this term, which is the experiment that says whether the flag can be trusted later.</bpmn:documentation>
+        <bpmn:incoming>g3</bpmn:incoming>
+        <bpmn:outgoing>g5</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:exclusiveGateway id="G_gjoin">
+        <bpmn:incoming>g4</bpmn:incoming>
+        <bpmn:incoming>g5</bpmn:incoming>
+        <bpmn:outgoing>g6</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:endEvent id="End_g" name="credit settled">
+        <bpmn:incoming>g6</bpmn:incoming>
+      </bpmn:endEvent>
+    </bpmn:subProcess>
+    <bpmn:userTask id="T_review" name="Review the graded scripts">
+      <bpmn:documentation>Every script, every week, until the flag has earned trust. There is no gateway in front of this on purpose: nothing is filtered out yet. When the flag is trusted, this becomes a branch and the label narrows to the flagged items.</bpmn:documentation>
+      <bpmn:incoming>f11</bpmn:incoming>
+      <bpmn:outgoing>f12</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:scriptTask id="T_push" name="Push the scores to Canvas&#10;quiz-scores.mjs — NOT WRITTEN YET">
+      <bpmn:documentation>umsi212F2026/course-private:tools/quiz-scores.mjs — instructor only, not in this repository. One bulk call against the gradebook, keyed on the canvas_id the seating chart already carries.</bpmn:documentation>
+      <bpmn:incoming>f12</bpmn:incoming>
+      <bpmn:outgoing>f13</bpmn:outgoing>
+    </bpmn:scriptTask>
+    <bpmn:endEvent id="End_scores" name="scores in&#10;the gradebook">
+      <bpmn:incoming>f13</bpmn:incoming>
+    </bpmn:endEvent>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="D_quiz">
+    <bpmndi:BPMNPlane id="Pl_quiz" bpmnElement="C_quiz">
+      <bpmndi:BPMNShape id="P_student_di" bpmnElement="P_student" isHorizontal="true">
+        <dc:Bounds x="160" y="80" width="3120" height="100" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P_day_di" bpmnElement="P_day" isHorizontal="true">
+        <dc:Bounds x="160" y="220" width="3120" height="590" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L_human_di" bpmnElement="L_human" isHorizontal="true" color:background-color="#fdf3f7" color:border-color="#9c8490">
+        <dc:Bounds x="190" y="220" width="3090" height="200" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L_agent_di" bpmnElement="L_agent" isHorizontal="true" color:background-color="#fdf7ee" color:border-color="#9c8d76">
+        <dc:Bounds x="190" y="420" width="3090" height="200" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L_program_di" bpmnElement="L_program" isHorizontal="true" color:background-color="#eef5f4" color:border-color="#7a918d">
+        <dc:Bounds x="190" y="620" width="3090" height="190" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Start_day_di" bpmnElement="Start_day">
+        <dc:Bounds x="230" y="302" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_draft_di" bpmnElement="T_draft">
+        <dc:Bounds x="310" y="480" width="200" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_curate_di" bpmnElement="T_curate">
+        <dc:Bounds x="550" y="280" width="200" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_publish_di" bpmnElement="T_publish">
+        <dc:Bounds x="790" y="280" width="200" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_pool_di" bpmnElement="T_pool">
+        <dc:Bounds x="1030" y="280" width="200" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_bake_di" bpmnElement="T_bake">
+        <dc:Bounds x="1270" y="675" width="200" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_seed_di" bpmnElement="T_seed">
+        <dc:Bounds x="1510" y="675" width="200" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_open_di" bpmnElement="T_open">
+        <dc:Bounds x="1750" y="280" width="200" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_close_di" bpmnElement="T_close">
+        <dc:Bounds x="1990" y="280" width="200" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_export_di" bpmnElement="T_export">
+        <dc:Bounds x="2230" y="675" width="200" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Sub_grade_di" bpmnElement="Sub_grade" isExpanded="false">
+        <dc:Bounds x="2470" y="480" width="200" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_review_di" bpmnElement="T_review">
+        <dc:Bounds x="2710" y="280" width="200" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_push_di" bpmnElement="T_push">
+        <dc:Bounds x="2950" y="675" width="200" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_scores_di" bpmnElement="End_scores">
+        <dc:Bounds x="3200" y="697" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="f1_di" bpmnElement="f1">
+        <di:waypoint x="266" y="320" />
+        <di:waypoint x="288" y="320" />
+        <di:waypoint x="288" y="520" />
+        <di:waypoint x="310" y="520" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f2_di" bpmnElement="f2">
+        <di:waypoint x="510" y="520" />
+        <di:waypoint x="530" y="520" />
+        <di:waypoint x="530" y="320" />
+        <di:waypoint x="550" y="320" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f3_di" bpmnElement="f3">
+        <di:waypoint x="750" y="320" />
+        <di:waypoint x="790" y="320" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f4_di" bpmnElement="f4">
+        <di:waypoint x="990" y="320" />
+        <di:waypoint x="1030" y="320" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f5_di" bpmnElement="f5">
+        <di:waypoint x="1230" y="320" />
+        <di:waypoint x="1250" y="320" />
+        <di:waypoint x="1250" y="715" />
+        <di:waypoint x="1270" y="715" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f6_di" bpmnElement="f6">
+        <di:waypoint x="1470" y="715" />
+        <di:waypoint x="1510" y="715" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f7_di" bpmnElement="f7">
+        <di:waypoint x="1710" y="715" />
+        <di:waypoint x="1730" y="715" />
+        <di:waypoint x="1730" y="320" />
+        <di:waypoint x="1750" y="320" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f8_di" bpmnElement="f8">
+        <di:waypoint x="1950" y="320" />
+        <di:waypoint x="1990" y="320" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f9_di" bpmnElement="f9">
+        <di:waypoint x="2190" y="320" />
+        <di:waypoint x="2210" y="320" />
+        <di:waypoint x="2210" y="715" />
+        <di:waypoint x="2230" y="715" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f10_di" bpmnElement="f10">
+        <di:waypoint x="2430" y="715" />
+        <di:waypoint x="2450" y="715" />
+        <di:waypoint x="2450" y="520" />
+        <di:waypoint x="2470" y="520" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f11_di" bpmnElement="f11">
+        <di:waypoint x="2670" y="520" />
+        <di:waypoint x="2690" y="520" />
+        <di:waypoint x="2690" y="320" />
+        <di:waypoint x="2710" y="320" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f12_di" bpmnElement="f12">
+        <di:waypoint x="2910" y="320" />
+        <di:waypoint x="2930" y="320" />
+        <di:waypoint x="2930" y="715" />
+        <di:waypoint x="2950" y="715" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f13_di" bpmnElement="f13">
+        <di:waypoint x="3150" y="715" />
+        <di:waypoint x="3200" y="715" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="m_serve_di" bpmnElement="m_serve">
+        <di:waypoint x="1850" y="280" />
+        <di:waypoint x="1850" y="180" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="m_answers_di" bpmnElement="m_answers">
+        <di:waypoint x="2330" y="180" />
+        <di:waypoint x="2330" y="675" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+  <bpmndi:BPMNDiagram id="D_grade">
+    <bpmndi:BPMNPlane id="Pl_grade" bpmnElement="Sub_grade">
+      <bpmndi:BPMNShape id="L_g_human_di" bpmnElement="L_g_human" isHorizontal="true" color:background-color="#fdf3f7" color:border-color="#9c8490">
+        <dc:Bounds x="160" y="80" width="760" height="140" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L_g_agent_di" bpmnElement="L_g_agent" isHorizontal="true" color:background-color="#fdf7ee" color:border-color="#9c8d76">
+        <dc:Bounds x="160" y="220" width="760" height="160" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L_g_program_di" bpmnElement="L_g_program" isHorizontal="true" color:background-color="#eef5f4" color:border-color="#7a918d">
+        <dc:Bounds x="160" y="380" width="760" height="180" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Start_g_di" bpmnElement="Start_g">
+        <dc:Bounds x="220" y="452" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_kind_di" bpmnElement="G_kind" isMarkerVisible="true">
+        <dc:Bounds x="300" y="445" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_mcq_di" bpmnElement="T_mcq">
+        <dc:Bounds x="410" y="430" width="200" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_judge_di" bpmnElement="T_judge">
+        <dc:Bounds x="410" y="260" width="200" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_gjoin_di" bpmnElement="G_gjoin" isMarkerVisible="true">
+        <dc:Bounds x="660" y="445" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_g_di" bpmnElement="End_g">
+        <dc:Bounds x="750" y="452" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="g1_di" bpmnElement="g1">
+        <di:waypoint x="256" y="470" />
+        <di:waypoint x="300" y="470" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="g2_di" bpmnElement="g2">
+        <di:waypoint x="350" y="470" />
+        <di:waypoint x="410" y="470" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="g3_di" bpmnElement="g3">
+        <di:waypoint x="325" y="445" />
+        <di:waypoint x="325" y="300" />
+        <di:waypoint x="410" y="300" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="g4_di" bpmnElement="g4">
+        <di:waypoint x="610" y="470" />
+        <di:waypoint x="660" y="470" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="g5_di" bpmnElement="g5">
+        <di:waypoint x="610" y="300" />
+        <di:waypoint x="685" y="300" />
+        <di:waypoint x="685" y="445" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="g6_di" bpmnElement="g6">
+        <di:waypoint x="710" y="470" />
+        <di:waypoint x="750" y="470" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
