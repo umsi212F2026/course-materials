@@ -9,8 +9,9 @@
 //     ... --outcome declared    the learner saying they've got it
 //
 //   --tags a,b                   what the supply returned. From the closed set in lib/slots.mjs
-//   --source study|review|scan   defaults to study. `scan` is for the daily transcript scan,
-//                                which is designed but not built
+//   --source study|review|quiz|scan  defaults to study. `quiz` is a practice quiz, whose passes
+//                                re-date a goal without moving it along the intervals. `scan` is
+//                                for the daily transcript scan, which is designed but not built
 //   --note "..."                 optional, e.g. why they stopped
 //
 // ONE CODE PATH FOR EVERY GOAL. A capability, a word and an orientation all arrive here the
@@ -54,7 +55,7 @@ const USAGE = `usage:
   --axes '{"unaided":"yes|no|unclear","criterion":"met|not met|unclear|unchecked"}'
   --outcome abandoned | declared
   --tags ${Object.keys(TAGS).join(',')}
-  --source study | review | scan      (default study)
+  --source study | review | quiz | scan   (default study)
   --note "..."`;
 
 const die = (msg) => {
@@ -105,7 +106,8 @@ if (extra.length) {
 if (!existsSync(dir)) die(`${dir} does not exist.`);
 
 const source = flags.source ?? 'study';
-if (!['study', 'review', 'scan'].includes(source)) die(`--source must be study, review or scan.`);
+if (!['study', 'review', 'quiz', 'scan'].includes(source))
+  die(`--source must be study, review, quiz or scan.`);
 
 if (!!flags.axes === !!flags.outcome) {
   die('Give exactly one of --axes and --outcome.\n\n' + USAGE);

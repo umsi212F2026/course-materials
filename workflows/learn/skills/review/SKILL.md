@@ -202,9 +202,12 @@ argument.
 
    **That one call is also what sets the next date**, and there is nothing to forget, because
    there is no second write. The schedule is a fold over this log: `--source review` is what
-   makes this attempt one the fold acts on, and the fold moves the date out on a pass, in on a
-   lapse, and a full interval along on anything inconclusive. There is no file to edit, and no
-   path where a recorded attempt leaves a goal due forever.
+   makes this attempt one the fold moves along the intervals, out on a pass, in on a lapse, and
+   a full interval along on anything inconclusive. A pass from anywhere else, practice or a
+   quiz, re-dates the goal from the day it happened but leaves it on the interval it was
+   already on, so a goal that keeps being met keeps an honest clock without ever earning a
+   longer gap for it. There is no file to edit, and no path where a recorded attempt leaves a
+   goal due forever.
 
    **Before anything else** because step 5 is where the session runs long. It's one call, the
    verdict is already in hand, and everything after this point is conversation that can be

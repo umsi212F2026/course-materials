@@ -19,7 +19,7 @@
 // file order is chronological; nothing here sorts, and a line inserted out of order would produce
 // a wrong date rather than an error. Nothing hand-edits that file, and this is one of the reasons.
 
-import { met, intervalDirection } from './bars.mjs';
+import { met, intervalDirection, isPass } from './bars.mjs';
 import { recurs } from './slots.mjs';
 
 // Intervals in days. A pass moves one step along; a lapse moves one back, never below the
@@ -67,9 +67,17 @@ export function reviewSchedule(goal, attempts) {
       continue;
     }
 
-    // Afterwards, only review moves it. A study session recording a second pass shouldn't move a
-    // date that review owns.
-    if (attempt.source !== 'review') continue;
+    // Afterwards, ONLY REVIEW MOVES IT ALONG THE INTERVALS, but a pass from anywhere else still
+    // re-dates it: the goal was shown again today, so the clock restarts from today at the
+    // interval it is already on. The step does not move, which is what stops two passes in one
+    // sitting lengthening an interval that review owns.
+    //
+    // Anything that is not a pass outside review moves nothing at all, so a tutor helping during
+    // study cannot pull a date in, and a miss in practice cannot push one out.
+    if (attempt.source !== 'review') {
+      if (isPass(attempt)) due = plus(attempt.at, INTERVALS[step]);
+      continue;
+    }
 
     const direction = intervalDirection(attempt);
     if (direction === 'longer') step = Math.min(step + 1, INTERVALS.length - 1);

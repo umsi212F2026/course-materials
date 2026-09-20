@@ -977,7 +977,7 @@
         <bpmn:outgoing>r10</bpmn:outgoing>
       </bpmn:exclusiveGateway>
       <bpmn:scriptTask id="R_record" name="Record the attempt; the same call moves the date&#10;record-attempt.mjs">
-        <bpmn:documentation>workflows/learn/tools/record-attempt.mjs, with --source review. It appends one line and writes nowhere else: the next date is a fold over the file it has just appended to, so recording the attempt IS setting the date, and there is no second write for a session to forget. --source review is what makes this attempt one the fold moves the date on.</bpmn:documentation>
+        <bpmn:documentation>workflows/learn/tools/record-attempt.mjs, with --source review. It appends one line and writes nowhere else: the next date is a fold over the file it has just appended to, so recording the attempt IS setting the date, and there is no second write for a session to forget. --source review is what makes this attempt one the fold moves along the intervals. A pass recorded from anywhere else, a practice quiz or a real one, re-dates the goal from the day it happened but leaves it on the interval it was already on, so being met elsewhere keeps the clock honest without earning a longer gap.</bpmn:documentation>
         <bpmn:incoming>r5</bpmn:incoming>
         <bpmn:outgoing>r9</bpmn:outgoing>
         <bpmn:property id="Property_r_rec" name="__targetRef_placeholder" />
