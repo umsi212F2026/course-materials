@@ -26,7 +26,7 @@ rule nothing.
 
 ## What you get, and what you don't
 
-**Six things, and you need all six:**
+**Five things you need, and one you may not be given:**
 
 |             |                                                                                       |
 | ----------- | ------------------------------------------------------------------------------------- |
@@ -35,13 +35,23 @@ rule nothing.
 | `rubric`    | the recorded answer, followed by its credit line. This is the authority, not your own |
 | `answer`    | what the student wrote, verbatim and unedited                                         |
 | `goal`      | the goal id the item examines, or absent where the source has no goals                |
-| `kind`      | `written` or `capability`                                                             |
+| `kind`      | `written` or `capability`, where the caller could determine it. See below              |
 
 Sent as a JSON object per answer, and a batch is an array of them.
 
-**If one is missing, say so and rule nothing.** Not the rubric you would have written, not the
-goal the item looks like it examines. A verdict built on an inferred input is worse than none,
-because it is recorded exactly like a real one and a student is graded on it.
+**If one of the five is missing, say so and rule nothing.** Not the rubric you would have
+written, not the goal the item looks like it examines. A verdict built on an inferred input is
+worse than none, because it is recorded exactly like a real one and a student is graded on it.
+
+**`kind` is the one that may legitimately be absent.** Whether a goal is met by doing something
+rather than by writing about it lives in the topic's `goals.md`, in the slots the goal carries,
+and not every caller has read it: the batch runner works from a draw file and a submissions file
+and may have neither to hand. Absent, rule as `written`. That is safe exactly where it happens,
+because a caller with no `goals.md` is also a caller with no review schedule for the axis to
+move. The practice quiz has both and always sends it.
+
+**Never infer `kind` from the goal id.** The `c-` / `w-` / `o-` prefix is a reading aid, and
+nothing in this course decides anything from it.
 
 **The credit line is the authority and it is specific on purpose.** It was written next to the
 question by the person who set it, and it usually names both what earns full credit and what

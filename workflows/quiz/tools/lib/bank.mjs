@@ -142,6 +142,16 @@ export function readBank(dir, label = '') {
       const base = name.replace(/\.md$/, '');
       const bank = label ? `${label}/${base}` : base;
 
+      // THE GOAL AND THE MOVE TRAVEL WITH THE ITEM, for the two things downstream that need
+      // them: the grader, which rules a capability item's criterion `unchecked`, and the
+      // practice quiz, which records an attempt against the goal. Neither reaches the student:
+      // quiz-seed's validateItem allow-lists what the app is served, so a draw file is
+      // deliberately richer than the page built from it. A source with no goals, an
+      // assignment's follow-ups for instance, simply carries neither.
+      const recording = {};
+      if (r.goal) recording.goal = r.goal;
+      if (r.move) recording.move = r.move;
+
       if (type === 'mcq') {
         if (!choices) {
           problems.push(`${s.id} is type mcq but its question carries no numbered choices`);
@@ -152,7 +162,7 @@ export function readBank(dir, label = '') {
           problems.push(`${s.id} has answer: ${r.answer}, which is not one of its ${choices.length} choices`);
           continue;
         }
-        items.push({ bank, id: s.id, type, prompt, choices, answer: n - 1 });
+        items.push({ bank, ...recording, id: s.id, type, prompt, choices, answer: n - 1 });
       } else {
         if (!r.answer) {
           problems.push(`${s.id} has no answer in its rubric`);
@@ -161,7 +171,7 @@ export function readBank(dir, label = '') {
         // One string, because that is what the draw contract and the grader already take.
         const credit = r.credit ? r.credit.charAt(0).toUpperCase() + r.credit.slice(1) : '';
         const rubric = credit ? `${r.answer} ${credit}` : r.answer;
-        items.push({ bank, id: s.id, type, prompt, rubric });
+        items.push({ bank, ...recording, id: s.id, type, prompt, rubric });
       }
     }
   }
