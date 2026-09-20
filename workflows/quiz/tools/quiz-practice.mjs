@@ -2,7 +2,7 @@
 //
 // Sit a practice quiz on a page, then score it once an agent has ruled the written answers.
 //
-//   node workflows/quiz/tools/quiz-practice.mjs learning-topics/commits-and-history-2026-09
+//   node workflows/quiz/tools/quiz-practice.mjs --session 5
 //   node workflows/quiz/tools/quiz-practice.mjs --score tmp/practice-2026-09-20T14-02-11
 //
 // THE QUESTIONS ARE ANSWERED ON A PAGE, NOT IN A CHAT, and that is the point rather than the
@@ -27,8 +27,7 @@ import { readFileSync, writeFileSync, appendFileSync, existsSync, mkdirSync } fr
 import { createServer } from "node:http";
 import { resolve, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { readBank } from "./lib/bank.mjs";
-import { drawPractice } from "./quiz-draw.mjs";
+import { drawPractice, loadPool } from "./quiz-draw.mjs";
 import { collectAnswers, settleMcq, buildQueue, mergeGrades, CREDIT_VALUE } from "./lib/grade.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -197,25 +196,27 @@ function main() {
     return score(dir);
   }
 
-  const source = process.argv.slice(2).find((a) => !a.startsWith("--"));
   const portAt = process.argv.indexOf("--port");
   const port = Number(portAt === -1 ? 5300 : process.argv[portAt + 1]);
-  if (!source) {
-    console.error("Usage: node workflows/quiz/tools/quiz-practice.mjs <source> [--port 5300]");
+  const sessionAt = process.argv.indexOf("--session");
+  const session = sessionAt === -1 ? null : process.argv[sessionAt + 1];
+  if (!session) {
+    console.error("Usage: node workflows/quiz/tools/quiz-practice.mjs --session <n> [--port 5300]");
     process.exit(1);
   }
-  const dir = join(ROOT, source);
-  if (!existsSync(dir)) {
-    console.error(`No ${source} under ${ROOT}. Name it as a path from your workspace root.`);
+  const pool = loadPool(session);
+  if (!pool) {
+    console.error(`No published pool for session ${session}.`);
     process.exit(1);
   }
+  const source = `session ${pool.session}, the quiz of ${pool.date}`;
 
-  const { items, strata, problems } = drawPractice(readBank(dir, source), {
+  const { items, strata, problems } = drawPractice(pool, ROOT, {
     seed: process.argv.includes("--seed") ? process.argv[process.argv.indexOf("--seed") + 1] : undefined,
   });
   for (const p of problems) console.error(`  ${p}`);
   if (!items.length) {
-    console.error(`\n${source} has no practice quiz to draw.`);
+    console.error(`\nSession ${session}'s pool drew nothing.`);
     process.exit(1);
   }
 

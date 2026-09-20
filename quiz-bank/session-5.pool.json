@@ -1,0 +1,10 @@
+{
+  "_note": "The per-session selection: how many questions to draw from each bank on one date. Published, because a practice quiz is generated from this same file by the same library, so students practise the shape they will actually face. It says how many from where and nothing about which questions: the draw is random per student, and the questions themselves live in the sources named below, which students already have.",
+  "session": 5,
+  "date": "2026-09-15",
+  "topic": "commits-and-history-2026-09",
+  "draw": {
+    "words": 4,
+    "commit-and-restore": 1
+  }
+}

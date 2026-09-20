@@ -1,18 +1,22 @@
 #!/usr/bin/env node
 //
-// Draw a practice quiz from one source, for a student practising on their own machine.
+// Draw a practice quiz from one session's published pool.
 //
-//   node workflows/quiz/tools/quiz-draw.mjs learning-topics/commits-and-history-2026-09
-//   node workflows/quiz/tools/quiz-draw.mjs assignments/ps1-data-analysis --seed anything
+//   node workflows/quiz/tools/quiz-draw.mjs --session 5
+//   node workflows/quiz/tools/quiz-draw.mjs --session 5 --seed anything
 //
 // THE SAME LIBRARY THE REAL QUIZ DRAWS FROM. bank.mjs is shared with the instructor's bake,
 // so a practice quiz is not a rehearsal of the real thing, it is the real thing with a
 // different front end. That is the claim this file exists to make true.
 //
-// THE SHAPE COMES FROM THE SOURCE, NOT FROM A POOL. Which questions are fair on a given date
-// is a judgment about one session and lives in the instructor's clone, where no student can
-// see it. So each tasks file declares its own practice shape in its intro, and that is what is
-// drawn here: the same strata a real quiz uses, without publishing the selection.
+// THE SHAPE COMES FROM THE SAME POOL FILE THE REAL QUIZ USED. A pool says how many to draw
+// from each bank on one date, and it is published, so this is not a restatement of the quiz's
+// shape but the quiz's shape. The shape is a judgment about one session rather than a property
+// of the material: a topic examined twice in a term can be drawn two different ways, which is
+// why this cannot live in a tasks file.
+//
+// IT DISCLOSES NOTHING. A pool says how many from where, never which questions, and the draw
+// below is random per run. The questions themselves are in repositories students already have.
 //
 // RANDOM EVERY TIME, on purpose. The instructor's bake is seeded from the date and the
 // uniqname so that fixing a typo and re-baking does not reshuffle anyone's quiz. Practice has
@@ -27,12 +31,14 @@
 import { readFileSync, existsSync } from "node:fs";
 import { resolve, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { readBank } from "./lib/bank.mjs";
+import { readPoolSources, applyPool } from "./lib/bank.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 // The workspace root: the folder holding course-materials, learning-topics and assignments.
 // A source is named as a path from here, so it means the same thing on every machine.
-const ROOT = process.env.SOURCES_ROOT ?? resolve(here, "..", "..", "..", "..");
+const REPO = resolve(here, "..", "..", "..");
+const ROOT = process.env.SOURCES_ROOT ?? resolve(REPO, "..");
+const POOLS = join(REPO, "quiz-bank");
 
 /** mulberry32, seeded from a string, so a test can ask for the same draw twice. */
 function rng(seed) {
@@ -59,56 +65,52 @@ function pick(items, count, next) {
   return out;
 }
 
-/** One practice quiz: every bank in the source contributes the number it declares.
+/** One practice quiz from one session's pool: each stratum contributes what the pool asks for.
  *
- *  A bank that declares nothing contributes nothing, and says so. Guessing a number would
- *  make the practice quiz a different shape from the real one, which is the one thing it is
- *  supposed to share. */
-export function drawPractice(bank, { seed } = {}) {
+ *  This is the instructor's bake with the roster taken out and the seed left random. The strata
+ *  come from applyPool, which is the same function the bake uses, so "three about reading a
+ *  diagram and one about lanes" is as much a guarantee here as it is in class. */
+export function drawPractice(pool, root, { seed } = {}) {
+  const bank = readPoolSources(pool, root);
+  const { strata, problems } = applyPool(bank, pool);
   const next = rng(seed ?? `${Date.now()}:${Math.random()}`);
-  const byBank = new Map();
-  for (const item of bank.items) {
-    if (!byBank.has(item.bank)) byBank.set(item.bank, []);
-    byBank.get(item.bank).push(item);
-  }
 
-  const problems = [...bank.problems];
   const items = [];
-  const strata = [];
-  for (const [name, available] of [...byBank].sort()) {
-    const take = available[0].practice;
-    if (take == null) {
-      problems.push(`${name} does not say how many a practice quiz should draw, so it contributed none. Add "**Practice draw:** <n>" to its intro.`);
-      continue;
+  const shape = [];
+  for (const s of strata) {
+    if (s.items.length < s.take) {
+      problems.push(`${s.name} asks for ${s.take} but has only ${s.items.length}, so all of them were drawn`);
     }
-    if (available.length < take) {
-      problems.push(`${name} asks for ${take} but has only ${available.length}, so all of them were drawn`);
-    }
-    const drawn = pick(available, Math.min(take, available.length), next);
-    strata.push({ name, take, drawn: drawn.length });
+    const drawn = pick(s.items, Math.min(s.take, s.items.length), next);
+    shape.push({ name: s.name, take: s.take, drawn: drawn.length });
     items.push(...drawn);
   }
-  return { items, strata, problems };
+  return { items, strata: shape, problems };
+}
+
+/** The published pool for one session, from the clone this tool lives in. */
+export function loadPool(session) {
+  const path = join(POOLS, `session-${session}.pool.json`);
+  if (!existsSync(path)) return null;
+  return JSON.parse(readFileSync(path, "utf8"));
 }
 
 function main() {
-  const args = process.argv.slice(2).filter((a) => !a.startsWith("--"));
   const seedAt = process.argv.indexOf("--seed");
-  const source = args[0];
-  if (!source) {
-    console.error("Usage: node workflows/quiz/tools/quiz-draw.mjs <source> [--seed <text>]");
-    console.error("  e.g. learning-topics/commits-and-history-2026-09");
+  const sessionAt = process.argv.indexOf("--session");
+  const session = sessionAt === -1 ? null : process.argv[sessionAt + 1];
+  if (!session) {
+    console.error("Usage: node workflows/quiz/tools/quiz-draw.mjs --session <n> [--seed <text>]");
     process.exit(1);
   }
 
-  const dir = join(ROOT, source);
-  if (!existsSync(dir)) {
-    console.error(`No ${source} under ${ROOT}. Name it as a path from your workspace root.`);
+  const pool = loadPool(session);
+  if (!pool) {
+    console.error(`No published pool for session ${session}.`);
     process.exit(1);
   }
 
-  const bank = readBank(dir, source);
-  const { items, strata, problems } = drawPractice(bank, {
+  const { items, strata, problems } = drawPractice(pool, ROOT, {
     seed: seedAt === -1 ? undefined : process.argv[seedAt + 1],
   });
 
@@ -117,12 +119,12 @@ function main() {
     console.error("");
   }
   if (!items.length) {
-    console.error(`${source} has no practice quiz to draw. Its banks declare no practice shape.`);
+    console.error(`Session ${session}'s pool drew nothing.`);
     process.exit(1);
   }
 
   process.stdout.write(
-    JSON.stringify({ source, drawn: new Date().toISOString(), strata, items }, null, 2) + "\n",
+    JSON.stringify({ session: pool.session, date: pool.date, drawn: new Date().toISOString(), strata, items }, null, 2) + "\n",
   );
 }
 
