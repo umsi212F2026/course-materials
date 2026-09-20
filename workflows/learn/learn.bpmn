@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:color="http://www.omg.org/spec/BPMN/non-normative/color/1.0" id="Definitions_v2" targetNamespace="http://si212.umich.edu/schema/bpmn">
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:color="http://www.omg.org/spec/BPMN/non-normative/color/1.0" id="Definitions_v2" targetNamespace="http://si212.umich.edu/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.50.1">
   <bpmn:collaboration id="C_1">
     <bpmn:participant id="P_1" name="Teaching yourself something: one sitting" processRef="Proc_1" />
   </bpmn:collaboration>
@@ -28,7 +28,7 @@
     <bpmn:sequenceFlow id="f_topicback" sourceRef="Sub_topic" targetRef="Gate_entry" />
     <bpmn:sequenceFlow id="f_notsel" name="done" sourceRef="Gate_done" targetRef="End_ended" />
     <bpmn:sequenceFlow id="f_reviewback" sourceRef="Conv_review" targetRef="Gate_entry" />
-    <bpmn:sequenceFlow id="f_quiz" name="practise for a quiz" sourceRef="Gate_done" targetRef="Conv_quiz">
+    <bpmn:sequenceFlow id="f_quiz" name="practice quiz" sourceRef="Gate_done" targetRef="Conv_quiz">
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">they want to know whether they would pass one</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
     <bpmn:sequenceFlow id="f_quizback" sourceRef="Conv_quiz" targetRef="Gate_entry" />
@@ -55,7 +55,7 @@
     <bpmn:startEvent id="Start_1" name="sits down&#10;to learn">
       <bpmn:outgoing>f_start</bpmn:outgoing>
     </bpmn:startEvent>
-    <bpmn:subProcess id="Sub_select" name="Take stock and choose">
+    <bpmn:subProcess id="Sub_select" name="Take stock and choose&#10;learn">
       <bpmn:documentation>workflows/learn/skills/learn/SKILL.md — guide: workflows/learn/guides/learn/howto.md</bpmn:documentation>
       <bpmn:incoming>f_enter</bpmn:incoming>
       <bpmn:outgoing>f_chosen</bpmn:outgoing>
@@ -104,7 +104,7 @@
         </bpmn:dataInputAssociation>
       </bpmn:scriptTask>
       <bpmn:scriptTask id="L_due" name="Count what is due across all topics&#10;review-due.mjs">
-        <bpmn:documentation>workflows/learn/tools/review-due.mjs — the menu needs the count and roughly where they are, not the list. Review runs the same program itself and is handed nothing, so a list can&#39;t travel with the learner and go stale on the way. It takes no arguments and reads the same three files wherever it is run — the review plane draws the identical set.</bpmn:documentation>
+        <bpmn:documentation>workflows/learn/tools/review-due.mjs — the menu needs the count and roughly where they are, not the list. Review runs the same program itself and is handed nothing, so a list can't travel with the learner and go stale on the way. It takes no arguments and reads the same three files wherever it is run — the review plane draws the identical set.</bpmn:documentation>
         <bpmn:incoming>l3</bpmn:incoming>
         <bpmn:outgoing>l5</bpmn:outgoing>
         <bpmn:property id="Property_l_due" name="__targetRef_placeholder" />
@@ -252,7 +252,7 @@
       <bpmn:sequenceFlow id="Flow_1plhddl" sourceRef="L_word" targetRef="G_lmerge" />
       <bpmn:sequenceFlow id="Flow_0l1rwug" sourceRef="L_mkdir" targetRef="G_lmerge" />
     </bpmn:subProcess>
-    <bpmn:subProcess id="Sub_topic" name="Work on a topic">
+    <bpmn:subProcess id="Sub_topic" name="Work on a topic&#10;topic">
       <bpmn:documentation>workflows/learn/skills/topic/SKILL.md — one topic, until there is nothing more to do on it today. Everything inside is about this topic; a review sitting is not, which is why it is not in here.</bpmn:documentation>
       <bpmn:incoming>f_sel</bpmn:incoming>
       <bpmn:outgoing>f_topicback</bpmn:outgoing>
@@ -288,7 +288,7 @@
         <bpmn:outgoing>f_assess</bpmn:outgoing>
       </bpmn:exclusiveGateway>
       <bpmn:scriptTask id="S_phase" name="Derive the phase and what is outstanding&#10;survey.mjs">
-        <bpmn:documentation>workflows/learn/tools/survey.mjs — one derivation, run here and by the menu, so that topic, learn and the progress report cannot drift apart. It reads all four files drawn here, and needs all four: goals.md for the goals and their slots, activities.md for which entries are still live, attempts.jsonl to ask each goal&#39;s own bar of the whole history, and status.jsonl for what is outstanding and whether the topic was given up. A stored phase could contradict the files; this cannot.</bpmn:documentation>
+        <bpmn:documentation>workflows/learn/tools/survey.mjs — one derivation, run here and by the menu, so that topic, learn and the progress report cannot drift apart. It reads all four files drawn here, and needs all four: goals.md for the goals and their slots, activities.md for which entries are still live, attempts.jsonl to ask each goal's own bar of the whole history, and status.jsonl for what is outstanding and whether the topic was given up. A stored phase could contradict the files; this cannot.</bpmn:documentation>
         <bpmn:incoming>f_assess</bpmn:incoming>
         <bpmn:outgoing>f_phase</bpmn:outgoing>
         <bpmn:property id="Property_phase_tr" name="__targetRef_placeholder" />
@@ -420,7 +420,7 @@
         <bpmn:sequenceFlow id="g_s5" name="no" sourceRef="G_accept" targetRef="End_G" />
         <bpmn:sequenceFlow id="g_s7" sourceRef="G_critique" targetRef="G_merge" />
       </bpmn:subProcess>
-      <bpmn:subProcess id="Sub_curate" name="Curate activities">
+      <bpmn:subProcess id="Sub_curate" name="Curate activities&#10;curation">
         <bpmn:documentation>workflows/learn/skills/curation/SKILL.md — no learner involved</bpmn:documentation>
         <bpmn:incoming>f_curate</bpmn:incoming>
         <bpmn:outgoing>f_curateback</bpmn:outgoing>
@@ -462,7 +462,7 @@
           <bpmn:outgoing>c1</bpmn:outgoing>
         </bpmn:startEvent>
         <bpmn:serviceTask id="C_stamp" name="Stamp entries for goals that supply their own&#10;curation, step 0">
-          <bpmn:documentation>workflows/learn/skills/curation/SKILL.md, step 0. A goal whose supply slot names anything but `curated` produces its own activities — a vocabulary word&#39;s moves come from the six-move menu, not from this file — so there is no artifact to find and no menu to choose among. What it needs is one entry carrying `origin: generated`, so that every goal is reachable through the same lookup and review never has to ask what kind of goal it is looking at. Idempotent, and outside the revision loop: it runs once per curation run, and a goal that already has its entry is left alone.</bpmn:documentation>
+          <bpmn:documentation>workflows/learn/skills/curation/SKILL.md, step 0. A goal whose supply slot names anything but `curated` produces its own activities — a vocabulary word's moves come from the six-move menu, not from this file — so there is no artifact to find and no menu to choose among. What it needs is one entry carrying `origin: generated`, so that every goal is reachable through the same lookup and review never has to ask what kind of goal it is looking at. Idempotent, and outside the revision loop: it runs once per curation run, and a goal that already has its entry is left alone.</bpmn:documentation>
           <bpmn:incoming>c1</bpmn:incoming>
           <bpmn:outgoing>c15</bpmn:outgoing>
           <bpmn:property id="Property_stamp_tr" name="__targetRef_placeholder" />
@@ -697,7 +697,7 @@
           <bpmn:outgoing>s16</bpmn:outgoing>
         </bpmn:exclusiveGateway>
         <bpmn:scriptTask id="S_block" name="Say what has to change upstream&#10;record-status.mjs">
-          <bpmn:documentation>workflows/learn/tools/record-status.mjs, writing a `blocked` line to this topic&#39;s status log. Two things reach it, and the difference is who has to act. `needs: curation` — every live candidate for this goal has been dropped, or the instances its supply produces are bad; an agent fixes that alone and learn spawns it in the background. `needs: goal-setting` — the criterion turns out to be untestable or to bundle two capabilities; that needs the learner, and goes on their menu. A tutor who wrote neither would leave a goal that cannot be worked on and nothing saying why.</bpmn:documentation>
+          <bpmn:documentation>workflows/learn/tools/record-status.mjs, writing a `blocked` line to this topic's status log. Two things reach it, and the difference is who has to act. `needs: curation` — every live candidate for this goal has been dropped, or the instances its supply produces are bad; an agent fixes that alone and learn spawns it in the background. `needs: goal-setting` — the criterion turns out to be untestable or to bundle two capabilities; that needs the learner, and goes on their menu. A tutor who wrote neither would leave a goal that cannot be worked on and nothing saying why.</bpmn:documentation>
           <bpmn:incoming>s16</bpmn:incoming>
           <bpmn:outgoing>s15</bpmn:outgoing>
           <bpmn:property id="Property_s_block" name="__targetRef_placeholder" />
@@ -749,7 +749,7 @@
             </bpmn:dataOutputAssociation>
           </bpmn:serviceTask>
           <bpmn:scriptTask id="RUN_served" name="What has this already been given?&#10;served.mjs">
-            <bpmn:documentation>workflows/learn/tools/served.mjs — the labels this goal has already been given, returned unmodified. A label is whatever the supply that wrote it chose to write, and that supply is the only thing that reads it back: the vocabulary supply writes the move and a note on the instance, the curated supply writes the entry id and a bank item after a slash. Recomputed from the attempt log rather than cached, because a generator&#39;s labels grow for as long as the goal keeps coming back in review.</bpmn:documentation>
+            <bpmn:documentation>workflows/learn/tools/served.mjs — the labels this goal has already been given, returned unmodified. A label is whatever the supply that wrote it chose to write, and that supply is the only thing that reads it back: the vocabulary supply writes the move and a note on the instance, the curated supply writes the entry id and a bank item after a slash. Recomputed from the attempt log rather than cached, because a generator's labels grow for as long as the goal keeps coming back in review.</bpmn:documentation>
             <bpmn:property id="Property_served_tr" name="__targetRef_placeholder" />
             <bpmn:dataInputAssociation id="a_served_log">
               <bpmn:sourceRef>DOR_run_log</bpmn:sourceRef>
@@ -767,7 +767,7 @@
           <bpmn:outgoing>s8</bpmn:outgoing>
         </bpmn:exclusiveGateway>
         <bpmn:serviceTask id="S_judge" name="Rule on unaided, and on the criterion&#10;the goal&#39;s adjudicator">
-          <bpmn:documentation>Whichever implementation the goal&#39;s adjudicator slot names: workflows/learn/skills/study/judge/SKILL.md, a fresh judge in a fresh context, or the tutor ruling in session with no extra call. One contract either way — given the goal, its criterion and the record, rule on each question separately.</bpmn:documentation>
+          <bpmn:documentation>Whichever implementation the goal's adjudicator slot names: workflows/learn/skills/study/judge/SKILL.md, a fresh judge in a fresh context, or the tutor ruling in session with no extra call. One contract either way — given the goal, its criterion and the record, rule on each question separately.</bpmn:documentation>
           <bpmn:incoming>s7</bpmn:incoming>
           <bpmn:outgoing>s9</bpmn:outgoing>
         </bpmn:serviceTask>
@@ -777,7 +777,7 @@
           <bpmn:outgoing>s10</bpmn:outgoing>
         </bpmn:exclusiveGateway>
         <bpmn:scriptTask id="S_log" name="Log the attempt&#10;record-attempt.mjs">
-          <bpmn:documentation>workflows/learn/tools/record-attempt.mjs. Every attempt goes through it, missed ones included — nothing can be worked out from a record of only what worked. It checks the goal id against goals.md, stores the two axes raw and collapses nothing, records the label and tags the supply returned, and asks the goal&#39;s own bar of the whole log. It sets no date and writes nowhere else: the schedule is a fold over the file it has just appended to, so recording the attempt is what sets the date.</bpmn:documentation>
+          <bpmn:documentation>workflows/learn/tools/record-attempt.mjs. Every attempt goes through it, missed ones included — nothing can be worked out from a record of only what worked. It checks the goal id against goals.md, stores the two axes raw and collapses nothing, records the label and tags the supply returned, and asks the goal's own bar of the whole log. It sets no date and writes nowhere else: the schedule is a fold over the file it has just appended to, so recording the attempt is what sets the date.</bpmn:documentation>
           <bpmn:incoming>s10</bpmn:incoming>
           <bpmn:outgoing>s14</bpmn:outgoing>
           <bpmn:property id="Property_s_log" name="__targetRef_placeholder" />
@@ -823,7 +823,7 @@
         <bpmn:sequenceFlow id="s3" sourceRef="S_merge" targetRef="S_choose" />
         <bpmn:sequenceFlow id="s4" sourceRef="S_choose" targetRef="S_offerable" />
         <bpmn:sequenceFlow id="s5" name="yes" sourceRef="S_offerable" targetRef="S_run">
-          <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">the goal&#39;s supply returned something to run. Otherwise that goal is stuck until something upstream changes, and saying so is the only useful thing left to do with it</bpmn:conditionExpression>
+          <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">the goal's supply returned something to run. Otherwise that goal is stuck until something upstream changes, and saying so is the only useful thing left to do with it</bpmn:conditionExpression>
         </bpmn:sequenceFlow>
         <bpmn:sequenceFlow id="s6" sourceRef="S_run" targetRef="S_gate_judge" />
         <bpmn:sequenceFlow id="s7" name="yes" sourceRef="S_gate_judge" targetRef="S_judge">
@@ -873,7 +873,7 @@
       <bpmn:dataObject id="DO_notes" />
       <bpmn:dataObject id="DO_status" />
     </bpmn:subProcess>
-    <bpmn:subProcess id="Conv_quiz" name="Practice quiz">
+    <bpmn:subProcess id="Conv_quiz" name="Take Practice Quiz&#10;quiz">
       <bpmn:documentation>workflows/quiz/skills/quiz/SKILL.md. Drawn from the same published pool and marked by the same skill as the quiz the class sits, which is the whole of what makes practising against the real grader true rather than a claim. It records an attempt against every goal the quiz examined, so a practice run moves review dates: that is why it is a branch here and not a thing off to one side.</bpmn:documentation>
       <bpmn:incoming>f_quiz</bpmn:incoming>
       <bpmn:outgoing>f_quizback</bpmn:outgoing>
@@ -885,13 +885,13 @@
         </bpmn:lane>
         <bpmn:lane id="L_q_a" name="AI AGENT">
           <bpmn:flowNodeRef>Start_Q</bpmn:flowNodeRef>
-          <bpmn:flowNodeRef>G_sit</bpmn:flowNodeRef>
-          <bpmn:flowNodeRef>End_study</bpmn:flowNodeRef>
           <bpmn:flowNodeRef>Q_rule</bpmn:flowNodeRef>
           <bpmn:flowNodeRef>Q_report</bpmn:flowNodeRef>
           <bpmn:flowNodeRef>G_wrong</bpmn:flowNodeRef>
           <bpmn:flowNodeRef>G_qjoin</bpmn:flowNodeRef>
           <bpmn:flowNodeRef>End_Q</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>End_study</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>G_sit</bpmn:flowNodeRef>
         </bpmn:lane>
         <bpmn:lane id="L_q_p" name="PROGRAM">
           <bpmn:flowNodeRef>Q_pick</bpmn:flowNodeRef>
@@ -915,10 +915,10 @@
       <bpmn:sequenceFlow id="qf10" sourceRef="Q_score" targetRef="Q_report" />
       <bpmn:sequenceFlow id="qf11" sourceRef="Q_report" targetRef="Q_over" />
       <bpmn:sequenceFlow id="qf12" sourceRef="Q_over" targetRef="G_wrong" />
-      <bpmn:sequenceFlow id="qf13" name="a mark was wrong" sourceRef="G_wrong" targetRef="Q_fix">
+      <bpmn:sequenceFlow id="qf13" name="yes" sourceRef="G_wrong" targetRef="Q_fix">
         <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">the learner says an answer was marked wrongly</bpmn:conditionExpression>
       </bpmn:sequenceFlow>
-      <bpmn:sequenceFlow id="qf14" name="the marks stand" sourceRef="G_wrong" targetRef="G_qjoin" />
+      <bpmn:sequenceFlow id="qf14" name="no" sourceRef="G_wrong" targetRef="G_qjoin" />
       <bpmn:sequenceFlow id="qf15" sourceRef="Q_fix" targetRef="G_qjoin" />
       <bpmn:sequenceFlow id="qf16" sourceRef="G_qjoin" targetRef="End_Q" />
       <bpmn:startEvent id="Start_Q" name="the learner chose&#10;a practice quiz">
@@ -978,7 +978,7 @@
         <bpmn:incoming>qf11</bpmn:incoming>
         <bpmn:outgoing>qf12</bpmn:outgoing>
       </bpmn:userTask>
-      <bpmn:exclusiveGateway id="G_wrong" name="do they say&#10;a mark is wrong?" default="qf14">
+      <bpmn:exclusiveGateway id="G_wrong" name="does student say&#10;a mark is wrong?" default="qf14">
         <bpmn:documentation>The one place in this course where the learner is the human in the loop rather than the subject of it. They can see their own answer and what they meant by it; the grader has a rubric line written before either of them saw it.</bpmn:documentation>
         <bpmn:incoming>qf12</bpmn:incoming>
         <bpmn:outgoing>qf13</bpmn:outgoing>
@@ -998,7 +998,7 @@
         <bpmn:incoming>qf16</bpmn:incoming>
       </bpmn:endEvent>
     </bpmn:subProcess>
-    <bpmn:subProcess id="Conv_review" name="Review">
+    <bpmn:subProcess id="Conv_review" name="Review&#10;review">
       <bpmn:documentation>workflows/learn/skills/review/SKILL.md</bpmn:documentation>
       <bpmn:incoming>f_review</bpmn:incoming>
       <bpmn:outgoing>f_reviewback</bpmn:outgoing>
@@ -1086,7 +1086,7 @@
         <bpmn:outgoing>r4</bpmn:outgoing>
       </bpmn:userTask>
       <bpmn:serviceTask id="R_judge" name="Rule on unaided, and on the criterion&#10;the goal&#39;s adjudicator">
-        <bpmn:documentation>Whichever implementation the goal&#39;s adjudicator slot names — the same one the first pass used. Nearly always workflows/learn/skills/study/judge/SKILL.md here: a goal whose adjudicator is the tutor usually carries recurrence: never and does not come back at all.</bpmn:documentation>
+        <bpmn:documentation>Whichever implementation the goal's adjudicator slot names — the same one the first pass used. Nearly always workflows/learn/skills/study/judge/SKILL.md here: a goal whose adjudicator is the tutor usually carries recurrence: never and does not come back at all.</bpmn:documentation>
         <bpmn:incoming>r4</bpmn:incoming>
         <bpmn:outgoing>r5</bpmn:outgoing>
       </bpmn:serviceTask>
@@ -1210,6 +1210,7 @@
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Conv_quiz_di" bpmnElement="Conv_quiz" isExpanded="false">
         <dc:Bounds x="1260" y="150" width="170" height="440" />
+        <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Conv_review_di" bpmnElement="Conv_review" isExpanded="false">
         <dc:Bounds x="800" y="150" width="170" height="440" />
@@ -1253,25 +1254,24 @@
           <dc:Bounds x="697" y="213" width="25" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_reviewback_di" bpmnElement="f_reviewback">
+        <di:waypoint x="885" y="150" />
+        <di:waypoint x="885" y="110" />
+        <di:waypoint x="340" y="110" />
+        <di:waypoint x="340" y="370" />
+      </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="f_quiz_di" bpmnElement="f_quiz">
-        <di:waypoint x="715" y="330" />
-        <di:waypoint x="760" y="330" />
-        <di:waypoint x="760" y="655" />
+        <di:waypoint x="690" y="355" />
+        <di:waypoint x="690" y="655" />
         <di:waypoint x="1345" y="655" />
         <di:waypoint x="1345" y="590" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1045" y="624" width="130" height="28" />
+          <dc:Bounds x="699" y="643" width="62" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="f_quizback_di" bpmnElement="f_quizback">
         <di:waypoint x="1345" y="150" />
         <di:waypoint x="1345" y="110" />
-        <di:waypoint x="340" y="110" />
-        <di:waypoint x="340" y="370" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="f_reviewback_di" bpmnElement="f_reviewback">
-        <di:waypoint x="885" y="150" />
-        <di:waypoint x="885" y="110" />
         <di:waypoint x="340" y="110" />
         <di:waypoint x="340" y="370" />
       </bpmndi:BPMNEdge>
@@ -1321,30 +1321,6 @@
         <dc:Bounds x="-300" y="275" width="50" height="50" />
         <bpmndi:BPMNLabel>
           <dc:Bounds x="-349" y="316" width="57" height="27" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="DOR_t_status_di" bpmnElement="DOR_t_status" color:background-color="#f0eef7">
-        <dc:Bounds x="-510" y="505" width="36" height="50" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="-524" y="559" width="64" height="14" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="DOR_t_goals_p_di" bpmnElement="DOR_t_goals_p" color:background-color="#eaf2fb">
-        <dc:Bounds x="-868" y="505" width="36" height="50" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="-872" y="559" width="45" height="14" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="DOR_t_acts_p_di" bpmnElement="DOR_t_acts_p" color:background-color="#eef7ec">
-        <dc:Bounds x="-868" y="575" width="36" height="50" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="-880" y="628" width="61" height="14" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="DOR_t_log_in_di" bpmnElement="DOR_t_log_in">
-        <dc:Bounds x="-510" y="575" width="36" height="50" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="-525" y="628" width="68" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Conv_goals_di" bpmnElement="Conv_goals" isExpanded="false">
@@ -1400,6 +1376,30 @@
           <dc:Bounds x="-523" y="434" width="61" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_t_log_in_di" bpmnElement="DOR_t_log_in">
+        <dc:Bounds x="-510" y="575" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="-525" y="628" width="68" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_t_status_di" bpmnElement="DOR_t_status" color:background-color="#f0eef7">
+        <dc:Bounds x="-510" y="505" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="-524" y="559" width="64" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_t_goals_p_di" bpmnElement="DOR_t_goals_p" color:background-color="#eaf2fb">
+        <dc:Bounds x="-868" y="505" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="-872" y="559" width="45" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_t_acts_p_di" bpmnElement="DOR_t_acts_p" color:background-color="#eef7ec">
+        <dc:Bounds x="-868" y="575" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="-880" y="628" width="61" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="DOR_notes_di" bpmnElement="DOR_notes" color:background-color="#fdf6e3">
         <dc:Bounds x="342" y="148" width="36" height="50" />
         <bpmndi:BPMNLabel>
@@ -1420,6 +1420,10 @@
         <di:waypoint x="-510" y="530" />
         <di:waypoint x="-565" y="530" />
       </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="a_phase_log_di" bpmnElement="a_phase_log">
+        <di:waypoint x="-510" y="600" />
+        <di:waypoint x="-565" y="600" />
+      </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="a_phase_goals_di" bpmnElement="a_phase_goals">
         <di:waypoint x="-832" y="530" />
         <di:waypoint x="-795" y="530" />
@@ -1427,10 +1431,6 @@
       <bpmndi:BPMNEdge id="a_phase_acts_di" bpmnElement="a_phase_acts">
         <di:waypoint x="-832" y="600" />
         <di:waypoint x="-795" y="600" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="a_phase_log_di" bpmnElement="a_phase_log">
-        <di:waypoint x="-510" y="600" />
-        <di:waypoint x="-565" y="600" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="a_topic_acts_di" bpmnElement="a_topic_acts">
         <di:waypoint x="-492" y="380" />
@@ -1578,12 +1578,6 @@
       <bpmndi:BPMNShape id="L_spawn_di" bpmnElement="L_spawn">
         <dc:Bounds x="380" y="300" width="220" height="80" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="DOR_l_status_di" bpmnElement="DOR_l_status" color:background-color="#f0eef7">
-        <dc:Bounds x="472" y="400" width="36" height="50" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="458" y="454" width="64" height="14" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="G_lmerge_di" bpmnElement="G_lmerge" isMarkerVisible="true">
         <dc:Bounds x="705" y="435" width="50" height="50" />
       </bpmndi:BPMNShape>
@@ -1661,6 +1655,12 @@
           <dc:Bounds x="556" y="784" width="64" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_l_status_di" bpmnElement="DOR_l_status" color:background-color="#f0eef7">
+        <dc:Bounds x="472" y="400" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="458" y="454" width="64" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="DOR_l_goals_a_di" bpmnElement="DOR_l_goals_a" color:background-color="#eaf2fb">
         <dc:Bounds x="1430" y="160" width="36" height="50" />
         <bpmndi:BPMNLabel>
@@ -1699,6 +1699,10 @@
         <di:waypoint x="490" y="400" />
         <di:waypoint x="490" y="380" />
       </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="a_l_report_folders_di" bpmnElement="a_l_report_folders">
+        <di:waypoint x="968" y="690" />
+        <di:waypoint x="968" y="660" />
+      </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="a_l_add_goals_di" bpmnElement="a_l_add_goals">
         <di:waypoint x="1430" y="185" />
         <di:waypoint x="1380" y="185" />
@@ -1706,10 +1710,6 @@
       <bpmndi:BPMNEdge id="a_l_word_goals_in_di" bpmnElement="a_l_word_goals_in">
         <di:waypoint x="1210" y="690" />
         <di:waypoint x="1210" y="655" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="a_l_report_folders_di" bpmnElement="a_l_report_folders">
-        <di:waypoint x="968" y="690" />
-        <di:waypoint x="968" y="660" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="a_l_word_goals_di" bpmnElement="a_l_word_goals">
         <di:waypoint x="1198" y="655" />
@@ -1811,6 +1811,10 @@
           <dc:Bounds x="1400" y="345" width="87" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="l21_di" bpmnElement="l21">
+        <di:waypoint x="1645" y="180" />
+        <di:waypoint x="1690" y="180" />
+      </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="l12_di" bpmnElement="l12">
         <di:waypoint x="990" y="155" />
         <di:waypoint x="990" y="120" />
@@ -1819,10 +1823,6 @@
         <bpmndi:BPMNLabel>
           <dc:Bounds x="1131" y="86" width="82" height="27" />
         </bpmndi:BPMNLabel>
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="l21_di" bpmnElement="l21">
-        <di:waypoint x="1645" y="180" />
-        <di:waypoint x="1690" y="180" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="l15_di" bpmnElement="l15">
         <di:waypoint x="990" y="205" />
@@ -2016,18 +2016,6 @@
       <bpmndi:BPMNShape id="S_block_di" bpmnElement="S_block">
         <dc:Bounds x="830" y="640" width="260" height="90" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="DOR_s_log_di" bpmnElement="DOR_s_log" color:background-color="#f6ecf7">
-        <dc:Bounds x="1600" y="765" width="36" height="50" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="1585" y="819" width="68" height="14" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="DOR_s_goals_l_di" bpmnElement="DOR_s_goals_l" color:background-color="#eaf2fb">
-        <dc:Bounds x="1702" y="765" width="36" height="50" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="1698" y="819" width="45" height="14" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="S_run_di" bpmnElement="S_run" isExpanded="false">
         <dc:Bounds x="1140" y="170" width="220" height="110" />
       </bpmndi:BPMNShape>
@@ -2104,6 +2092,18 @@
           <dc:Bounds x="1147" y="389" width="61" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_s_log_di" bpmnElement="DOR_s_log" color:background-color="#f6ecf7">
+        <dc:Bounds x="1600" y="765" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1585" y="819" width="68" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_s_goals_l_di" bpmnElement="DOR_s_goals_l" color:background-color="#eaf2fb">
+        <dc:Bounds x="1702" y="765" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1698" y="819" width="45" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="a_open_goals_di" bpmnElement="a_open_goals">
         <di:waypoint x="273" y="450" />
         <di:waypoint x="273" y="420" />
@@ -2120,13 +2120,13 @@
         <di:waypoint x="480" y="450" />
         <di:waypoint x="480" y="420" />
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="a_s_block_status_di" bpmnElement="a_s_block_status">
-        <di:waypoint x="958" y="730" />
-        <di:waypoint x="958" y="780" />
-      </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="a_s_block_goals_di" bpmnElement="a_s_block_goals">
         <di:waypoint x="1028" y="780" />
         <di:waypoint x="1028" y="730" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="a_s_block_status_di" bpmnElement="a_s_block_status">
+        <di:waypoint x="958" y="730" />
+        <di:waypoint x="958" y="780" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="DataInputAssociation_1r6ja31_di" bpmnElement="DataInputAssociation_1r6ja31">
         <di:waypoint x="1178" y="335" />
@@ -2140,13 +2140,13 @@
         <di:waypoint x="1628" y="765" />
         <di:waypoint x="1628" y="730" />
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="a_s_log_di" bpmnElement="a_s_log">
-        <di:waypoint x="1610" y="730" />
-        <di:waypoint x="1610" y="765" />
-      </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="a_s_log_goals_di" bpmnElement="a_s_log_goals">
         <di:waypoint x="1720" y="765" />
         <di:waypoint x="1720" y="730" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="a_s_log_di" bpmnElement="a_s_log">
+        <di:waypoint x="1610" y="730" />
+        <di:waypoint x="1610" y="765" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="s14_di" bpmnElement="s14">
         <di:waypoint x="1780" y="640" />
@@ -2327,26 +2327,6 @@
       <bpmndi:BPMNShape id="C_stamp_di" bpmnElement="C_stamp">
         <dc:Bounds x="286" y="310" width="170" height="80" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="DOR_c_goals3_di" bpmnElement="DOR_c_goals3" color:background-color="#eaf2fb">
-        <dc:Bounds x="300" y="470" width="36" height="50" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="296" y="524" width="45" height="14" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="DOR_c_acts4_di" bpmnElement="DOR_c_acts4" color:background-color="#eef7ec">
-        <dc:Bounds x="390" y="470" width="36" height="50" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="376" y="524" width="66" height="14" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNEdge id="a_stamp_goals_di" bpmnElement="a_stamp_goals">
-        <di:waypoint x="318" y="470" />
-        <di:waypoint x="318" y="390" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="a_stamp_acts_di" bpmnElement="a_stamp_acts">
-        <di:waypoint x="408" y="390" />
-        <di:waypoint x="408" y="470" />
-      </bpmndi:BPMNEdge>
       <bpmndi:BPMNShape id="C_merge_di" bpmnElement="C_merge" isMarkerVisible="true">
         <dc:Bounds x="495" y="325" width="50" height="50" />
       </bpmndi:BPMNShape>
@@ -2379,24 +2359,6 @@
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="C_clear_di" bpmnElement="C_clear">
         <dc:Bounds x="1400" y="575" width="220" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="DOR_c_goals4_di" bpmnElement="DOR_c_goals4" color:background-color="#eaf2fb">
-        <dc:Bounds x="1490" y="470" width="36" height="50" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="1486" y="524" width="45" height="14" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="DOR_c_status_di" bpmnElement="DOR_c_status" color:background-color="#f0eef7">
-        <dc:Bounds x="1550" y="470" width="36" height="50" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="1536" y="524" width="64" height="14" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="DOR_c_tasks_di" bpmnElement="DOR_c_tasks" color:background-color="#f2f0e6">
-        <dc:Bounds x="1020" y="325" width="36" height="50" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="1023" y="379" width="32" height="14" />
-        </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="C_blocked_di" bpmnElement="C_blocked" isMarkerVisible="true">
         <dc:Bounds x="1710" y="325" width="50" height="50" />
@@ -2446,6 +2408,44 @@
           <dc:Bounds x="937" y="379" width="61" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_c_goals3_di" bpmnElement="DOR_c_goals3" color:background-color="#eaf2fb">
+        <dc:Bounds x="300" y="470" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="296" y="524" width="45" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_c_acts4_di" bpmnElement="DOR_c_acts4" color:background-color="#eef7ec">
+        <dc:Bounds x="390" y="470" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="376" y="524" width="66" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_c_goals4_di" bpmnElement="DOR_c_goals4" color:background-color="#eaf2fb">
+        <dc:Bounds x="1490" y="470" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1486" y="524" width="45" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_c_status_di" bpmnElement="DOR_c_status" color:background-color="#f0eef7">
+        <dc:Bounds x="1550" y="470" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1536" y="524" width="64" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_c_tasks_di" bpmnElement="DOR_c_tasks" color:background-color="#f2f0e6">
+        <dc:Bounds x="1020" y="325" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1023" y="379" width="32" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="a_stamp_goals_di" bpmnElement="a_stamp_goals">
+        <di:waypoint x="318" y="470" />
+        <di:waypoint x="318" y="390" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="a_stamp_acts_di" bpmnElement="a_stamp_acts">
+        <di:waypoint x="408" y="390" />
+        <di:waypoint x="408" y="470" />
+      </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="a_gen_goals_di" bpmnElement="a_gen_goals">
         <di:waypoint x="620" y="470" />
         <di:waypoint x="620" y="390" />
@@ -2458,6 +2458,10 @@
       <bpmndi:BPMNEdge id="a_gen_acts_out_di" bpmnElement="a_gen_acts_out">
         <di:waypoint x="700" y="390" />
         <di:waypoint x="700" y="470" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="a_ver_tasks_di" bpmnElement="a_ver_tasks">
+        <di:waypoint x="1038" y="325" />
+        <di:waypoint x="1038" y="290" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="DataInputAssociation_163n5af_di" bpmnElement="DataInputAssociation_163n5af">
         <di:waypoint x="898" y="325" />
@@ -2484,6 +2488,14 @@
         <di:waypoint x="1540" y="390" />
         <di:waypoint x="1540" y="495" />
         <di:waypoint x="1456" y="495" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="a_clear_goals_di" bpmnElement="a_clear_goals">
+        <di:waypoint x="1508" y="520" />
+        <di:waypoint x="1508" y="575" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="a_clear_status_di" bpmnElement="a_clear_status">
+        <di:waypoint x="1568" y="575" />
+        <di:waypoint x="1568" y="520" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="c1_di" bpmnElement="c1">
         <di:waypoint x="236" y="350" />
@@ -2555,18 +2567,6 @@
         <di:waypoint x="1690" y="350" />
         <di:waypoint x="1710" y="350" />
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="a_clear_goals_di" bpmnElement="a_clear_goals">
-        <di:waypoint x="1508" y="520" />
-        <di:waypoint x="1508" y="575" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="a_clear_status_di" bpmnElement="a_clear_status">
-        <di:waypoint x="1568" y="575" />
-        <di:waypoint x="1568" y="520" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="a_ver_tasks_di" bpmnElement="a_ver_tasks">
-        <di:waypoint x="1038" y="325" />
-        <di:waypoint x="1038" y="290" />
-      </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="c13_di" bpmnElement="c13">
         <di:waypoint x="1735" y="325" />
         <di:waypoint x="1735" y="264" />
@@ -2587,14 +2587,14 @@
   </bpmndi:BPMNDiagram>
   <bpmndi:BPMNDiagram id="D_quiz">
     <bpmndi:BPMNPlane id="Pl_quiz" bpmnElement="Conv_quiz">
-      <bpmndi:BPMNShape id="L_q_h_di" bpmnElement="L_q_h" isHorizontal="true" color:background-color="#fdf3f7" color:border-color="#9c8490">
-        <dc:Bounds x="160" y="80" width="2340" height="160" />
+      <bpmndi:BPMNShape id="L_q_p_di" bpmnElement="L_q_p" isHorizontal="true" color:background-color="#eef5f4" color:border-color="#7a918d">
+        <dc:Bounds x="160" y="540" width="2340" height="180" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="L_q_a_di" bpmnElement="L_q_a" isHorizontal="true" color:background-color="#fdf7ee" color:border-color="#9c8d76">
         <dc:Bounds x="160" y="240" width="2340" height="300" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="L_q_p_di" bpmnElement="L_q_p" isHorizontal="true" color:background-color="#eef5f4" color:border-color="#7a918d">
-        <dc:Bounds x="160" y="540" width="2340" height="260" />
+      <bpmndi:BPMNShape id="L_q_h_di" bpmnElement="L_q_h" isHorizontal="true" color:background-color="#fdf3f7" color:border-color="#9c8490">
+        <dc:Bounds x="160" y="80" width="2340" height="160" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Start_Q_di" bpmnElement="Start_Q">
         <dc:Bounds x="200" y="372" width="36" height="36" />
@@ -2611,16 +2611,10 @@
       <bpmndi:BPMNShape id="Q_offer_di" bpmnElement="Q_offer">
         <dc:Bounds x="640" y="110" width="240" height="90" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="G_sit_di" bpmnElement="G_sit" isMarkerVisible="true">
-        <dc:Bounds x="920" y="365" width="50" height="50" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="985" y="376" width="120" height="28" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="End_study_di" bpmnElement="End_study">
         <dc:Bounds x="927" y="260" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="972" y="262" width="110" height="30" />
+          <dc:Bounds x="975" y="264" width="49" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Q_serve_di" bpmnElement="Q_serve">
@@ -2644,7 +2638,7 @@
       <bpmndi:BPMNShape id="G_wrong_di" bpmnElement="G_wrong" isMarkerVisible="true">
         <dc:Bounds x="1900" y="365" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1955" y="318" width="140" height="30" />
+          <dc:Bounds x="1938" y="336" width="84" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Q_fix_di" bpmnElement="Q_fix">
@@ -2655,6 +2649,12 @@
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="End_Q_di" bpmnElement="End_Q">
         <dc:Bounds x="2400" y="372" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_sit_di" bpmnElement="G_sit" isMarkerVisible="true">
+        <dc:Bounds x="935" y="365" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="977" y="356" width="66" height="27" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="qf1_di" bpmnElement="qf1">
         <di:waypoint x="236" y="390" />
@@ -2672,23 +2672,25 @@
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="qf4_di" bpmnElement="qf4">
         <di:waypoint x="880" y="155" />
-        <di:waypoint x="895" y="155" />
-        <di:waypoint x="895" y="390" />
-        <di:waypoint x="920" y="390" />
+        <di:waypoint x="900" y="155" />
+        <di:waypoint x="900" y="390" />
+        <di:waypoint x="935" y="390" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="qf5_di" bpmnElement="qf5">
-        <di:waypoint x="945" y="365" />
+        <di:waypoint x="960" y="365" />
+        <di:waypoint x="960" y="331" />
+        <di:waypoint x="945" y="331" />
         <di:waypoint x="945" y="296" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="792" y="304" width="95" height="28" />
+          <dc:Bounds x="946" y="307" width="48" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="qf6_di" bpmnElement="qf6">
-        <di:waypoint x="945" y="415" />
-        <di:waypoint x="945" y="605" />
+        <di:waypoint x="960" y="415" />
+        <di:waypoint x="960" y="605" />
         <di:waypoint x="1020" y="605" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="840" y="470" width="95" height="28" />
+          <dc:Bounds x="968" y="463" width="43" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="qf7_di" bpmnElement="qf7">
@@ -2723,14 +2725,14 @@
         <di:waypoint x="1925" y="605" />
         <di:waypoint x="1980" y="605" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1940" y="470" width="140" height="28" />
+          <dc:Bounds x="1941" y="473" width="18" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="qf14_di" bpmnElement="qf14">
         <di:waypoint x="1950" y="390" />
         <di:waypoint x="2300" y="390" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="2140" y="355" width="130" height="28" />
+          <dc:Bounds x="2093" y="393" width="13" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="qf15_di" bpmnElement="qf15">
@@ -2766,6 +2768,15 @@
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="R_setup_di" bpmnElement="R_setup">
         <dc:Bounds x="290" y="300" width="220" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="R_checkable_di" bpmnElement="R_checkable" isMarkerVisible="true">
+        <dc:Bounds x="680" y="315" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="660" y="266" width="90" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="R_block_di" bpmnElement="R_block">
+        <dc:Bounds x="1150" y="660" width="260" height="90" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="R_merge_di" bpmnElement="R_merge" isMarkerVisible="true">
         <dc:Bounds x="375" y="445" width="50" height="50" />
@@ -2804,15 +2815,6 @@
         <bpmndi:BPMNLabel>
           <dc:Bounds x="1530" y="192" width="96" height="27" />
         </bpmndi:BPMNLabel>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="R_checkable_di" bpmnElement="R_checkable" isMarkerVisible="true">
-        <dc:Bounds x="680" y="315" width="50" height="50" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="660" y="266" width="90" height="27" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="R_block_di" bpmnElement="R_block">
-        <dc:Bounds x="1150" y="660" width="260" height="90" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="DOR_r_goals_di" bpmnElement="DOR_r_goals" color:background-color="#eaf2fb">
         <dc:Bounds x="490" y="410" width="36" height="50" />
@@ -2894,6 +2896,14 @@
         <di:waypoint x="508" y="410" />
         <di:waypoint x="508" y="380" />
       </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="a_r_block_goals_di" bpmnElement="a_r_block_goals">
+        <di:waypoint x="1308" y="790" />
+        <di:waypoint x="1308" y="750" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="a_r_block_status_di" bpmnElement="a_r_block_status">
+        <di:waypoint x="1228" y="750" />
+        <di:waypoint x="1228" y="790" />
+      </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="a_r_post_notes_di" bpmnElement="a_r_post_notes">
         <di:waypoint x="1398" y="170" />
         <di:waypoint x="1398" y="150" />
@@ -2905,14 +2915,6 @@
       <bpmndi:BPMNEdge id="a_r_record_goals_di" bpmnElement="a_r_record_goals">
         <di:waypoint x="870" y="675" />
         <di:waypoint x="870" y="645" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="a_r_block_status_di" bpmnElement="a_r_block_status">
-        <di:waypoint x="1228" y="750" />
-        <di:waypoint x="1228" y="790" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="a_r_block_goals_di" bpmnElement="a_r_block_goals">
-        <di:waypoint x="1308" y="790" />
-        <di:waypoint x="1308" y="750" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="a_r_record_log_di" bpmnElement="a_r_record_log">
         <di:waypoint x="950" y="650" />
