@@ -111,11 +111,9 @@ A clean lint is not a readable diagram. Look at every plane you changed.
 
 ## Choosing a construct
 
-Stay inside Silver's **Descriptive** subset — see the reference. Going outside costs a reader
-something specific; name the cost before you spend it.
-
-Everything below is in the set except `adHocSubProcess`, which is already spent on the
-conversation idiom. Don't reach for a second exception without deciding to.
+Draw inside the current palette, which is staged and grows through the term: see the reference
+for what is in it now and what admits a new element. Reaching outside costs a reader something
+specific, so name the cost before you spend it.
 
 | you want to say                     | use                                           |
 | ----------------------------------- | --------------------------------------------- |
@@ -124,6 +122,8 @@ conversation idiom. Don't reach for a second exception without deciding to.
 | one decision, several outcomes      | `exclusiveGateway`, named as a question       |
 | several things at once              | `parallelGateway` to split, another to join   |
 | several paths converging            | a separate merging gateway, unnamed           |
+| one step, once per item in a batch  | multi-instance marker, three bars on the box  |
+| one pool, many independent runs     | `participantMultiplicity` on the pool         |
 | the same step in two places         | draw it twice while it's still being designed |
 
 **Don't simplify by deleting.** BPMN has no null in the graph layer: removing an arrow asserts

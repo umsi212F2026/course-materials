@@ -28,32 +28,49 @@ Re-read the file immediately before writing, never from a read taken earlier in 
 The GUI may have saved in between, and a stale coordinate written back is indistinguishable
 from a deliberate move.
 
-## Stay in the Descriptive set
+## The palette grows with the readers
 
 Silver splits BPMN into three tiers. **Descriptive (Level 1)** is the subset a business reader
 can be taught in an hour. **Analytic (Level 2)** adds the typed events and the exotic gateways.
 **Common Executable (Level 3)** is for engines.
 
-**Draw in Descriptive.** The constraint behind it is that the diagram must be readable by
-someone who has never seen BPMN. Such a reader's only tool is following lines, and most of what
-Analytic adds is either not a line, or not one that can be followed.
+**What a reader can follow is the whole constraint, and it is not fixed.** The same forty-eight
+people read these diagrams all term, so what was unreadable in week one is ordinary by week
+six. The palette is staged to match. An element joins it when it makes a diagram less busy
+without hiding a path.
 
-In the set:
+**The starter set**, which is all the first two weeks use:
 
 > pools and lanes · plain start and end events · tasks (user, service, script, manual) ·
 > subprocesses, collapsed and expanded · call activities · exclusive and parallel gateways ·
 > sequence and message flows · data objects and data associations · text annotations
 
-Out of it — reach for one only with a reason, and name what it costs a reader:
+**Added after week two**, each because it replaces something busier:
+
+> **the multi-instance markers**, three bars on an activity, where a step runs once per item in
+> a known collection. Horizontal bars are sequential, vertical are parallel. They replace a
+> drawn loop and say what the drawn loop could not: what the collection is.
+>
+> **participant multiplicity**, three bars on a pool, where one pool stands for many
+> independent runs, one per student. It states a cardinality that a pool's name only implies.
+
+**Still costly, all for one reason**: each makes a path a reader cannot trace by following
+lines.
 
 > error, escalation, signal and conditional events · boundary events of any type · event
-> subprocesses · event-based, inclusive and complex gateways · terminate end events · loop and
-> multi-instance markers · transactions
+> subprocesses · event-based, inclusive and complex gateways · terminate end events ·
+> transactions
 
-**`adHocSubProcess` is an exception already in use**, for conversations with no fixed order. It
-is probably outside Descriptive — worth confirming against the book. It costs a reader two
+**That distinction is the test for anything not listed.** A marker a reader ignores leaves them
+less informed. A path they cannot trace leaves them wrong, and only the second disqualifies.
+Name what a new element buys before spending it.
+
+**Prefer the drawn version wherever it is not the busier one.** An explicit back-arrow beats a
+loop marker whenever the loop carries a choice, because no marker can carry a branch: the
+listener loop in `learn.bpmn` is a gateway and an arrow for exactly that reason.
+
+**`adHocSubProcess` is in use** for conversations with no fixed order. It costs a reader two
 things: the `~` marker, and the fact that a completion condition stands in for an end event.
-Treat that budget as spent, and don't take a second exception without deciding to.
 
 ## Naming
 
