@@ -7,16 +7,28 @@ description: Sit a practice quiz, drawn from the same pool and marked by the sam
 
 ## Operates on
 
-Two clones, and establish both at the start by asking:
+Two clones, and **establish both from `~/.codex/AGENTS.md` before you say anything**. That file
+names them, on every machine, and it exists so that nothing has to guess or ask:
 
 - **`course-materials`** - the course's own clone, holding the pools and the tools below. Every
   command here is run from inside it.
 - **`learning-topics`** - the learner's clone, holding the topics the quiz examines. This is
-  where the attempts go.
+  where the attempts go. The tools derive it from the first as a sibling, so you pass it to
+  `survey.mjs` and nowhere else.
 
-The tools find the second from the first, assuming the sibling layout the workspace has. If a
-tool says a topic is not there, that assumption is what broke, and asking is how you find out
-rather than guessing at a path.
+**Do not open with a question about a directory.** A learner asking to practise for a quiz has
+no way to answer one: they did not choose those paths, the installer did, and the answer is
+already written down. Opening on it spends the session's first exchange on a question whose
+answer you were handed.
+
+**If `~/.codex/AGENTS.md` is missing or names a folder that is not there**, say that, name the
+path you found in it, and ask. That is a broken install and the student needs to know, which is
+a different thing from routinely asking.
+
+**If they answer something that is not a path, that is not a refusal, it is a signal that the
+question made no sense to them.** Take what `~/.codex/AGENTS.md` says, tell them which folder
+you are using in a clause, and get on with step 1. Asking again is the worst available move:
+they have already told you they cannot answer it.
 
 **The question this session asks is the real one: would you pass Tuesday's quiz?** Not what do
 you know about this topic, and not what would you like to go over. The whole value is that
@@ -44,11 +56,19 @@ what makes their score worth reading.
 node workflows/quiz/tools/quiz-practice.mjs --list
 ```
 
-One line per published pool: a session number, the date of that quiz, how many questions, and
-the topic. **Show them the list and let them choose.** A pool appears when the instructor
-publishes it, so a session missing from the list is one nobody can practise yet.
+**This is the first thing you run, and running it is how the session opens.** One line per
+published pool: a session number, the date of that quiz, how many questions, and the topic. A
+pool appears when the instructor publishes it, so a session missing from the list is one nobody
+can practise yet.
 
-**If they named a session already, skip to step 2.**
+**Match what they already said against those dates before showing them anything.** Nobody says
+"session 5"; they say _last Tuesday's_, _the one about commits_, _the most recent one_. Each of
+those picks a line out of that list on its own, and where one does, you have your answer and
+the list is not a question to put to them. Say which quiz you are drawing from, in a clause, so
+a wrong match is visible and correctable.
+
+**Only where it is genuinely ambiguous, show the list and let them choose.** Two quizzes in the
+same week, or nothing said at all.
 
 ### 2. Say where they stand on that topic, and offer to study first
 
