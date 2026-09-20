@@ -113,19 +113,28 @@ is not meant to be.
 
 ### 3. Launch the page, and stop talking
 
-**Run it in the background, with its output going to a file you can read later.**
-
 ```
-node workflows/quiz/tools/quiz-practice.mjs --session <n> > /tmp/practice.log 2>&1 &
+node workflows/quiz/tools/quiz-practice.mjs --session <n>
 ```
 
-**It does not exit until they submit**, which is why it cannot be run in the foreground: a
-blocked command means you never get a turn in which to send them the URL, and they sit looking
-at nothing. If it exits at once, read the log: the likeliest reason is that a port is in use
-and it has told you which flag fixes it.
+**It prints the URL in about a second and then does not exit until they submit.** Two things
+follow, and getting either wrong costs the session several minutes of thrashing.
 
-Then read the log for the URL it printed, and send them this as **the last thing in the turn**,
-with the URL from the log rather than the one below, which is only the usual one:
+**Ask for escalated permission on this command, the first time, without waiting to be
+refused.** It opens a page on `127.0.0.1`, and a sandbox refuses that by default: the bind
+comes back `EPERM` and the tool says so. Nothing is served off the machine and no request
+leaves it, which is what the justification should say. Discovering this by failing first is
+what happened to the first student agent that ran it, and it cost seven commands and a full
+read of the tool's source.
+
+**Do not background it with `&` or `nohup`.** The process does not survive the command
+returning, the log file comes back empty, and there is nothing to read and no error to explain
+it. Run it in the foreground and let the command yield while it keeps running: it prints the
+URL long before any sensible yield elapses, and the server is still there when you get your
+turn back.
+
+Take the URL from what it printed, and send them this as **the last thing in the turn**, with
+that URL rather than the one below, which is only the usual one:
 
 > Your practice quiz is at **http://127.0.0.1:5300**. `<n>` questions, drawn the same way the
 > real one was, from the same pool.
@@ -138,9 +147,9 @@ with the URL from the log rather than the one below, which is only the usual one
 will see every one of them in a moment, and reading them now is how a conversation about the
 material starts by accident.
 
-**When they come back, read `/tmp/practice.log`.** Its last lines name the directory holding
-`queue.json`. If the log does not name a directory yet, the submission has not arrived: say so
-and ask them to press Submit, rather than grading an empty queue.
+**When they come back, read what the command printed.** Its last lines name the directory
+holding `queue.json`. If it has not named a directory yet, the submission has not arrived: say
+so and ask them to press Submit, rather than grading an empty queue.
 
 **Multiple choice is settled in code and is not in the queue.** The log says how many, and
 scoring settles them again from the draw. There is nothing for you to do about them and
@@ -243,30 +252,58 @@ you say before this collapses into `Worked for 31s` and the learner never sees i
 One message, and nothing after it in the same turn. The score, then the items in the order they
 were asked, then the last two sentences exactly as they stand here:
 
-> **4 out of 5** on the session 5 practice quiz.
+> **3 out of 4** on the session 5 practice quiz.
+>
+> ---
 >
 > **1. Full credit.**
 >
-> **2. Full credit.**
+> _Your editor keeps an undo history, and a git repository has a history. What is the difference
+> between them?_
 >
-> **3. Half credit.** You said where each history lives, which is right, but not what follows
-> from it: git's history is kept in the repository and survives the editor closing or an agent
-> rewriting the file, and undo history does not.
+> You wrote: "The editor's history is of changes to a file before it is saved. The git repo
+> history shows all commits, which are snapshots of the state of all files as of the commit."
 >
-> **4. Half credit.** You got what the agent is telling you. The question also asks what not
-> having it in the commit rules out, and you did not say: no earlier version of that file can
-> come back from the history.
+> ---
 >
-> **5. Full credit.**
+> **2. Half credit.**
+>
+> _A classmate says: "The diff between Thursday's commit and my latest commit doesn't mention
+> notes.md anywhere, so notes.md must have been deleted." What is wrong with what they said?_
+>
+> You wrote: "It probably just didn't change."
+>
+> You have the right idea, but not stated as the reason their conclusion is wrong: a file
+> missing from a diff has not changed between those two commits, and a deletion would have
+> appeared in the diff as every line removed.
+>
+> The answer that earns full credit: a diff shows only what differs between the two commits, so
+> a file it does not mention is the same in both. If notes.md had been deleted, the diff would
+> show it.
+>
+> ---
+>
+> **3. Full credit.** ...
 >
 > **If you think I marked something wrong, say so and tell me why.** I will take your word for
 > it: you can see your own answer and I only have what the rubric says. Otherwise, tell me
 > which one you want to go over.
 
-**The text after each mark is the row's `missed`, quoted and not summarised.** It was written
-to this learner by the same grader that wrote the real quiz's feedback, and a friendlier
-version of it is a different mark's worth of feedback. On full credit there is no `missed` and
-the line is just the mark, as items 1, 2 and 5 are above.
+**Every item gets its question and what they wrote, whatever the mark.** The page is closed by
+the time they read this, so a bare "2. No credit" and a sentence about an answer they can no
+longer see teaches nothing: they cannot tell which question item 2 was or what they said. All
+of it is on the row, `prompt` and `answer`, and an mcq's `answer` is already resolved to the
+choice they picked rather than left as an index.
+
+**On less than full credit, add two things and in this order:** the row's `missed`, quoted and
+not summarised, and then the row's `expected`, introduced as the answer that earns full credit.
+`missed` was written to this learner by the same grader that marked the real quiz, and a
+friendlier version of it is a different mark's worth of feedback. `expected` is the model
+answer, and it is what they actually want when they ask what they should have said.
+
+**On full credit, the question and their answer are the whole entry.** Nothing to add: `missed`
+is empty by design, and quoting the model answer back at somebody who already gave one is
+noise.
 
 **Say the correction sentence every time, including on a perfect score.** A learner who does
 not know they can argue will not argue, and a student overruling the grader is the one place in

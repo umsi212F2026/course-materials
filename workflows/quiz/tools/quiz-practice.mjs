@@ -268,6 +268,23 @@ function score(dir) {
   // its tag for the label, and the axes the verdict settled. Nothing left to derive means
   // nothing left to derive differently on a bad day.
   const byId = new Map(drawFile.draws[0].items.map((it) => [it.id, it]));
+
+  // THE QUESTION AND WHAT THEY WROTE, because a mark on its own teaches nobody anything. The
+  // report used to be "2. No credit" followed by a sentence about an answer the student could
+  // no longer see: the page is closed by then, and nothing in front of them says which one
+  // question 2 was. An mcq's answer is a stored index, so it is resolved back to the choice
+  // they picked here rather than left as "2", which is a number about nothing.
+  const written = new Map(
+    (submissionsFile.submissions[0]?.answers ?? []).map((a) => [a.item_id, a.text]),
+  );
+  const said = (it) => {
+    const raw = written.get(it?.id);
+    if (raw === undefined || String(raw).trim() === "") return null;
+    if (it.type !== "mcq") return raw;
+    const n = Number(raw);
+    return it.choices?.[n] ?? String(raw);
+  };
+
   console.log(JSON.stringify({
     source: drawFile.practice,
     score: me.score,
@@ -277,6 +294,8 @@ function score(dir) {
       return {
         item: i.item,
         goal: i.goal,
+        prompt: it?.prompt ?? null,
+        answer: said(it),
         topic: it?.topic ?? null,
         move: it?.move ?? null,
         tags: it?.move ? MOVE_TAGS[it.move] ?? null : null,
@@ -385,11 +404,24 @@ function main() {
   // process dies on an unhandled 'error' event and the stack trace is the only thing anyone
   // sees, which reads like the tool is broken rather than like a page is already open.
   server.on("error", (err) => {
-    if (err.code !== "EADDRINUSE") throw err;
-    console.error(`Port ${port} is already in use, probably by a practice quiz still waiting.`);
-    console.error(`Finish that one at http://127.0.0.1:${port}, or start this one on another port:`);
-    console.error(`\n  node workflows/quiz/tools/quiz-practice.mjs --session ${session} --port ${port + 1}\n`);
-    process.exit(1);
+    if (err.code === "EADDRINUSE") {
+      console.error(`Port ${port} is already in use, probably by a practice quiz still waiting.`);
+      console.error(`Finish that one at http://127.0.0.1:${port}, or start this one on another port:`);
+      console.error(`\n  node workflows/quiz/tools/quiz-practice.mjs --session ${session} --port ${port + 1}\n`);
+      process.exit(1);
+    }
+    // A SANDBOX REFUSING THE BIND IS THE OTHER ORDINARY CASE, and it came out as a raw Node
+    // stack trace the first time a student's agent met it: EPERM on a listen, thrown from the
+    // line above. The agent read this whole file trying to work out what it had done wrong,
+    // and it had done nothing wrong. Nothing about the message said "ask for permission",
+    // which is the entire fix and takes one retry.
+    if (err.code === "EPERM" || err.code === "EACCES") {
+      console.error(`Not allowed to open 127.0.0.1:${port}. That is the sandbox, not this tool.`);
+      console.error(`The page is local only: nothing is served off this machine and no network`);
+      console.error(`request leaves it. Re-run this same command with escalated permissions.\n`);
+      process.exit(1);
+    }
+    throw err;
   });
 
   // 127.0.0.1 rather than every interface: these are your own answers, on your own machine.
