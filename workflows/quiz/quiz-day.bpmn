@@ -115,7 +115,7 @@
       <bpmn:outgoing>q1</bpmn:outgoing>
     </bpmn:scriptTask>
     <bpmn:subProcess id="Sub_grade" name="Grade one answer&#10;quiz/grade">
-      <bpmn:documentation>workflows/quiz/skills/quiz/grade/SKILL.md. One set of grading instructions, two runners. The batch runner here is the instructor's quiz-grade.mjs; the practice runner is the student's own agent, following the same skill in a fresh context. Consistency comes from the recorded rubric rather than from which model runs it. Drawn a second time in workflows/learn/learn.bpmn, where the practice quiz calls it; the two planes are the same phase and have to be kept in step by hand.</bpmn:documentation>
+      <bpmn:documentation>workflows/quiz/skills/quiz/grade/SKILL.md. One set of grading instructions, two runners. The batch runner here is the instructor's quiz-grade.mjs; the practice runner is the student's own agent, following the same skill in a fresh context. Consistency comes from the recorded rubric rather than from which model runs it. Called a second time from workflows/learn/learn.bpmn, where the practice quiz's Rule every written answer names this same skill. It is a task there rather than a second copy of this plane, so there is one drawing of the phase and nothing to keep in step by hand.</bpmn:documentation>
       <bpmn:incoming>q1</bpmn:incoming>
       <bpmn:outgoing>f11</bpmn:outgoing>
       <bpmn:multiInstanceLoopCharacteristics isSequential="true" />
