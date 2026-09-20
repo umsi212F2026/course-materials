@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:color="http://www.omg.org/spec/BPMN/non-normative/color/1.0" id="Definitions_quiz" targetNamespace="http://si212.umich.edu/schema/bpmn">
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:color="http://www.omg.org/spec/BPMN/non-normative/color/1.0" id="Definitions_quiz" targetNamespace="http://si212.umich.edu/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.50.1">
   <bpmn:collaboration id="C_quiz">
     <bpmn:participant id="P_day" name="Quiz day: one run per quiz date" processRef="Proc_day" />
     <bpmn:participant id="P_student" name="A student taking the quiz in class">
@@ -53,11 +53,11 @@
     <bpmn:sequenceFlow id="q2" sourceRef="T_merge" targetRef="G_rejoin" />
     <bpmn:sequenceFlow id="q3" sourceRef="G_rejoin" targetRef="T_review" />
     <bpmn:sequenceFlow id="f12" sourceRef="T_review" targetRef="G_criteria" />
-    <bpmn:sequenceFlow id="q4" name="the criteria were wrong" sourceRef="G_criteria" targetRef="Sub_regrade">
+    <bpmn:sequenceFlow id="q4" name="yes" sourceRef="G_criteria" targetRef="Sub_regrade">
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">the reviewer wrote a note saying what should change</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
     <bpmn:sequenceFlow id="q5" sourceRef="Sub_regrade" targetRef="G_rejoin" />
-    <bpmn:sequenceFlow id="q6" name="the marks stand" sourceRef="G_criteria" targetRef="T_comments" />
+    <bpmn:sequenceFlow id="q6" name="no" sourceRef="G_criteria" targetRef="T_comments" />
     <bpmn:sequenceFlow id="q7" sourceRef="T_comments" targetRef="T_push" />
     <bpmn:sequenceFlow id="f13" sourceRef="T_push" targetRef="End_scores" />
     <bpmn:startEvent id="Start_day" name="calendar names&#10;a quiz date">
@@ -79,7 +79,7 @@
       <bpmn:incoming>f3</bpmn:incoming>
       <bpmn:outgoing>f4</bpmn:outgoing>
     </bpmn:userTask>
-    <bpmn:userTask id="T_pool" name="Write the session's pool file">
+    <bpmn:userTask id="T_pool" name="Write the session&#39;s pool file">
       <bpmn:documentation>quiz-bank/session-&lt;n&gt;.pool.json, in this repository and published. It names the sources and how many to draw from each of their tasks files. Publishing it is what makes practice the real thing rather than a rehearsal of it: the student's draw comes out of the same file, through the same library. It discloses nothing, because it says how many from where and never which questions, and the questions themselves are in repositories students already have.</bpmn:documentation>
       <bpmn:incoming>f4</bpmn:incoming>
       <bpmn:outgoing>f5</bpmn:outgoing>
@@ -114,7 +114,7 @@
       <bpmn:incoming>f10</bpmn:incoming>
       <bpmn:outgoing>q1</bpmn:outgoing>
     </bpmn:scriptTask>
-    <bpmn:subProcess id="Sub_grade" name="Grade one answer">
+    <bpmn:subProcess id="Sub_grade" name="Grade one answer&#10;quiz/grade">
       <bpmn:documentation>workflows/quiz/skills/quiz/grade/SKILL.md. One set of grading instructions, two runners. The batch runner here is the instructor's quiz-grade.mjs; the practice runner is the student's own agent, following the same skill in a fresh context. Consistency comes from the recorded rubric rather than from which model runs it. Drawn a second time in workflows/learn/learn.bpmn, where the practice quiz calls it; the two planes are the same phase and have to be kept in step by hand.</bpmn:documentation>
       <bpmn:incoming>q1</bpmn:incoming>
       <bpmn:outgoing>f11</bpmn:outgoing>
@@ -189,7 +189,7 @@
       <bpmn:incoming>q6</bpmn:incoming>
       <bpmn:outgoing>q7</bpmn:outgoing>
     </bpmn:scriptTask>
-    <bpmn:subProcess id="Sub_regrade" name="Rewrite the criteria and re-rule">
+    <bpmn:subProcess id="Sub_regrade" name="Rewrite the criteria and regrade all answers to question&#10;quiz/grade">
       <bpmn:documentation>umsi212F2026/course-private:tools/quiz-regrade.mjs, instructor only, not in this repository. Drains the requests the review tool records, ONE AT A TIME behind a lock, because two agents committing in the same repository collide on .git/index.lock and one of them simply fails. Requests can arrive whenever the reviewer makes them; they are drained in order. The reviewer carries on with other questions while this runs, and marking is held only on the question being re-ruled.</bpmn:documentation>
       <bpmn:incoming>q4</bpmn:incoming>
       <bpmn:outgoing>q5</bpmn:outgoing>
@@ -286,20 +286,17 @@
   </bpmn:process>
   <bpmndi:BPMNDiagram id="D_quiz">
     <bpmndi:BPMNPlane id="Pl_quiz" bpmnElement="C_quiz">
-      <bpmndi:BPMNShape id="P_student_di" bpmnElement="P_student" isHorizontal="true">
-        <dc:Bounds x="1680" y="80" width="820" height="100" />
-      </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="P_day_di" bpmnElement="P_day" isHorizontal="true">
         <dc:Bounds x="160" y="220" width="4160" height="590" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="L_human_di" bpmnElement="L_human" isHorizontal="true" color:background-color="#fdf3f7" color:border-color="#9c8490">
-        <dc:Bounds x="190" y="220" width="4130" height="200" />
+      <bpmndi:BPMNShape id="L_program_di" bpmnElement="L_program" isHorizontal="true" color:background-color="#eef5f4" color:border-color="#7a918d">
+        <dc:Bounds x="190" y="620" width="4130" height="190" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="L_agent_di" bpmnElement="L_agent" isHorizontal="true" color:background-color="#fdf7ee" color:border-color="#9c8d76">
         <dc:Bounds x="190" y="420" width="4130" height="200" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="L_program_di" bpmnElement="L_program" isHorizontal="true" color:background-color="#eef5f4" color:border-color="#7a918d">
-        <dc:Bounds x="190" y="620" width="4130" height="190" />
+      <bpmndi:BPMNShape id="L_human_di" bpmnElement="L_human" isHorizontal="true" color:background-color="#fdf3f7" color:border-color="#9c8490">
+        <dc:Bounds x="190" y="220" width="4130" height="200" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Start_day_di" bpmnElement="Start_day">
         <dc:Bounds x="230" y="302" width="36" height="36" />
@@ -331,20 +328,11 @@
       <bpmndi:BPMNShape id="T_export_di" bpmnElement="T_export">
         <dc:Bounds x="2230" y="675" width="200" height="80" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Sub_grade_di" bpmnElement="Sub_grade" isExpanded="false">
-        <dc:Bounds x="2710" y="480" width="200" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="T_review_di" bpmnElement="T_review">
-        <dc:Bounds x="3290" y="280" width="200" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="T_push_di" bpmnElement="T_push">
-        <dc:Bounds x="3880" y="675" width="200" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="End_scores_di" bpmnElement="End_scores">
-        <dc:Bounds x="4130" y="697" width="36" height="36" />
-      </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="T_queue_di" bpmnElement="T_queue">
         <dc:Bounds x="2470" y="675" width="200" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Sub_grade_di" bpmnElement="Sub_grade" isExpanded="false">
+        <dc:Bounds x="2710" y="480" width="200" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="T_merge_di" bpmnElement="T_merge">
         <dc:Bounds x="2950" y="675" width="200" height="80" />
@@ -355,14 +343,24 @@
       <bpmndi:BPMNShape id="G_criteria_di" bpmnElement="G_criteria" isMarkerVisible="true">
         <dc:Bounds x="3540" y="295" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="3505" y="256" width="120" height="30" />
+          <dc:Bounds x="3510" y="266" width="79" height="27" />
         </bpmndi:BPMNLabel>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Sub_regrade_di" bpmnElement="Sub_regrade" isExpanded="false">
-        <dc:Bounds x="3290" y="480" width="200" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="T_comments_di" bpmnElement="T_comments">
         <dc:Bounds x="3640" y="675" width="200" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Sub_regrade_di" bpmnElement="Sub_regrade" isExpanded="false">
+        <dc:Bounds x="3290" y="480" width="200" height="100" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_review_di" bpmnElement="T_review">
+        <dc:Bounds x="3290" y="280" width="200" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_push_di" bpmnElement="T_push">
+        <dc:Bounds x="3880" y="675" width="200" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_scores_di" bpmnElement="End_scores">
+        <dc:Bounds x="4130" y="697" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="f1_di" bpmnElement="f1">
         <di:waypoint x="266" y="320" />
@@ -414,42 +412,31 @@
         <di:waypoint x="2430" y="715" />
         <di:waypoint x="2470" y="715" />
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="f11_di" bpmnElement="f11">
-        <di:waypoint x="2910" y="520" />
-        <di:waypoint x="2930" y="520" />
-        <di:waypoint x="2930" y="715" />
-        <di:waypoint x="2950" y="715" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="f12_di" bpmnElement="f12">
-        <di:waypoint x="3490" y="320" />
-        <di:waypoint x="3540" y="320" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="f13_di" bpmnElement="f13">
-        <di:waypoint x="4080" y="715" />
-        <di:waypoint x="4130" y="715" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="m_serve_di" bpmnElement="m_serve">
-        <di:waypoint x="1850" y="280" />
-        <di:waypoint x="1850" y="180" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="m_answers_di" bpmnElement="m_answers">
-        <di:waypoint x="2330" y="180" />
-        <di:waypoint x="2330" y="675" />
-      </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="q1_di" bpmnElement="q1">
         <di:waypoint x="2670" y="715" />
         <di:waypoint x="2690" y="715" />
         <di:waypoint x="2690" y="520" />
         <di:waypoint x="2710" y="520" />
       </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f11_di" bpmnElement="f11">
+        <di:waypoint x="2910" y="520" />
+        <di:waypoint x="2930" y="520" />
+        <di:waypoint x="2930" y="715" />
+        <di:waypoint x="2950" y="715" />
+      </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="q2_di" bpmnElement="q2">
         <di:waypoint x="3150" y="715" />
-        <di:waypoint x="3215" y="715" />
-        <di:waypoint x="3215" y="345" />
+        <di:waypoint x="3170" y="715" />
+        <di:waypoint x="3170" y="320" />
+        <di:waypoint x="3190" y="320" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="q3_di" bpmnElement="q3">
         <di:waypoint x="3240" y="320" />
         <di:waypoint x="3290" y="320" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f12_di" bpmnElement="f12">
+        <di:waypoint x="3490" y="320" />
+        <di:waypoint x="3540" y="320" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="q4_di" bpmnElement="q4">
         <di:waypoint x="3565" y="345" />
@@ -457,37 +444,61 @@
         <di:waypoint x="3390" y="430" />
         <di:waypoint x="3390" y="480" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="3408" y="386" width="132" height="30" />
+          <dc:Bounds x="3541" y="363" width="18" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="q5_di" bpmnElement="q5">
-        <di:waypoint x="3290" y="520" />
-        <di:waypoint x="3165" y="520" />
-        <di:waypoint x="3165" y="320" />
-        <di:waypoint x="3190" y="320" />
+        <di:waypoint x="3290" y="530" />
+        <di:waypoint x="3215" y="530" />
+        <di:waypoint x="3215" y="345" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="q6_di" bpmnElement="q6">
         <di:waypoint x="3590" y="320" />
         <di:waypoint x="3615" y="320" />
         <di:waypoint x="3615" y="715" />
         <di:waypoint x="3640" y="715" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3623" y="343" width="13" height="14" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="q7_di" bpmnElement="q7">
         <di:waypoint x="3840" y="715" />
         <di:waypoint x="3880" y="715" />
       </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f13_di" bpmnElement="f13">
+        <di:waypoint x="4080" y="715" />
+        <di:waypoint x="4130" y="715" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="P_student_di" bpmnElement="P_student" isHorizontal="true">
+        <dc:Bounds x="1770" y="80" width="390" height="100" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="m_serve_di" bpmnElement="m_serve">
+        <di:waypoint x="1850" y="280" />
+        <di:waypoint x="1850" y="180" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1822" y="220" width="86" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="m_answers_di" bpmnElement="m_answers">
+        <di:waypoint x="2160" y="130" />
+        <di:waypoint x="2330" y="130" />
+        <di:waypoint x="2330" y="675" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2214" y="100" width="63" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
   <bpmndi:BPMNDiagram id="D_grade">
     <bpmndi:BPMNPlane id="Pl_grade" bpmnElement="Sub_grade">
-      <bpmndi:BPMNShape id="L_g_human_di" bpmnElement="L_g_human" isHorizontal="true" color:background-color="#fdf3f7" color:border-color="#9c8490">
-        <dc:Bounds x="160" y="80" width="760" height="140" />
+      <bpmndi:BPMNShape id="L_g_program_di" bpmnElement="L_g_program" isHorizontal="true" color:background-color="#eef5f4" color:border-color="#7a918d">
+        <dc:Bounds x="160" y="380" width="760" height="180" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="L_g_agent_di" bpmnElement="L_g_agent" isHorizontal="true" color:background-color="#fdf7ee" color:border-color="#9c8d76">
         <dc:Bounds x="160" y="220" width="760" height="160" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="L_g_program_di" bpmnElement="L_g_program" isHorizontal="true" color:background-color="#eef5f4" color:border-color="#7a918d">
-        <dc:Bounds x="160" y="380" width="760" height="180" />
+      <bpmndi:BPMNShape id="L_g_human_di" bpmnElement="L_g_human" isHorizontal="true" color:background-color="#fdf3f7" color:border-color="#9c8490">
+        <dc:Bounds x="160" y="80" width="760" height="140" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Start_g_di" bpmnElement="Start_g">
         <dc:Bounds x="220" y="452" width="36" height="36" />
@@ -540,14 +551,14 @@
   </bpmndi:BPMNDiagram>
   <bpmndi:BPMNDiagram id="D_regrade">
     <bpmndi:BPMNPlane id="Pl_regrade" bpmnElement="Sub_regrade">
-      <bpmndi:BPMNShape id="L_r_human_di" bpmnElement="L_r_human" isHorizontal="true" color:background-color="#fdf3f7" color:border-color="#9c8490">
-        <dc:Bounds x="160" y="80" width="1600" height="140" />
+      <bpmndi:BPMNShape id="L_r_program_di" bpmnElement="L_r_program" isHorizontal="true" color:background-color="#eef5f4" color:border-color="#7a918d">
+        <dc:Bounds x="160" y="380" width="1600" height="320" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="L_r_agent_di" bpmnElement="L_r_agent" isHorizontal="true" color:background-color="#fdf7ee" color:border-color="#9c8d76">
         <dc:Bounds x="160" y="220" width="1600" height="160" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="L_r_program_di" bpmnElement="L_r_program" isHorizontal="true" color:background-color="#eef5f4" color:border-color="#7a918d">
-        <dc:Bounds x="160" y="380" width="1600" height="320" />
+      <bpmndi:BPMNShape id="L_r_human_di" bpmnElement="L_r_human" isHorizontal="true" color:background-color="#fdf3f7" color:border-color="#9c8490">
+        <dc:Bounds x="160" y="80" width="1600" height="140" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Start_r_di" bpmnElement="Start_r">
         <dc:Bounds x="220" y="462" width="36" height="36" />
@@ -573,11 +584,11 @@
       <bpmndi:BPMNShape id="T_remerge_di" bpmnElement="T_remerge">
         <dc:Bounds x="1350" y="440" width="200" height="80" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="End_regraded_di" bpmnElement="End_regraded">
-        <dc:Bounds x="1590" y="462" width="36" height="36" />
-      </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="T_rollback_di" bpmnElement="T_rollback">
         <dc:Bounds x="1110" y="570" width="200" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_regraded_di" bpmnElement="End_regraded">
+        <dc:Bounds x="1590" y="462" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="End_refused_di" bpmnElement="End_refused">
         <dc:Bounds x="1350" y="592" width="36" height="36" />
