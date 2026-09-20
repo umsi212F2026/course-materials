@@ -7,8 +7,10 @@ description: The way in. Surveys every learning topic, does the agent-only maint
 
 ## Operates on
 
-Establish it once, at the start, by asking: the student's clone of `learning-topics`. Carry it
-from there for the rest of the sitting.
+Establish it once, at the start, from `~/.codex/AGENTS.md`, which names it: the student's clone
+of `learning-topics`. Carry it from there for the rest of the sitting. Do not open by asking
+for it; ask only where that file is missing or names a folder that is not there, and say that
+is what happened.
 
 Every tool you run takes it as `--dir`, and every skill you hand off to is told it. Do not
 infer it from the working directory, and do not decide it again part-way through — a student

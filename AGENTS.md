@@ -64,6 +64,15 @@ of these is found from there. Only the entry points are listed here.
   or when a setup check fails and the fix has been published.
   `workflows/update/skills/update/SKILL.md`
 
-**Before starting a workflow, establish which data directory it operates on. Ask; do not
-infer.** The directory is decided once, at the entry point, and carried from there — a skill
-invoked by another skill is told which directory to use and never chooses its own.
+**Before starting a workflow, establish which data directory it operates on. Read
+`~/.codex/AGENTS.md`, which names it; do not infer it from the working directory, and do not
+open by asking.** Installation 1 wrote that file so this question has one answer on every
+machine, and a student did not choose those paths and cannot confirm them. Ask only where the
+file is missing or names a folder that is not there, and say that is what happened: a broken
+install is worth telling them about, and it is a different thing from a routine question.
+
+The directory is decided once, at the entry point, and carried from there — a skill invoked by
+another skill is told which directory to use and never chooses its own.
+
+None of this is about *what* to work on. Which topic, which quiz, which repository to update
+are real questions with the learner's own answers, and they are asked.
