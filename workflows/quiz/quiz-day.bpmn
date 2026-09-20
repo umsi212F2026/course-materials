@@ -89,13 +89,13 @@
       <bpmn:incoming>f8</bpmn:incoming>
       <bpmn:outgoing>f9</bpmn:outgoing>
     </bpmn:userTask>
-    <bpmn:scriptTask id="T_export" name="Export the submissions&#10;NOT WRITTEN YET">
-      <bpmn:documentation>Writes course-private/data/quizzes/&lt;date&gt;-submissions.json — the latest submission per student, plus a drafts array for answers that were typed and never submitted. The grader reads this file and never reads the database.</bpmn:documentation>
+    <bpmn:scriptTask id="T_export" name="Export the submissions&#10;quiz-export.mjs">
+      <bpmn:documentation>umsi212F2026/course-private:tools/quiz-export.mjs — instructor only, not in this repository. Writes data/quizzes/&lt;date&gt;-submissions.json — the latest submission per student, plus a drafts array for answers that were typed and never submitted. The grader reads this file and never reads the database.</bpmn:documentation>
       <bpmn:incoming>f9</bpmn:incoming>
       <bpmn:outgoing>f10</bpmn:outgoing>
     </bpmn:scriptTask>
     <bpmn:subProcess id="Sub_grade" name="Grade one answer">
-      <bpmn:documentation>workflows/quiz/skills/quiz/grade/SKILL.md — NOT WRITTEN YET. One set of grading instructions, two runners. The batch runner here is the instructor's quiz-grade.mjs; the practice runner is the student's own agent, following the same skill in a fresh context. Consistency comes from the recorded rubric rather than from which model runs it. Drawn a second time in workflows/learn/learn.bpmn, where the practice quiz calls it; the two planes are the same phase and have to be kept in step by hand.</bpmn:documentation>
+      <bpmn:documentation>workflows/quiz/skills/quiz/grade/SKILL.md. One set of grading instructions, two runners. The batch runner here is the instructor's quiz-grade.mjs; the practice runner is the student's own agent, following the same skill in a fresh context. Consistency comes from the recorded rubric rather than from which model runs it. Drawn a second time in workflows/learn/learn.bpmn, where the practice quiz calls it; the two planes are the same phase and have to be kept in step by hand.</bpmn:documentation>
       <bpmn:incoming>f10</bpmn:incoming>
       <bpmn:outgoing>f11</bpmn:outgoing>
       <bpmn:multiInstanceLoopCharacteristics isSequential="true" />
@@ -135,8 +135,8 @@
         <bpmn:incoming>g2</bpmn:incoming>
         <bpmn:outgoing>g4</bpmn:outgoing>
       </bpmn:scriptTask>
-      <bpmn:serviceTask id="T_judge" name="Judge against the rubric&#10;quiz/grade — NOT WRITTEN YET">
-        <bpmn:documentation>workflows/quiz/skills/quiz/grade/SKILL.md — NOT WRITTEN YET. Rules on one answer to one item, given the prompt, its rubric entry and the answer. Returns the credit (full, half or none), what the answer missed, the two axes for the log, and a flag when the credit is close enough to be worth a person's eye. Nothing branches on the flag yet: the instructor reviews every script this term, which is the experiment that says whether the flag can be trusted later.</bpmn:documentation>
+      <bpmn:serviceTask id="T_judge" name="Judge against the rubric&#10;quiz/grade">
+        <bpmn:documentation>workflows/quiz/skills/quiz/grade/SKILL.md. Rules on one answer to one item, given the prompt, its rubric entry and the answer. Returns the credit (full, half or none), what the answer missed, the two axes for the log, and a flag when the credit is close enough to be worth a person's eye. Nothing branches on the flag yet: the instructor reviews every script this term, which is the experiment that says whether the flag can be trusted later.</bpmn:documentation>
         <bpmn:incoming>g3</bpmn:incoming>
         <bpmn:outgoing>g5</bpmn:outgoing>
       </bpmn:serviceTask>
