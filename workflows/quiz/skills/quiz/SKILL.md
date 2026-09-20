@@ -48,6 +48,12 @@ you start talking about the material while it is open.
 that everything is fair game afterwards.** That is not a rule you are enforcing on them. It is
 what makes their score worth reading.
 
+**Do not open the quiz page yourself, with a browser tool or anything else.** You will have a
+browser available and the URL in front of you, and it is the one thing in reach that destroys
+this outright: a page you have read is a page whose questions you know before they answer, and
+a page you can type into is a quiz you can sit for them. The tool hands you their answers the
+moment they submit, which is the only way you are meant to get them.
+
 ## The sequence
 
 ### 1. Find out what they can practise, and let them pick
@@ -225,7 +231,17 @@ node workflows/learn/tools/record-attempt.mjs <topic> <goal> "<label>" --tags <t
 ```
 
 Take all five straight off the row from step 6: `row.topic`, `row.goal`, `row.axes` as it
-stands, and `row.tags` where the row has one. The label is the one thing you build:
+stands, and `row.tags` where the row has one.
+
+**`row.topic` is a complete path and goes in exactly as it is.** It is absolute, so it does not
+depend on where you are running from, and there is nothing to strip, join or rebuild. A folder
+name reassembled into `../learning-topics/<name>` happens to work from one directory and is a
+silent failure from any other.
+
+**You do not need to read `record-attempt.mjs` to call it.** Everything it takes is above and
+on the row. Opening it costs two hundred lines of context to learn what this paragraph says.
+
+The label is the one thing you build:
 
 - **`<move>: <item>`** where the row has a `move`, which is the vocabulary supply's own label
   format. `served.mjs` hands it back the next time this word is studied, so study does not
@@ -308,6 +324,21 @@ noise.
 **Say the correction sentence every time, including on a perfect score.** A learner who does
 not know they can argue will not argue, and a student overruling the grader is the one place in
 this course where they are the human in the loop rather than the subject of it.
+
+**Where you flagged an item because the rubric itself looked wrong, say so, in that item's
+entry.** [`quiz/grade`](workflows/quiz/skills/quiz/grade/SKILL.md) tells you to rule by the
+credit line even where you think the line is wrong, and it says the practice quiz is what puts
+that in front of the student. This sentence is the whole of that: without it the flag is
+written to a file in `tmp/` that is deleted, and the one reader who could act on it never hears
+about it.
+
+> I marked this against the rubric, which is what I am meant to do, but I think the rubric is
+> wrong here: `<what is wrong with it, in a clause>`. If you agree, say so and I will take your
+> mark instead of mine.
+
+**A capability flag is not this, and is not said to the student.** Every capability item is
+flagged by construction, because the mark and the evidence come apart on all of them. There is
+nothing there for anybody to act on and nothing worth interrupting a report for.
 
 ### 9. Go over what they missed
 
