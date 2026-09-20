@@ -16,19 +16,11 @@ names them, on every machine, and it exists so that nothing has to guess or ask:
   where the attempts go. The tools derive it from the first as a sibling, so you pass it to
   `survey.mjs` and nowhere else.
 
-**Do not open with a question about a directory.** A learner asking to practise for a quiz has
-no way to answer one: they did not choose those paths, the installer did, and the answer is
-already written down. Opening on it spends the session's first exchange on a question whose
-answer you were handed.
-
-**If `~/.codex/AGENTS.md` is missing or names a folder that is not there**, say that, name the
-path you found in it, and ask. That is a broken install and the student needs to know, which is
-a different thing from routinely asking.
-
-**If they answer something that is not a path, that is not a refusal, it is a signal that the
-question made no sense to them.** Take what `~/.codex/AGENTS.md` says, tell them which folder
-you are using in a clause, and get on with step 1. Asking again is the worst available move:
-they have already told you they cannot answer it.
+**Do not open with a question about a directory.** A learner asking to practise for a quiz did
+not choose those paths and cannot confirm them. Ask only where that file is missing or names a
+folder that is not there, and say that is what happened: a broken install is worth telling them
+about. If they answer something that is not a path, that is them saying the question made no
+sense, so take the file's answer and get on with step 1 rather than asking twice.
 
 **The question this session asks is the real one: would you pass Tuesday's quiz?** Not what do
 you know about this topic, and not what would you like to go over. The whole value is that
@@ -40,19 +32,17 @@ nothing here is softened, so the answer means something.
 definition, not a "think about what happens to the old commit". Not even confirming that an
 answer sounds right.
 
-This is why the questions are served on a page and not by you. The page is the only arrangement
-where a student can answer with nobody holding the rubric, and it stops being that the moment
-you start talking about the material while it is open.
-
-**If they ask you something while the quiz is up, say you cannot answer until they submit, and
-that everything is fair game afterwards.** That is not a rule you are enforcing on them. It is
-what makes their score worth reading.
+The page is the only arrangement where a student answers with nobody holding the rubric, and it
+stops being that the moment you talk about the material while it is open. **If they ask you
+something while the quiz is up, say you cannot answer until they submit and that everything is
+fair game afterwards.** That is not a rule you are enforcing on them; it is what makes their
+score worth reading.
 
 **Do not open the quiz page yourself, with a browser tool or anything else.** You will have a
 browser available and the URL in front of you, and it is the one thing in reach that destroys
 this outright: a page you have read is a page whose questions you know before they answer, and
-a page you can type into is a quiz you can sit for them. The tool hands you their answers the
-moment they submit, which is the only way you are meant to get them.
+a page you can type into is a quiz you can sit for them. The tool hands you their answers when
+they submit, which is the only way you are meant to get them.
 
 ## The sequence
 
@@ -104,10 +94,6 @@ topic nobody has started yet:
 >
 > Do you want to study first, or sit it anyway to see the questions?
 
-**Listing nine goal ids is not the offer, it is a wall to scroll past.** A learner who has not
-started a topic already knows they have not started it; what they need is the number and a
-straight answer about what a quiz would be worth today.
-
 **Take whichever they pick, with no second attempt at persuading them.** Studying first is the
 better order and saying so once is the whole of your part in it; a learner who wants to know
 where they stand right now has a good reason, and "practise cold, then study the gaps" is a
@@ -124,20 +110,16 @@ node workflows/quiz/tools/quiz-practice.mjs --session <n>
 ```
 
 **It prints the URL in about a second and then does not exit until they submit.** Two things
-follow, and getting either wrong costs the session several minutes of thrashing.
+follow, and getting either wrong costs several minutes of thrashing.
 
-**Ask for escalated permission on this command, the first time, without waiting to be
-refused.** It opens a page on `127.0.0.1`, and a sandbox refuses that by default: the bind
-comes back `EPERM` and the tool says so. Nothing is served off the machine and no request
-leaves it, which is what the justification should say. Discovering this by failing first is
-what happened to the first student agent that ran it, and it cost seven commands and a full
-read of the tool's source.
+**Ask for escalated permission on this command the first time, without waiting to be refused.**
+It opens a page on `127.0.0.1`, which a sandbox refuses by default. Nothing is served off the
+machine and no request leaves it, which is what the justification should say.
 
 **Do not background it with `&` or `nohup`.** The process does not survive the command
-returning, the log file comes back empty, and there is nothing to read and no error to explain
-it. Run it in the foreground and let the command yield while it keeps running: it prints the
-URL long before any sensible yield elapses, and the server is still there when you get your
-turn back.
+returning, and the log comes back empty with no error to explain it. Run it in the foreground
+and let the command yield while it keeps running: the URL is printed long before any sensible
+yield elapses, and the server is still there when you get your turn back.
 
 Take the URL from what it printed, and send them this as **the last thing in the turn**, with
 that URL rather than the one below, which is only the usual one:
@@ -182,11 +164,9 @@ goal's own criterion. **Write `kinds.json` beside it, one entry per goal in that
 **Never read this off the goal id.** The `c-` prefix is on both examples above.
 
 **Every goal in the array gets an entry, including ones with no written answer to rule on.** A
-goal examined only by multiple choice never reaches step 5, so this file is the only place
-anybody asks the question about it, and picking the right option out of four is not evidence
-that somebody can commit and restore.
-
-The scorer reads this file and applies it. Nothing downstream asks you again.
+goal examined only by multiple choice never reaches step 5, so this is the only place anybody
+asks the question about it, and picking the right option out of four is not evidence that
+somebody can commit and restore.
 
 ### 5. Rule every answer in the queue
 
@@ -233,13 +213,10 @@ node workflows/learn/tools/record-attempt.mjs <topic> <goal> "<label>" --tags <t
 Take all five straight off the row from step 6: `row.topic`, `row.goal`, `row.axes` as it
 stands, and `row.tags` where the row has one.
 
-**`row.topic` is a complete path and goes in exactly as it is.** It is absolute, so it does not
-depend on where you are running from, and there is nothing to strip, join or rebuild. A folder
-name reassembled into `../learning-topics/<name>` happens to work from one directory and is a
-silent failure from any other.
-
-**You do not need to read `record-attempt.mjs` to call it.** Everything it takes is above and
-on the row. Opening it costs two hundred lines of context to learn what this paragraph says.
+**`row.topic` is an absolute path and goes in exactly as it is**, with nothing to strip, join
+or rebuild: a folder name reassembled into `../learning-topics/<name>` works from one directory
+and fails silently from any other. **Everything this tool takes is on that row, so there is no
+reason to open it.**
 
 The label is the one thing you build:
 
@@ -306,31 +283,25 @@ were asked, then the last two sentences exactly as they stand here:
 > which one you want to go over.
 
 **Every item gets its question and what they wrote, whatever the mark.** The page is closed by
-the time they read this, so a bare "2. No credit" and a sentence about an answer they can no
-longer see teaches nothing: they cannot tell which question item 2 was or what they said. All
-of it is on the row, `prompt` and `answer`, and an mcq's `answer` is already resolved to the
-choice they picked rather than left as an index.
+the time they read this, so a bare "2. No credit" leaves them unable to tell which question it
+was or what they said. Both are on the row as `prompt` and `answer`, and an mcq's `answer` is
+already the choice they picked rather than an index.
 
-**On less than full credit, add two things and in this order:** the row's `missed`, quoted and
-not summarised, and then the row's `expected`, introduced as the answer that earns full credit.
-`missed` was written to this learner by the same grader that marked the real quiz, and a
-friendlier version of it is a different mark's worth of feedback. `expected` is the model
-answer, and it is what they actually want when they ask what they should have said.
-
-**On full credit, the question and their answer are the whole entry.** Nothing to add: `missed`
-is empty by design, and quoting the model answer back at somebody who already gave one is
-noise.
+**On less than full credit, add the row's `missed` and then its `expected`, in that order.**
+Quote `missed` rather than summarising it: the same grader wrote it that marked the real quiz,
+and a friendlier version is a different mark's worth of feedback. `expected` is the model
+answer, introduced as what earns full credit. On full credit neither applies, and the question
+and their answer are the whole entry.
 
 **Say the correction sentence every time, including on a perfect score.** A learner who does
 not know they can argue will not argue, and a student overruling the grader is the one place in
 this course where they are the human in the loop rather than the subject of it.
 
 **Where you flagged an item because the rubric itself looked wrong, say so, in that item's
-entry.** [`quiz/grade`](workflows/quiz/skills/quiz/grade/SKILL.md) tells you to rule by the
-credit line even where you think the line is wrong, and it says the practice quiz is what puts
-that in front of the student. This sentence is the whole of that: without it the flag is
-written to a file in `tmp/` that is deleted, and the one reader who could act on it never hears
-about it.
+entry.** [`quiz/grade`](workflows/quiz/skills/quiz/grade/SKILL.md) has you rule by the credit
+line anyway and leaves the practice quiz to put it in front of the student. This is that:
+unsaid, the flag goes to a file in `tmp/` that is deleted, and the one person who could act on
+it never hears.
 
 > I marked this against the rubric, which is what I am meant to do, but I think the rubric is
 > wrong here: `<what is wrong with it, in a clause>`. If you agree, say so and I will take your
@@ -346,12 +317,11 @@ No fixed order. The learner replying to step 8 starts it, and they steer.
 
 **This is the most valuable part of the session and the report is only the way into it.** Aim
 at what went wrong underneath rather than at the wording: a miss is usually one distinction
-that was not there, and the `expected` field on the row is the answer that would have earned
-full credit, which is what to work from when they ask what they should have said.
+that was not there.
 
-**Offer the harder thing.** A word missed here comes back in review in three days, and they
-will get another go at it; what is worth the next ten minutes is whichever misconception
-produced the answer, not a corrected sentence to remember.
+**Offer the harder thing.** A word missed here comes back in review in three days and they get
+another go at it, so what is worth the next ten minutes is whichever misconception produced the
+answer, not a corrected sentence to remember.
 
 ## When they say the mark is wrong
 

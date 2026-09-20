@@ -124,13 +124,31 @@ export function loadPool(session) {
  *
  *  Which quizzes exist is a fact about the folder, and reading it here rather than asking the
  *  skill to glob and parse keeps one answer to "what can I practise". A pool appears the moment
- *  the instructor publishes it, so this is also how a student finds out a new one is there. */
-export function listPools() {
+ *  the instructor publishes it, so this is also how a student finds out a new one is there.
+ *
+ *  A POOL WHOSE SOURCES A STUDENT DOES NOT HAVE IS NOT LISTED, because the question this
+ *  answers is what they can practise, not what quizzes have happened. Session 3 is the case:
+ *  it draws from a topic that is authored in the instructor's clone and deliberately not
+ *  published, so its draw comes up empty on every student machine. Offering it and then
+ *  failing is worse than not offering it. Naming the session directly still runs, and still
+ *  says exactly which banks are missing, which is what an instructor needs and a student does
+ *  not.
+ *
+ *  Drawable means the draw actually produces items, not that the folders exist. That is a few
+ *  markdown reads per pool, which is nothing next to being wrong about it. */
+export function listPools(root = ROOT) {
   if (!existsSync(POOLS)) return [];
   return readdirSync(POOLS)
     .map((n) => /^session-(\d+)\.pool\.json$/.exec(n))
     .filter(Boolean)
     .map((m) => ({ session: Number(m[1]), ...JSON.parse(readFileSync(join(POOLS, m[0]), "utf8")) }))
+    .filter((pool) => {
+      try {
+        return applyPool(readPoolSources(pool, root), pool).strata.some((s) => s.items.length);
+      } catch {
+        return false;
+      }
+    })
     .sort((a, b) => a.session - b.session);
 }
 
