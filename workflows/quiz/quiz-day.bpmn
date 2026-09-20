@@ -19,15 +19,21 @@
         <bpmn:flowNodeRef>T_open</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>T_close</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>T_review</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>G_rejoin</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>G_criteria</bpmn:flowNodeRef>
       </bpmn:lane>
       <bpmn:lane id="L_agent" name="AI AGENT">
         <bpmn:flowNodeRef>T_draft</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>Sub_grade</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Sub_regrade</bpmn:flowNodeRef>
       </bpmn:lane>
       <bpmn:lane id="L_program" name="PROGRAM">
         <bpmn:flowNodeRef>T_bake</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>T_seed</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>T_export</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_queue</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_merge</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_comments</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>T_push</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>End_scores</bpmn:flowNodeRef>
       </bpmn:lane>
@@ -41,9 +47,18 @@
     <bpmn:sequenceFlow id="f7" sourceRef="T_seed" targetRef="T_open" />
     <bpmn:sequenceFlow id="f8" sourceRef="T_open" targetRef="T_close" />
     <bpmn:sequenceFlow id="f9" sourceRef="T_close" targetRef="T_export" />
-    <bpmn:sequenceFlow id="f10" sourceRef="T_export" targetRef="Sub_grade" />
-    <bpmn:sequenceFlow id="f11" sourceRef="Sub_grade" targetRef="T_review" />
-    <bpmn:sequenceFlow id="f12" sourceRef="T_review" targetRef="T_push" />
+    <bpmn:sequenceFlow id="f10" sourceRef="T_export" targetRef="T_queue" />
+    <bpmn:sequenceFlow id="q1" sourceRef="T_queue" targetRef="Sub_grade" />
+    <bpmn:sequenceFlow id="f11" sourceRef="Sub_grade" targetRef="T_merge" />
+    <bpmn:sequenceFlow id="q2" sourceRef="T_merge" targetRef="G_rejoin" />
+    <bpmn:sequenceFlow id="q3" sourceRef="G_rejoin" targetRef="T_review" />
+    <bpmn:sequenceFlow id="f12" sourceRef="T_review" targetRef="G_criteria" />
+    <bpmn:sequenceFlow id="q4" name="the criteria were wrong" sourceRef="G_criteria" targetRef="Sub_regrade">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">the reviewer wrote a note saying what should change</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="q5" sourceRef="Sub_regrade" targetRef="G_rejoin" />
+    <bpmn:sequenceFlow id="q6" name="the marks stand" sourceRef="G_criteria" targetRef="T_comments" />
+    <bpmn:sequenceFlow id="q7" sourceRef="T_comments" targetRef="T_push" />
     <bpmn:sequenceFlow id="f13" sourceRef="T_push" targetRef="End_scores" />
     <bpmn:startEvent id="Start_day" name="calendar names&#10;a quiz date">
       <bpmn:documentation>The instructor's term calendar is the only file that knows a date. It names which session carries a quiz and what that quiz is on.</bpmn:documentation>
@@ -94,9 +109,14 @@
       <bpmn:incoming>f9</bpmn:incoming>
       <bpmn:outgoing>f10</bpmn:outgoing>
     </bpmn:scriptTask>
+    <bpmn:scriptTask id="T_queue" name="Gather the answers&#10;by question&#10;quiz-grade.mjs --queue">
+      <bpmn:documentation>umsi212F2026/course-private:tools/quiz-grade.mjs — instructor only, not in this repository. Settles every multiple choice in code and gathers the free answers into a queue GROUPED BY QUESTION rather than by student. That grouping is a grading decision, not a convenience: ruling every answer to one question together holds its standard still across the twenty people who answered it, where going student by student re-derives the standard once per script and drifts.</bpmn:documentation>
+      <bpmn:incoming>f10</bpmn:incoming>
+      <bpmn:outgoing>q1</bpmn:outgoing>
+    </bpmn:scriptTask>
     <bpmn:subProcess id="Sub_grade" name="Grade one answer">
       <bpmn:documentation>workflows/quiz/skills/quiz/grade/SKILL.md. One set of grading instructions, two runners. The batch runner here is the instructor's quiz-grade.mjs; the practice runner is the student's own agent, following the same skill in a fresh context. Consistency comes from the recorded rubric rather than from which model runs it. Drawn a second time in workflows/learn/learn.bpmn, where the practice quiz calls it; the two planes are the same phase and have to be kept in step by hand.</bpmn:documentation>
-      <bpmn:incoming>f10</bpmn:incoming>
+      <bpmn:incoming>q1</bpmn:incoming>
       <bpmn:outgoing>f11</bpmn:outgoing>
       <bpmn:multiInstanceLoopCharacteristics isSequential="true" />
       <bpmn:laneSet id="LS_grade">
@@ -149,14 +169,115 @@
         <bpmn:incoming>g6</bpmn:incoming>
       </bpmn:endEvent>
     </bpmn:subProcess>
-    <bpmn:userTask id="T_review" name="Review the graded scripts">
-      <bpmn:documentation>Every script, every week, until the flag has earned trust. There is no gateway in front of this on purpose: nothing is filtered out yet. When the flag is trusted, this becomes a branch and the label narrows to the flagged items.</bpmn:documentation>
+    <bpmn:scriptTask id="T_merge" name="Merge the verdicts&#10;into grades&#10;quiz-grade.mjs --merge">
+      <bpmn:documentation>umsi212F2026/course-private:tools/quiz-grade.mjs — instructor only, not in this repository. Folds the verdicts back onto every student and scores them. An answered item with no verdict is reported as a PROBLEM rather than scored zero: a zero is a claim about the student and a missing verdict is a claim about the grading run, and quietly turning the second into the first is how a grading bug reaches a gradebook looking like a result.</bpmn:documentation>
       <bpmn:incoming>f11</bpmn:incoming>
+      <bpmn:outgoing>q2</bpmn:outgoing>
+    </bpmn:scriptTask>
+    <bpmn:exclusiveGateway id="G_rejoin">
+      <bpmn:incoming>q2</bpmn:incoming>
+      <bpmn:incoming>q5</bpmn:incoming>
+      <bpmn:outgoing>q3</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:exclusiveGateway id="G_criteria" name="were the criteria&#10;wrong?" default="q6">
+      <bpmn:incoming>f12</bpmn:incoming>
+      <bpmn:outgoing>q4</bpmn:outgoing>
+      <bpmn:outgoing>q6</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:scriptTask id="T_comments" name="Build the feedback&#10;quiz-comments.mjs">
+      <bpmn:documentation>umsi212F2026/course-private:tools/quiz-comments.mjs — instructor only, not in this repository. One block per question: what was asked, what they wrote, what was being looked for, the feedback where there is any, and the score. The model answer is quoted because the items live in a repository students already have, so it gives nothing away and it is the part someone who scored full marks still learns from. No model runs here.</bpmn:documentation>
+      <bpmn:incoming>q6</bpmn:incoming>
+      <bpmn:outgoing>q7</bpmn:outgoing>
+    </bpmn:scriptTask>
+    <bpmn:subProcess id="Sub_regrade" name="Rewrite the criteria and re-rule">
+      <bpmn:documentation>umsi212F2026/course-private:tools/quiz-regrade.mjs — instructor only, not in this repository. Drains the requests the review tool records, ONE AT A TIME behind a lock, because two agents committing in the same repository collide on .git/index.lock and one of them simply fails. Requests can arrive whenever the reviewer makes them; they are drained in order. The reviewer carries on with other questions while this runs, and marking is held only on the question being re-ruled.</bpmn:documentation>
+      <bpmn:incoming>q4</bpmn:incoming>
+      <bpmn:outgoing>q5</bpmn:outgoing>
+      <bpmn:laneSet id="LS_regrade">
+        <bpmn:lane id="L_r_human" name="HUMAN operator">
+          <bpmn:documentation>Empty on purpose, and that emptiness is the phase's whole point. The reviewer wrote a note and moved to another question; nothing in here waits on them. It is also why the agent below gets Read, Edit and Write and nothing else: no shell and no git, because an unattended agent rewriting course material and re-marking students is enough authority without the ability to run commands too.</bpmn:documentation>
+        </bpmn:lane>
+        <bpmn:lane id="L_r_agent" name="AI AGENT">
+          <bpmn:flowNodeRef>T_rewrite</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>T_rerule</bpmn:flowNodeRef>
+        </bpmn:lane>
+        <bpmn:lane id="L_r_program" name="PROGRAM">
+          <bpmn:flowNodeRef>Start_r</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>T_claim</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>G_cover</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>T_commit</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>T_remerge</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>T_rollback</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>End_regraded</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>End_refused</bpmn:flowNodeRef>
+        </bpmn:lane>
+      </bpmn:laneSet>
+      <bpmn:sequenceFlow id="r1" sourceRef="Start_r" targetRef="T_claim" />
+      <bpmn:sequenceFlow id="r2" sourceRef="T_claim" targetRef="T_rewrite" />
+      <bpmn:sequenceFlow id="r3" sourceRef="T_rewrite" targetRef="T_rerule" />
+      <bpmn:sequenceFlow id="r4" sourceRef="T_rerule" targetRef="G_cover" />
+      <bpmn:sequenceFlow id="r5" name="every answer ruled" sourceRef="G_cover" targetRef="T_commit">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">the new verdicts cover every answer to the question, each with one of the three credits and a timestamp</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="r6" name="anything missing" sourceRef="G_cover" targetRef="T_rollback" />
+      <bpmn:sequenceFlow id="r7" sourceRef="T_commit" targetRef="T_remerge" />
+      <bpmn:sequenceFlow id="r8" sourceRef="T_remerge" targetRef="End_regraded" />
+      <bpmn:sequenceFlow id="r9" sourceRef="T_rollback" targetRef="End_refused" />
+      <bpmn:startEvent id="Start_r" name="a regrade&#10;requested">
+        <bpmn:documentation>Recorded by the reviewer in the review tool, which shows them the exact prompt this agent will be given before anything is spent. A question whose rubric is not on main is refused here rather than attempted: its criteria were never released, so rewriting them would change a standard nobody was held to.</bpmn:documentation>
+        <bpmn:outgoing>r1</bpmn:outgoing>
+      </bpmn:startEvent>
+      <bpmn:scriptTask id="T_claim" name="Claim the request&#10;quiz-regrade.mjs">
+        <bpmn:documentation>Refuses outright if the rubric file has uncommitted changes, because rolling back means restoring it from git and that would throw away the reviewer's own edits. Refusing beats being clever.</bpmn:documentation>
+        <bpmn:incoming>r1</bpmn:incoming>
+        <bpmn:outgoing>r2</bpmn:outgoing>
+      </bpmn:scriptTask>
+      <bpmn:serviceTask id="T_rewrite" name="Rewrite the credit line">
+        <bpmn:documentation>Changes that one item's credit line and nothing else: not the model answer, not another item, not another file. An ambiguous note FAILS rather than guessing, because a guess changes real marks for real students with nobody watching.</bpmn:documentation>
+        <bpmn:incoming>r2</bpmn:incoming>
+        <bpmn:outgoing>r3</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:serviceTask id="T_rerule" name="Re-rule every answer&#10;quiz/grade">
+        <bpmn:documentation>workflows/quiz/skills/quiz/grade/SKILL.md — the same skill that ruled them the first time. Every answer, including those already at full credit: the standard has moved, and a mark made under the old one is not evidence about the new one. An answer the reviewer had corrected by hand is re-ruled too, flagged, and quoted back to them, because the correction was made against criteria that no longer exist. The student is never told any of this happened.</bpmn:documentation>
+        <bpmn:incoming>r3</bpmn:incoming>
+        <bpmn:outgoing>r4</bpmn:outgoing>
+        <bpmn:multiInstanceLoopCharacteristics isSequential="true" />
+      </bpmn:serviceTask>
+      <bpmn:exclusiveGateway id="G_cover" name="do the verdicts&#10;cover it?" default="r6">
+        <bpmn:incoming>r4</bpmn:incoming>
+        <bpmn:outgoing>r5</bpmn:outgoing>
+        <bpmn:outgoing>r6</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:scriptTask id="T_commit" name="Commit the rubric,&#10;never push">
+        <bpmn:documentation>The runner commits, not the agent, and only after the check above passes. A commit is a record and a push is a release, and a background process does not make releases.</bpmn:documentation>
+        <bpmn:incoming>r5</bpmn:incoming>
+        <bpmn:outgoing>r7</bpmn:outgoing>
+      </bpmn:scriptTask>
+      <bpmn:scriptTask id="T_remerge" name="Merge the new verdicts&#10;quiz-grade.mjs --merge">
+        <bpmn:documentation>New verdicts that never reach the grades file are invisible: the review tool reads grades, so a finished regrade would show the old marks and look as though it had done nothing.</bpmn:documentation>
+        <bpmn:incoming>r7</bpmn:incoming>
+        <bpmn:outgoing>r8</bpmn:outgoing>
+      </bpmn:scriptTask>
+      <bpmn:scriptTask id="T_rollback" name="Put the rubric and&#10;the verdicts back">
+        <bpmn:documentation>A PARTIAL REGRADE IS WORSE THAN NONE, and it is invisible: the status says failed so nobody looks, while some students sit re-ruled under criteria the rest were not. Every failure after the agent is allowed to write truncates the verdicts back and restores the rubric from git.</bpmn:documentation>
+        <bpmn:incoming>r6</bpmn:incoming>
+        <bpmn:outgoing>r9</bpmn:outgoing>
+      </bpmn:scriptTask>
+      <bpmn:endEvent id="End_regraded" name="criteria rewritten,&#10;answers re-ruled">
+        <bpmn:incoming>r8</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:endEvent id="End_refused" name="nothing changed">
+        <bpmn:incoming>r9</bpmn:incoming>
+      </bpmn:endEvent>
+    </bpmn:subProcess>
+    <bpmn:userTask id="T_review" name="Review the graded scripts&#10;quiz-review.mjs">
+      <bpmn:documentation>Every script, every week, until the flag has earned trust. There is no gateway in front of this on purpose: nothing is filtered out yet. When the flag is trusted, this becomes a branch and the label narrows to the flagged items.</bpmn:documentation>
+      <bpmn:incoming>q3</bpmn:incoming>
       <bpmn:outgoing>f12</bpmn:outgoing>
     </bpmn:userTask>
-    <bpmn:scriptTask id="T_push" name="Push the scores to Canvas&#10;quiz-scores.mjs — NOT WRITTEN YET">
+    <bpmn:scriptTask id="T_push" name="Push the scores to Canvas&#10;quiz-scores.mjs">
       <bpmn:documentation>umsi212F2026/course-private:tools/quiz-scores.mjs — instructor only, not in this repository. One bulk call against the gradebook, keyed on the canvas_id the seating chart already carries.</bpmn:documentation>
-      <bpmn:incoming>f12</bpmn:incoming>
+      <bpmn:incoming>q7</bpmn:incoming>
       <bpmn:outgoing>f13</bpmn:outgoing>
     </bpmn:scriptTask>
     <bpmn:endEvent id="End_scores" name="scores in&#10;the gradebook">
@@ -166,19 +287,19 @@
   <bpmndi:BPMNDiagram id="D_quiz">
     <bpmndi:BPMNPlane id="Pl_quiz" bpmnElement="C_quiz">
       <bpmndi:BPMNShape id="P_student_di" bpmnElement="P_student" isHorizontal="true">
-        <dc:Bounds x="160" y="80" width="3120" height="100" />
+        <dc:Bounds x="160" y="80" width="4160" height="100" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="P_day_di" bpmnElement="P_day" isHorizontal="true">
-        <dc:Bounds x="160" y="220" width="3120" height="590" />
+        <dc:Bounds x="160" y="220" width="4160" height="590" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="L_human_di" bpmnElement="L_human" isHorizontal="true" color:background-color="#fdf3f7" color:border-color="#9c8490">
-        <dc:Bounds x="190" y="220" width="3090" height="200" />
+        <dc:Bounds x="190" y="220" width="4130" height="200" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="L_agent_di" bpmnElement="L_agent" isHorizontal="true" color:background-color="#fdf7ee" color:border-color="#9c8d76">
-        <dc:Bounds x="190" y="420" width="3090" height="200" />
+        <dc:Bounds x="190" y="420" width="4130" height="200" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="L_program_di" bpmnElement="L_program" isHorizontal="true" color:background-color="#eef5f4" color:border-color="#7a918d">
-        <dc:Bounds x="190" y="620" width="3090" height="190" />
+        <dc:Bounds x="190" y="620" width="4130" height="190" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Start_day_di" bpmnElement="Start_day">
         <dc:Bounds x="230" y="302" width="36" height="36" />
@@ -211,16 +332,34 @@
         <dc:Bounds x="2230" y="675" width="200" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Sub_grade_di" bpmnElement="Sub_grade" isExpanded="false">
-        <dc:Bounds x="2470" y="480" width="200" height="80" />
+        <dc:Bounds x="2710" y="480" width="200" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="T_review_di" bpmnElement="T_review">
-        <dc:Bounds x="2710" y="280" width="200" height="80" />
+        <dc:Bounds x="3290" y="280" width="200" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="T_push_di" bpmnElement="T_push">
-        <dc:Bounds x="2950" y="675" width="200" height="80" />
+        <dc:Bounds x="3880" y="675" width="200" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="End_scores_di" bpmnElement="End_scores">
-        <dc:Bounds x="3200" y="697" width="36" height="36" />
+        <dc:Bounds x="4130" y="697" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_queue_di" bpmnElement="T_queue">
+        <dc:Bounds x="2470" y="675" width="200" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_merge_di" bpmnElement="T_merge">
+        <dc:Bounds x="2950" y="675" width="200" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_rejoin_di" bpmnElement="G_rejoin" isMarkerVisible="true">
+        <dc:Bounds x="3190" y="295" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_criteria_di" bpmnElement="G_criteria" isMarkerVisible="true">
+        <dc:Bounds x="3540" y="295" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Sub_regrade_di" bpmnElement="Sub_regrade" isExpanded="false">
+        <dc:Bounds x="3290" y="480" width="200" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_comments_di" bpmnElement="T_comments">
+        <dc:Bounds x="3640" y="675" width="200" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="f1_di" bpmnElement="f1">
         <di:waypoint x="266" y="320" />
@@ -270,25 +409,21 @@
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="f10_di" bpmnElement="f10">
         <di:waypoint x="2430" y="715" />
-        <di:waypoint x="2450" y="715" />
-        <di:waypoint x="2450" y="520" />
-        <di:waypoint x="2470" y="520" />
+        <di:waypoint x="2470" y="715" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="f11_di" bpmnElement="f11">
-        <di:waypoint x="2670" y="520" />
-        <di:waypoint x="2690" y="520" />
-        <di:waypoint x="2690" y="320" />
-        <di:waypoint x="2710" y="320" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="f12_di" bpmnElement="f12">
-        <di:waypoint x="2910" y="320" />
-        <di:waypoint x="2930" y="320" />
+        <di:waypoint x="2910" y="520" />
+        <di:waypoint x="2930" y="520" />
         <di:waypoint x="2930" y="715" />
         <di:waypoint x="2950" y="715" />
       </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f12_di" bpmnElement="f12">
+        <di:waypoint x="3490" y="320" />
+        <di:waypoint x="3540" y="320" />
+      </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="f13_di" bpmnElement="f13">
-        <di:waypoint x="3150" y="715" />
-        <di:waypoint x="3200" y="715" />
+        <di:waypoint x="4080" y="715" />
+        <di:waypoint x="4130" y="715" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="m_serve_di" bpmnElement="m_serve">
         <di:waypoint x="1850" y="280" />
@@ -297,6 +432,43 @@
       <bpmndi:BPMNEdge id="m_answers_di" bpmnElement="m_answers">
         <di:waypoint x="2330" y="180" />
         <di:waypoint x="2330" y="675" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="q1_di" bpmnElement="q1">
+        <di:waypoint x="2670" y="715" />
+        <di:waypoint x="2690" y="715" />
+        <di:waypoint x="2690" y="520" />
+        <di:waypoint x="2710" y="520" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="q2_di" bpmnElement="q2">
+        <di:waypoint x="3150" y="715" />
+        <di:waypoint x="3215" y="715" />
+        <di:waypoint x="3215" y="345" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="q3_di" bpmnElement="q3">
+        <di:waypoint x="3240" y="320" />
+        <di:waypoint x="3290" y="320" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="q4_di" bpmnElement="q4">
+        <di:waypoint x="3565" y="345" />
+        <di:waypoint x="3565" y="430" />
+        <di:waypoint x="3390" y="430" />
+        <di:waypoint x="3390" y="480" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="q5_di" bpmnElement="q5">
+        <di:waypoint x="3290" y="520" />
+        <di:waypoint x="3165" y="520" />
+        <di:waypoint x="3165" y="320" />
+        <di:waypoint x="3190" y="320" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="q6_di" bpmnElement="q6">
+        <di:waypoint x="3590" y="320" />
+        <di:waypoint x="3615" y="320" />
+        <di:waypoint x="3615" y="715" />
+        <di:waypoint x="3640" y="715" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="q7_di" bpmnElement="q7">
+        <di:waypoint x="3840" y="715" />
+        <di:waypoint x="3880" y="715" />
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
@@ -354,6 +526,89 @@
       <bpmndi:BPMNEdge id="g6_di" bpmnElement="g6">
         <di:waypoint x="710" y="470" />
         <di:waypoint x="750" y="470" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+  <bpmndi:BPMNDiagram id="D_regrade">
+    <bpmndi:BPMNPlane id="Pl_regrade" bpmnElement="Sub_regrade">
+      <bpmndi:BPMNShape id="L_r_human_di" bpmnElement="L_r_human" isHorizontal="true" color:background-color="#fdf3f7" color:border-color="#9c8490">
+        <dc:Bounds x="160" y="80" width="1600" height="140" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L_r_agent_di" bpmnElement="L_r_agent" isHorizontal="true" color:background-color="#fdf7ee" color:border-color="#9c8d76">
+        <dc:Bounds x="160" y="220" width="1600" height="160" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L_r_program_di" bpmnElement="L_r_program" isHorizontal="true" color:background-color="#eef5f4" color:border-color="#7a918d">
+        <dc:Bounds x="160" y="380" width="1600" height="320" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Start_r_di" bpmnElement="Start_r">
+        <dc:Bounds x="220" y="462" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_claim_di" bpmnElement="T_claim">
+        <dc:Bounds x="300" y="440" width="200" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_rewrite_di" bpmnElement="T_rewrite">
+        <dc:Bounds x="540" y="260" width="200" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_rerule_di" bpmnElement="T_rerule">
+        <dc:Bounds x="780" y="260" width="200" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_cover_di" bpmnElement="G_cover" isMarkerVisible="true">
+        <dc:Bounds x="1020" y="455" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_commit_di" bpmnElement="T_commit">
+        <dc:Bounds x="1110" y="440" width="200" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_remerge_di" bpmnElement="T_remerge">
+        <dc:Bounds x="1350" y="440" width="200" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_regraded_di" bpmnElement="End_regraded">
+        <dc:Bounds x="1590" y="462" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_rollback_di" bpmnElement="T_rollback">
+        <dc:Bounds x="1110" y="570" width="200" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_refused_di" bpmnElement="End_refused">
+        <dc:Bounds x="1350" y="592" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="r1_di" bpmnElement="r1">
+        <di:waypoint x="256" y="480" />
+        <di:waypoint x="300" y="480" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="r2_di" bpmnElement="r2">
+        <di:waypoint x="500" y="480" />
+        <di:waypoint x="520" y="480" />
+        <di:waypoint x="520" y="300" />
+        <di:waypoint x="540" y="300" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="r3_di" bpmnElement="r3">
+        <di:waypoint x="740" y="300" />
+        <di:waypoint x="780" y="300" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="r4_di" bpmnElement="r4">
+        <di:waypoint x="980" y="300" />
+        <di:waypoint x="1045" y="300" />
+        <di:waypoint x="1045" y="455" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="r5_di" bpmnElement="r5">
+        <di:waypoint x="1070" y="480" />
+        <di:waypoint x="1110" y="480" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="r6_di" bpmnElement="r6">
+        <di:waypoint x="1045" y="505" />
+        <di:waypoint x="1045" y="610" />
+        <di:waypoint x="1110" y="610" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="r7_di" bpmnElement="r7">
+        <di:waypoint x="1310" y="480" />
+        <di:waypoint x="1350" y="480" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="r8_di" bpmnElement="r8">
+        <di:waypoint x="1550" y="480" />
+        <di:waypoint x="1590" y="480" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="r9_di" bpmnElement="r9">
+        <di:waypoint x="1310" y="610" />
+        <di:waypoint x="1350" y="610" />
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
