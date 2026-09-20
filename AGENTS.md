@@ -51,6 +51,12 @@ of these is found from there. Only the entry points are listed here.
   interval. Use when anything is due; it works out what that is itself rather than being told.
   Not the same as study, which works the other side of the line — goals not yet met.
   `workflows/learn/skills/review/SKILL.md`
+- **quiz** - Sit a practice quiz, drawn from the same pool and marked by the same grader as a
+  real one, then go over what was missed. Use when a learner asks to practise for a quiz, or
+  wants to know whether they would pass one. It records an attempt against each goal the quiz
+  examined, so a practice run moves review dates. Not the same as review, which serves what is
+  due; this serves what one session's quiz would.
+  `workflows/quiz/skills/quiz/SKILL.md`
 
 - **update** — Bring one of the course repositories up to date with the instructor's copy,
   committing the student's own work first and helping them through any conflict. Use whenever

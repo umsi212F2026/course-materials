@@ -13,8 +13,6 @@
  *  copies of this object is how a practice quiz and a real one start to disagree. */
 export const CREDIT_VALUE = { full: 1, half: 0.5, none: 0 };
 
-const readJson = (p) => JSON.parse(readFileSync(p, "utf8"));
-
 /** One row per (student, item) for every student who was assigned a draw.
  *
  *  `source` says where the text came from, and it is the honest distinction the export
@@ -109,6 +107,12 @@ export function mergeGrades(rows, verdicts, { date, session, corrections = [] })
     let flag = false;
     let flagReason = "";
     let criterion;
+    // `yes` UNLESS A VERDICT SAYS OTHERWISE. In class it is true by construction: the quiz is
+    // sat in the room with nothing else open. In practice the page is answered cold too, but
+    // the agent is in the room afterwards, and an answer the student went back and talked
+    // through before submitting is not an unaided one. The grade skill is the only thing that
+    // can see the difference, so where it reports one, that is what gets recorded.
+    let unaided = "yes";
 
     if (r.item.type === "mcq") {
       credit = settleMcq(r.item, r.text);
@@ -134,6 +138,12 @@ export function mergeGrades(rows, verdicts, { date, session, corrections = [] })
       // what for. This field is the reviewer's.
       flagReason = v.flag_reason ?? "";
       criterion = credit === "full" ? "met" : "not met";
+      if (v.axes?.unaided === "no" || v.axes?.unaided === "unclear") unaided = v.axes.unaided;
+      // A CAPABILITY ITEM IS MARKED AND ESTABLISHES NOTHING, and those two are not in tension:
+      // one is a mark, the other is evidence. The student answered the question that was asked,
+      // so the credit stands; nobody watched them do the thing, so the criterion is `unchecked`
+      // and no review date moves on it.
+      if (v.axes?.criterion === "unchecked") criterion = "unchecked";
       if (!Object.hasOwn(CREDIT_VALUE, credit)) {
         problems.push(`${r.uniqname} ${r.item.id}: credit "${credit}" is not full, half or none`);
         continue;
@@ -165,7 +175,10 @@ export function mergeGrades(rows, verdicts, { date, session, corrections = [] })
         graderCredit = credit;
         credit = fix.credit;
         if (typeof fix.comment === "string") missed = fix.comment;
-        criterion = credit === "full" ? "met" : "not met";
+        // A CORRECTION CHANGES THE MARK, NOT WHETHER ANYBODY WATCHED. `unchecked` on a
+        // capability item says nobody established the capability, and a second opinion on how
+        // well the question was answered does not establish it either.
+        if (criterion !== "unchecked") criterion = credit === "full" ? "met" : "not met";
       }
     }
 
@@ -179,7 +192,7 @@ export function mergeGrades(rows, verdicts, { date, session, corrections = [] })
       flag_reason: flagReason,
       corrected,
       grader_credit: graderCredit,
-      axes: { unaided: "yes", criterion },
+      axes: { unaided, criterion },
     });
   }
 

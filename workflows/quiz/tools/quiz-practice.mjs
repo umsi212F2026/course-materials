@@ -2,6 +2,7 @@
 //
 // Sit a practice quiz on a page, then score it once an agent has ruled the written answers.
 //
+//   node workflows/quiz/tools/quiz-practice.mjs --list
 //   node workflows/quiz/tools/quiz-practice.mjs --session 5
 //   node workflows/quiz/tools/quiz-practice.mjs --score tmp/practice-2026-09-20T14-02-11
 //
@@ -27,8 +28,12 @@ import { readFileSync, writeFileSync, appendFileSync, existsSync, mkdirSync } fr
 import { createServer } from "node:http";
 import { resolve, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { drawPractice, loadPool } from "./quiz-draw.mjs";
+import { drawPractice, loadPool, listPools } from "./quiz-draw.mjs";
 import { collectAnswers, settleMcq, buildQueue, mergeGrades, CREDIT_VALUE } from "./lib/grade.mjs";
+// THE LEARN WORKFLOW'S READER, not a second one. What a practice quiz leaves behind is an
+// attempt in a topic's log, so this tool already lives on the far side of that boundary; a
+// private copy of how goals.md parses would be one more thing to keep in step with it.
+import { readIds } from "../../learn/tools/lib/topic.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const REPO = resolve(here, "..", "..", "..");
@@ -37,6 +42,34 @@ const readJson = (p) => JSON.parse(readFileSync(p, "utf8"));
 
 const esc = (s) =>
   String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+// WHICH MOVES ARE PRODUCTION ONES, from workflows/learn/skills/goal-setting/references/
+// vocabulary-moves.md. A word carries `bar: one production pass`, and the tag is the only thing
+// that tells the bar whether a move was one, so an item answered here counts toward finishing a
+// word exactly as the same move would in study. The table is five rows and has not changed; if
+// it grows, it grows there and here together, and a move missing below records no tag rather
+// than a wrong one.
+const MOVE_TAGS = {
+  DEFINE: "reception",
+  INTERPRET: "reception",
+  DISTINGUISH: "production",
+  CATCH: "production",
+  APPLY: "production",
+};
+
+/** Every goal named by the draw, keyed by id, with the topic it came from.
+ *
+ *  One read per topic rather than one per item, and a topic that isn't cloned simply
+ *  contributes nothing: the draw still serves, the answers are still marked, and what is lost
+ *  is the recording. The skill says so out loud, because that is where it can be. */
+function goalsFor(items) {
+  const byId = new Map();
+  for (const dir of new Set(items.map((i) => i.topic).filter(Boolean))) {
+    if (!existsSync(dir)) continue;
+    for (const [id, goal] of readIds(dir)) byId.set(id, goal);
+  }
+  return byId;
+}
 
 /** The page. Every item on one screen, answered cold, submitted once. */
 function page(items, source) {
@@ -128,8 +161,52 @@ function record(dir, source, items, answers) {
   writeFileSync(join(dir, "submissions.json"), JSON.stringify(submissionsFile, null, 2) + "\n");
 
   const rows = collectAnswers(drawFile, submissionsFile);
-  const queue = buildQueue(rows);
-  writeFileSync(join(dir, "queue.json"), JSON.stringify({ date, items: queue }, null, 2) + "\n");
+  const goals = goalsFor(items);
+  const byId = new Map(items.map((it) => [it.id, it]));
+
+  // WHAT buildQueue RETURNS, PLUS WHAT ONLY THIS SIDE KNOWS. The shared function is the
+  // instructor's too, and the batch runner works from a draw file and a submissions file with
+  // no learning-topics in reach: it has no criterion to send and no topic to record against.
+  // Here both are at hand, so they go in rather than being looked up twice, once by the grade
+  // skill and again by the practice skill.
+  const queue = buildQueue(rows).map((g) => {
+    const it = byId.get(g.item);
+    const goal = it?.goal ? goals.get(it.goal) : null;
+    return {
+      ...g,
+      topic: it?.topic ?? null,
+      move: it?.move ?? null,
+      tags: it?.move ? MOVE_TAGS[it.move] ?? null : null,
+      // THE CRITERION, SO THE SKILL CAN SAY WHAT KIND OF ITEM THIS IS. `kind: capability` turns
+      // on whether a written answer could establish the goal, and that is a reading of the
+      // criterion rather than a slot to look up: `c-describe-app-bug` is met by writing the
+      // request, and `c-commit-recovery-point` is not met by describing the act. The `c-`
+      // prefix separates them in neither case.
+      criterion: goal?.criterionText ?? null,
+    };
+  });
+
+  // EVERY GOAL THE DRAW EXAMINED, INCLUDING THE ONES WITH NO WRITTEN ANSWER. `items` above is
+  // the work to rule on, and multiple choice is deliberately not in it; but whether a goal is
+  // met by doing rather than by writing is a fact about the GOAL, and a goal examined only by
+  // an mcq needs that answer as much as any other. Without this list it never gets asked, and a
+  // capability quietly records as met because somebody picked the right option out of four.
+  const examined = [];
+  const seenGoal = new Set();
+  for (const it of items) {
+    if (!it.goal || seenGoal.has(it.goal)) continue;
+    seenGoal.add(it.goal);
+    examined.push({
+      goal: it.goal,
+      topic: it.topic ?? null,
+      criterion: goals.get(it.goal)?.criterionText ?? null,
+    });
+  }
+
+  writeFileSync(
+    join(dir, "queue.json"),
+    JSON.stringify({ date, goals: examined, items: queue }, null, 2) + "\n",
+  );
 
   // Multiple choice is settled here, in code, exactly as it is for a real quiz. It never
   // reaches the skill, which is why it costs nothing and can never disagree with itself.
@@ -169,24 +246,64 @@ function score(dir) {
     process.exit(1);
   }
 
+  // THE CAPABILITY CALL IS MADE ONCE PER GOAL AND APPLIED HERE, so that it cannot be made
+  // twice and differently. The skill reads queue.json's `goals`, decides which of them are met
+  // by doing rather than by writing, and writes kinds.json; this is where that answer reaches
+  // every item on the goal, multiple choice included. Picking the right option out of four is
+  // not evidence that anyone can commit and restore, and nothing in the grading path would
+  // have said so: an mcq is settled in code and never reaches the skill at all.
+  const kindsPath = join(dir, "kinds.json");
+  const kinds = existsSync(kindsPath) ? readJson(kindsPath) : {};
+  for (const i of me.items) {
+    if (i.goal && kinds[i.goal] === "capability") i.axes = { ...i.axes, criterion: "unchecked" };
+  }
+
+  // EVERYTHING ONE record-attempt CALL NEEDS, ON ONE LINE EACH. The skill makes a call per
+  // item, and every argument it takes is here: the topic to record in, the goal, the move and
+  // its tag for the label, and the axes the verdict settled. Nothing left to derive means
+  // nothing left to derive differently on a bad day.
   const byId = new Map(drawFile.draws[0].items.map((it) => [it.id, it]));
   console.log(JSON.stringify({
     source: drawFile.practice,
     score: me.score,
     out_of: me.out_of,
-    items: me.items.map((i) => ({
-      item: i.item,
-      goal: i.goal,
-      move: byId.get(i.item)?.move ?? null,
-      type: i.type,
-      credit: i.credit,
-      missed: i.missed,
-      flag: i.flag,
-    })),
+    items: me.items.map((i) => {
+      const it = byId.get(i.item);
+      return {
+        item: i.item,
+        goal: i.goal,
+        topic: it?.topic ?? null,
+        move: it?.move ?? null,
+        tags: it?.move ? MOVE_TAGS[it.move] ?? null : null,
+        type: i.type,
+        credit: i.credit,
+        missed: i.missed,
+        // The model answer, for going over a miss afterwards. Separate from the rubric on
+        // purpose: the joined credit line reads as marking instructions, and this reads as an
+        // answer, which is what the student is owed when they ask what they should have said.
+        expected: it?.expected ?? null,
+        axes: i.axes,
+        flag: i.flag,
+      };
+    }),
   }, null, 2));
 }
 
+function listing() {
+  const pools = listPools();
+  if (!pools.length) {
+    console.error("No published pools. Pull course-materials and try again.");
+    process.exit(1);
+  }
+  for (const p of pools) {
+    const take = Object.values(p.draw ?? {}).reduce((n, k) => n + k, 0);
+    console.log(`  --session ${p.session}   the quiz of ${p.date}, ${take} questions   ${p.topic ?? ""}`.trimEnd());
+  }
+}
+
 function main() {
+  if (process.argv.includes("--list")) return listing();
+
   if (process.argv.includes("--score")) {
     const dir = process.argv[process.argv.indexOf("--score") + 1];
     if (!dir || !existsSync(join(dir, "draw.json"))) {
@@ -201,12 +318,15 @@ function main() {
   const sessionAt = process.argv.indexOf("--session");
   const session = sessionAt === -1 ? null : process.argv[sessionAt + 1];
   if (!session) {
-    console.error("Usage: node workflows/quiz/tools/quiz-practice.mjs --session <n> [--port 5300]");
+    console.error("Usage: node workflows/quiz/tools/quiz-practice.mjs --session <n> [--port 5300]\n");
+    console.error("Published pools:");
+    listing();
     process.exit(1);
   }
   const pool = loadPool(session);
   if (!pool) {
-    console.error(`No published pool for session ${session}.`);
+    console.error(`No published pool for session ${session}. Published pools:`);
+    listing();
     process.exit(1);
   }
   const source = `session ${pool.session}, the quiz of ${pool.date}`;
@@ -254,6 +374,17 @@ function main() {
     }
     res.writeHead(404, { "content-type": "text/plain" });
     res.end("not found");
+  });
+
+  // A PORT ALREADY IN USE IS THE ORDINARY SECOND RUN, not an exception. Without this the
+  // process dies on an unhandled 'error' event and the stack trace is the only thing anyone
+  // sees, which reads like the tool is broken rather than like a page is already open.
+  server.on("error", (err) => {
+    if (err.code !== "EADDRINUSE") throw err;
+    console.error(`Port ${port} is already in use, probably by a practice quiz still waiting.`);
+    console.error(`Finish that one at http://127.0.0.1:${port}, or start this one on another port:`);
+    console.error(`\n  node workflows/quiz/tools/quiz-practice.mjs --session ${session} --port ${port + 1}\n`);
+    process.exit(1);
   });
 
   // 127.0.0.1 rather than every interface: these are your own answers, on your own machine.

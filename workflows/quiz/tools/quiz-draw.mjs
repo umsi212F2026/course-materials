@@ -28,7 +28,7 @@
 // the quiz are the same act. Not showing them until the answer is given is a discipline the
 // skill keeps, not a secret this file protects.
 
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { resolve, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { readPoolSources, applyPool } from "./lib/bank.mjs";
@@ -65,6 +65,28 @@ function pick(items, count, next) {
   return out;
 }
 
+/** Which topic folder an item's attempt gets recorded against, as a path.
+ *
+ *  TWO POOL SHAPES, ONE ANSWER. The single-topic form names the topic once at the top; the
+ *  multi-source form spells it into every draw key, `learning-topics/<folder>/<bank file>`, and
+ *  the folder is the segment after `learning-topics`. Deriving it rather than asking for it is
+ *  the same choice readPoolSources made about the sources themselves: two statements of one
+ *  fact are two statements that can disagree.
+ *
+ *  A SOURCE THAT IS NOT A LEARNING TOPIC HAS NO TOPIC, and null is the honest answer rather
+ *  than a guess. An assignment's follow-up questions are the case: nobody set goals for a
+ *  problem set, so the item carries no goal either, and there is nothing to record.
+ *
+ *  It is not checked for existence here. A student who has not cloned the topic gets a draw
+ *  and a score either way; what they lose is the attempt, and the skill is where that is
+ *  noticed, because that is where it can be said out loud. */
+export function topicDir(pool, item, root) {
+  if (pool.topic) return join(root, "learning-topics", pool.topic);
+  const parts = String(item.bank ?? "").split("/");
+  const at = parts.indexOf("learning-topics");
+  return at === -1 || !parts[at + 1] ? null : join(root, "learning-topics", parts[at + 1]);
+}
+
 /** One practice quiz from one session's pool: each stratum contributes what the pool asks for.
  *
  *  This is the instructor's bake with the roster taken out and the seed left random. The strata
@@ -83,7 +105,10 @@ export function drawPractice(pool, root, { seed } = {}) {
     }
     const drawn = pick(s.items, Math.min(s.take, s.items.length), next);
     shape.push({ name: s.name, take: s.take, drawn: drawn.length });
-    items.push(...drawn);
+    // The topic travels with the item for the same reason the goal does: what a practice quiz
+    // leaves behind is an attempt in a topic's log, and the two together are the whole address
+    // of where it goes. The instructor's bake needs neither and does not carry them.
+    items.push(...drawn.map((it) => ({ ...it, topic: topicDir(pool, it, root) })));
   }
   return { items, strata: shape, problems };
 }
@@ -93,6 +118,20 @@ export function loadPool(session) {
   const path = join(POOLS, `session-${session}.pool.json`);
   if (!existsSync(path)) return null;
   return JSON.parse(readFileSync(path, "utf8"));
+}
+
+/** Every session with a published pool, oldest first.
+ *
+ *  Which quizzes exist is a fact about the folder, and reading it here rather than asking the
+ *  skill to glob and parse keeps one answer to "what can I practise". A pool appears the moment
+ *  the instructor publishes it, so this is also how a student finds out a new one is there. */
+export function listPools() {
+  if (!existsSync(POOLS)) return [];
+  return readdirSync(POOLS)
+    .map((n) => /^session-(\d+)\.pool\.json$/.exec(n))
+    .filter(Boolean)
+    .map((m) => ({ session: Number(m[1]), ...JSON.parse(readFileSync(join(POOLS, m[0]), "utf8")) }))
+    .sort((a, b) => a.session - b.session);
 }
 
 function main() {

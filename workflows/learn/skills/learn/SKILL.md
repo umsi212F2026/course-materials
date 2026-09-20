@@ -183,9 +183,16 @@ That option is a program and not a skill on purpose. If it ever turns out there'
 it — which topics to foreground, which silence to point at — that's when it earns a skill of
 its own, and not before.
 
+**"Could I pass the quiz?" is always available too**, and unlike the rest of the menu it does
+not come out of the survey: a practice quiz exists whenever the instructor has published a
+pool, whatever state the topics are in. Name it when a quiz is coming up or when a topic has
+most of its goals met, and hand off to `quiz`, which lists the pools itself. It is worth naming
+even where goals are still pending — it says where they stand and offers to study first, which
+is a better answer than not mentioning it.
+
 ## 4. Hand off
 
-Three places to hand off to, and which one depends on what they picked.
+Four places to hand off to, and which one depends on what they picked.
 
 **A topic** goes to its **`topic`** skill. Which phase it needs — goal setting, curation first,
 study — is that skill's decision, not yours. Pass along anything they said that bears on it:
@@ -194,6 +201,11 @@ that they want to revise the goals, that they've retired it, that they only have
 **A review sitting** goes straight to **`review`**, not through `topic`. It isn't a topic's
 phase and never was one — it works across all of them at once, and finds what's due itself.
 Hand it nothing.
+
+**A practice quiz** goes straight to **`quiz`**, which finds the published pools itself and
+asks them which one. Like review, it isn't a topic's phase: the pool decides what it draws on,
+and a session's quiz can draw from more than one place. Hand it nothing but the session number,
+if they named one.
 
 **Starting something new** goes to **`add-topic`**, which asks what it's called and which words
 it starts with, makes the folder, and stops. `topic` is never the thing that creates one — it
@@ -234,6 +246,7 @@ Then you're done. You don't sit inside the session you started.
 - [`add-topic`](workflows/learn/skills/add-topic/SKILL.md) — skill
 - [`curation`](workflows/learn/skills/curation/SKILL.md) — skill
 - [`goal-setting`](workflows/learn/skills/goal-setting/SKILL.md) — skill
+- [`quiz`](workflows/quiz/skills/quiz/SKILL.md) - skill
 - [`review`](workflows/learn/skills/review/SKILL.md) — skill
 - [`study`](workflows/learn/skills/study/SKILL.md) — skill
 - [`topic`](workflows/learn/skills/topic/SKILL.md) — skill
