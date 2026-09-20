@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:color="http://www.omg.org/spec/BPMN/non-normative/color/1.0" id="Definitions_quiz" targetNamespace="http://si212.umich.edu/schema/bpmn">
   <bpmn:collaboration id="C_quiz">
-    <bpmn:participant id="P_day" name="Quiz day — one run per quiz date" processRef="Proc_day" />
+    <bpmn:participant id="P_day" name="Quiz day: one run per quiz date" processRef="Proc_day" />
     <bpmn:participant id="P_student" name="A student taking the quiz in class">
       <bpmn:documentation>A black box on purpose. What happens inside is the web app and the student, and this diagram makes no claim about it beyond the two messages. The three bars say there is one run of this per student, and the run of Quiz day does not wait for any of them: the quiz closes on the clock, which is why the export has to carry drafts as well as submissions.</bpmn:documentation>
       <bpmn:participantMultiplicity minimum="1" />
@@ -80,17 +80,17 @@
       <bpmn:outgoing>f4</bpmn:outgoing>
     </bpmn:userTask>
     <bpmn:userTask id="T_pool" name="Write the session's pool file">
-      <bpmn:documentation>course-private/data/quiz-bank/session-&lt;n&gt;.pool.json — instructor only, not in this repository. It names the sources and how many to draw from each of their tasks files. The selection is the private half: which questions are fair on one date is a judgment about one session.</bpmn:documentation>
+      <bpmn:documentation>quiz-bank/session-&lt;n&gt;.pool.json, in this repository and published. It names the sources and how many to draw from each of their tasks files. Publishing it is what makes practice the real thing rather than a rehearsal of it: the student's draw comes out of the same file, through the same library. It discloses nothing, because it says how many from where and never which questions, and the questions themselves are in repositories students already have.</bpmn:documentation>
       <bpmn:incoming>f4</bpmn:incoming>
       <bpmn:outgoing>f5</bpmn:outgoing>
     </bpmn:userTask>
     <bpmn:scriptTask id="T_bake" name="Bake a draw for every student&#10;on the roster&#10;quiz-bake.mjs">
-      <bpmn:documentation>umsi212F2026/course-private:tools/quiz-bake.mjs — instructor only, not in this repository. It reads the pool file, resolves each source to a folder with tasks/ and rubrics/, and draws per student. The roster comes from that date's seating chart; there is no second roster source. The draw is deterministic, seeded from the date and the uniqname, so fixing a typo and re-baking does not reshuffle everyone's quiz. It shares its draw library with the practice front end.</bpmn:documentation>
+      <bpmn:documentation>umsi212F2026/course-private:tools/quiz-bake.mjs, instructor only, not in this repository. It reads the pool file, resolves each source to a folder with tasks/ and rubrics/, and draws per student. The roster comes from that date's seating chart; there is no second roster source. The draw is deterministic, seeded from the date and the uniqname, so fixing a typo and re-baking does not reshuffle everyone's quiz. It shares its draw library with the practice front end.</bpmn:documentation>
       <bpmn:incoming>f5</bpmn:incoming>
       <bpmn:outgoing>f6</bpmn:outgoing>
     </bpmn:scriptTask>
     <bpmn:scriptTask id="T_seed" name="Seed the draws into the app&#10;quiz-seed.mjs">
-      <bpmn:documentation>umsi212F2026/course-private:tools/quiz-seed.mjs — instructor only, not in this repository. An upsert keyed on date and uniqname, so re-baking after a fix is just running it again. Refused once the quiz is open unless forced, because the same upsert would replace items under students who are mid-quiz.</bpmn:documentation>
+      <bpmn:documentation>umsi212F2026/course-private:tools/quiz-seed.mjs, instructor only, not in this repository. An upsert keyed on date and uniqname, so re-baking after a fix is just running it again. Refused once the quiz is open unless forced, because the same upsert would replace items under students who are mid-quiz.</bpmn:documentation>
       <bpmn:incoming>f6</bpmn:incoming>
       <bpmn:outgoing>f7</bpmn:outgoing>
     </bpmn:scriptTask>
@@ -105,12 +105,12 @@
       <bpmn:outgoing>f9</bpmn:outgoing>
     </bpmn:userTask>
     <bpmn:scriptTask id="T_export" name="Export the submissions&#10;quiz-export.mjs">
-      <bpmn:documentation>umsi212F2026/course-private:tools/quiz-export.mjs — instructor only, not in this repository. Writes data/quizzes/&lt;date&gt;-submissions.json — the latest submission per student, plus a drafts array for answers that were typed and never submitted. The grader reads this file and never reads the database.</bpmn:documentation>
+      <bpmn:documentation>umsi212F2026/course-private:tools/quiz-export.mjs, instructor only, not in this repository. Writes data/quizzes/&lt;date&gt;-submissions.json: the latest submission per student, plus a drafts array for answers that were typed and never submitted. The grader reads this file and never reads the database.</bpmn:documentation>
       <bpmn:incoming>f9</bpmn:incoming>
       <bpmn:outgoing>f10</bpmn:outgoing>
     </bpmn:scriptTask>
     <bpmn:scriptTask id="T_queue" name="Gather the answers&#10;by question&#10;quiz-grade.mjs --queue">
-      <bpmn:documentation>umsi212F2026/course-private:tools/quiz-grade.mjs — instructor only, not in this repository. Settles every multiple choice in code and gathers the free answers into a queue GROUPED BY QUESTION rather than by student. That grouping is a grading decision, not a convenience: ruling every answer to one question together holds its standard still across the twenty people who answered it, where going student by student re-derives the standard once per script and drifts.</bpmn:documentation>
+      <bpmn:documentation>umsi212F2026/course-private:tools/quiz-grade.mjs, instructor only, not in this repository. Settles every multiple choice in code and gathers the free answers into a queue GROUPED BY QUESTION rather than by student. That grouping is a grading decision, not a convenience: ruling every answer to one question together holds its standard still across the twenty people who answered it, where going student by student re-derives the standard once per script and drifts.</bpmn:documentation>
       <bpmn:incoming>f10</bpmn:incoming>
       <bpmn:outgoing>q1</bpmn:outgoing>
     </bpmn:scriptTask>
@@ -170,7 +170,7 @@
       </bpmn:endEvent>
     </bpmn:subProcess>
     <bpmn:scriptTask id="T_merge" name="Merge the verdicts&#10;into grades&#10;quiz-grade.mjs --merge">
-      <bpmn:documentation>umsi212F2026/course-private:tools/quiz-grade.mjs — instructor only, not in this repository. Folds the verdicts back onto every student and scores them. An answered item with no verdict is reported as a PROBLEM rather than scored zero: a zero is a claim about the student and a missing verdict is a claim about the grading run, and quietly turning the second into the first is how a grading bug reaches a gradebook looking like a result.</bpmn:documentation>
+      <bpmn:documentation>umsi212F2026/course-private:tools/quiz-grade.mjs, instructor only, not in this repository. Folds the verdicts back onto every student and scores them. An answered item with no verdict is reported as a PROBLEM rather than scored zero: a zero is a claim about the student and a missing verdict is a claim about the grading run, and quietly turning the second into the first is how a grading bug reaches a gradebook looking like a result.</bpmn:documentation>
       <bpmn:incoming>f11</bpmn:incoming>
       <bpmn:outgoing>q2</bpmn:outgoing>
     </bpmn:scriptTask>
@@ -185,12 +185,12 @@
       <bpmn:outgoing>q6</bpmn:outgoing>
     </bpmn:exclusiveGateway>
     <bpmn:scriptTask id="T_comments" name="Build the feedback&#10;quiz-comments.mjs">
-      <bpmn:documentation>umsi212F2026/course-private:tools/quiz-comments.mjs — instructor only, not in this repository. One block per question: what was asked, what they wrote, what was being looked for, the feedback where there is any, and the score. The model answer is quoted because the items live in a repository students already have, so it gives nothing away and it is the part someone who scored full marks still learns from. No model runs here.</bpmn:documentation>
+      <bpmn:documentation>umsi212F2026/course-private:tools/quiz-comments.mjs, instructor only, not in this repository. One block per question: what was asked, what they wrote, what was being looked for, the feedback where there is any, and the score. The model answer is quoted because the items live in a repository students already have, so it gives nothing away and it is the part someone who scored full marks still learns from. No model runs here.</bpmn:documentation>
       <bpmn:incoming>q6</bpmn:incoming>
       <bpmn:outgoing>q7</bpmn:outgoing>
     </bpmn:scriptTask>
     <bpmn:subProcess id="Sub_regrade" name="Rewrite the criteria and re-rule">
-      <bpmn:documentation>umsi212F2026/course-private:tools/quiz-regrade.mjs — instructor only, not in this repository. Drains the requests the review tool records, ONE AT A TIME behind a lock, because two agents committing in the same repository collide on .git/index.lock and one of them simply fails. Requests can arrive whenever the reviewer makes them; they are drained in order. The reviewer carries on with other questions while this runs, and marking is held only on the question being re-ruled.</bpmn:documentation>
+      <bpmn:documentation>umsi212F2026/course-private:tools/quiz-regrade.mjs, instructor only, not in this repository. Drains the requests the review tool records, ONE AT A TIME behind a lock, because two agents committing in the same repository collide on .git/index.lock and one of them simply fails. Requests can arrive whenever the reviewer makes them; they are drained in order. The reviewer carries on with other questions while this runs, and marking is held only on the question being re-ruled.</bpmn:documentation>
       <bpmn:incoming>q4</bpmn:incoming>
       <bpmn:outgoing>q5</bpmn:outgoing>
       <bpmn:laneSet id="LS_regrade">
@@ -238,7 +238,7 @@
         <bpmn:outgoing>r3</bpmn:outgoing>
       </bpmn:serviceTask>
       <bpmn:serviceTask id="T_rerule" name="Re-rule every answer&#10;quiz/grade">
-        <bpmn:documentation>workflows/quiz/skills/quiz/grade/SKILL.md — the same skill that ruled them the first time. Every answer, including those already at full credit: the standard has moved, and a mark made under the old one is not evidence about the new one. An answer the reviewer had corrected by hand is re-ruled too, flagged, and quoted back to them, because the correction was made against criteria that no longer exist. The student is never told any of this happened.</bpmn:documentation>
+        <bpmn:documentation>workflows/quiz/skills/quiz/grade/SKILL.md, the same skill that ruled them the first time. Every answer, including those already at full credit: the standard has moved, and a mark made under the old one is not evidence about the new one. An answer the reviewer had corrected by hand is re-ruled too, flagged, and quoted back to them, because the correction was made against criteria that no longer exist. The student is never told any of this happened.</bpmn:documentation>
         <bpmn:incoming>r3</bpmn:incoming>
         <bpmn:outgoing>r4</bpmn:outgoing>
         <bpmn:multiInstanceLoopCharacteristics isSequential="true" />
@@ -276,7 +276,7 @@
       <bpmn:outgoing>f12</bpmn:outgoing>
     </bpmn:userTask>
     <bpmn:scriptTask id="T_push" name="Push the scores to Canvas&#10;quiz-scores.mjs">
-      <bpmn:documentation>umsi212F2026/course-private:tools/quiz-scores.mjs — instructor only, not in this repository. One bulk call against the gradebook, keyed on the canvas_id the seating chart already carries.</bpmn:documentation>
+      <bpmn:documentation>umsi212F2026/course-private:tools/quiz-scores.mjs, instructor only, not in this repository. One bulk call against the gradebook, keyed on the canvas_id the seating chart already carries.</bpmn:documentation>
       <bpmn:incoming>q7</bpmn:incoming>
       <bpmn:outgoing>f13</bpmn:outgoing>
     </bpmn:scriptTask>
@@ -287,7 +287,7 @@
   <bpmndi:BPMNDiagram id="D_quiz">
     <bpmndi:BPMNPlane id="Pl_quiz" bpmnElement="C_quiz">
       <bpmndi:BPMNShape id="P_student_di" bpmnElement="P_student" isHorizontal="true">
-        <dc:Bounds x="160" y="80" width="4160" height="100" />
+        <dc:Bounds x="1680" y="80" width="820" height="100" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="P_day_di" bpmnElement="P_day" isHorizontal="true">
         <dc:Bounds x="160" y="220" width="4160" height="590" />
@@ -354,6 +354,9 @@
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="G_criteria_di" bpmnElement="G_criteria" isMarkerVisible="true">
         <dc:Bounds x="3540" y="295" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3505" y="256" width="120" height="30" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Sub_regrade_di" bpmnElement="Sub_regrade" isExpanded="false">
         <dc:Bounds x="3290" y="480" width="200" height="80" />
@@ -453,6 +456,9 @@
         <di:waypoint x="3565" y="430" />
         <di:waypoint x="3390" y="430" />
         <di:waypoint x="3390" y="480" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3408" y="386" width="132" height="30" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="q5_di" bpmnElement="q5">
         <di:waypoint x="3290" y="520" />
@@ -488,6 +494,9 @@
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="G_kind_di" bpmnElement="G_kind" isMarkerVisible="true">
         <dc:Bounds x="300" y="445" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="265" y="500" width="120" height="30" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="T_mcq_di" bpmnElement="T_mcq">
         <dc:Bounds x="410" y="430" width="200" height="80" />
@@ -554,6 +563,9 @@
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="G_cover_di" bpmnElement="G_cover" isMarkerVisible="true">
         <dc:Bounds x="1020" y="455" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="893" y="466" width="117" height="30" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="T_commit_di" bpmnElement="T_commit">
         <dc:Bounds x="1110" y="440" width="200" height="80" />
@@ -592,11 +604,17 @@
       <bpmndi:BPMNEdge id="r5_di" bpmnElement="r5">
         <di:waypoint x="1070" y="480" />
         <di:waypoint x="1110" y="480" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1075" y="404" width="114" height="30" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="r6_di" bpmnElement="r6">
         <di:waypoint x="1045" y="505" />
         <di:waypoint x="1045" y="610" />
         <di:waypoint x="1110" y="610" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="905" y="576" width="114" height="30" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="r7_di" bpmnElement="r7">
         <di:waypoint x="1310" y="480" />

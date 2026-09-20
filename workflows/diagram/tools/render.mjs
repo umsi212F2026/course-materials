@@ -64,6 +64,12 @@ try {
   });
   await page.evaluate(() => resize());
 
+  // THE DRILL-DOWN BUTTON IS AN HTML OVERLAY, not part of the diagram, and bpmn-js draws one on
+  // every collapsed subprocess. In the interactive viewer it is how you open one; in a still it
+  // is a small grey box floating beside a shape, which reads as a stray element rather than as
+  // a control. Hidden here and not in skeleton.html, which the interactive viewer shares.
+  await page.addStyleTag({ content: '.bjs-drilldown, .bjs-breadcrumbs { display: none !important }' });
+
   console.log(`writing ${outPath}`);
   await page.screenshot({
     path: outPath,

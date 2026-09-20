@@ -1,9 +1,9 @@
 ---
 name: quiz-grade
-description: Rule on one answer to one quiz item, given the prompt, the item's rubric entry and what the student wrote. Returns the credit, what the answer missed, the two axes for the log, and a flag. Called by the instructor's batch runner after a quiz, and by the practice quiz on a student's own machine — the same skill in both, which is what makes practising against the real grader true rather than a claim. Multiple choice never reaches here.
+description: Rule on one answer to one quiz item, given the prompt, the item's rubric entry and what the student wrote. Returns the credit, what the answer missed, the two axes for the log, and a flag. Called by the instructor's batch runner after a quiz, and by the practice quiz on a student's own machine, the same skill in both, which is what makes practising against the real grader true rather than a claim. Multiple choice never reaches here.
 ---
 
-# Quiz — grade
+# Quiz: grade
 
 ## Operates on
 
@@ -78,21 +78,21 @@ they come apart.
 
 Six things, and no summary verdict on top of them.
 
-- **`item`** — the id you were given, echoed back
-- **`credit`** — `full`, `half` or `none`, against the credit line as written. Half only where
+- **`item`**: the id you were given, echoed back
+- **`credit`**: `full`, `half` or `none`, against the credit line as written. Half only where
   the line provides for it; where it does not, there is no half
-- **`missed`** — what the answer did not reach, in one or two sentences addressed to the
+- **`missed`**: what the answer did not reach, in one or two sentences addressed to the
   student. On full credit this is empty. This is the only thing a student ever reads back from
   you, so write it as something they can act on, not as a justification of the mark
-- **`axes`** — `{"unaided": …, "criterion": …}`. `criterion` is `met` on full credit and
+- **`axes`**: `{"unaided": …, "criterion": …}`. `criterion` is `met` on full credit and
   `not met` otherwise, except on a capability item where it is `unchecked` either way.
   `unaided` is `yes` for a quiz taken in class, and for practice it is what the transcript
   shows: `no` if the answer was discussed or looked up before it was given
-- **`flag`** — `true` when this credit is worth a person's eye. Three cases and no others: the
+- **`flag`**: `true` when this credit is worth a person's eye. Three cases and no others: the
   answer is close enough to the line that a reasonable person could mark it either way; it
   contradicts something the credit line says not to accept but appears to be right anyway; or
   the item is a capability item, where the mark and the evidence disagree by construction
-- **`flag_reason`** — one clause saying why, written to the person reviewing rather than to the
+- **`flag_reason`**: one clause saying why, written to the person reviewing rather than to the
   student. Required whenever `flag` is true, and empty otherwise. **It is not `missed`.** That
   field belongs to the student and is empty on full credit, so a flag on a correct answer has
   nowhere else to put its reason and arrives silent: marked for attention with nothing saying

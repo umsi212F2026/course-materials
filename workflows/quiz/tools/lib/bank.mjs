@@ -117,21 +117,21 @@ export function readBank(dir, label = '') {
   for (const name of readdirSync(tasksDir).filter((n) => n.endsWith('.md')).sort()) {
     // A BANK FILE IS A tasks/ FILE WITH A rubrics/ FILE OF THE SAME NAME, AND NOTHING ELSE.
     // A topic's tasks/ also holds study activities, and their sections carry ids of the same
-    // shape — `### a1` in react-apps-2026-09 — so without this gate every one of them reads as
+    // shape (`### a1` in react-apps-2026-09), so without this gate every one of them reads as
     // a question nothing could grade, and a topic that teaches as well as examines reports
     // dozens of phantom problems and draws nothing. Skipped silently, because a study activity
     // having no rubric is not a defect: it is what a study activity is.
     if (!existsSync(join(rubricsDir, name))) continue;
     for (const s of sections(readFileSync(join(tasksDir, name), 'utf8'))) {
       if (seen.has(s.id)) {
-        problems.push(`${s.id} appears in two task files — ids are permanent and must be unique`);
+        problems.push(`${s.id} appears in two task files; ids are permanent and must be unique`);
         continue;
       }
       seen.add(s.id);
 
       const r = rubrics.get(s.id);
       if (!r) {
-        problems.push(`${s.id} is in tasks/${name} with no rubric entry — nothing could grade it`);
+        problems.push(`${s.id} is in tasks/${name} with no rubric entry, so nothing could grade it`);
         continue;
       }
 
@@ -209,7 +209,7 @@ export function readPoolSources(pool, root) {
 
   for (const source of sources) {
     if (!source) {
-      problems.push(`a draw key names no source — write it as <source>/<tasks file>`);
+      problems.push(`a draw key names no source; write it as <source>/<tasks file>`);
       continue;
     }
     const dir = join(root, source);
@@ -228,7 +228,7 @@ export function readPoolSources(pool, root) {
 /** Apply one session's pool to a source's items.
  *
  *  `draw` is the shape to prefer: { "<bank>": <how many> }, naming a file in tasks/ and how many
- *  of its questions each student gets. It is stratified on purpose — "three about reading a
+ *  of its questions each student gets. It is stratified on purpose: "three about reading a
  *  diagram and one about lanes" is a statement about what the quiz covers, which a flat draw
  *  cannot make and cannot be relied on to produce by chance.
  *
@@ -268,7 +268,7 @@ export function applyPool(bank, pool) {
     // EXHAUSTIVE ONLY IN THE SINGLE-SOURCE FORM. With one topic, a bank file the pool never
     // mentions is drift: the pool was written against a topic that has since grown a file. With
     // several sources, a source is read because the pool named it, and having banks it does not
-    // draw from this week is the ordinary case — a topic examined twice in a term is not a
+    // draw from this week is the ordinary case, and a topic examined twice in a term is not a
     // defect the first time. The half that matters is still caught below, where a draw naming a
     // bank that does not exist is a problem either way.
     if (pool.topic) {
