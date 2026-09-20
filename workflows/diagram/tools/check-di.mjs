@@ -60,6 +60,15 @@ for (const m of xml.matchAll(/<bpmn:sequenceFlow\b[^>]*id="([^"]+)"[^>]*sourceRe
 for (const m of xml.matchAll(/<bpmn:association\b[^>]*id="([^"]+)"[^>]*sourceRef="([^"]+)"[^>]*targetRef="([^"]+)"/g))
   edges.set(m[1], { from: m[2], to: m[3] });
 
+// A message flow is drawn, so it needs a BPMNEdge and its endpoints have to touch what
+// they connect — but it never carries a run, so it stays out of sequenceFlows. Keeping it
+// out is the point: a message must not be able to make a node reachable, or the walk below
+// stops catching the closed loops it exists for. Its endpoints are often participants,
+// which have shapes and no entry in `nodes`, and the endpoint check skips what it cannot
+// find rather than inventing a defect.
+for (const m of xml.matchAll(/<bpmn:messageFlow\b[^>]*id="([^"]+)"[^>]*sourceRef="([^"]+)"[^>]*targetRef="([^"]+)"/g))
+  edges.set(m[1], { from: m[2], to: m[3] });
+
 // An association belongs to the INNERMOST activity enclosing it. Subprocesses nest, so a
 // non-greedy match on the container reads a child's associations as its parent's — which
 // silently checks the wrong shape. Take the last activity opening tag before the match.
