@@ -87,6 +87,22 @@ function splitChoices(body) {
   return { prompt: unwrap(lines.slice(0, first).join('\n')), choices };
 }
 
+/** How many questions a PRACTICE draw takes from one tasks file, declared in that file's own
+ *  intro as `**Practice draw:** 4`.
+ *
+ *  IT LIVES WITH THE QUESTIONS BECAUSE THE POOL FILE IS PRIVATE. A real quiz's shape is a
+ *  judgment about one session and stays in the instructor's clone, so a student running a
+ *  practice quiz has no way to see it. Declaring it here is what lets practice have the same
+ *  shape as the real thing without publishing the selection.
+ *
+ *  Anything before the first `### heading` is intro, which readBank already skips, so this
+ *  costs the file nothing. */
+export function practiceShape(text) {
+  const intro = text.split(/^###\s/m)[0];
+  const m = /^\s*\*\*Practice draw:\*\*\s*(\d+)\s*$/m.exec(intro);
+  return m ? Number(m[1]) : null;
+}
+
 /** Read every question and rubric in one source. Returns { items, problems } with items keyed in
  *  file order across tasks/, and problems as human-readable strings. It COLLECTS rather than
  *  throwing, for the same reason applySlots does: one malformed entry should not hide the other
@@ -114,6 +130,7 @@ export function readBank(dir, label = '') {
 
   const items = [];
   const seen = new Set();
+  const shapes = new Map();
   for (const name of readdirSync(tasksDir).filter((n) => n.endsWith('.md')).sort()) {
     // A BANK FILE IS A tasks/ FILE WITH A rubrics/ FILE OF THE SAME NAME, AND NOTHING ELSE.
     // A topic's tasks/ also holds study activities, and their sections carry ids of the same
@@ -122,7 +139,9 @@ export function readBank(dir, label = '') {
     // dozens of phantom problems and draws nothing. Skipped silently, because a study activity
     // having no rubric is not a defect: it is what a study activity is.
     if (!existsSync(join(rubricsDir, name))) continue;
-    for (const s of sections(readFileSync(join(tasksDir, name), 'utf8'))) {
+    const text = readFileSync(join(tasksDir, name), 'utf8');
+    shapes.set(name.replace(/\.md$/, ''), practiceShape(text));
+    for (const s of sections(text)) {
       if (seen.has(s.id)) {
         problems.push(`${s.id} appears in two task files — ids are permanent and must be unique`);
         continue;
@@ -141,6 +160,7 @@ export function readBank(dir, label = '') {
       // what `curation/generate` means by a bank entry having to "say how many and how to pick".
       const base = name.replace(/\.md$/, '');
       const bank = label ? `${label}/${base}` : base;
+      const practice = shapes.get(base);
 
       // THE GOAL AND THE MOVE TRAVEL WITH THE ITEM, for the two things downstream that need
       // them: the grader, which rules a capability item's criterion `unchecked`, and the
@@ -168,7 +188,7 @@ export function readBank(dir, label = '') {
           problems.push(`${s.id} has answer: ${r.answer}, which is not one of its ${choices.length} choices`);
           continue;
         }
-        items.push({ bank, ...recording, id: s.id, type, prompt, choices, answer: n - 1 });
+        items.push({ bank, practice, ...recording, id: s.id, type, prompt, choices, answer: n - 1 });
       } else {
         if (!r.answer) {
           problems.push(`${s.id} has no answer in its rubric`);
@@ -177,7 +197,7 @@ export function readBank(dir, label = '') {
         // One string, because that is what the draw contract and the grader already take.
         const credit = r.credit ? r.credit.charAt(0).toUpperCase() + r.credit.slice(1) : '';
         const rubric = credit ? `${r.answer} ${credit}` : r.answer;
-        items.push({ bank, ...recording, id: s.id, type, prompt, rubric });
+        items.push({ bank, practice, ...recording, id: s.id, type, prompt, rubric });
       }
     }
   }
