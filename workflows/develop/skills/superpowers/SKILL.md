@@ -29,9 +29,9 @@ repositories, before you say anything:
 Do not open with a question about either. Ask only where `~/.codex/AGENTS.md` is missing or
 names a folder that is not there, and say that is what happened.
 
-**If there is no clone there, or the student asked to install or check Superpowers**, follow
-[`setup-superpowers`](workflows/bootstrap/skills/setup-superpowers/SKILL.md) instead. It ends
-its turn on a line for Canvas, and the build starts when they ask for it again.
+**If there is no clone there, or the student asked to set up, install or check Superpowers**,
+follow [`setup-superpowers`](workflows/bootstrap/skills/setup-superpowers/SKILL.md) instead. It
+ends its turn on a line for Canvas, and the build starts when they ask for it again.
 
 ## How its names resolve
 
@@ -48,15 +48,11 @@ them, so that name means nothing until you turn it into a path:
 or as a skill the app lists. The clone is the version the course pins, and the others need not
 be.
 
-## Start
-
-Read `superpowers:using-superpowers` and follow it. It is how Superpowers begins a session, and
-it sends a request to build something to `superpowers:brainstorming` first.
-
 ## Where it is wrong here
 
-Three things it says are not true on a student's machine. Where it and this file disagree, this
-file wins.
+Three things it says are not true on a student's machine. They come before where to start
+because the first file you open sends you straight to the first of them. Where Superpowers and
+this file disagree, this file wins.
 
 **The subagent tools.** `using-superpowers` sends you to `references/codex-tools.md`, which says
 "current presets run V2" and names the tools `spawn_agent`, `wait_agent` and so on. The version
@@ -74,6 +70,11 @@ applies, and `brainstorming` says it must come before any creative work. Here bo
 building work in `assignments` and nothing else. When the conversation turns to studying,
 anything in `learning-topics`, Superpowers' rules stop, and the course's own workflows take
 over as this repository's AGENTS.md lists them.
+
+## Start
+
+Read `superpowers:using-superpowers` and follow it. It is how Superpowers begins a session, and
+it sends a request to build something to `superpowers:brainstorming` first.
 
 ## Depends on
 
