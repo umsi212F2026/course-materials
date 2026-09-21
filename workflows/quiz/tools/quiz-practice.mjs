@@ -104,6 +104,13 @@ function page(items, source) {
  h2{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#6b6b6b;margin:0 0 10px}
  .prompt{margin:0 0 14px;white-space:pre-wrap}
  textarea{width:100%;box-sizing:border-box;padding:10px;border:1px solid #dcdcd8;border-radius:5px;font:inherit}
+ /* A locked answer still has to be readable: WebKit greys disabled text out, and the whole
+    point of leaving the page up is that they can read what they wrote while the agent marks
+    it. -webkit-text-fill-color is the one that actually wins there; color alone does not. */
+ textarea:disabled{color:inherit;-webkit-text-fill-color:currentColor;opacity:1;background:#fbfbfa}
+ ul.choices label:has(input:disabled){cursor:default}
+ ul.choices label:has(input:disabled):hover{background:none}
+ ul.choices input:disabled:checked+span{font-weight:600}
  ul.choices{margin:0;padding:0;list-style:none}
  ul.choices li{margin:0 0 2px}
  /* A flex row so a choice that wraps lines up under its own text rather than under the radio,
@@ -126,7 +133,7 @@ function page(items, source) {
   <button type=submit>Submit</button>
  </form>
  <div id=done><b>Submitted.</b> Go back to your agent, which will mark these and go through
-  them with you. You can close this tab.</div>
+  them with you. Your answers stay on this tab if you want to read them while it does.</div>
 </main>
 <script>
  document.getElementById("f").onsubmit = async (e) => {
@@ -135,7 +142,12 @@ function page(items, source) {
    for (const [k, v] of new FormData(e.target)) answers[k] = v;
    await fetch("/submit", { method: "POST", headers: { "content-type": "application/json" },
                             body: JSON.stringify({ answers }) });
-   e.target.style.display = "none";
+   // THE PAGE IS LEFT STANDING, LOCKED, RATHER THAN REPLACED. The report that comes back names
+   // each question and what they wrote, and a student reading it wants to look at the thing
+   // itself. Hiding the form made the only copy of their own answers disappear at the moment
+   // they became worth re-reading.
+   for (const el of e.target.elements) el.disabled = true;
+   e.target.querySelector("button[type=submit]").style.display = "none";
    document.getElementById("done").style.display = "block";
  };
 </script>`;
@@ -302,10 +314,21 @@ function score(dir) {
         type: i.type,
         credit: i.credit,
         missed: i.missed,
+        // THE CHOICES TRAVEL WITH AN MCQ ROW, because a report that names a choice the student
+        // cannot see is no report. They have closed the page by the time they read this.
+        choices: it?.choices ?? null,
         // The model answer, for going over a miss afterwards. Separate from the rubric on
         // purpose: the joined credit line reads as marking instructions, and this reads as an
         // answer, which is what the student is owed when they ask what they should have said.
-        expected: it?.expected ?? null,
+        //
+        // AN MCQ'S `expected` IS AN INDEX IN THE RUBRIC AND MUST NOT LEAVE HERE AS ONE. The
+        // rubric stores the answer 1-based, for a person reading it beside the numbered list in
+        // tasks/, so passing it through unresolved reports "the correct choice was option 1" to
+        // someone holding no list. Resolved here, the same way quiz-comments.mjs resolves it.
+        expected:
+          it?.type === "mcq"
+            ? it.choices?.[it.answer] ?? it.expected ?? null
+            : it?.expected ?? null,
         axes: i.axes,
         flag: i.flag,
       };
@@ -358,10 +381,22 @@ function main() {
   const { items, strata, problems } = drawPractice(pool, ROOT, {
     seed: process.argv.includes("--seed") ? process.argv[process.argv.indexOf("--seed") + 1] : undefined,
   });
-  for (const p of problems) console.error(`  ${p}`);
+  if (problems.length) {
+    console.error(`\nPROBLEMS in session ${session}'s pool:`);
+    for (const p of problems) console.error(`  ${p}`);
+  }
   if (!items.length) {
     console.error(`\nSession ${session}'s pool drew nothing.`);
     process.exit(1);
+  }
+  // SAID IN ONE LINE, BECAUSE ONE LINE IS WHAT GETS PASSED ON. The problems above name each
+  // short stratum and are what a person debugging wants; this is the sentence the student has
+  // to hear, and the skill quotes it into the message that hands over the URL.
+  const asked = Object.values(pool.draw ?? {}).reduce((n, k) => n + k, 0);
+  if (asked && items.length < asked) {
+    console.error(
+      `\nSHORT: this draw has ${items.length} questions, not the ${asked} this quiz asks for.`,
+    );
   }
 
   const stamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);

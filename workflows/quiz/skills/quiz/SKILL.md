@@ -131,6 +131,18 @@ that URL rather than the one below, which is only the usual one:
 > until you submit, and that is the point. **Come back here and tell me when you have pressed
 > Submit.**
 
+**If the command printed a `SHORT:` line, its sentence goes into that block, ahead of the
+rest**, with what the `PROBLEMS` lines above it name as missing:
+
+> **This draw is short: 4 questions, not the 5 this quiz asks for.** You have not got
+> `assignments/ps1-data-analysis`, so nothing could be drawn from it. Running `update` and
+> sitting this again would give you the whole quiz.
+
+**A short draw is served rather than refused, and saying so is the whole of your part in it.**
+Practising the rest is worth doing and they are the one who decides. But nobody can count the
+questions they were never shown: unsaid, a student reads a score out of four as a score out of
+four, and concludes they are ready on material the quiz never reached.
+
 **Do not paraphrase the questions into the chat, and do not read them yourself first.** You
 will see every one of them in a moment, and reading them now is how a conversation about the
 material starts by accident.
@@ -286,6 +298,28 @@ were asked, then the last two sentences exactly as they stand here:
 the time they read this, so a bare "2. No credit" leaves them unable to tell which question it
 was or what they said. Both are on the row as `prompt` and `answer`, and an mcq's `answer` is
 already the choice they picked rather than an index.
+
+**An mcq entry lists every choice, numbered, between the question and their answer.** They are
+on the row as `choices`, in the order the student saw them. The page is closed, so naming a
+right answer without the list it came from tells them nothing about what they rejected, and the
+distractor they fell for is the whole of what there is to learn from a wrong mcq. `expected` is
+the text of the correct choice, never its number:
+
+> **2. No credit.**
+>
+> _You are twenty messages into a chat in Codex, working on your app, and you send one more
+> message. Which of these is counted in that turn's input tokens?_
+>
+> 1. Your new message, the twenty messages before it, the system prompt, and the contents of
+>    any file the agent has read into the chat.
+> 2. Only your new message.
+> 3. Your new message and the agent's reply to it.
+> 4. Every chat you have had with Codex this week.
+>
+> You wrote: "Your new message and the agent's reply to it."
+>
+> The answer that earns full credit: "Your new message, the twenty messages before it, the
+> system prompt, and the contents of any file the agent has read into the chat."
 
 **On less than full credit, add the row's `missed` and then its `expected`, in that order.**
 Quote `missed` rather than summarising it: the same grader wrote it that marked the real quiz,
