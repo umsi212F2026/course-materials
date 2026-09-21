@@ -28,8 +28,11 @@ set -euo pipefail
 PIN="b36e082"           # v6.3.0, 2026-08-12
 UPSTREAM="https://github.com/obra/superpowers.git"
 
-SRC="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"   # this repo's root
-DEST="$(dirname "$SRC")/superpowers"                      # sibling of this repo
+SRC="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"   # this repo's root
+# A linked worktree sits in the worktree corral, beside other worktrees rather than the
+# clone, so go beside the MAIN checkout instead. It is where check-di.mjs looks too.
+MAIN="$(cd "$(git -C "$SRC" rev-parse --path-format=absolute --git-common-dir)/.." && pwd)"
+DEST="$(dirname "$MAIN")/superpowers"                           # sibling of the main checkout
 
 UPDATE=""
 [ "${1:-}" = "--update" ] && UPDATE="yes"
