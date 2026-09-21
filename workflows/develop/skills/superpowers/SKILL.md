@@ -16,11 +16,12 @@ where what it says is not true on a student's machine.
 Two folders. **Establish both from `~/.codex/AGENTS.md`**, which names the course
 repositories, before you say anything:
 
-- **`assignments`**, the student's repository, where what they build goes. Each thing being
-  built gets a folder of its own inside it, and that folder is the project Superpowers works
-  in: its specs, its plans and its code all go there. If neither the student nor an assignment
-  has named the folder, agree a name with the student when brainstorming first needs somewhere
-  to write.
+- **`assignments`**, the student's repository, where what they build goes. The project
+  Superpowers works in is one folder inside it, and its specs, its plans and its code all go
+  there. **If the work belongs to a problem set**, because the student says so or is already
+  working in its folder (`ps1-data-analysis`, say), that problem set's folder is the project.
+  Anything else gets a new folder of its own: agree a name with the student when brainstorming
+  first needs somewhere to write.
 - **the clone**, `superpowers`, in the same folder as `course-materials`. Read it, and never
   edit it, commit in it or pull it. It stays on the commit the course pins, and a newer
   Superpowers arrives only when the course moves the pin and the student runs
@@ -50,7 +51,7 @@ be.
 
 ## Where it is wrong here
 
-Three things it says are not true on a student's machine. They come before where to start
+Four things it says are not true on a student's machine. They come before where to start
 because the first file you open sends you straight to the first of them. Where Superpowers and
 this file disagree, this file wins.
 
@@ -70,6 +71,21 @@ applies, and `brainstorming` says it must come before any creative work. Here bo
 building work in `assignments` and nothing else. When the conversation turns to studying,
 anything in `learning-topics`, Superpowers' rules stop, and the course's own workflows take
 over as this repository's AGENTS.md lists them.
+
+**Its scripts, on Windows.** Every script Superpowers ships is bash: the brainstorming server's
+`start-server.sh` and `stop-server.sh`, and the three under
+`skills/subagent-driven-development/scripts/`. Its notes say to run them as they are, which
+assumes a bash shell, and on Windows yours is PowerShell, which does not run a bash script
+itself. Run each one through the bash that came with git, by its full path, with forward
+slashes in every path you hand it:
+
+```powershell
+& "C:\Program Files\Git\bin\bash.exe" <clone>/skills/brainstorming/scripts/start-server.sh --project-dir <project>
+```
+
+That path is a constant, like `C:\Program Files\Git\cmd\git.exe`: git was installed there
+machine-wide in the first setup session. Do not go looking for another bash, and do not
+rewrite a script in PowerShell. If it fails through that bash, say what it said and stop.
 
 ## Start
 
