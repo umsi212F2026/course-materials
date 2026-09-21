@@ -100,9 +100,6 @@ export function drawPractice(pool, root, { seed } = {}) {
   const items = [];
   const shape = [];
   for (const s of strata) {
-    if (s.items.length < s.take) {
-      problems.push(`${s.name} asks for ${s.take} but has only ${s.items.length}, so all of them were drawn`);
-    }
     const drawn = pick(s.items, Math.min(s.take, s.items.length), next);
     shape.push({ name: s.name, take: s.take, drawn: drawn.length });
     // The topic travels with the item for the same reason the goal does: what a practice quiz
@@ -110,6 +107,21 @@ export function drawPractice(pool, root, { seed } = {}) {
     // of where it goes. The instructor's bake needs neither and does not carry them.
     items.push(...drawn.map((it) => ({ ...it, topic: topicDir(pool, it, root) })));
   }
+
+  // WHAT WAS ASKED FOR IS THE POOL'S OWN COUNTS, NOT WHAT SURVIVED, and the difference is the
+  // whole of this check. A draw key whose bank is missing does not come back from applyPool as
+  // an empty stratum; it does not come back at all. Measuring a shortfall against `strata`
+  // therefore cannot see the case that costs a student most: a source they have not cloned.
+  //
+  // A SHORT DRAW IS SERVED, NOT REFUSED. Practising the rest is worth doing. But nobody can
+  // count the questions they were never shown, so this is the one thing the draw has to say
+  // out loud, and the skill has to pass it on.
+  const drawnBy = new Map(shape.map((s) => [s.name, s.drawn]));
+  for (const [name, take] of Object.entries(pool.draw ?? {})) {
+    const got = drawnBy.get(name) ?? 0;
+    if (got < take) problems.push(`${name} drew ${got} of the ${take} asked for`);
+  }
+
   return { items, strata: shape, problems };
 }
 
