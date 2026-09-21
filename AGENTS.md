@@ -63,6 +63,13 @@ of these is found from there. Only the entry points are listed here.
   someone asks whether there is anything new, when an assignment or a topic has been corrected,
   or when a setup check fails and the fix has been published.
   `workflows/update/skills/update/SKILL.md`
+- **superpowers** - Design and build software in the assignments repository with Superpowers,
+  which brainstorms an idea into a spec, turns the spec into a plan, and carries the plan out.
+  Use when someone wants to build, design or change an app or other code in their assignments
+  repository, or asks for Superpowers by name. Not for studying or anything else in
+  learning-topics, which stays with learn, study, review and quiz even when it involves making
+  something.
+  `workflows/develop/skills/superpowers/SKILL.md`
 
 **Before starting a workflow, establish which data directory it operates on. Read
 `~/.codex/AGENTS.md`, which names it; do not infer it from the working directory, and do not
