@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:color="http://www.omg.org/spec/BPMN/non-normative/color/1.0" id="Definitions_sp" targetNamespace="http://si212.umich.edu/schema/bpmn">
   <bpmn:collaboration id="C_SP">
-    <bpmn:participant id="P_SP" name="obra/superpowers v6.3.0 — one chunk, from a request to a merged branch" processRef="Proc_SP" />
+    <bpmn:participant id="P_SP" name="obra/superpowers v6.3.0 — design and implement one chunk of work" processRef="Proc_SP" />
   </bpmn:collaboration>
   <bpmn:process id="Proc_SP" isExecutable="false">
     <bpmn:documentation>Drawn from the skill files in obra/superpowers at v6.3.0 (commit b36e082, 2026-08-12), not from the README. Where the two disagree the skills win; the disagreements are recorded in the documentation of the elements concerned.
@@ -635,15 +635,16 @@ This is also where the controller's "Rulings I made" list surfaces — every dec
     <bpmndi:BPMNPlane id="Plane_SP" bpmnElement="C_SP">
       <bpmndi:BPMNShape id="P_SP_di" bpmnElement="P_SP" isHorizontal="true">
         <dc:Bounds x="160" y="0" width="2080" height="890" />
+        <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="L_program_di" bpmnElement="L_program" isHorizontal="true" color:background-color="#eef5f4" color:border-color="#7a918d">
-        <dc:Bounds x="190" y="690" width="2050" height="200" />
+      <bpmndi:BPMNShape id="L_human_di" bpmnElement="L_human" isHorizontal="true" color:background-color="#fdf3f7" color:border-color="#9c8490">
+        <dc:Bounds x="190" y="0" width="2050" height="170" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="L_agent_di" bpmnElement="L_agent" isHorizontal="true" color:background-color="#fdf7ee" color:border-color="#9c8d76">
         <dc:Bounds x="190" y="170" width="2050" height="520" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="L_human_di" bpmnElement="L_human" isHorizontal="true" color:background-color="#fdf3f7" color:border-color="#9c8490">
-        <dc:Bounds x="190" y="0" width="2050" height="170" />
+      <bpmndi:BPMNShape id="L_program_di" bpmnElement="L_program" isHorizontal="true" color:background-color="#eef5f4" color:border-color="#7a918d">
+        <dc:Bounds x="190" y="690" width="2050" height="200" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Start_req_di" bpmnElement="Start_req">
         <dc:Bounds x="237" y="65" width="36" height="36" />
