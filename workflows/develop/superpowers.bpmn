@@ -1,63 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:color="http://www.omg.org/spec/BPMN/non-normative/color/1.0" id="Definitions_sp" targetNamespace="http://si212.umich.edu/schema/bpmn">
   <bpmn:collaboration id="C_SP">
-    <bpmn:participant id="P_PLAN" name="Working out what to build — one engagement, however many chunks (OURS, NOT SUPERPOWERS)" processRef="Proc_PLAN" />
     <bpmn:participant id="P_SP" name="obra/superpowers v6.3.0 — one chunk, from a request to a merged branch" processRef="Proc_SP" />
   </bpmn:collaboration>
-
-  <bpmn:process id="Proc_PLAN" isExecutable="false">
-    <bpmn:documentation>NOT PART OF SUPERPOWERS. This pool is a course addition, drawn because superpowers has no product-planning layer at all: nothing in its skills library decides what to build, in what order, or records that decision anywhere.
-
-One run of this pool is one engagement — a person with something they want to exist, talking it out until there is a chunk list naming one or more chunks in build order. Each of those chunks is then a separate run of the pool below.
-
-The artifact is deliberately NOT called a plan: superpowers already owns that word for the per-chunk implementation plan at docs/superpowers/plans/. Two documents called "the plan" at two granularities is the mistake this vocabulary is trying to avoid.
-
-Nothing here is written yet. The labels say so.</bpmn:documentation>
-    <bpmn:laneSet id="LS_PLAN">
-      <bpmn:lane id="LP_human" name="HUMAN operator">
-        <bpmn:flowNodeRef>Start_idea</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>End_planned</bpmn:flowNodeRef>
-      </bpmn:lane>
-      <bpmn:lane id="LP_agent" name="AI AGENT">
-        <bpmn:flowNodeRef>Sub_converse</bpmn:flowNodeRef>
-      </bpmn:lane>
-      <bpmn:lane id="LP_program" name="PROGRAM" />
-    </bpmn:laneSet>
-
-    <bpmn:startEvent id="Start_idea" name="has something they&#10;want to exist">
-      <bpmn:documentation>Deliberately vaguer than the superpowers start event below. At this point there is no request, no scope and no order — that is what the conversation produces.</bpmn:documentation>
-      <bpmn:outgoing>p1</bpmn:outgoing>
-    </bpmn:startEvent>
-
-    <bpmn:adHocSubProcess id="Sub_converse" name="Work out what to build&#10;NOT WRITTEN YET">
-      <bpmn:documentation>An unstructured conversation: no fixed order of moves, which is why this is the ad-hoc idiom rather than a sequence of tasks. What belongs in it — eliciting what the person actually wants, sizing the pieces, ordering them, cutting the ones that are not worth building — is exactly the design question this box is a placeholder for.
-
-Sizing is the whole job here. From the superpowers repo's own 15 plans, a chunk should come out at roughly one spec's worth of work — a median of 5 to 7 tasks, around 30 steps, one to two and a half hours of agent time. Anything larger is two chunks. A student's weekly assignment is likely 3 to 5 chunks; a final project maybe 10.
-
-The completion condition is the gate: the conversation ends when there is a written chunk list naming at least one chunk in build order. Ad-hoc subprocesses forbid start and end events, so the condition is the only terminal this box has.</bpmn:documentation>
-      <bpmn:incoming>p1</bpmn:incoming>
-      <bpmn:outgoing>p2</bpmn:outgoing>
-      <bpmn:dataOutputAssociation id="doa_chunklist">
-        <bpmn:targetRef>DOR_chunklist</bpmn:targetRef>
-      </bpmn:dataOutputAssociation>
-      <bpmn:completionCondition xsi:type="bpmn:tFormalExpression">the chunk list names at least one chunk, in the order they will be built</bpmn:completionCondition>
-    </bpmn:adHocSubProcess>
-
-    <bpmn:endEvent id="End_planned" name="chunk list agreed">
-      <bpmn:incoming>p2</bpmn:incoming>
-    </bpmn:endEvent>
-
-    <bpmn:dataObjectReference id="DOR_chunklist" name="chunk list&#10;LOCATION NOT DECIDED YET" dataObjectRef="DO_chunklist" />
-    <bpmn:dataObject id="DO_chunklist" />
-
-    <bpmn:sequenceFlow id="p1" sourceRef="Start_idea" targetRef="Sub_converse" />
-    <bpmn:sequenceFlow id="p2" sourceRef="Sub_converse" targetRef="End_planned" />
-  </bpmn:process>
 
   <bpmn:process id="Proc_SP" isExecutable="false">
     <bpmn:documentation>Drawn from the skill files in obra/superpowers at v6.3.0 (commit b36e082, 2026-08-12), not from the README. Where the two disagree the skills win; the disagreements are recorded in the documentation of the elements concerned.
 
-One run is one chunk: a single request arriving, through a design and a plan, to a merged branch or an open PR. The pool above decides which chunks exist and in what order; this pool runs once per chunk.
+One run is one chunk: a single request arriving, through a design and a plan, to a merged branch or an open PR.
 
 VOCABULARY. The granularity chain, largest first:
   assignment  — 3 to 5 chunks (a final project, maybe 10)
@@ -94,8 +44,8 @@ ARCHIVE CAVEAT: three early plans (2026-01-22, 2026-02-19, 2026-03-11) use "## C
       </bpmn:lane>
     </bpmn:laneSet>
 
-    <bpmn:startEvent id="Start_req" name="a chunk is picked&#10;off the list">
-      <bpmn:documentation>Superpowers begins here, with a human bringing it one thing to build. It says nothing about how that thing was chosen — there is no product-planning, roadmap or backlog step anywhere in its skills library. The pool above is our answer to that; superpowers' own answer is silence.</bpmn:documentation>
+    <bpmn:startEvent id="Start_req" name="ready to start&#10;a chunk of work">
+      <bpmn:documentation>Superpowers begins here, with a human bringing it one thing to build. It says nothing about how that thing was chosen — there is no product-planning, roadmap or backlog step anywhere in its skills library.</bpmn:documentation>
       <bpmn:outgoing>f1</bpmn:outgoing>
     </bpmn:startEvent>
 
@@ -165,7 +115,7 @@ Below this box: explore project context, a scope check that can decompose an ove
 
 Two human gates live in here, and they are the only approval gates in the whole run before the finish menu.
 
-Superpowers' own decomposition step lives here too, as a scope guard rather than a planning phase: help the user decompose into sub-projects, decide what order to build them, "then brainstorm the first sub-project through the normal design flow." Nothing records the others — no file, no path, no return. The pool above exists because of that sentence.</bpmn:documentation>
+Superpowers' own decomposition step lives here too, as a scope guard rather than a planning phase: help the user decompose into sub-projects, decide what order to build them, "then brainstorm the first sub-project through the normal design flow." Nothing records the others — no file, no path, no return.</bpmn:documentation>
       <bpmn:incoming>f5</bpmn:incoming>
       <bpmn:outgoing>f12</bpmn:outgoing>
       <bpmn:dataOutputAssociation id="doa_spec">
@@ -725,11 +675,6 @@ Every plan opens with a required header naming the spec it argues from and a Glo
     </bpmn:dataObjectReference>
     <bpmn:dataObject id="DO_plan" />
 
-    <bpmn:textAnnotation id="Note_handoff">
-      <bpmn:text>Nothing carries a chunk from the list into a run. A human picks the next one and opens a session — which is why no flow crosses the boundary between the pools.</bpmn:text>
-    </bpmn:textAnnotation>
-    <bpmn:association id="assoc_handoff" sourceRef="Note_handoff" targetRef="Start_req" />
-
     <bpmn:sequenceFlow id="f1" sourceRef="Start_req" targetRef="Gate_merge_in" />
     <bpmn:sequenceFlow id="f2" sourceRef="Gate_merge_in" targetRef="Gate_classify" />
     <bpmn:sequenceFlow id="f3" name="spike" sourceRef="Gate_classify" targetRef="Task_spike" />
@@ -753,56 +698,6 @@ Every plan opens with a required header naming the spec it argues from and a Glo
   <bpmndi:BPMNDiagram id="D_SP">
     <bpmndi:BPMNPlane id="Plane_SP" bpmnElement="C_SP">
 
-      <bpmndi:BPMNShape id="P_PLAN_di" bpmnElement="P_PLAN" isHorizontal="true">
-        <dc:Bounds x="160" y="80" width="2080" height="350" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="LP_human_di" bpmnElement="LP_human" isHorizontal="true" color:background-color="#fdf3f7" color:border-color="#9c8490">
-        <dc:Bounds x="190" y="80" width="2050" height="120" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="LP_agent_di" bpmnElement="LP_agent" isHorizontal="true" color:background-color="#fdf7ee" color:border-color="#9c8d76">
-        <dc:Bounds x="190" y="200" width="2050" height="150" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="LP_program_di" bpmnElement="LP_program" isHorizontal="true" color:background-color="#eef5f4" color:border-color="#7a918d">
-        <dc:Bounds x="190" y="350" width="2050" height="80" />
-      </bpmndi:BPMNShape>
-
-      <bpmndi:BPMNShape id="Start_idea_di" bpmnElement="Start_idea">
-        <dc:Bounds x="250" y="112" width="36" height="36" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="228" y="155" width="82" height="40" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Sub_converse_di" bpmnElement="Sub_converse" isExpanded="false">
-        <dc:Bounds x="400" y="235" width="260" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="DOR_chunklist_di" bpmnElement="DOR_chunklist" color:background-color="#fdf0e6">
-        <dc:Bounds x="790" y="240" width="36" height="50" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="738" y="295" width="140" height="40" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="End_planned_di" bpmnElement="End_planned">
-        <dc:Bounds x="960" y="112" width="36" height="36" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="1005" y="120" width="93" height="27" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNShape>
-
-      <bpmndi:BPMNEdge id="p1_di" bpmnElement="p1">
-        <di:waypoint x="268" y="148" />
-        <di:waypoint x="268" y="275" />
-        <di:waypoint x="400" y="275" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="p2_di" bpmnElement="p2">
-        <di:waypoint x="660" y="275" />
-        <di:waypoint x="978" y="275" />
-        <di:waypoint x="978" y="148" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="doa_chunklist_di" bpmnElement="doa_chunklist">
-        <di:waypoint x="660" y="265" />
-        <di:waypoint x="790" y="265" />
-      </bpmndi:BPMNEdge>
-
       <bpmndi:BPMNShape id="P_SP_di" bpmnElement="P_SP" isHorizontal="true">
         <dc:Bounds x="160" y="470" width="2080" height="890" />
       </bpmndi:BPMNShape>
@@ -815,14 +710,6 @@ Every plan opens with a required header naming the spec it argues from and a Glo
       <bpmndi:BPMNShape id="L_program_di" bpmnElement="L_program" isHorizontal="true" color:background-color="#eef5f4" color:border-color="#7a918d">
         <dc:Bounds x="190" y="1160" width="2050" height="200" />
       </bpmndi:BPMNShape>
-
-      <bpmndi:BPMNShape id="Note_handoff_di" bpmnElement="Note_handoff">
-        <dc:Bounds x="330" y="482" width="470" height="60" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNEdge id="assoc_handoff_di" bpmnElement="assoc_handoff">
-        <di:waypoint x="330" y="512" />
-        <di:waypoint x="273" y="536" />
-      </bpmndi:BPMNEdge>
 
       <bpmndi:BPMNShape id="Start_req_di" bpmnElement="Start_req">
         <dc:Bounds x="237" y="535" width="36" height="36" />
