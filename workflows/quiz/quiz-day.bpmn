@@ -156,7 +156,7 @@
         <bpmn:outgoing>g4</bpmn:outgoing>
       </bpmn:scriptTask>
       <bpmn:serviceTask id="T_judge" name="Judge against the rubric&#10;quiz/grade">
-        <bpmn:documentation>workflows/quiz/skills/quiz/grade/SKILL.md. Rules on one answer to one item, given the prompt, its rubric entry and the answer. Returns the credit (full, half or none), what the answer missed, the two axes for the log, and a flag when the credit is close enough to be worth a person's eye. Nothing branches on the flag yet: the instructor reviews every script this term, which is the experiment that says whether the flag can be trusted later.</bpmn:documentation>
+        <bpmn:documentation>workflows/quiz/skills/quiz/grade/SKILL.md. Rules on one answer to one item, given the prompt, its rubric entry and the answer. Returns the credit (full, half or none), what the answer missed, the two axes for the log, and a flag when the credit is close enough to be worth a person's eye. The instructor reviews only the flagged answers, so the flag decides what a person reads, and the grader flags whenever it is unsure.</bpmn:documentation>
         <bpmn:incoming>g3</bpmn:incoming>
         <bpmn:outgoing>g5</bpmn:outgoing>
       </bpmn:serviceTask>
@@ -270,8 +270,8 @@
         <bpmn:incoming>r9</bpmn:incoming>
       </bpmn:endEvent>
     </bpmn:subProcess>
-    <bpmn:userTask id="T_review" name="Review the graded scripts&#10;quiz-review.mjs">
-      <bpmn:documentation>Every script, every week, until the flag has earned trust. There is no gateway in front of this on purpose: nothing is filtered out yet. When the flag is trusted, this becomes a branch and the label narrows to the flagged items.</bpmn:documentation>
+    <bpmn:userTask id="T_review" name="Review the flagged answers&#10;quiz-review.mjs">
+      <bpmn:documentation>The flagged answers, every week. There is no gateway in front of this: the review page filters to flagged answers, so the narrowing happens where the reviewer works. An unflagged verdict goes to the gradebook as the grader wrote it.</bpmn:documentation>
       <bpmn:incoming>q3</bpmn:incoming>
       <bpmn:outgoing>f12</bpmn:outgoing>
     </bpmn:userTask>
