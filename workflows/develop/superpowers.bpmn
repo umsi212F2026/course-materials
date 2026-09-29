@@ -452,6 +452,8 @@ Seven subagent dispatches are drawn on the plane below, off four prompt template
 
 WHY CALL ACTIVITIES, NOT COLLAPSED SUBPROCESSES. Each dispatch is drawn as a callActivity — a thick-bordered box meaning "this runs as a process defined elsewhere". A subagent session is exactly that: its own context, constructed by the controller, never inherited. bpmn-js does not drill into a call activity, which is the honest signal here — there is no plane below, only a prompt template you can go read. A collapsed subprocess would promise a plane that will never exist, and would also fail bpmnlint's start-event-required and end-event-required for as long as it stayed empty.
 
+The one exception is the implementer (CA_impl), drawn as a collapsed subprocess so its test-first loop can be opened and seen. Its plane is drawn from implementer-prompt.md and the plan's task steps.
+
 There are no human gates in here at all. The skill is explicit: "Do not pause to check in with your human partner between tasks", and "Rulings, not stalls" tells the controller to decide ambiguities itself and record each decision in the ledger. Exactly four things stop it: an irreversible or destructive operation, a security-sensitive action, a side effect outside the worktree, and a plan so broken that every path forward is a guess. See Note_nohuman on the plane below — those are interrupts that can fire anywhere, not steps, so nothing draws them.
 
 README DISAGREEMENT: the README lists using-git-worktrees as step 2 of the basic workflow, "activates after design approval" — before planning. The skills put workspace creation at execution time (writing-plans: "it should have been created via the using-git-worktrees skill at execution time"; this skill's Setup section). The skills win here, so the worktree is inside this box and not a phase of its own.</bpmn:documentation>
@@ -585,7 +587,7 @@ Also here, though it has no box of its own: the controller records BASE (git rev
         <bpmn:incoming>xf13</bpmn:incoming>
         <bpmn:outgoing>xf10</bpmn:outgoing>
       </bpmn:exclusiveGateway>
-      <bpmn:callActivity id="CA_impl" name="Dispatch a fresh implementer&#10;implementer-prompt.md&#10;MODEL: the cheapest that fits, mid-tier floor">
+      <bpmn:subProcess id="CA_impl" name="Dispatch a fresh implementer&#10;implementer-prompt.md&#10;MODEL: the cheapest that fits, mid-tier floor">
         <bpmn:documentation>obra/superpowers:skills/subagent-driven-development/implementer-prompt.md.
 
 Seat 1 of 7 on this plane, and the one that runs most often — once per task, plus every re-dispatch.
@@ -596,7 +598,9 @@ The dispatch carries five things and nothing else: where this task fits, the bri
 
 The implementer implements, tests, commits and self-reviews, writes its full report to the report file, and returns only status, commits, a one-line test summary and concerns. It never dispatches subagents of its own, and above all never a reviewer: "every reviewer a worker spawned duplicated the task review the controller dispatched anyway — a full extra review seat per task."
 
-Never dispatch two implementers in parallel — they conflict.</bpmn:documentation>
+Never dispatch two implementers in parallel — they conflict.
+
+Drawn as a collapsed subprocess rather than a call activity, unlike the other six seats, so its session can be opened: the plane below shows the implementer's own test-first loop, which is where every test on this plane is written and run.</bpmn:documentation>
         <bpmn:incoming>xf10</bpmn:incoming>
         <bpmn:outgoing>xf11</bpmn:outgoing>
         <bpmn:property id="Property_1h3p1nz" name="__targetRef_placeholder" />
@@ -604,7 +608,188 @@ Never dispatch two implementers in parallel — they conflict.</bpmn:documentati
           <bpmn:sourceRef>DOR_brief</bpmn:sourceRef>
           <bpmn:targetRef>Property_1h3p1nz</bpmn:targetRef>
         </bpmn:dataInputAssociation>
-      </bpmn:callActivity>
+        <bpmn:dataObject id="DO_report" />
+      <bpmn:laneSet id="LI_LS">
+        <bpmn:lane id="LI_human" name="HUMAN operator" />
+        <bpmn:lane id="LI_agent" name="AI AGENT">
+          <bpmn:flowNodeRef>Start_I</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>I_read</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>GI_clear</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>End_Ineed</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>GI_stepmerge</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>I_writetest</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>GI_red</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>GI_implmerge</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>I_implement</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>GI_more</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>I_selfreview</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>I_report</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>End_I</bpmn:flowNodeRef>
+        </bpmn:lane>
+        <bpmn:lane id="LI_program" name="PROGRAM">
+          <bpmn:flowNodeRef>I_runred</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>I_rungreen</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>GI_green</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>I_suite</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>GI_suite</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>I_commit</bpmn:flowNodeRef>
+        </bpmn:lane>
+      </bpmn:laneSet>
+
+      <bpmn:startEvent id="Start_I" name="dispatched&#10;with the brief">
+        <bpmn:documentation>obra/superpowers:skills/subagent-driven-development/implementer-prompt.md. A fresh subagent session: its context is only what the dispatch carries (where the task fits, the brief path, interfaces from earlier tasks, the controller's rulings, the report-file path). No human is in this session, which is why the HUMAN lane is empty.</bpmn:documentation>
+        <bpmn:outgoing>if1</bpmn:outgoing>
+      </bpmn:startEvent>
+
+      <bpmn:task id="I_read" name="Read the brief and the context&#10;implementer-prompt.md">
+        <bpmn:documentation>obra/superpowers:skills/subagent-driven-development/implementer-prompt.md, "Task Description" and "Context": "Read your task brief first." The brief holds the task's full text from the plan, including its test code, which is where the tests on this plane come from.</bpmn:documentation>
+        <bpmn:incoming>if1</bpmn:incoming>
+        <bpmn:outgoing>if2</bpmn:outgoing>
+        <bpmn:dataInputAssociation id="DOR_brief_i_r">
+          <bpmn:sourceRef>DOR_brief_i</bpmn:sourceRef>
+        </bpmn:dataInputAssociation>
+      </bpmn:task>
+
+      <bpmn:exclusiveGateway id="GI_clear" name="requirements&#10;clear?">
+        <bpmn:documentation>obra/superpowers:skills/subagent-driven-development/implementer-prompt.md, "Before You Begin": questions about requirements, approach, dependencies or anything unclear are asked now, before starting work. The implementer decides.
+
+"STOP and escalate" can also happen at any later point, when the task needs architectural decisions, code beyond what was provided, or restructuring the plan did not anticipate. That return (BLOCKED or NEEDS_CONTEXT) can fire anywhere, so it is not drawn as a step; the parent's "what did the report say?" gateway handles it.</bpmn:documentation>
+        <bpmn:incoming>if2</bpmn:incoming>
+        <bpmn:outgoing>if3</bpmn:outgoing>
+        <bpmn:outgoing>if4</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+
+      <bpmn:endEvent id="End_Ineed" name="returns&#10;NEEDS_CONTEXT">
+        <bpmn:documentation>obra/superpowers:skills/subagent-driven-development/implementer-prompt.md: "If BLOCKED or NEEDS_CONTEXT, put the specifics in the final message itself; the controller acts on it directly."</bpmn:documentation>
+        <bpmn:incoming>if3</bpmn:incoming>
+      </bpmn:endEvent>
+
+      <bpmn:exclusiveGateway id="GI_stepmerge">
+        <bpmn:documentation>Unnamed merge. The loop over the task's behaviors returns here, and so does a test that failed for the wrong reason.</bpmn:documentation>
+        <bpmn:incoming>if4</bpmn:incoming>
+        <bpmn:incoming>if9</bpmn:incoming>
+        <bpmn:incoming>if15</bpmn:incoming>
+        <bpmn:outgoing>if5</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+
+      <bpmn:task id="I_writetest" name="Write the failing test&#10;implementer-prompt.md">
+        <bpmn:documentation>obra/superpowers:skills/writing-plans/SKILL.md, Task Structure, Step 1, carried in the brief: the plan gives the test code itself. obra/superpowers:skills/subagent-driven-development/implementer-prompt.md: "Write tests (following TDD if task says to)." Every plan task written by writing-plans is test-first, so in practice it always says to.</bpmn:documentation>
+        <bpmn:incoming>if5</bpmn:incoming>
+        <bpmn:outgoing>if6</bpmn:outgoing>
+      </bpmn:task>
+
+      <bpmn:scriptTask id="I_runred" name="Run it, expecting it to fail&#10;the plan's focused test command">
+        <bpmn:documentation>obra/superpowers:skills/writing-plans/SKILL.md, Task Structure, Step 2: "Run test to verify it fails", with the exact command, e.g. pytest tests/path/test.py::test_name -v, and the expected failure. The output becomes the RED evidence in the report.</bpmn:documentation>
+        <bpmn:incoming>if6</bpmn:incoming>
+        <bpmn:outgoing>if7</bpmn:outgoing>
+      </bpmn:scriptTask>
+
+      <bpmn:exclusiveGateway id="GI_red" name="fails for the&#10;expected reason?">
+        <bpmn:documentation>obra/superpowers:skills/subagent-driven-development/implementer-prompt.md, Report Format: RED evidence includes "why the failure was expected". The test runner only says fail; whether it failed for the right reason is the implementer's judgment, so this diamond sits in AI AGENT. A test that passes already, or fails for another reason, goes back to be rewritten.</bpmn:documentation>
+        <bpmn:incoming>if7</bpmn:incoming>
+        <bpmn:outgoing>if8</bpmn:outgoing>
+        <bpmn:outgoing>if9</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+
+      <bpmn:exclusiveGateway id="GI_implmerge">
+        <bpmn:documentation>Unnamed merge. Returns here when the focused test is still red, or the full suite is.</bpmn:documentation>
+        <bpmn:incoming>if8</bpmn:incoming>
+        <bpmn:incoming>if14</bpmn:incoming>
+        <bpmn:incoming>if19</bpmn:incoming>
+        <bpmn:outgoing>if10</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+
+      <bpmn:task id="I_implement" name="Write the minimal implementation&#10;implementer-prompt.md">
+        <bpmn:documentation>obra/superpowers:skills/writing-plans/SKILL.md, Task Structure, Step 3, and obra/superpowers:skills/subagent-driven-development/implementer-prompt.md: "Implement exactly what the task specifies." Follow the plan's file structure; a file growing beyond the plan's intent is reported as DONE_WITH_CONCERNS rather than split.</bpmn:documentation>
+        <bpmn:incoming>if10</bpmn:incoming>
+        <bpmn:outgoing>if11</bpmn:outgoing>
+      </bpmn:task>
+
+      <bpmn:scriptTask id="I_rungreen" name="Run it, expecting it to pass&#10;the plan's focused test command">
+        <bpmn:documentation>obra/superpowers:skills/writing-plans/SKILL.md, Task Structure, Step 4: "Run test to verify it passes." obra/superpowers:skills/subagent-driven-development/implementer-prompt.md: "While iterating, run the focused test for what you're changing." The output becomes the GREEN evidence.</bpmn:documentation>
+        <bpmn:incoming>if11</bpmn:incoming>
+        <bpmn:outgoing>if12</bpmn:outgoing>
+      </bpmn:scriptTask>
+
+      <bpmn:exclusiveGateway id="GI_green" name="passes?">
+        <bpmn:documentation>Decided by the test runner's exit code, so it sits in PROGRAM: the machine verdict at the heart of this phase.</bpmn:documentation>
+        <bpmn:incoming>if12</bpmn:incoming>
+        <bpmn:outgoing>if13</bpmn:outgoing>
+        <bpmn:outgoing>if14</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+
+      <bpmn:exclusiveGateway id="GI_more" name="more behaviors&#10;in the task?">
+        <bpmn:documentation>A plan task can carry more than one test-then-implement pair. The implementer works through them in the order the brief gives.</bpmn:documentation>
+        <bpmn:incoming>if13</bpmn:incoming>
+        <bpmn:outgoing>if15</bpmn:outgoing>
+        <bpmn:outgoing>if16</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+
+      <bpmn:scriptTask id="I_suite" name="Run the full suite&#10;the project's test command">
+        <bpmn:documentation>obra/superpowers:skills/subagent-driven-development/implementer-prompt.md: "run the full suite once before committing, not after every edit."</bpmn:documentation>
+        <bpmn:incoming>if16</bpmn:incoming>
+        <bpmn:outgoing>if17</bpmn:outgoing>
+      </bpmn:scriptTask>
+
+      <bpmn:exclusiveGateway id="GI_suite" name="suite&#10;green?">
+        <bpmn:documentation>The exit code decides. Something else broken sends the implementer back to the code.</bpmn:documentation>
+        <bpmn:incoming>if17</bpmn:incoming>
+        <bpmn:outgoing>if18</bpmn:outgoing>
+        <bpmn:outgoing>if19</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+
+      <bpmn:scriptTask id="I_commit" name="Commit&#10;git commit">
+        <bpmn:documentation>obra/superpowers:skills/writing-plans/SKILL.md, Task Structure, Step 5, and obra/superpowers:skills/subagent-driven-development/implementer-prompt.md, "Your Job" step 4: commit your work. The controller later packages the diff from the BASE it recorded before dispatch.</bpmn:documentation>
+        <bpmn:incoming>if18</bpmn:incoming>
+        <bpmn:outgoing>if20</bpmn:outgoing>
+      </bpmn:scriptTask>
+
+      <bpmn:task id="I_selfreview" name="Self-review the diff and fix what it finds&#10;implementer-prompt.md">
+        <bpmn:documentation>obra/superpowers:skills/subagent-driven-development/implementer-prompt.md, "Before Reporting Back: Self-Review": completeness, quality, discipline (YAGNI, only what was requested) and testing (do tests verify behavior rather than mocks, is the output pristine). "If you find issues during self-review, fix them now before reporting." Self-review means reading your own diff; never dispatch a reviewer.</bpmn:documentation>
+        <bpmn:incoming>if20</bpmn:incoming>
+        <bpmn:outgoing>if21</bpmn:outgoing>
+      </bpmn:task>
+
+      <bpmn:task id="I_report" name="Write the report file, with RED and GREEN evidence&#10;implementer-prompt.md">
+        <bpmn:documentation>obra/superpowers:skills/subagent-driven-development/implementer-prompt.md, "Report Format": what was implemented, what was tested and the results, TDD evidence (the RED and GREEN commands with their output), files changed, self-review findings, concerns. "Reviewers will not re-run tests for you; your report is the test evidence." Then a reply of under 15 lines: status, commits, a one-line test summary, concerns, the report path.</bpmn:documentation>
+        <bpmn:incoming>if21</bpmn:incoming>
+        <bpmn:outgoing>if22</bpmn:outgoing>
+        <bpmn:dataOutputAssociation id="DOR_report_i_w">
+          <bpmn:targetRef>DOR_report_i</bpmn:targetRef>
+        </bpmn:dataOutputAssociation>
+      </bpmn:task>
+
+      <bpmn:endEvent id="End_I" name="returns DONE or&#10;DONE_WITH_CONCERNS">
+        <bpmn:documentation>obra/superpowers:skills/subagent-driven-development/implementer-prompt.md: "Use DONE_WITH_CONCERNS if you completed the work but have doubts about correctness." The parent's "what did the report say?" reads this status.</bpmn:documentation>
+        <bpmn:incoming>if22</bpmn:incoming>
+      </bpmn:endEvent>
+
+      <bpmn:dataObjectReference id="DOR_brief_i" name="task brief&#10;one file per task" dataObjectRef="DO_brief" />
+      <bpmn:dataObjectReference id="DOR_report_i" name="report file&#10;&lt;workspace&gt;/" dataObjectRef="DO_report" />
+
+      <bpmn:sequenceFlow id="if1" sourceRef="Start_I" targetRef="I_read" />
+      <bpmn:sequenceFlow id="if2" sourceRef="I_read" targetRef="GI_clear" />
+      <bpmn:sequenceFlow id="if3" name="no" sourceRef="GI_clear" targetRef="End_Ineed" />
+      <bpmn:sequenceFlow id="if4" name="yes" sourceRef="GI_clear" targetRef="GI_stepmerge" />
+      <bpmn:sequenceFlow id="if5" sourceRef="GI_stepmerge" targetRef="I_writetest" />
+      <bpmn:sequenceFlow id="if6" sourceRef="I_writetest" targetRef="I_runred" />
+      <bpmn:sequenceFlow id="if7" sourceRef="I_runred" targetRef="GI_red" />
+      <bpmn:sequenceFlow id="if8" name="yes" sourceRef="GI_red" targetRef="GI_implmerge" />
+      <bpmn:sequenceFlow id="if9" name="no, rewrite the test" sourceRef="GI_red" targetRef="GI_stepmerge" />
+      <bpmn:sequenceFlow id="if10" sourceRef="GI_implmerge" targetRef="I_implement" />
+      <bpmn:sequenceFlow id="if11" sourceRef="I_implement" targetRef="I_rungreen" />
+      <bpmn:sequenceFlow id="if12" sourceRef="I_rungreen" targetRef="GI_green" />
+      <bpmn:sequenceFlow id="if13" name="yes" sourceRef="GI_green" targetRef="GI_more" />
+      <bpmn:sequenceFlow id="if14" name="no" sourceRef="GI_green" targetRef="GI_implmerge" />
+      <bpmn:sequenceFlow id="if15" name="yes, next behavior" sourceRef="GI_more" targetRef="GI_stepmerge" />
+      <bpmn:sequenceFlow id="if16" name="no" sourceRef="GI_more" targetRef="I_suite" />
+      <bpmn:sequenceFlow id="if17" sourceRef="I_suite" targetRef="GI_suite" />
+      <bpmn:sequenceFlow id="if18" name="yes" sourceRef="GI_suite" targetRef="I_commit" />
+      <bpmn:sequenceFlow id="if19" name="no" sourceRef="GI_suite" targetRef="GI_implmerge" />
+      <bpmn:sequenceFlow id="if20" sourceRef="I_commit" targetRef="I_selfreview" />
+      <bpmn:sequenceFlow id="if21" sourceRef="I_selfreview" targetRef="I_report" />
+      <bpmn:sequenceFlow id="if22" sourceRef="I_report" targetRef="End_I" />
+    </bpmn:subProcess>
       <bpmn:exclusiveGateway id="G_report" name="what did the&#10;report say?">
         <bpmn:documentation>Implementers return one of four statuses. DONE and DONE_WITH_CONCERNS go to review — concerns about correctness or scope get addressed first, observations get noted. NEEDS_CONTEXT and BLOCKED go back for another dispatch: supply the missing context; or, if the task needs more reasoning, a more capable model; or break the task up; or, if the plan itself is wrong, rule on the correction, ledger it, and carry the ruling in the new dispatch.
 
@@ -1382,7 +1567,7 @@ Discarding the work is not on the menu. It happens only when the human asks for 
       <bpmndi:BPMNShape id="G_implmerge_di" bpmnElement="G_implmerge" isMarkerVisible="true">
         <dc:Bounds x="2226" y="475" width="50" height="50" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="CA_impl_di" bpmnElement="CA_impl">
+      <bpmndi:BPMNShape id="CA_impl_di" bpmnElement="CA_impl" isExpanded="false">
         <dc:Bounds x="2336" y="445" width="270" height="110" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="G_report_di" bpmnElement="G_report" isMarkerVisible="true">
@@ -2493,6 +2678,260 @@ Discarding the work is not on the menu. It happens only when the human asks for 
       <bpmndi:BPMNEdge id="ff19_di" bpmnElement="ff19">
         <di:waypoint x="2376" y="800" />
         <di:waypoint x="2453" y="800" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+  <bpmndi:BPMNDiagram id="D_impl">
+    <bpmndi:BPMNPlane id="Pl_CA_impl" bpmnElement="CA_impl">
+      <bpmndi:BPMNShape id="LI_human_di" bpmnElement="LI_human" isHorizontal="true" color:background-color="#fdf3f7" color:border-color="#9c8490">
+        <dc:Bounds x="160" y="0" width="4348" height="200" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="LI_agent_di" bpmnElement="LI_agent" isHorizontal="true" color:background-color="#fdf7ee" color:border-color="#9c8d76">
+        <dc:Bounds x="160" y="200" width="4348" height="360" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="LI_program_di" bpmnElement="LI_program" isHorizontal="true" color:background-color="#eef5f4" color:border-color="#7a918d">
+        <dc:Bounds x="160" y="560" width="4348" height="240" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Start_I_di" bpmnElement="Start_I">
+        <dc:Bounds x="250" y="362" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="213" y="405" width="110" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="I_read_di" bpmnElement="I_read">
+        <dc:Bounds x="356" y="325" width="250" height="110" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="GI_clear_di" bpmnElement="GI_clear" isMarkerVisible="true">
+        <dc:Bounds x="676" y="355" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="636" y="321" width="130" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_Ineed_di" bpmnElement="End_Ineed">
+        <dc:Bounds x="796" y="362" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="759" y="405" width="110" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="GI_stepmerge_di" bpmnElement="GI_stepmerge" isMarkerVisible="true">
+        <dc:Bounds x="902" y="355" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="I_writetest_di" bpmnElement="I_writetest">
+        <dc:Bounds x="1022" y="325" width="250" height="110" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="I_runred_di" bpmnElement="I_runred">
+        <dc:Bounds x="1342" y="585" width="250" height="110" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="GI_red_di" bpmnElement="GI_red" isMarkerVisible="true">
+        <dc:Bounds x="1732" y="355" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1692" y="411" width="130" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="GI_implmerge_di" bpmnElement="GI_implmerge" isMarkerVisible="true">
+        <dc:Bounds x="1852" y="355" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="I_implement_di" bpmnElement="I_implement">
+        <dc:Bounds x="1972" y="325" width="250" height="110" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="I_rungreen_di" bpmnElement="I_rungreen">
+        <dc:Bounds x="2292" y="585" width="250" height="110" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="GI_green_di" bpmnElement="GI_green" isMarkerVisible="true">
+        <dc:Bounds x="2612" y="615" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2572" y="671" width="130" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="GI_more_di" bpmnElement="GI_more" isMarkerVisible="true">
+        <dc:Bounds x="2732" y="355" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2692" y="411" width="130" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="I_suite_di" bpmnElement="I_suite">
+        <dc:Bounds x="2922" y="585" width="250" height="110" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="GI_suite_di" bpmnElement="GI_suite" isMarkerVisible="true">
+        <dc:Bounds x="3242" y="615" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3202" y="581" width="130" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="I_commit_di" bpmnElement="I_commit">
+        <dc:Bounds x="3362" y="585" width="250" height="110" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="I_selfreview_di" bpmnElement="I_selfreview">
+        <dc:Bounds x="3682" y="325" width="250" height="110" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="I_report_di" bpmnElement="I_report">
+        <dc:Bounds x="4002" y="325" width="250" height="110" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_I_di" bpmnElement="End_I">
+        <dc:Bounds x="4322" y="362" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4265" y="405" width="150" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_brief_i_di" bpmnElement="DOR_brief_i" color:background-color="#fdf6e3">
+        <dc:Bounds x="463" y="460" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="507" y="465" width="150" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_report_i_di" bpmnElement="DOR_report_i" color:background-color="#f3f3f3">
+        <dc:Bounds x="4109" y="460" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4153" y="465" width="150" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="if1_di" bpmnElement="if1">
+        <di:waypoint x="286" y="380" />
+        <di:waypoint x="356" y="380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="if2_di" bpmnElement="if2">
+        <di:waypoint x="606" y="380" />
+        <di:waypoint x="676" y="380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="if3_di" bpmnElement="if3">
+        <di:waypoint x="726" y="380" />
+        <di:waypoint x="796" y="380" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="732" y="360" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="if4_di" bpmnElement="if4">
+        <di:waypoint x="701" y="405" />
+        <di:waypoint x="701" y="500" />
+        <di:waypoint x="927" y="500" />
+        <di:waypoint x="927" y="405" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="709" y="482" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="if5_di" bpmnElement="if5">
+        <di:waypoint x="952" y="380" />
+        <di:waypoint x="1022" y="380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="if6_di" bpmnElement="if6">
+        <di:waypoint x="1272" y="380" />
+        <di:waypoint x="1307" y="380" />
+        <di:waypoint x="1307" y="640" />
+        <di:waypoint x="1342" y="640" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="if7_di" bpmnElement="if7">
+        <di:waypoint x="1592" y="640" />
+        <di:waypoint x="1662" y="640" />
+        <di:waypoint x="1662" y="380" />
+        <di:waypoint x="1732" y="380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="if8_di" bpmnElement="if8">
+        <di:waypoint x="1782" y="380" />
+        <di:waypoint x="1852" y="380" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1788" y="360" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="if9_di" bpmnElement="if9">
+        <di:waypoint x="1757" y="355" />
+        <di:waypoint x="1757" y="290" />
+        <di:waypoint x="927" y="290" />
+        <di:waypoint x="927" y="355" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1765" y="272" width="112" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="if10_di" bpmnElement="if10">
+        <di:waypoint x="1902" y="380" />
+        <di:waypoint x="1972" y="380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="if11_di" bpmnElement="if11">
+        <di:waypoint x="2222" y="380" />
+        <di:waypoint x="2257" y="380" />
+        <di:waypoint x="2257" y="640" />
+        <di:waypoint x="2292" y="640" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="if12_di" bpmnElement="if12">
+        <di:waypoint x="2542" y="640" />
+        <di:waypoint x="2612" y="640" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="if13_di" bpmnElement="if13">
+        <di:waypoint x="2662" y="640" />
+        <di:waypoint x="2697" y="640" />
+        <di:waypoint x="2697" y="380" />
+        <di:waypoint x="2732" y="380" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2668" y="620" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="if14_di" bpmnElement="if14">
+        <di:waypoint x="2637" y="615" />
+        <di:waypoint x="2637" y="290" />
+        <di:waypoint x="1877" y="290" />
+        <di:waypoint x="1877" y="355" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2645" y="272" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="if15_di" bpmnElement="if15">
+        <di:waypoint x="2757" y="355" />
+        <di:waypoint x="2757" y="230" />
+        <di:waypoint x="927" y="230" />
+        <di:waypoint x="927" y="355" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2765" y="212" width="101" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="if16_di" bpmnElement="if16">
+        <di:waypoint x="2782" y="380" />
+        <di:waypoint x="2852" y="380" />
+        <di:waypoint x="2852" y="640" />
+        <di:waypoint x="2922" y="640" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2788" y="360" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="if17_di" bpmnElement="if17">
+        <di:waypoint x="3172" y="640" />
+        <di:waypoint x="3242" y="640" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="if18_di" bpmnElement="if18">
+        <di:waypoint x="3292" y="640" />
+        <di:waypoint x="3362" y="640" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3298" y="620" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="if19_di" bpmnElement="if19">
+        <di:waypoint x="3267" y="665" />
+        <di:waypoint x="3267" y="770" />
+        <di:waypoint x="1877" y="770" />
+        <di:waypoint x="1877" y="405" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3275" y="752" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="if20_di" bpmnElement="if20">
+        <di:waypoint x="3612" y="640" />
+        <di:waypoint x="3647" y="640" />
+        <di:waypoint x="3647" y="380" />
+        <di:waypoint x="3682" y="380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="if21_di" bpmnElement="if21">
+        <di:waypoint x="3932" y="380" />
+        <di:waypoint x="4002" y="380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="if22_di" bpmnElement="if22">
+        <di:waypoint x="4252" y="380" />
+        <di:waypoint x="4322" y="380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DOR_brief_i_r_di" bpmnElement="DOR_brief_i_r">
+        <di:waypoint x="481" y="460" />
+        <di:waypoint x="481" y="435" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DOR_report_i_w_di" bpmnElement="DOR_report_i_w">
+        <di:waypoint x="4127" y="435" />
+        <di:waypoint x="4127" y="460" />
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
