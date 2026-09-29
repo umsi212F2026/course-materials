@@ -1568,7 +1568,7 @@ Discarding the work is not on the menu. It happens only when the human asks for 
         <dc:Bounds x="2226" y="475" width="50" height="50" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="CA_impl_di" bpmnElement="CA_impl" isExpanded="false">
-        <dc:Bounds x="2336" y="445" width="270" height="110" />
+        <dc:Bounds x="2336" y="445" width="270" height="345" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="G_report_di" bpmnElement="G_report" isMarkerVisible="true">
         <dc:Bounds x="2666" y="475" width="50" height="50" />
@@ -1601,7 +1601,7 @@ Discarding the work is not on the menu. It happens only when the human asks for 
         <dc:Bounds x="4136" y="475" width="50" height="50" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="CA_fix_di" bpmnElement="CA_fix">
-        <dc:Bounds x="4246" y="445" width="270" height="110" />
+        <dc:Bounds x="4246" y="445" width="270" height="345" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Script_pkg_fix_di" bpmnElement="Script_pkg_fix">
         <dc:Bounds x="4596" y="705" width="250" height="110" />
@@ -1815,7 +1815,7 @@ Discarding the work is not on the menu. It happens only when the human asks for 
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="xda7_di" bpmnElement="xda7">
         <di:waypoint x="2471" y="850" />
-        <di:waypoint x="2471" y="555" />
+        <di:waypoint x="2471" y="790" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="xf11_di" bpmnElement="xf11">
         <di:waypoint x="2606" y="500" />
