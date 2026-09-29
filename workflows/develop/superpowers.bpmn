@@ -442,7 +442,6 @@ The skill never says to commit the plan, so no git step is drawn here. finishing
       <bpmn:sequenceFlow id="wf10" sourceRef="W_offer" targetRef="W_choose" />
       <bpmn:sequenceFlow id="wf11" sourceRef="W_choose" targetRef="End_W" />
       <bpmn:dataObject id="DO_spec" />
-      <bpmn:dataObject id="DO_plan" />
     </bpmn:subProcess>
     <bpmn:subProcess id="Sub_execute" name="Execute the plan, task by task">
       <bpmn:documentation>obra/superpowers:skills/subagent-driven-development/SKILL.md.
@@ -464,38 +463,6 @@ README DISAGREEMENT: the README lists using-git-worktrees as step 2 of the basic
         <bpmn:targetRef>Property_1tacu97</bpmn:targetRef>
       </bpmn:dataInputAssociation>
       <bpmn:laneSet id="LS_X">
-        <bpmn:lane id="LX_human" name="HUMAN operator" />
-        <bpmn:lane id="LX_agent" name="AI AGENT">
-          <bpmn:flowNodeRef>Start_X</bpmn:flowNodeRef>
-          <bpmn:flowNodeRef>X_worktree</bpmn:flowNodeRef>
-          <bpmn:flowNodeRef>X_ledger</bpmn:flowNodeRef>
-          <bpmn:flowNodeRef>X_preflight</bpmn:flowNodeRef>
-          <bpmn:flowNodeRef>G_taskmerge</bpmn:flowNodeRef>
-          <bpmn:flowNodeRef>G_tasks</bpmn:flowNodeRef>
-          <bpmn:flowNodeRef>G_implmerge</bpmn:flowNodeRef>
-          <bpmn:flowNodeRef>CA_impl</bpmn:flowNodeRef>
-          <bpmn:flowNodeRef>G_report</bpmn:flowNodeRef>
-          <bpmn:flowNodeRef>CA_taskrev</bpmn:flowNodeRef>
-          <bpmn:flowNodeRef>G_review</bpmn:flowNodeRef>
-          <bpmn:flowNodeRef>X_triage</bpmn:flowNodeRef>
-          <bpmn:flowNodeRef>G_loop</bpmn:flowNodeRef>
-          <bpmn:flowNodeRef>G_fixmerge</bpmn:flowNodeRef>
-          <bpmn:flowNodeRef>CA_fix</bpmn:flowNodeRef>
-          <bpmn:flowNodeRef>CA_rerev</bpmn:flowNodeRef>
-          <bpmn:flowNodeRef>G_addressed</bpmn:flowNodeRef>
-          <bpmn:flowNodeRef>G_cap</bpmn:flowNodeRef>
-          <bpmn:flowNodeRef>X_adjudicate</bpmn:flowNodeRef>
-          <bpmn:flowNodeRef>G_donemerge</bpmn:flowNodeRef>
-          <bpmn:flowNodeRef>X_complete</bpmn:flowNodeRef>
-          <bpmn:flowNodeRef>CA_final</bpmn:flowNodeRef>
-          <bpmn:flowNodeRef>G_finalfind</bpmn:flowNodeRef>
-          <bpmn:flowNodeRef>CA_finalfix</bpmn:flowNodeRef>
-          <bpmn:flowNodeRef>CA_finalrerev</bpmn:flowNodeRef>
-          <bpmn:flowNodeRef>X_finaladj</bpmn:flowNodeRef>
-          <bpmn:flowNodeRef>G_finalmerge</bpmn:flowNodeRef>
-          <bpmn:flowNodeRef>X_rulings</bpmn:flowNodeRef>
-          <bpmn:flowNodeRef>End_X</bpmn:flowNodeRef>
-        </bpmn:lane>
         <bpmn:lane id="LX_program" name="PROGRAM">
           <bpmn:flowNodeRef>Script_ws</bpmn:flowNodeRef>
           <bpmn:flowNodeRef>Script_brief</bpmn:flowNodeRef>
@@ -505,6 +472,38 @@ README DISAGREEMENT: the README lists using-git-worktrees as step 2 of the basic
           <bpmn:flowNodeRef>Script_pkg_fw</bpmn:flowNodeRef>
           <bpmn:flowNodeRef>Script_rm</bpmn:flowNodeRef>
         </bpmn:lane>
+        <bpmn:lane id="LX_agent" name="AI AGENT">
+          <bpmn:flowNodeRef>X_worktree</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>X_ledger</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>X_preflight</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>G_taskmerge</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>G_implmerge</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>CA_impl</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>CA_taskrev</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>X_triage</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>G_fixmerge</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>CA_fix</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>CA_rerev</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>X_adjudicate</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>G_donemerge</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>X_complete</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>CA_final</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>CA_finalfix</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>CA_finalrerev</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>X_finaladj</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>G_finalmerge</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>X_rulings</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Start_X</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>G_tasks</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>G_report</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>G_review</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>G_loop</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>G_addressed</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>G_cap</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>G_finalfind</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>End_X</bpmn:flowNodeRef>
+        </bpmn:lane>
+        <bpmn:lane id="LX_human" name="HUMAN operator" />
       </bpmn:laneSet>
       <bpmn:startEvent id="Start_X" name="the plan is handed&#10;to the executor">
         <bpmn:documentation>The trigger is the executor fork at the end of obra/superpowers:skills/writing-plans/SKILL.md: the human is offered a subagent-driven executor or an inline one, and picks subagents. Nothing else has to be true — the branch may not exist yet, and the ledger certainly does not.</bpmn:documentation>
@@ -544,8 +543,10 @@ Resume rules, folded into this one box rather than drawn as a gateway: if the le
 The table goes in the ledger, and every conflict it surfaces is ruled on before execution begins, with the spec as the binding authority and the ruling recorded beside its row.</bpmn:documentation>
         <bpmn:incoming>xf4</bpmn:incoming>
         <bpmn:outgoing>xf5</bpmn:outgoing>
+        <bpmn:property id="Property_0g9tt5f" name="__targetRef_placeholder" />
         <bpmn:dataInputAssociation id="xda1">
           <bpmn:sourceRef>DOR_plan_a</bpmn:sourceRef>
+          <bpmn:targetRef>Property_0g9tt5f</bpmn:targetRef>
         </bpmn:dataInputAssociation>
       </bpmn:task>
       <bpmn:exclusiveGateway id="G_taskmerge">
@@ -562,7 +563,7 @@ The table goes in the ledger, and every conflict it surfaces is ruled on before 
         <bpmn:outgoing>xf7</bpmn:outgoing>
         <bpmn:outgoing>xf8</bpmn:outgoing>
       </bpmn:exclusiveGateway>
-      <bpmn:scriptTask id="Script_brief" name="Extract the task&#39;s text to its own brief file&#10;task-brief">
+      <bpmn:scriptTask id="Script_brief" name="Extract a task&#39;s text to its own brief file&#10;task-brief">
         <bpmn:documentation>obra/superpowers:skills/subagent-driven-development/scripts/task-brief PLAN_FILE N. Writes the task's full text to a uniquely named file and prints the path.
 
 The brief exists so that "Never make a subagent read the whole plan file" can be true, and so the exact values — numbers, magic strings, signatures, test cases — live in exactly one place. The dispatch prompt introduces it as "read this first — it is your requirements, with the exact values to use verbatim".
@@ -570,8 +571,10 @@ The brief exists so that "Never make a subagent read the whole plan file" can be
 Also here, though it has no box of its own: the controller records BASE (git rev-parse HEAD) before dispatching, because the review package needs it. Never HEAD~1, which silently drops all but the last commit of a multi-commit task.</bpmn:documentation>
         <bpmn:incoming>xf7</bpmn:incoming>
         <bpmn:outgoing>xf9</bpmn:outgoing>
+        <bpmn:property id="Property_059ijga" name="__targetRef_placeholder" />
         <bpmn:dataInputAssociation id="xda2">
           <bpmn:sourceRef>DOR_plan_b</bpmn:sourceRef>
+          <bpmn:targetRef>Property_059ijga</bpmn:targetRef>
         </bpmn:dataInputAssociation>
         <bpmn:dataOutputAssociation id="xda6">
           <bpmn:targetRef>DOR_brief</bpmn:targetRef>
@@ -596,8 +599,10 @@ The implementer implements, tests, commits and self-reviews, writes its full rep
 Never dispatch two implementers in parallel — they conflict.</bpmn:documentation>
         <bpmn:incoming>xf10</bpmn:incoming>
         <bpmn:outgoing>xf11</bpmn:outgoing>
+        <bpmn:property id="Property_1h3p1nz" name="__targetRef_placeholder" />
         <bpmn:dataInputAssociation id="xda7">
           <bpmn:sourceRef>DOR_brief</bpmn:sourceRef>
+          <bpmn:targetRef>Property_1h3p1nz</bpmn:targetRef>
         </bpmn:dataInputAssociation>
       </bpmn:callActivity>
       <bpmn:exclusiveGateway id="G_report" name="what did the&#10;report say?">
@@ -632,8 +637,10 @@ The reviewer gets three paths — brief, report, review package — plus the pla
 Three things the controller may not do to it: re-ask for tests the implementer already ran, add open-ended directives without a task-specific reason, or pre-judge a finding. "If the prompt you are writing contains 'do not flag', 'don't treat X as a defect', 'at most Minor', or 'the plan chose' — stop: you are pre-judging, usually to spare yourself a review loop."</bpmn:documentation>
         <bpmn:incoming>xf14</bpmn:incoming>
         <bpmn:outgoing>xf15</bpmn:outgoing>
+        <bpmn:property id="Property_1y7zl17" name="__targetRef_placeholder" />
         <bpmn:dataInputAssociation id="xda9">
           <bpmn:sourceRef>DOR_pkg</bpmn:sourceRef>
+          <bpmn:targetRef>Property_1y7zl17</bpmn:targetRef>
         </bpmn:dataInputAssociation>
       </bpmn:callActivity>
       <bpmn:exclusiveGateway id="G_review" name="spec met and&#10;quality approved?">
@@ -797,8 +804,10 @@ So a finding that survives the one fix wave leaves this phase unfixed, carried o
 Done before the workspace is deleted, and read by the human one box later, at Sub_finish's integration menu.</bpmn:documentation>
         <bpmn:incoming>xf40</bpmn:incoming>
         <bpmn:outgoing>xf41</bpmn:outgoing>
+        <bpmn:property id="Property_1j61cqk" name="__targetRef_placeholder" />
         <bpmn:dataInputAssociation id="xda5">
           <bpmn:sourceRef>DOR_ledger_c</bpmn:sourceRef>
+          <bpmn:targetRef>Property_1j61cqk</bpmn:targetRef>
         </bpmn:dataInputAssociation>
       </bpmn:task>
       <bpmn:scriptTask id="Script_rm" name="Delete this plan&#39;s workspace&#10;rm -rf &#60;workspace&#62;">
@@ -872,18 +881,11 @@ Drawn three times because its three users sit far apart: created at setup, appen
       <bpmn:sequenceFlow id="xf40" sourceRef="G_finalmerge" targetRef="X_rulings" />
       <bpmn:sequenceFlow id="xf41" sourceRef="X_rulings" targetRef="Script_rm" />
       <bpmn:sequenceFlow id="xf42" sourceRef="Script_rm" targetRef="End_X" />
-      <bpmn:textAnnotation id="Note_nohuman">
-        <bpmn:text>This lane is empty, and that is the finding. No human gate exists anywhere in this phase: "Do not pause to check in with your human partner between tasks." Ambiguities are settled by ruling and recorded in the ledger — "a wrong ruling costs rework your human partner can see and undo; a session parked on a question costs their whole day". Exactly four things stop the run and ask: an irreversible or destructive operation, a security-sensitive action, a side effect outside this worktree, and a plan so broken every path forward is a guess. None of them is a step — they can fire anywhere — so nothing draws them.</bpmn:text>
-      </bpmn:textAnnotation>
-      <bpmn:association id="xas1" sourceRef="Note_nohuman" targetRef="Start_X" />
+      <bpmn:dataObject id="DO_plan" />
       <bpmn:textAnnotation id="Note_budget">
         <bpmn:text>NO BUDGET MECHANISM. Nothing in superpowers counts tokens, and nothing stops at a threshold — grep the skills for token accounting and there is none. Cost control here is entirely structural: the cheapest model that fits each role, the five-round breaker, one fixer for the whole findings list, no second wave, and review packages handed over as file paths so diffs never enter the controller's context. Every one of those is a fixed shape, not a limit that can be set. For a student on a $50 cap, that is the gap.</bpmn:text>
       </bpmn:textAnnotation>
       <bpmn:association id="xas2" sourceRef="Note_budget" targetRef="CA_final" />
-      <bpmn:textAnnotation id="Note_noprogram">
-        <bpmn:text>Programs do the mechanical work on this plane: resolving the workspace, extracting each task's brief, packaging every diff, deleting the workspace. They produce files, not verdicts. Every decision here is the AI's, including two a script could make: "was that round 5?" is a counter and "tasks left in the plan?" is a ledger lookup. The one machine verdict in this phase, the TDD red/green cycle, happens inside each implementer, a called process with no plane to show it on. The project's own test suite runs one box later, in the parent.</bpmn:text>
-      </bpmn:textAnnotation>
-      <bpmn:association id="xas3" sourceRef="Note_noprogram" targetRef="Script_ws" />
       <bpmn:textAnnotation id="Note_redundancy">
         <bpmn:text>ANTI-REDUNDANT BY DESIGN. One task reviewer per task. One fixer for the whole findings list, never one per finding — "a real session's final-review fix wave cost more than all its tasks combined". One scoped re-review after it, and no second wave. A worker that spawns its own reviewer is "a defect to flag, not rigor". So "how many redundant agents" is a knob superpowers set to 1 and nailed shut: turning it up is a disagreement with the methodology, not a configuration of it.</bpmn:text>
       </bpmn:textAnnotation>
@@ -1338,508 +1340,495 @@ Discarding the work is not on the menu. It happens only when the human asks for 
   <bpmndi:BPMNDiagram id="D_execute">
     <bpmndi:BPMNPlane id="Pl_execute" bpmnElement="Sub_execute">
       <bpmndi:BPMNShape id="LX_program_di" bpmnElement="LX_program" isHorizontal="true" color:background-color="#eef5f4" color:border-color="#7a918d">
-        <dc:Bounds x="160" y="590" width="9322" height="370" />
+        <dc:Bounds x="160" y="670" width="9322" height="370" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="LX_agent_di" bpmnElement="LX_agent" isHorizontal="true" color:background-color="#fdf7ee" color:border-color="#9c8d76">
-        <dc:Bounds x="160" y="150" width="9322" height="440" />
+        <dc:Bounds x="160" y="230" width="9322" height="440" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="LX_human_di" bpmnElement="LX_human" isHorizontal="true" color:background-color="#fdf3f7" color:border-color="#9c8490">
-        <dc:Bounds x="160" y="0" width="9322" height="150" />
+        <dc:Bounds x="160" y="80" width="9322" height="150" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Start_X_di" bpmnElement="Start_X">
-        <dc:Bounds x="260" y="402" width="36" height="36" />
+        <dc:Bounds x="260" y="482" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="228" y="445" width="100" height="27" />
+          <dc:Bounds x="233" y="525" width="90" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="X_worktree_di" bpmnElement="X_worktree">
-        <dc:Bounds x="356" y="365" width="250" height="110" />
+        <dc:Bounds x="356" y="445" width="250" height="110" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Script_ws_di" bpmnElement="Script_ws">
-        <dc:Bounds x="686" y="625" width="250" height="110" />
+        <dc:Bounds x="686" y="705" width="250" height="110" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="X_ledger_di" bpmnElement="X_ledger">
-        <dc:Bounds x="1016" y="365" width="250" height="110" />
+        <dc:Bounds x="1016" y="445" width="250" height="110" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="X_preflight_di" bpmnElement="X_preflight">
-        <dc:Bounds x="1326" y="365" width="270" height="110" />
+        <dc:Bounds x="1326" y="445" width="270" height="110" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="G_taskmerge_di" bpmnElement="G_taskmerge" isMarkerVisible="true">
-        <dc:Bounds x="1656" y="395" width="50" height="50" />
+        <dc:Bounds x="1656" y="475" width="50" height="50" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="G_tasks_di" bpmnElement="G_tasks" isMarkerVisible="true">
-        <dc:Bounds x="1766" y="395" width="50" height="50" />
+        <dc:Bounds x="1766" y="475" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1751" y="361" width="80" height="27" />
+          <dc:Bounds x="1763" y="441" width="57" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Script_brief_di" bpmnElement="Script_brief">
-        <dc:Bounds x="1896" y="625" width="250" height="110" />
+        <dc:Bounds x="1896" y="705" width="250" height="110" />
+        <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="G_implmerge_di" bpmnElement="G_implmerge" isMarkerVisible="true">
-        <dc:Bounds x="2226" y="395" width="50" height="50" />
+        <dc:Bounds x="2226" y="475" width="50" height="50" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="CA_impl_di" bpmnElement="CA_impl">
-        <dc:Bounds x="2336" y="365" width="270" height="110" />
+        <dc:Bounds x="2336" y="445" width="270" height="110" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="G_report_di" bpmnElement="G_report" isMarkerVisible="true">
-        <dc:Bounds x="2666" y="395" width="50" height="50" />
+        <dc:Bounds x="2666" y="475" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="2651" y="451" width="80" height="27" />
+          <dc:Bounds x="2661" y="531" width="60" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Script_pkg_di" bpmnElement="Script_pkg">
-        <dc:Bounds x="2916" y="625" width="250" height="110" />
+        <dc:Bounds x="2916" y="705" width="250" height="110" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="CA_taskrev_di" bpmnElement="CA_taskrev">
-        <dc:Bounds x="3246" y="365" width="270" height="110" />
+        <dc:Bounds x="3246" y="445" width="270" height="110" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="G_review_di" bpmnElement="G_review" isMarkerVisible="true">
-        <dc:Bounds x="3576" y="395" width="50" height="50" />
+        <dc:Bounds x="3576" y="475" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="3561" y="451" width="80" height="27" />
+          <dc:Bounds x="3558" y="531" width="87" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="X_triage_di" bpmnElement="X_triage">
-        <dc:Bounds x="3686" y="365" width="270" height="110" />
+        <dc:Bounds x="3686" y="445" width="270" height="110" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="G_loop_di" bpmnElement="G_loop" isMarkerVisible="true">
-        <dc:Bounds x="4016" y="395" width="50" height="50" />
+        <dc:Bounds x="4016" y="475" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="4001" y="451" width="80" height="27" />
+          <dc:Bounds x="3966" y="456" width="67" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="G_fixmerge_di" bpmnElement="G_fixmerge" isMarkerVisible="true">
-        <dc:Bounds x="4136" y="395" width="50" height="50" />
+        <dc:Bounds x="4136" y="475" width="50" height="50" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="CA_fix_di" bpmnElement="CA_fix">
-        <dc:Bounds x="4246" y="365" width="270" height="110" />
+        <dc:Bounds x="4246" y="445" width="270" height="110" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Script_pkg_fix_di" bpmnElement="Script_pkg_fix">
-        <dc:Bounds x="4596" y="625" width="250" height="110" />
+        <dc:Bounds x="4596" y="705" width="250" height="110" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="CA_rerev_di" bpmnElement="CA_rerev">
-        <dc:Bounds x="4926" y="365" width="270" height="110" />
+        <dc:Bounds x="4926" y="445" width="270" height="110" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="G_addressed_di" bpmnElement="G_addressed" isMarkerVisible="true">
-        <dc:Bounds x="5256" y="395" width="50" height="50" />
+        <dc:Bounds x="5256" y="475" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="5241" y="361" width="80" height="27" />
+          <dc:Bounds x="5250" y="441" width="63" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="G_cap_di" bpmnElement="G_cap" isMarkerVisible="true">
-        <dc:Bounds x="5366" y="395" width="50" height="50" />
+        <dc:Bounds x="5366" y="475" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="5351" y="451" width="80" height="27" />
+          <dc:Bounds x="5369" y="531" width="44" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="X_adjudicate_di" bpmnElement="X_adjudicate">
-        <dc:Bounds x="5586" y="365" width="290" height="110" />
+        <dc:Bounds x="5586" y="445" width="290" height="110" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="G_donemerge_di" bpmnElement="G_donemerge" isMarkerVisible="true">
-        <dc:Bounds x="5936" y="395" width="50" height="50" />
+        <dc:Bounds x="5936" y="475" width="50" height="50" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="X_complete_di" bpmnElement="X_complete">
-        <dc:Bounds x="6046" y="365" width="270" height="110" />
+        <dc:Bounds x="6046" y="445" width="270" height="110" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Script_pkg_final_di" bpmnElement="Script_pkg_final">
-        <dc:Bounds x="6416" y="625" width="250" height="110" />
+        <dc:Bounds x="6416" y="705" width="250" height="110" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="CA_final_di" bpmnElement="CA_final">
-        <dc:Bounds x="6746" y="365" width="270" height="110" />
+        <dc:Bounds x="6746" y="445" width="270" height="110" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="G_finalfind_di" bpmnElement="G_finalfind" isMarkerVisible="true">
-        <dc:Bounds x="7076" y="395" width="50" height="50" />
+        <dc:Bounds x="7076" y="475" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="7061" y="451" width="80" height="27" />
+          <dc:Bounds x="7067" y="531" width="69" height="40" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="CA_finalfix_di" bpmnElement="CA_finalfix">
-        <dc:Bounds x="7196" y="365" width="270" height="110" />
+        <dc:Bounds x="7196" y="445" width="270" height="110" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Script_pkg_fw_di" bpmnElement="Script_pkg_fw">
-        <dc:Bounds x="7546" y="625" width="250" height="110" />
+        <dc:Bounds x="7546" y="705" width="250" height="110" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="CA_finalrerev_di" bpmnElement="CA_finalrerev">
-        <dc:Bounds x="7876" y="365" width="270" height="110" />
+        <dc:Bounds x="7876" y="445" width="270" height="110" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="X_finaladj_di" bpmnElement="X_finaladj">
-        <dc:Bounds x="8206" y="365" width="290" height="110" />
+        <dc:Bounds x="8206" y="445" width="290" height="110" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="G_finalmerge_di" bpmnElement="G_finalmerge" isMarkerVisible="true">
-        <dc:Bounds x="8556" y="395" width="50" height="50" />
+        <dc:Bounds x="8556" y="475" width="50" height="50" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="X_rulings_di" bpmnElement="X_rulings">
-        <dc:Bounds x="8666" y="365" width="270" height="110" />
+        <dc:Bounds x="8666" y="445" width="270" height="110" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Script_rm_di" bpmnElement="Script_rm">
-        <dc:Bounds x="9016" y="625" width="250" height="110" />
+        <dc:Bounds x="9016" y="705" width="250" height="110" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="End_X_di" bpmnElement="End_X">
-        <dc:Bounds x="9346" y="402" width="36" height="36" />
+        <dc:Bounds x="9346" y="482" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="9314" y="445" width="100" height="27" />
+          <dc:Bounds x="9316" y="525" width="97" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="DOR_plan_a_di" bpmnElement="DOR_plan_a" color:background-color="#f2eef9">
-        <dc:Bounds x="1443" y="250" width="36" height="50" />
+        <dc:Bounds x="1443" y="330" width="36" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1487" y="255" width="130" height="40" />
+          <dc:Bounds x="1491" y="335" width="122" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="DOR_plan_b_di" bpmnElement="DOR_plan_b" color:background-color="#f2eef9">
-        <dc:Bounds x="1916" y="770" width="36" height="50" />
+        <dc:Bounds x="1916" y="850" width="36" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1869" y="825" width="130" height="40" />
+          <dc:Bounds x="1873" y="905" width="122" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="DOR_ledger_a_di" bpmnElement="DOR_ledger_a" color:background-color="#e9f2ea">
-        <dc:Bounds x="1123" y="250" width="36" height="50" />
+        <dc:Bounds x="1123" y="330" width="36" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1167" y="255" width="130" height="40" />
+          <dc:Bounds x="1167" y="335" width="130" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="DOR_ledger_b_di" bpmnElement="DOR_ledger_b" color:background-color="#e9f2ea">
-        <dc:Bounds x="6163" y="492" width="36" height="50" />
+        <dc:Bounds x="6163" y="572" width="36" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="6207" y="497" width="130" height="40" />
+          <dc:Bounds x="6207" y="577" width="130" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="DOR_ledger_c_di" bpmnElement="DOR_ledger_c" color:background-color="#e9f2ea">
-        <dc:Bounds x="8783" y="250" width="36" height="50" />
+        <dc:Bounds x="8783" y="330" width="36" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="8827" y="255" width="130" height="40" />
+          <dc:Bounds x="8827" y="335" width="130" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="DOR_brief_di" bpmnElement="DOR_brief" color:background-color="#fdf6e3">
-        <dc:Bounds x="2453" y="770" width="36" height="50" />
+        <dc:Bounds x="2453" y="850" width="36" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="2406" y="825" width="130" height="40" />
+          <dc:Bounds x="2432" y="905" width="78" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="DOR_pkg_di" bpmnElement="DOR_pkg" color:background-color="#f7ecec">
-        <dc:Bounds x="3363" y="770" width="36" height="50" />
+        <dc:Bounds x="3363" y="850" width="36" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="3316" y="825" width="130" height="40" />
+          <dc:Bounds x="3318" y="905" width="126" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Note_nohuman_di" bpmnElement="Note_nohuman">
-        <dc:Bounds x="260" y="25" width="900" height="100" />
-      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="xas2_di" bpmnElement="xas2">
+        <di:waypoint x="6881" y="870" />
+        <di:waypoint x="6881" y="555" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="xas4_di" bpmnElement="xas4">
+        <di:waypoint x="8011" y="870" />
+        <di:waypoint x="8011" y="555" />
+      </bpmndi:BPMNEdge>
       <bpmndi:BPMNShape id="Note_budget_di" bpmnElement="Note_budget">
-        <dc:Bounds x="6706" y="790" width="780" height="130" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Note_noprogram_di" bpmnElement="Note_noprogram">
-        <dc:Bounds x="260" y="780" width="900" height="100" />
+        <dc:Bounds x="6706" y="870" width="780" height="130" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Note_redundancy_di" bpmnElement="Note_redundancy">
-        <dc:Bounds x="7526" y="790" width="800" height="130" />
+        <dc:Bounds x="7526" y="870" width="800" height="130" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNEdge id="xda3_di" bpmnElement="xda3">
-        <di:waypoint x="1141" y="365" />
-        <di:waypoint x="1141" y="300" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="xda1_di" bpmnElement="xda1">
-        <di:waypoint x="1461" y="300" />
-        <di:waypoint x="1461" y="365" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="xda2_di" bpmnElement="xda2">
-        <di:waypoint x="1934" y="770" />
-        <di:waypoint x="1934" y="735" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="xda6_di" bpmnElement="xda6">
-        <di:waypoint x="2081" y="735" />
-        <di:waypoint x="2081" y="795" />
-        <di:waypoint x="2453" y="795" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="xda7_di" bpmnElement="xda7">
-        <di:waypoint x="2471" y="770" />
-        <di:waypoint x="2471" y="475" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="xda8_di" bpmnElement="xda8">
-        <di:waypoint x="3101" y="735" />
-        <di:waypoint x="3101" y="795" />
-        <di:waypoint x="3363" y="795" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="xda9_di" bpmnElement="xda9">
-        <di:waypoint x="3381" y="770" />
-        <di:waypoint x="3381" y="475" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="xda4_di" bpmnElement="xda4">
-        <di:waypoint x="6181" y="475" />
-        <di:waypoint x="6181" y="492" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="xda5_di" bpmnElement="xda5">
-        <di:waypoint x="8801" y="300" />
-        <di:waypoint x="8801" y="365" />
-      </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="xf1_di" bpmnElement="xf1">
-        <di:waypoint x="296" y="420" />
-        <di:waypoint x="356" y="420" />
+        <di:waypoint x="296" y="500" />
+        <di:waypoint x="356" y="500" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="xf2_di" bpmnElement="xf2">
-        <di:waypoint x="606" y="420" />
-        <di:waypoint x="646" y="420" />
-        <di:waypoint x="646" y="680" />
-        <di:waypoint x="686" y="680" />
+        <di:waypoint x="606" y="500" />
+        <di:waypoint x="646" y="500" />
+        <di:waypoint x="646" y="760" />
+        <di:waypoint x="686" y="760" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="xf3_di" bpmnElement="xf3">
-        <di:waypoint x="936" y="680" />
-        <di:waypoint x="976" y="680" />
-        <di:waypoint x="976" y="420" />
-        <di:waypoint x="1016" y="420" />
+        <di:waypoint x="936" y="760" />
+        <di:waypoint x="976" y="760" />
+        <di:waypoint x="976" y="500" />
+        <di:waypoint x="1016" y="500" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="xda3_di" bpmnElement="xda3">
+        <di:waypoint x="1141" y="445" />
+        <di:waypoint x="1141" y="380" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="xf4_di" bpmnElement="xf4">
-        <di:waypoint x="1266" y="420" />
-        <di:waypoint x="1326" y="420" />
+        <di:waypoint x="1266" y="500" />
+        <di:waypoint x="1326" y="500" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="xda1_di" bpmnElement="xda1">
+        <di:waypoint x="1461" y="380" />
+        <di:waypoint x="1461" y="445" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="xf5_di" bpmnElement="xf5">
-        <di:waypoint x="1596" y="420" />
-        <di:waypoint x="1656" y="420" />
+        <di:waypoint x="1596" y="500" />
+        <di:waypoint x="1656" y="500" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="xf31_di" bpmnElement="xf31">
+        <di:waypoint x="6181" y="445" />
+        <di:waypoint x="6181" y="290" />
+        <di:waypoint x="1681" y="290" />
+        <di:waypoint x="1681" y="475" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="xf6_di" bpmnElement="xf6">
-        <di:waypoint x="1706" y="420" />
-        <di:waypoint x="1766" y="420" />
+        <di:waypoint x="1706" y="500" />
+        <di:waypoint x="1766" y="500" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="xf7_di" bpmnElement="xf7">
-        <di:waypoint x="1816" y="420" />
-        <di:waypoint x="1856" y="420" />
-        <di:waypoint x="1856" y="680" />
-        <di:waypoint x="1896" y="680" />
+        <di:waypoint x="1816" y="500" />
+        <di:waypoint x="1856" y="500" />
+        <di:waypoint x="1856" y="760" />
+        <di:waypoint x="1896" y="760" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1822" y="400" width="20" height="14" />
+          <dc:Bounds x="1823" y="480" width="18" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="xf8_di" bpmnElement="xf8">
-        <di:waypoint x="1791" y="445" />
-        <di:waypoint x="1791" y="900" />
-        <di:waypoint x="6541" y="900" />
-        <di:waypoint x="6541" y="735" />
+        <di:waypoint x="1791" y="525" />
+        <di:waypoint x="1791" y="980" />
+        <di:waypoint x="6541" y="980" />
+        <di:waypoint x="6541" y="815" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1801" y="906" width="110" height="14" />
+          <dc:Bounds x="1808" y="986" width="97" height="14" />
         </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="xda2_di" bpmnElement="xda2">
+        <di:waypoint x="1934" y="850" />
+        <di:waypoint x="1934" y="815" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="xda6_di" bpmnElement="xda6">
+        <di:waypoint x="2081" y="815" />
+        <di:waypoint x="2081" y="875" />
+        <di:waypoint x="2453" y="875" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="xf9_di" bpmnElement="xf9">
-        <di:waypoint x="2146" y="680" />
-        <di:waypoint x="2186" y="680" />
-        <di:waypoint x="2186" y="420" />
-        <di:waypoint x="2226" y="420" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="xf10_di" bpmnElement="xf10">
-        <di:waypoint x="2276" y="420" />
-        <di:waypoint x="2336" y="420" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="xf11_di" bpmnElement="xf11">
-        <di:waypoint x="2606" y="420" />
-        <di:waypoint x="2666" y="420" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="xf12_di" bpmnElement="xf12">
-        <di:waypoint x="2716" y="420" />
-        <di:waypoint x="2816" y="420" />
-        <di:waypoint x="2816" y="680" />
-        <di:waypoint x="2916" y="680" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="2726" y="400" width="140" height="14" />
-        </bpmndi:BPMNLabel>
+        <di:waypoint x="2146" y="760" />
+        <di:waypoint x="2186" y="760" />
+        <di:waypoint x="2186" y="500" />
+        <di:waypoint x="2226" y="500" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="xf13_di" bpmnElement="xf13">
-        <di:waypoint x="2691" y="395" />
-        <di:waypoint x="2691" y="330" />
-        <di:waypoint x="2251" y="330" />
-        <di:waypoint x="2251" y="395" />
+        <di:waypoint x="2691" y="475" />
+        <di:waypoint x="2691" y="410" />
+        <di:waypoint x="2251" y="410" />
+        <di:waypoint x="2251" y="475" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="2263" y="312" width="130" height="14" />
+          <dc:Bounds x="2265" y="392" width="126" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="xf10_di" bpmnElement="xf10">
+        <di:waypoint x="2276" y="500" />
+        <di:waypoint x="2336" y="500" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="xda7_di" bpmnElement="xda7">
+        <di:waypoint x="2471" y="850" />
+        <di:waypoint x="2471" y="555" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="xf11_di" bpmnElement="xf11">
+        <di:waypoint x="2606" y="500" />
+        <di:waypoint x="2666" y="500" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="xf12_di" bpmnElement="xf12">
+        <di:waypoint x="2716" y="500" />
+        <di:waypoint x="2816" y="500" />
+        <di:waypoint x="2816" y="760" />
+        <di:waypoint x="2916" y="760" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2727" y="480" width="139" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="xda8_di" bpmnElement="xda8">
+        <di:waypoint x="3101" y="815" />
+        <di:waypoint x="3101" y="875" />
+        <di:waypoint x="3363" y="875" />
+      </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="xf14_di" bpmnElement="xf14">
-        <di:waypoint x="3166" y="680" />
-        <di:waypoint x="3206" y="680" />
-        <di:waypoint x="3206" y="420" />
-        <di:waypoint x="3246" y="420" />
+        <di:waypoint x="3166" y="760" />
+        <di:waypoint x="3206" y="760" />
+        <di:waypoint x="3206" y="500" />
+        <di:waypoint x="3246" y="500" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="xda9_di" bpmnElement="xda9">
+        <di:waypoint x="3381" y="850" />
+        <di:waypoint x="3381" y="555" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="xf15_di" bpmnElement="xf15">
-        <di:waypoint x="3516" y="420" />
-        <di:waypoint x="3576" y="420" />
+        <di:waypoint x="3516" y="500" />
+        <di:waypoint x="3576" y="500" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="xf16_di" bpmnElement="xf16">
-        <di:waypoint x="3601" y="395" />
-        <di:waypoint x="3601" y="250" />
-        <di:waypoint x="5961" y="250" />
-        <di:waypoint x="5961" y="395" />
+        <di:waypoint x="3601" y="475" />
+        <di:waypoint x="3601" y="330" />
+        <di:waypoint x="5961" y="330" />
+        <di:waypoint x="5961" y="475" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="3609" y="232" width="20" height="14" />
+          <dc:Bounds x="3610" y="312" width="18" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="xf17_di" bpmnElement="xf17">
-        <di:waypoint x="3626" y="420" />
-        <di:waypoint x="3686" y="420" />
+        <di:waypoint x="3626" y="500" />
+        <di:waypoint x="3686" y="500" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="3632" y="400" width="15" height="14" />
+          <dc:Bounds x="3633" y="480" width="13" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="xf18_di" bpmnElement="xf18">
-        <di:waypoint x="3956" y="420" />
-        <di:waypoint x="4016" y="420" />
+        <di:waypoint x="3956" y="500" />
+        <di:waypoint x="4016" y="500" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="xf19_di" bpmnElement="xf19">
-        <di:waypoint x="4041" y="395" />
-        <di:waypoint x="4041" y="290" />
-        <di:waypoint x="5961" y="290" />
-        <di:waypoint x="5961" y="395" />
+        <di:waypoint x="4041" y="475" />
+        <di:waypoint x="4041" y="370" />
+        <di:waypoint x="5961" y="370" />
+        <di:waypoint x="5961" y="475" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="4049" y="272" width="90" height="14" />
+          <dc:Bounds x="4051" y="352" width="86" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="xf20_di" bpmnElement="xf20">
-        <di:waypoint x="4066" y="420" />
-        <di:waypoint x="4136" y="420" />
+        <di:waypoint x="4066" y="500" />
+        <di:waypoint x="4136" y="500" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="4074" y="400" width="20" height="14" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="xf21_di" bpmnElement="xf21">
-        <di:waypoint x="4186" y="420" />
-        <di:waypoint x="4246" y="420" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="xf22_di" bpmnElement="xf22">
-        <di:waypoint x="4516" y="420" />
-        <di:waypoint x="4556" y="420" />
-        <di:waypoint x="4556" y="680" />
-        <di:waypoint x="4596" y="680" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="xf23_di" bpmnElement="xf23">
-        <di:waypoint x="4846" y="680" />
-        <di:waypoint x="4886" y="680" />
-        <di:waypoint x="4886" y="420" />
-        <di:waypoint x="4926" y="420" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="xf24_di" bpmnElement="xf24">
-        <di:waypoint x="5196" y="420" />
-        <di:waypoint x="5256" y="420" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="xf25_di" bpmnElement="xf25">
-        <di:waypoint x="5281" y="445" />
-        <di:waypoint x="5281" y="505" />
-        <di:waypoint x="5961" y="505" />
-        <di:waypoint x="5961" y="445" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="5289" y="485" width="20" height="14" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="xf26_di" bpmnElement="xf26">
-        <di:waypoint x="5306" y="420" />
-        <di:waypoint x="5366" y="420" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="5311" y="400" width="15" height="14" />
+          <dc:Bounds x="4075" y="480" width="18" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="xf27_di" bpmnElement="xf27">
-        <di:waypoint x="5391" y="395" />
-        <di:waypoint x="5391" y="330" />
-        <di:waypoint x="4161" y="330" />
-        <di:waypoint x="4161" y="395" />
+        <di:waypoint x="5391" y="475" />
+        <di:waypoint x="5391" y="410" />
+        <di:waypoint x="4161" y="410" />
+        <di:waypoint x="4161" y="475" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="4173" y="312" width="80" height="14" />
+          <dc:Bounds x="4172" y="392" width="82" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="xf21_di" bpmnElement="xf21">
+        <di:waypoint x="4186" y="500" />
+        <di:waypoint x="4246" y="500" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="xf22_di" bpmnElement="xf22">
+        <di:waypoint x="4516" y="500" />
+        <di:waypoint x="4556" y="500" />
+        <di:waypoint x="4556" y="760" />
+        <di:waypoint x="4596" y="760" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="xf23_di" bpmnElement="xf23">
+        <di:waypoint x="4846" y="760" />
+        <di:waypoint x="4886" y="760" />
+        <di:waypoint x="4886" y="500" />
+        <di:waypoint x="4926" y="500" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="xf24_di" bpmnElement="xf24">
+        <di:waypoint x="5196" y="500" />
+        <di:waypoint x="5256" y="500" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="xf25_di" bpmnElement="xf25">
+        <di:waypoint x="5281" y="525" />
+        <di:waypoint x="5281" y="585" />
+        <di:waypoint x="5961" y="585" />
+        <di:waypoint x="5961" y="525" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="5290" y="565" width="18" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="xf26_di" bpmnElement="xf26">
+        <di:waypoint x="5306" y="500" />
+        <di:waypoint x="5366" y="500" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="5312" y="480" width="13" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="xf28_di" bpmnElement="xf28">
-        <di:waypoint x="5416" y="420" />
-        <di:waypoint x="5586" y="420" />
+        <di:waypoint x="5416" y="500" />
+        <di:waypoint x="5586" y="500" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="5426" y="400" width="125" height="14" />
+          <dc:Bounds x="5432" y="480" width="114" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="xf29_di" bpmnElement="xf29">
-        <di:waypoint x="5876" y="420" />
-        <di:waypoint x="5936" y="420" />
+        <di:waypoint x="5876" y="500" />
+        <di:waypoint x="5936" y="500" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="xf30_di" bpmnElement="xf30">
-        <di:waypoint x="5986" y="420" />
-        <di:waypoint x="6046" y="420" />
+        <di:waypoint x="5986" y="500" />
+        <di:waypoint x="6046" y="500" />
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="xf31_di" bpmnElement="xf31">
-        <di:waypoint x="6181" y="365" />
-        <di:waypoint x="6181" y="210" />
-        <di:waypoint x="1681" y="210" />
-        <di:waypoint x="1681" y="395" />
+      <bpmndi:BPMNEdge id="xda4_di" bpmnElement="xda4">
+        <di:waypoint x="6181" y="555" />
+        <di:waypoint x="6181" y="572" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="xf32_di" bpmnElement="xf32">
-        <di:waypoint x="6666" y="680" />
-        <di:waypoint x="6706" y="680" />
-        <di:waypoint x="6706" y="420" />
-        <di:waypoint x="6746" y="420" />
+        <di:waypoint x="6666" y="760" />
+        <di:waypoint x="6706" y="760" />
+        <di:waypoint x="6706" y="500" />
+        <di:waypoint x="6746" y="500" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="xf33_di" bpmnElement="xf33">
-        <di:waypoint x="7016" y="420" />
-        <di:waypoint x="7076" y="420" />
+        <di:waypoint x="7016" y="500" />
+        <di:waypoint x="7076" y="500" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="xf34_di" bpmnElement="xf34">
-        <di:waypoint x="7126" y="420" />
-        <di:waypoint x="7196" y="420" />
+        <di:waypoint x="7126" y="500" />
+        <di:waypoint x="7196" y="500" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="7134" y="400" width="20" height="14" />
+          <dc:Bounds x="7135" y="480" width="18" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="xf35_di" bpmnElement="xf35">
-        <di:waypoint x="7101" y="395" />
-        <di:waypoint x="7101" y="330" />
-        <di:waypoint x="8581" y="330" />
-        <di:waypoint x="8581" y="395" />
+        <di:waypoint x="7101" y="475" />
+        <di:waypoint x="7101" y="410" />
+        <di:waypoint x="8581" y="410" />
+        <di:waypoint x="8581" y="475" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="7109" y="312" width="15" height="14" />
+          <dc:Bounds x="7110" y="392" width="13" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="xf36_di" bpmnElement="xf36">
-        <di:waypoint x="7466" y="420" />
-        <di:waypoint x="7506" y="420" />
-        <di:waypoint x="7506" y="680" />
-        <di:waypoint x="7546" y="680" />
+        <di:waypoint x="7466" y="500" />
+        <di:waypoint x="7506" y="500" />
+        <di:waypoint x="7506" y="760" />
+        <di:waypoint x="7546" y="760" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="xf37_di" bpmnElement="xf37">
-        <di:waypoint x="7796" y="680" />
-        <di:waypoint x="7836" y="680" />
-        <di:waypoint x="7836" y="420" />
-        <di:waypoint x="7876" y="420" />
+        <di:waypoint x="7796" y="760" />
+        <di:waypoint x="7836" y="760" />
+        <di:waypoint x="7836" y="500" />
+        <di:waypoint x="7876" y="500" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="xf38_di" bpmnElement="xf38">
-        <di:waypoint x="8146" y="420" />
-        <di:waypoint x="8206" y="420" />
+        <di:waypoint x="8146" y="500" />
+        <di:waypoint x="8206" y="500" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="xf39_di" bpmnElement="xf39">
-        <di:waypoint x="8496" y="420" />
-        <di:waypoint x="8556" y="420" />
+        <di:waypoint x="8496" y="500" />
+        <di:waypoint x="8556" y="500" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="xf40_di" bpmnElement="xf40">
-        <di:waypoint x="8606" y="420" />
-        <di:waypoint x="8666" y="420" />
+        <di:waypoint x="8606" y="500" />
+        <di:waypoint x="8666" y="500" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="xda5_di" bpmnElement="xda5">
+        <di:waypoint x="8801" y="380" />
+        <di:waypoint x="8801" y="445" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="xf41_di" bpmnElement="xf41">
-        <di:waypoint x="8936" y="420" />
-        <di:waypoint x="8976" y="420" />
-        <di:waypoint x="8976" y="680" />
-        <di:waypoint x="9016" y="680" />
+        <di:waypoint x="8936" y="500" />
+        <di:waypoint x="8976" y="500" />
+        <di:waypoint x="8976" y="760" />
+        <di:waypoint x="9016" y="760" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="xf42_di" bpmnElement="xf42">
-        <di:waypoint x="9266" y="680" />
-        <di:waypoint x="9306" y="680" />
-        <di:waypoint x="9306" y="420" />
-        <di:waypoint x="9346" y="420" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="xas1_di" bpmnElement="xas1">
-        <di:waypoint x="300" y="125" />
-        <di:waypoint x="278" y="402" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="xas2_di" bpmnElement="xas2">
-        <di:waypoint x="6881" y="790" />
-        <di:waypoint x="6881" y="475" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="xas3_di" bpmnElement="xas3">
-        <di:waypoint x="811" y="780" />
-        <di:waypoint x="811" y="735" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="xas4_di" bpmnElement="xas4">
-        <di:waypoint x="8011" y="790" />
-        <di:waypoint x="8011" y="475" />
+        <di:waypoint x="9266" y="760" />
+        <di:waypoint x="9306" y="760" />
+        <di:waypoint x="9306" y="500" />
+        <di:waypoint x="9346" y="500" />
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
@@ -2111,14 +2100,14 @@ Discarding the work is not on the menu. It happens only when the human asks for 
   </bpmndi:BPMNDiagram>
   <bpmndi:BPMNDiagram>
     <bpmndi:BPMNPlane id="Pl_Sub_plan" bpmnElement="Sub_plan">
-      <bpmndi:BPMNShape id="LW_program_di" bpmnElement="LW_program" isHorizontal="true" color:background-color="#eef5f4" color:border-color="#7a918d">
-        <dc:Bounds x="160" y="640" width="2912" height="140" />
+      <bpmndi:BPMNShape id="LW_human_di" bpmnElement="LW_human" isHorizontal="true" color:background-color="#fdf3f7" color:border-color="#9c8490">
+        <dc:Bounds x="160" y="80" width="2912" height="260" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="LW_agent_di" bpmnElement="LW_agent" isHorizontal="true" color:background-color="#fdf7ee" color:border-color="#9c8d76">
         <dc:Bounds x="160" y="340" width="2912" height="300" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="LW_human_di" bpmnElement="LW_human" isHorizontal="true" color:background-color="#fdf3f7" color:border-color="#9c8490">
-        <dc:Bounds x="160" y="80" width="2912" height="260" />
+      <bpmndi:BPMNShape id="LW_program_di" bpmnElement="LW_program" isHorizontal="true" color:background-color="#eef5f4" color:border-color="#7a918d">
+        <dc:Bounds x="160" y="640" width="2912" height="140" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Start_W_di" bpmnElement="Start_W">
         <dc:Bounds x="250" y="442" width="36" height="36" />
@@ -2269,11 +2258,20 @@ Discarding the work is not on the menu. It happens only when the human asks for 
       <bpmndi:BPMNShape id="F_detect_di" bpmnElement="F_detect">
         <dc:Bounds x="356" y="585" width="250" height="110" />
       </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="GF_baseknown_di" bpmnElement="GF_baseknown" isMarkerVisible="true">
+        <dc:Bounds x="676" y="355" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="636" y="321" width="130" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="F_base_di" bpmnElement="F_base">
         <dc:Bounds x="796" y="325" width="250" height="110" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="F_baseresp_di" bpmnElement="F_baseresp">
         <dc:Bounds x="796" y="95" width="250" height="110" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="GF_basemerge_di" bpmnElement="GF_basemerge" isMarkerVisible="true">
+        <dc:Bounds x="1116" y="355" width="50" height="50" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="F_menu_di" bpmnElement="F_menu">
         <dc:Bounds x="1236" y="325" width="250" height="110" />
@@ -2362,6 +2360,22 @@ Discarding the work is not on the menu. It happens only when the human asks for 
         <di:waypoint x="641" y="380" />
         <di:waypoint x="676" y="380" />
       </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="ff23_di" bpmnElement="ff23">
+        <di:waypoint x="726" y="380" />
+        <di:waypoint x="796" y="380" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="732" y="360" width="15" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="ff24_di" bpmnElement="ff24">
+        <di:waypoint x="701" y="405" />
+        <di:waypoint x="701" y="480" />
+        <di:waypoint x="1141" y="480" />
+        <di:waypoint x="1141" y="405" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="709" y="462" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="ff20_di" bpmnElement="ff20">
         <di:waypoint x="921" y="325" />
         <di:waypoint x="921" y="205" />
@@ -2370,6 +2384,10 @@ Discarding the work is not on the menu. It happens only when the human asks for 
         <di:waypoint x="1046" y="150" />
         <di:waypoint x="1141" y="150" />
         <di:waypoint x="1141" y="355" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="ff25_di" bpmnElement="ff25">
+        <di:waypoint x="1166" y="380" />
+        <di:waypoint x="1236" y="380" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="ff4_di" bpmnElement="ff4">
         <di:waypoint x="1486" y="380" />
@@ -2475,35 +2493,6 @@ Discarding the work is not on the menu. It happens only when the human asks for 
       <bpmndi:BPMNEdge id="ff19_di" bpmnElement="ff19">
         <di:waypoint x="2376" y="800" />
         <di:waypoint x="2453" y="800" />
-      </bpmndi:BPMNEdge>
-          <bpmndi:BPMNShape id="GF_baseknown_di" bpmnElement="GF_baseknown" isMarkerVisible="true">
-        <dc:Bounds x="676" y="355" width="50" height="50" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="636" y="321" width="130" height="28" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="GF_basemerge_di" bpmnElement="GF_basemerge" isMarkerVisible="true">
-        <dc:Bounds x="1116" y="355" width="50" height="50" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNEdge id="ff23_di" bpmnElement="ff23">
-        <di:waypoint x="726" y="380" />
-        <di:waypoint x="796" y="380" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="732" y="360" width="15" height="14" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="ff24_di" bpmnElement="ff24">
-        <di:waypoint x="701" y="405" />
-        <di:waypoint x="701" y="480" />
-        <di:waypoint x="1141" y="480" />
-        <di:waypoint x="1141" y="405" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="709" y="462" width="20" height="14" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="ff25_di" bpmnElement="ff25">
-        <di:waypoint x="1166" y="380" />
-        <di:waypoint x="1236" y="380" />
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
