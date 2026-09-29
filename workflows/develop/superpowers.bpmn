@@ -343,7 +343,7 @@ The skill has no explicit approval gate here: its own flowchart goes straight fr
       <bpmn:sequenceFlow id="bf24" name="yes" sourceRef="GB_changes" targetRef="GB_specmerge" />
     </bpmn:subProcess>
     <bpmn:subProcess id="Sub_plan" name="Write the implementation plan">
-      <bpmn:documentation>obra/superpowers:skills/writing-plans/SKILL.md. PLANE NOT YET DRAWN.
+      <bpmn:documentation>obra/superpowers:skills/writing-plans/SKILL.md.
 
 Below this box: a scope check, a file-structure pass, task decomposition into bite-sized steps of two to five minutes each, and a self-review against the spec for coverage, placeholders and type consistency. The plan carries a Global Constraints block copied verbatim from the spec.
 
@@ -358,6 +358,115 @@ The skill ends by offering the human a choice of executor — subagent-driven or
       <bpmn:dataOutputAssociation id="doa_plan">
         <bpmn:targetRef>DOR_plan</bpmn:targetRef>
       </bpmn:dataOutputAssociation>
+      <bpmn:laneSet id="LW_LS">
+        <bpmn:lane id="LW_human" name="HUMAN operator">
+          <bpmn:flowNodeRef>W_choose</bpmn:flowNodeRef>
+        </bpmn:lane>
+        <bpmn:lane id="LW_agent" name="AI AGENT">
+          <bpmn:flowNodeRef>Start_W</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>GW_scope</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>W_split</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>GW_merge</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>W_files</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>W_tasks</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>W_write</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>W_selfreview</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>W_offer</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>End_W</bpmn:flowNodeRef>
+        </bpmn:lane>
+        <bpmn:lane id="LW_program" name="PROGRAM" />
+      </bpmn:laneSet>
+
+      <bpmn:startEvent id="Start_W" name="spec approved">
+        <bpmn:documentation>obra/superpowers:skills/writing-plans/SKILL.md. Invoked by brainstorming as its only terminal skill. The agent announces "I'm using the writing-plans skill to create the implementation plan."</bpmn:documentation>
+        <bpmn:outgoing>wf1</bpmn:outgoing>
+      </bpmn:startEvent>
+
+      <bpmn:exclusiveGateway id="GW_scope" name="spec covers independent&#10;subsystems?">
+        <bpmn:documentation>obra/superpowers:skills/writing-plans/SKILL.md, "Scope Check". It should have been split during brainstorming; this is the second chance. The agent makes the call.</bpmn:documentation>
+        <bpmn:incoming>wf1</bpmn:incoming>
+        <bpmn:outgoing>wf2</bpmn:outgoing>
+        <bpmn:outgoing>wf4</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+
+      <bpmn:task id="W_split" name="Suggest one plan per subsystem&#10;writing-plans">
+        <bpmn:documentation>obra/superpowers:skills/writing-plans/SKILL.md, "Scope Check": suggest breaking this into separate plans, one per subsystem, each producing working, testable software on its own.
+
+Drawn across HUMAN and AGENT because it is a suggestion the human answers. The skill does not say what happens next; this diagram assumes the plan is then written for the first subsystem, as brainstorming does with sub-projects. Nothing records the others.</bpmn:documentation>
+        <bpmn:incoming>wf2</bpmn:incoming>
+        <bpmn:outgoing>wf3</bpmn:outgoing>
+      </bpmn:task>
+
+      <bpmn:exclusiveGateway id="GW_merge">
+        <bpmn:documentation>Unnamed merge.</bpmn:documentation>
+        <bpmn:incoming>wf3</bpmn:incoming>
+        <bpmn:incoming>wf4</bpmn:incoming>
+        <bpmn:outgoing>wf5</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+
+      <bpmn:task id="W_files" name="Map the file structure, one responsibility per file&#10;writing-plans">
+        <bpmn:documentation>obra/superpowers:skills/writing-plans/SKILL.md, "File Structure": before defining tasks, map which files will be created or modified and what each is responsible for. "This is where decomposition decisions get locked in." Follow existing patterns in an existing codebase.</bpmn:documentation>
+        <bpmn:incoming>wf5</bpmn:incoming>
+        <bpmn:outgoing>wf6</bpmn:outgoing>
+      </bpmn:task>
+
+      <bpmn:task id="W_tasks" name="Cut right-sized tasks of 2-5 minute steps&#10;writing-plans">
+        <bpmn:documentation>obra/superpowers:skills/writing-plans/SKILL.md, "Task Right-Sizing" and "Bite-Sized Task Granularity". A task is the smallest unit that carries its own test cycle and is worth a fresh reviewer's gate; split only where a reviewer could reject one task while approving its neighbor. Each step is one action of 2 to 5 minutes: write the failing test, run it, implement, run again, commit.</bpmn:documentation>
+        <bpmn:incoming>wf6</bpmn:incoming>
+        <bpmn:outgoing>wf7</bpmn:outgoing>
+      </bpmn:task>
+
+      <bpmn:task id="W_write" name="Write the plan: header, Global Constraints, every task in full&#10;writing-plans">
+        <bpmn:documentation>obra/superpowers:skills/writing-plans/SKILL.md, "Plan Document Header", "Task Structure" and "No Placeholders". Saved to docs/superpowers/plans/YYYY-MM-DD-&lt;feature-name&gt;.md (a user preference overrides the directory). The header names the spec; Global Constraints are copied verbatim from it. Every task lists exact files, Consumes/Produces interfaces, and complete code for every code step: no TBD, no "similar to Task N".
+
+The skill never says to commit the plan, so no git step is drawn here. finishing-a-development-branch later names "uncommitted plans" among the files that can block worktree removal.</bpmn:documentation>
+        <bpmn:incoming>wf7</bpmn:incoming>
+        <bpmn:outgoing>wf8</bpmn:outgoing>
+        <bpmn:dataInputAssociation id="DOR_spec_w_r">
+          <bpmn:sourceRef>DOR_spec_w</bpmn:sourceRef>
+        </bpmn:dataInputAssociation>
+        <bpmn:dataOutputAssociation id="DOR_plan_w_w">
+          <bpmn:targetRef>DOR_plan_w</bpmn:targetRef>
+        </bpmn:dataOutputAssociation>
+      </bpmn:task>
+
+      <bpmn:task id="W_selfreview" name="Self-review against the spec and fix inline&#10;writing-plans">
+        <bpmn:documentation>obra/superpowers:skills/writing-plans/SKILL.md, "Self-Review": spec coverage (point to a task for every requirement, and add a task where there is none), a placeholder scan, and type consistency across tasks. "This is a checklist you run yourself, not a subagent dispatch." Fix inline; no re-review.</bpmn:documentation>
+        <bpmn:incoming>wf8</bpmn:incoming>
+        <bpmn:outgoing>wf9</bpmn:outgoing>
+      </bpmn:task>
+
+      <bpmn:task id="W_offer" name="Offer the choice of executor&#10;writing-plans">
+        <bpmn:documentation>obra/superpowers:skills/writing-plans/SKILL.md, "Execution Handoff": subagent-driven (recommended), or inline execution through executing-plans.</bpmn:documentation>
+        <bpmn:incoming>wf9</bpmn:incoming>
+        <bpmn:outgoing>wf10</bpmn:outgoing>
+      </bpmn:task>
+
+      <bpmn:userTask id="W_choose" name="Choose subagent-driven execution">
+        <bpmn:documentation>obra/superpowers:skills/writing-plans/SKILL.md. The human picks the executor. This diagram follows the subagent-driven choice only, because students on this course always have subagents, so no gateway is drawn for a fork it does not model. The other branch runs obra/superpowers:skills/executing-plans/SKILL.md instead of the Execute phase.</bpmn:documentation>
+        <bpmn:incoming>wf10</bpmn:incoming>
+        <bpmn:outgoing>wf11</bpmn:outgoing>
+      </bpmn:userTask>
+
+      <bpmn:endEvent id="End_W" name="plan saved, subagent-&#10;driven execution chosen">
+        <bpmn:documentation>Next: the Execute phase in the parent, obra/superpowers:skills/subagent-driven-development/SKILL.md.</bpmn:documentation>
+        <bpmn:incoming>wf11</bpmn:incoming>
+      </bpmn:endEvent>
+
+      <bpmn:dataObjectReference id="DOR_spec_w" name="spec&#10;docs/superpowers/specs/" dataObjectRef="DO_spec" />
+      <bpmn:dataObjectReference id="DOR_plan_w" name="plan&#10;docs/superpowers/plans/" dataObjectRef="DO_plan" />
+
+      <bpmn:sequenceFlow id="wf1" sourceRef="Start_W" targetRef="GW_scope" />
+      <bpmn:sequenceFlow id="wf2" name="yes" sourceRef="GW_scope" targetRef="W_split" />
+      <bpmn:sequenceFlow id="wf3" sourceRef="W_split" targetRef="GW_merge" />
+      <bpmn:sequenceFlow id="wf4" name="no" sourceRef="GW_scope" targetRef="GW_merge" />
+      <bpmn:sequenceFlow id="wf5" sourceRef="GW_merge" targetRef="W_files" />
+      <bpmn:sequenceFlow id="wf6" sourceRef="W_files" targetRef="W_tasks" />
+      <bpmn:sequenceFlow id="wf7" sourceRef="W_tasks" targetRef="W_write" />
+      <bpmn:sequenceFlow id="wf8" sourceRef="W_write" targetRef="W_selfreview" />
+      <bpmn:sequenceFlow id="wf9" sourceRef="W_selfreview" targetRef="W_offer" />
+      <bpmn:sequenceFlow id="wf10" sourceRef="W_offer" targetRef="W_choose" />
+      <bpmn:sequenceFlow id="wf11" sourceRef="W_choose" targetRef="End_W" />
     </bpmn:subProcess>
     <bpmn:subProcess id="Sub_execute" name="Execute the plan, task by task">
       <bpmn:documentation>obra/superpowers:skills/subagent-driven-development/SKILL.md.
@@ -1845,7 +1954,135 @@ This is also where the controller's "Rulings I made" list surfaces — every dec
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
   <bpmndi:BPMNDiagram>
-    <bpmndi:BPMNPlane bpmnElement="Sub_plan" />
+    <bpmndi:BPMNPlane id="Pl_Sub_plan" bpmnElement="Sub_plan">
+      <bpmndi:BPMNShape id="LW_human_di" bpmnElement="LW_human" isHorizontal="true" color:background-color="#fdf3f7" color:border-color="#9c8490">
+        <dc:Bounds x="160" y="0" width="2912" height="260" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="LW_agent_di" bpmnElement="LW_agent" isHorizontal="true" color:background-color="#fdf7ee" color:border-color="#9c8d76">
+        <dc:Bounds x="160" y="260" width="2912" height="300" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="LW_program_di" bpmnElement="LW_program" isHorizontal="true" color:background-color="#eef5f4" color:border-color="#7a918d">
+        <dc:Bounds x="160" y="560" width="2912" height="140" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Start_W_di" bpmnElement="Start_W">
+        <dc:Bounds x="250" y="362" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="213" y="405" width="110" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="GW_scope_di" bpmnElement="GW_scope" isMarkerVisible="true">
+        <dc:Bounds x="356" y="355" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="316" y="321" width="130" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="W_split_di" bpmnElement="W_split">
+        <dc:Bounds x="496" y="105" width="250" height="330" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="GW_merge_di" bpmnElement="GW_merge" isMarkerVisible="true">
+        <dc:Bounds x="816" y="355" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="W_files_di" bpmnElement="W_files">
+        <dc:Bounds x="936" y="325" width="250" height="110" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="W_tasks_di" bpmnElement="W_tasks">
+        <dc:Bounds x="1256" y="325" width="250" height="110" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="W_write_di" bpmnElement="W_write">
+        <dc:Bounds x="1576" y="325" width="280" height="110" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="W_selfreview_di" bpmnElement="W_selfreview">
+        <dc:Bounds x="1926" y="325" width="250" height="110" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="W_offer_di" bpmnElement="W_offer">
+        <dc:Bounds x="2246" y="325" width="250" height="110" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="W_choose_di" bpmnElement="W_choose">
+        <dc:Bounds x="2566" y="95" width="250" height="110" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_W_di" bpmnElement="End_W">
+        <dc:Bounds x="2886" y="362" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2849" y="405" width="110" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_spec_w_di" bpmnElement="DOR_spec_w" color:background-color="#eef2f9">
+        <dc:Bounds x="1588" y="460" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1632" y="465" width="150" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_plan_w_di" bpmnElement="DOR_plan_w" color:background-color="#f2eef9">
+        <dc:Bounds x="1808" y="460" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1852" y="465" width="150" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="wf1_di" bpmnElement="wf1">
+        <di:waypoint x="286" y="380" />
+        <di:waypoint x="356" y="380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="wf2_di" bpmnElement="wf2">
+        <di:waypoint x="406" y="380" />
+        <di:waypoint x="496" y="380" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="412" y="360" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="wf3_di" bpmnElement="wf3">
+        <di:waypoint x="746" y="380" />
+        <di:waypoint x="816" y="380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="wf4_di" bpmnElement="wf4">
+        <di:waypoint x="381" y="405" />
+        <di:waypoint x="381" y="470" />
+        <di:waypoint x="841" y="470" />
+        <di:waypoint x="841" y="405" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="389" y="452" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="wf5_di" bpmnElement="wf5">
+        <di:waypoint x="866" y="380" />
+        <di:waypoint x="936" y="380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="wf6_di" bpmnElement="wf6">
+        <di:waypoint x="1186" y="380" />
+        <di:waypoint x="1256" y="380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="wf7_di" bpmnElement="wf7">
+        <di:waypoint x="1506" y="380" />
+        <di:waypoint x="1576" y="380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="wf8_di" bpmnElement="wf8">
+        <di:waypoint x="1856" y="380" />
+        <di:waypoint x="1926" y="380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="wf9_di" bpmnElement="wf9">
+        <di:waypoint x="2176" y="380" />
+        <di:waypoint x="2246" y="380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="wf10_di" bpmnElement="wf10">
+        <di:waypoint x="2496" y="380" />
+        <di:waypoint x="2531" y="380" />
+        <di:waypoint x="2531" y="150" />
+        <di:waypoint x="2566" y="150" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="wf11_di" bpmnElement="wf11">
+        <di:waypoint x="2816" y="150" />
+        <di:waypoint x="2851" y="150" />
+        <di:waypoint x="2851" y="380" />
+        <di:waypoint x="2886" y="380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DOR_spec_w_r_di" bpmnElement="DOR_spec_w_r">
+        <di:waypoint x="1606" y="460" />
+        <di:waypoint x="1606" y="435" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DOR_plan_w_w_di" bpmnElement="DOR_plan_w_w">
+        <di:waypoint x="1826" y="435" />
+        <di:waypoint x="1826" y="460" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
   <bpmndi:BPMNDiagram>
     <bpmndi:BPMNPlane bpmnElement="Sub_finish" />
