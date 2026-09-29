@@ -131,7 +131,7 @@ Every plan opens with a required header naming the spec it argues from and a Glo
     </bpmn:dataObjectReference>
     <bpmn:dataObject id="DO_plan" />
     <bpmn:subProcess id="Sub_brainstorm" name="Brainstorm the design">
-      <bpmn:documentation>obra/superpowers:skills/brainstorming/SKILL.md — architectural path. PLANE NOT YET DRAWN.
+      <bpmn:documentation>obra/superpowers:skills/brainstorming/SKILL.md — architectural path.
 
 Below this box: explore project context, a scope check that can decompose an over-large request, clarifying questions one at a time, two or three approaches with a recommendation, the design presented in sections with approval after each, the spec written and committed, a self-review, and a human review gate on the written spec.
 
@@ -143,6 +143,204 @@ Superpowers' own decomposition step lives here too, as a scope guard rather than
       <bpmn:dataOutputAssociation id="doa_spec">
         <bpmn:targetRef>DOR_spec</bpmn:targetRef>
       </bpmn:dataOutputAssociation>
+      <bpmn:laneSet id="LB_LS">
+        <bpmn:lane id="LB_human" name="HUMAN operator">
+          <bpmn:flowNodeRef>B_answer</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>GB_secok</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>B_review</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>GB_changes</bpmn:flowNodeRef>
+        </bpmn:lane>
+        <bpmn:lane id="LB_agent" name="AI AGENT">
+          <bpmn:flowNodeRef>Start_B</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>B_explore</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>GB_scope</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>B_decompose</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>GB_qmerge</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>B_ask</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>GB_understood</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>B_approaches</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>GB_secmerge</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>B_section</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>GB_more</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>GB_specmerge</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>B_write</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>B_selfreview</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>End_B</bpmn:flowNodeRef>
+        </bpmn:lane>
+        <bpmn:lane id="LB_program" name="PROGRAM">
+          <bpmn:flowNodeRef>B_commit</bpmn:flowNodeRef>
+        </bpmn:lane>
+      </bpmn:laneSet>
+
+      <bpmn:startEvent id="Start_B" name="architectural&#10;path chosen">
+        <bpmn:documentation>obra/superpowers:skills/brainstorming/SKILL.md, architectural path. Entered from the classification gateway in the parent: the agent has said out loud that this request is architectural (new projects, new subsystems, changes that restructure how components fit or alter interfaces others depend on), and the human has not overridden it.</bpmn:documentation>
+        <bpmn:outgoing>bf1</bpmn:outgoing>
+      </bpmn:startEvent>
+
+      <bpmn:task id="B_explore" name="Explore project context&#10;brainstorming">
+        <bpmn:documentation>obra/superpowers:skills/brainstorming/SKILL.md, checklist step 1: check out the current project state first (files, docs, recent commits).</bpmn:documentation>
+        <bpmn:incoming>bf1</bpmn:incoming>
+        <bpmn:outgoing>bf2</bpmn:outgoing>
+      </bpmn:task>
+
+      <bpmn:exclusiveGateway id="GB_scope" name="too big for&#10;one spec?">
+        <bpmn:documentation>obra/superpowers:skills/brainstorming/SKILL.md, "Understanding the idea": before asking detailed questions, assess scope. If the request describes multiple independent subsystems, flag it immediately rather than spend questions refining details of a project that needs to be decomposed first. The agent makes this call.</bpmn:documentation>
+        <bpmn:incoming>bf2</bpmn:incoming>
+        <bpmn:outgoing>bf3</bpmn:outgoing>
+        <bpmn:outgoing>bf5</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+
+      <bpmn:task id="B_decompose" name="Decompose into sub-projects, then take the first&#10;brainstorming">
+        <bpmn:documentation>obra/superpowers:skills/brainstorming/SKILL.md: help the user decompose into sub-projects (what are the independent pieces, how do they relate, what order should they be built), then brainstorm the first sub-project through the normal design flow. Each sub-project gets its own spec, plan and implementation cycle.
+
+Drawn across HUMAN and AGENT because both do the work: the agent proposes the split and the human agrees to it. Filed under AI AGENT, which it mostly overlaps.
+
+Nothing records the other sub-projects: no file, no path, no return. This is superpowers' only decomposition step, and it is a scope guard rather than a planning phase.</bpmn:documentation>
+        <bpmn:incoming>bf3</bpmn:incoming>
+        <bpmn:outgoing>bf4</bpmn:outgoing>
+      </bpmn:task>
+
+      <bpmn:exclusiveGateway id="GB_qmerge">
+        <bpmn:documentation>Unnamed, so a reader knows it is a merge and not a decision. The question loop returns here.</bpmn:documentation>
+        <bpmn:incoming>bf4</bpmn:incoming>
+        <bpmn:incoming>bf5</bpmn:incoming>
+        <bpmn:incoming>bf10</bpmn:incoming>
+        <bpmn:outgoing>bf6</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+
+      <bpmn:task id="B_ask" name="Ask one clarifying question&#10;brainstorming">
+        <bpmn:documentation>obra/superpowers:skills/brainstorming/SKILL.md, checklist step 3. One question per message; multiple choice where possible, open-ended is fine too. Focus: purpose, constraints, success criteria.
+
+Checklist step 2, offering the visual companion, happens here at most once, as its own message, the first time a question would be clearer shown than told. It is a side feature and is not drawn.</bpmn:documentation>
+        <bpmn:incoming>bf6</bpmn:incoming>
+        <bpmn:outgoing>bf7</bpmn:outgoing>
+      </bpmn:task>
+
+      <bpmn:userTask id="B_answer" name="Answer the question">
+        <bpmn:documentation>obra/superpowers:skills/brainstorming/SKILL.md. The human's half of the question loop.</bpmn:documentation>
+        <bpmn:incoming>bf7</bpmn:incoming>
+        <bpmn:outgoing>bf8</bpmn:outgoing>
+      </bpmn:userTask>
+
+      <bpmn:exclusiveGateway id="GB_understood" name="purpose, constraints,&#10;success criteria clear?">
+        <bpmn:documentation>obra/superpowers:skills/brainstorming/SKILL.md. The agent decides when it understands enough to propose approaches. The skill gives no count and no stopping rule beyond understanding purpose, constraints and success criteria.</bpmn:documentation>
+        <bpmn:incoming>bf8</bpmn:incoming>
+        <bpmn:outgoing>bf9</bpmn:outgoing>
+        <bpmn:outgoing>bf10</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+
+      <bpmn:task id="B_approaches" name="Propose 2-3 approaches, leading with a recommendation&#10;brainstorming">
+        <bpmn:documentation>obra/superpowers:skills/brainstorming/SKILL.md, checklist step 4 and "Exploring approaches": two or three approaches with trade-offs, presented conversationally, leading with the recommended one and why. YAGNI ruthlessly.
+
+The skill has no explicit approval gate here: its own flowchart goes straight from approaches to design sections. The human's reaction reaches the design through conversation, so no human step is drawn.</bpmn:documentation>
+        <bpmn:incoming>bf9</bpmn:incoming>
+        <bpmn:outgoing>bf11</bpmn:outgoing>
+      </bpmn:task>
+
+      <bpmn:exclusiveGateway id="GB_secmerge">
+        <bpmn:documentation>Unnamed merge. Both section loops return here: a revision after a no, and the next section after a yes.</bpmn:documentation>
+        <bpmn:incoming>bf11</bpmn:incoming>
+        <bpmn:incoming>bf15</bpmn:incoming>
+        <bpmn:incoming>bf16</bpmn:incoming>
+        <bpmn:outgoing>bf12</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+
+      <bpmn:task id="B_section" name="Present the next design section&#10;brainstorming">
+        <bpmn:documentation>obra/superpowers:skills/brainstorming/SKILL.md, checklist step 5 and "Presenting the design". Each section scaled to its complexity, from a few sentences up to 200-300 words. Covers architecture, components, data flow, error handling and testing, designed as small units with clear interfaces. After a no, this box presents the revised section instead.</bpmn:documentation>
+        <bpmn:incoming>bf12</bpmn:incoming>
+        <bpmn:outgoing>bf13</bpmn:outgoing>
+      </bpmn:task>
+
+      <bpmn:exclusiveGateway id="GB_secok" name="looks right&#10;so far?">
+        <bpmn:documentation>obra/superpowers:skills/brainstorming/SKILL.md: ask after each section whether it looks right so far. The first of the two human gates on this plane, and it fires once per section.</bpmn:documentation>
+        <bpmn:incoming>bf13</bpmn:incoming>
+        <bpmn:outgoing>bf14</bpmn:outgoing>
+        <bpmn:outgoing>bf15</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+
+      <bpmn:exclusiveGateway id="GB_more" name="sections&#10;left?">
+        <bpmn:documentation>The agent decides when the design is fully presented.</bpmn:documentation>
+        <bpmn:incoming>bf14</bpmn:incoming>
+        <bpmn:outgoing>bf16</bpmn:outgoing>
+        <bpmn:outgoing>bf17</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+
+      <bpmn:exclusiveGateway id="GB_specmerge">
+        <bpmn:documentation>Unnamed merge. A spec review that requests changes returns here.</bpmn:documentation>
+        <bpmn:incoming>bf17</bpmn:incoming>
+        <bpmn:incoming>bf24</bpmn:incoming>
+        <bpmn:outgoing>bf18</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+
+      <bpmn:task id="B_write" name="Write the spec&#10;brainstorming">
+        <bpmn:documentation>obra/superpowers:skills/brainstorming/SKILL.md, checklist step 6 and "Documentation": write the validated design to docs/superpowers/specs/YYYY-MM-DD-&lt;topic&gt;-design.md (a user preference for location overrides this). On a return from the review gate, this box makes the requested changes instead.</bpmn:documentation>
+        <bpmn:incoming>bf18</bpmn:incoming>
+        <bpmn:outgoing>bf19</bpmn:outgoing>
+        <bpmn:dataOutputAssociation id="DOR_spec_b_w">
+          <bpmn:targetRef>DOR_spec_b</bpmn:targetRef>
+        </bpmn:dataOutputAssociation>
+      </bpmn:task>
+
+      <bpmn:scriptTask id="B_commit" name="Commit the spec&#10;git commit">
+        <bpmn:documentation>obra/superpowers:skills/brainstorming/SKILL.md, "Documentation": commit the design document to git. Drawn in PROGRAM because git does the work; the agent invokes it.</bpmn:documentation>
+        <bpmn:incoming>bf19</bpmn:incoming>
+        <bpmn:outgoing>bf20</bpmn:outgoing>
+      </bpmn:scriptTask>
+
+      <bpmn:task id="B_selfreview" name="Self-review the spec and fix inline&#10;brainstorming">
+        <bpmn:documentation>obra/superpowers:skills/brainstorming/SKILL.md, "Spec Self-Review": a placeholder scan, internal consistency, a scope check (is this focused enough for one plan?), and an ambiguity check. Fix inline; no re-review. A checklist the agent runs itself, not a subagent dispatch.</bpmn:documentation>
+        <bpmn:incoming>bf20</bpmn:incoming>
+        <bpmn:outgoing>bf21</bpmn:outgoing>
+      </bpmn:task>
+
+      <bpmn:userTask id="B_review" name="Review the written spec">
+        <bpmn:documentation>obra/superpowers:skills/brainstorming/SKILL.md, "User Review Gate": the agent asks the human to review the committed spec file before any plan is written, then waits.</bpmn:documentation>
+        <bpmn:incoming>bf21</bpmn:incoming>
+        <bpmn:outgoing>bf22</bpmn:outgoing>
+        <bpmn:dataInputAssociation id="DOR_spec_c_r">
+          <bpmn:sourceRef>DOR_spec_c</bpmn:sourceRef>
+        </bpmn:dataInputAssociation>
+      </bpmn:userTask>
+
+      <bpmn:exclusiveGateway id="GB_changes" name="changes&#10;requested?">
+        <bpmn:documentation>obra/superpowers:skills/brainstorming/SKILL.md: if they request changes, make them and re-run the spec review loop. Only proceed once the user approves. The second human gate on this plane.</bpmn:documentation>
+        <bpmn:incoming>bf22</bpmn:incoming>
+        <bpmn:outgoing>bf23</bpmn:outgoing>
+        <bpmn:outgoing>bf24</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+
+      <bpmn:endEvent id="End_B" name="spec approved">
+        <bpmn:documentation>obra/superpowers:skills/brainstorming/SKILL.md, "Implementation": the only skill invoked next is writing-plans, which is the next box in the parent.</bpmn:documentation>
+        <bpmn:incoming>bf23</bpmn:incoming>
+      </bpmn:endEvent>
+
+      <bpmn:dataObjectReference id="DOR_spec_b" name="spec&#10;docs/superpowers/specs/" dataObjectRef="DO_spec" />
+      <bpmn:dataObjectReference id="DOR_spec_c" name="spec&#10;docs/superpowers/specs/" dataObjectRef="DO_spec" />
+
+      <bpmn:sequenceFlow id="bf1" sourceRef="Start_B" targetRef="B_explore" />
+      <bpmn:sequenceFlow id="bf2" sourceRef="B_explore" targetRef="GB_scope" />
+      <bpmn:sequenceFlow id="bf3" name="yes" sourceRef="GB_scope" targetRef="B_decompose" />
+      <bpmn:sequenceFlow id="bf4" sourceRef="B_decompose" targetRef="GB_qmerge" />
+      <bpmn:sequenceFlow id="bf5" name="no" sourceRef="GB_scope" targetRef="GB_qmerge" />
+      <bpmn:sequenceFlow id="bf6" sourceRef="GB_qmerge" targetRef="B_ask" />
+      <bpmn:sequenceFlow id="bf7" sourceRef="B_ask" targetRef="B_answer" />
+      <bpmn:sequenceFlow id="bf8" sourceRef="B_answer" targetRef="GB_understood" />
+      <bpmn:sequenceFlow id="bf9" name="yes" sourceRef="GB_understood" targetRef="B_approaches" />
+      <bpmn:sequenceFlow id="bf10" name="no, ask another" sourceRef="GB_understood" targetRef="GB_qmerge" />
+      <bpmn:sequenceFlow id="bf11" sourceRef="B_approaches" targetRef="GB_secmerge" />
+      <bpmn:sequenceFlow id="bf12" sourceRef="GB_secmerge" targetRef="B_section" />
+      <bpmn:sequenceFlow id="bf13" sourceRef="B_section" targetRef="GB_secok" />
+      <bpmn:sequenceFlow id="bf14" name="yes" sourceRef="GB_secok" targetRef="GB_more" />
+      <bpmn:sequenceFlow id="bf15" name="no, revise" sourceRef="GB_secok" targetRef="GB_secmerge" />
+      <bpmn:sequenceFlow id="bf16" name="yes" sourceRef="GB_more" targetRef="GB_secmerge" />
+      <bpmn:sequenceFlow id="bf17" name="no" sourceRef="GB_more" targetRef="GB_specmerge" />
+      <bpmn:sequenceFlow id="bf18" sourceRef="GB_specmerge" targetRef="B_write" />
+      <bpmn:sequenceFlow id="bf19" sourceRef="B_write" targetRef="B_commit" />
+      <bpmn:sequenceFlow id="bf20" sourceRef="B_commit" targetRef="B_selfreview" />
+      <bpmn:sequenceFlow id="bf21" sourceRef="B_selfreview" targetRef="B_review" />
+      <bpmn:sequenceFlow id="bf22" sourceRef="B_review" targetRef="GB_changes" />
+      <bpmn:sequenceFlow id="bf23" name="no" sourceRef="GB_changes" targetRef="End_B" />
+      <bpmn:sequenceFlow id="bf24" name="yes" sourceRef="GB_changes" targetRef="GB_specmerge" />
     </bpmn:subProcess>
     <bpmn:subProcess id="Sub_plan" name="Write the implementation plan">
       <bpmn:documentation>obra/superpowers:skills/writing-plans/SKILL.md. PLANE NOT YET DRAWN.
@@ -1381,7 +1579,270 @@ This is also where the controller's "Rulings I made" list surfaces — every dec
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
   <bpmndi:BPMNDiagram>
-    <bpmndi:BPMNPlane bpmnElement="Sub_brainstorm" />
+    <bpmndi:BPMNPlane id="Pl_Sub_brainstorm" bpmnElement="Sub_brainstorm">
+      <bpmndi:BPMNShape id="LB_human_di" bpmnElement="LB_human" isHorizontal="true" color:background-color="#fdf3f7" color:border-color="#9c8490">
+        <dc:Bounds x="160" y="0" width="4682" height="260" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="LB_agent_di" bpmnElement="LB_agent" isHorizontal="true" color:background-color="#fdf7ee" color:border-color="#9c8d76">
+        <dc:Bounds x="160" y="260" width="4682" height="300" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="LB_program_di" bpmnElement="LB_program" isHorizontal="true" color:background-color="#eef5f4" color:border-color="#7a918d">
+        <dc:Bounds x="160" y="560" width="4682" height="180" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Start_B_di" bpmnElement="Start_B">
+        <dc:Bounds x="250" y="362" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="213" y="405" width="110" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="B_explore_di" bpmnElement="B_explore">
+        <dc:Bounds x="356" y="325" width="250" height="110" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="GB_scope_di" bpmnElement="GB_scope" isMarkerVisible="true">
+        <dc:Bounds x="676" y="355" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="636" y="321" width="130" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="B_decompose_di" bpmnElement="B_decompose">
+        <dc:Bounds x="796" y="105" width="270" height="330" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="GB_qmerge_di" bpmnElement="GB_qmerge" isMarkerVisible="true">
+        <dc:Bounds x="1136" y="355" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="B_ask_di" bpmnElement="B_ask">
+        <dc:Bounds x="1256" y="325" width="250" height="110" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="B_answer_di" bpmnElement="B_answer">
+        <dc:Bounds x="1576" y="95" width="250" height="110" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="GB_understood_di" bpmnElement="GB_understood" isMarkerVisible="true">
+        <dc:Bounds x="1996" y="355" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1956" y="321" width="130" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="B_approaches_di" bpmnElement="B_approaches">
+        <dc:Bounds x="2116" y="325" width="270" height="110" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="GB_secmerge_di" bpmnElement="GB_secmerge" isMarkerVisible="true">
+        <dc:Bounds x="2456" y="355" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="B_section_di" bpmnElement="B_section">
+        <dc:Bounds x="2576" y="325" width="250" height="110" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="GB_secok_di" bpmnElement="GB_secok" isMarkerVisible="true">
+        <dc:Bounds x="2896" y="125" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2856" y="181" width="130" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="GB_more_di" bpmnElement="GB_more" isMarkerVisible="true">
+        <dc:Bounds x="3016" y="355" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2976" y="321" width="130" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="GB_specmerge_di" bpmnElement="GB_specmerge" isMarkerVisible="true">
+        <dc:Bounds x="3136" y="355" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="B_write_di" bpmnElement="B_write">
+        <dc:Bounds x="3256" y="325" width="250" height="110" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="B_commit_di" bpmnElement="B_commit">
+        <dc:Bounds x="3576" y="585" width="250" height="110" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="B_selfreview_di" bpmnElement="B_selfreview">
+        <dc:Bounds x="3896" y="325" width="250" height="110" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="B_review_di" bpmnElement="B_review">
+        <dc:Bounds x="4216" y="95" width="250" height="110" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="GB_changes_di" bpmnElement="GB_changes" isMarkerVisible="true">
+        <dc:Bounds x="4536" y="125" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4496" y="181" width="130" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_B_di" bpmnElement="End_B">
+        <dc:Bounds x="4656" y="362" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4619" y="405" width="110" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_spec_b_di" bpmnElement="DOR_spec_b" color:background-color="#eef2f9">
+        <dc:Bounds x="3363" y="460" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3407" y="465" width="150" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_spec_c_di" bpmnElement="DOR_spec_c" color:background-color="#eef2f9">
+        <dc:Bounds x="4323" y="290" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4367" y="295" width="150" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="bf1_di" bpmnElement="bf1">
+        <di:waypoint x="286" y="380" />
+        <di:waypoint x="356" y="380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="bf2_di" bpmnElement="bf2">
+        <di:waypoint x="606" y="380" />
+        <di:waypoint x="676" y="380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="bf3_di" bpmnElement="bf3">
+        <di:waypoint x="726" y="380" />
+        <di:waypoint x="796" y="380" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="732" y="360" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="bf4_di" bpmnElement="bf4">
+        <di:waypoint x="1066" y="380" />
+        <di:waypoint x="1136" y="380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="bf5_di" bpmnElement="bf5">
+        <di:waypoint x="701" y="405" />
+        <di:waypoint x="701" y="470" />
+        <di:waypoint x="1161" y="470" />
+        <di:waypoint x="1161" y="405" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="709" y="452" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="bf6_di" bpmnElement="bf6">
+        <di:waypoint x="1186" y="380" />
+        <di:waypoint x="1256" y="380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="bf7_di" bpmnElement="bf7">
+        <di:waypoint x="1506" y="380" />
+        <di:waypoint x="1541" y="380" />
+        <di:waypoint x="1541" y="150" />
+        <di:waypoint x="1576" y="150" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="bf8_di" bpmnElement="bf8">
+        <di:waypoint x="1826" y="150" />
+        <di:waypoint x="1911" y="150" />
+        <di:waypoint x="1911" y="380" />
+        <di:waypoint x="1996" y="380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="bf9_di" bpmnElement="bf9">
+        <di:waypoint x="2046" y="380" />
+        <di:waypoint x="2116" y="380" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2052" y="360" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="bf10_di" bpmnElement="bf10">
+        <di:waypoint x="2021" y="405" />
+        <di:waypoint x="2021" y="510" />
+        <di:waypoint x="1161" y="510" />
+        <di:waypoint x="1161" y="405" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2029" y="492" width="84" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="bf11_di" bpmnElement="bf11">
+        <di:waypoint x="2386" y="380" />
+        <di:waypoint x="2456" y="380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="bf12_di" bpmnElement="bf12">
+        <di:waypoint x="2506" y="380" />
+        <di:waypoint x="2576" y="380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="bf13_di" bpmnElement="bf13">
+        <di:waypoint x="2826" y="380" />
+        <di:waypoint x="2861" y="380" />
+        <di:waypoint x="2861" y="150" />
+        <di:waypoint x="2896" y="150" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="bf14_di" bpmnElement="bf14">
+        <di:waypoint x="2946" y="150" />
+        <di:waypoint x="2981" y="150" />
+        <di:waypoint x="2981" y="380" />
+        <di:waypoint x="3016" y="380" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2952" y="130" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="bf15_di" bpmnElement="bf15">
+        <di:waypoint x="2921" y="125" />
+        <di:waypoint x="2921" y="45" />
+        <di:waypoint x="2481" y="45" />
+        <di:waypoint x="2481" y="355" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2929" y="27" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="bf16_di" bpmnElement="bf16">
+        <di:waypoint x="3041" y="405" />
+        <di:waypoint x="3041" y="470" />
+        <di:waypoint x="2481" y="470" />
+        <di:waypoint x="2481" y="405" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3049" y="452" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="bf17_di" bpmnElement="bf17">
+        <di:waypoint x="3066" y="380" />
+        <di:waypoint x="3136" y="380" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3072" y="360" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="bf18_di" bpmnElement="bf18">
+        <di:waypoint x="3186" y="380" />
+        <di:waypoint x="3256" y="380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="bf19_di" bpmnElement="bf19">
+        <di:waypoint x="3506" y="380" />
+        <di:waypoint x="3541" y="380" />
+        <di:waypoint x="3541" y="640" />
+        <di:waypoint x="3576" y="640" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="bf20_di" bpmnElement="bf20">
+        <di:waypoint x="3826" y="640" />
+        <di:waypoint x="3861" y="640" />
+        <di:waypoint x="3861" y="380" />
+        <di:waypoint x="3896" y="380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="bf21_di" bpmnElement="bf21">
+        <di:waypoint x="4146" y="380" />
+        <di:waypoint x="4181" y="380" />
+        <di:waypoint x="4181" y="150" />
+        <di:waypoint x="4216" y="150" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="bf22_di" bpmnElement="bf22">
+        <di:waypoint x="4466" y="150" />
+        <di:waypoint x="4536" y="150" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="bf23_di" bpmnElement="bf23">
+        <di:waypoint x="4586" y="150" />
+        <di:waypoint x="4621" y="150" />
+        <di:waypoint x="4621" y="380" />
+        <di:waypoint x="4656" y="380" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4592" y="130" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="bf24_di" bpmnElement="bf24">
+        <di:waypoint x="4561" y="125" />
+        <di:waypoint x="4561" y="45" />
+        <di:waypoint x="3161" y="45" />
+        <di:waypoint x="3161" y="355" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4569" y="27" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DOR_spec_b_w_di" bpmnElement="DOR_spec_b_w">
+        <di:waypoint x="3381" y="435" />
+        <di:waypoint x="3381" y="460" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DOR_spec_c_r_di" bpmnElement="DOR_spec_c_r">
+        <di:waypoint x="4341" y="290" />
+        <di:waypoint x="4341" y="205" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
   <bpmndi:BPMNDiagram>
     <bpmndi:BPMNPlane bpmnElement="Sub_plan" />
