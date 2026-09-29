@@ -914,7 +914,7 @@ Drawn three times because its three users sit far apart: created at setup, appen
       <bpmn:association id="xas4" sourceRef="Note_redundancy" targetRef="CA_finalrerev" />
     </bpmn:subProcess>
     <bpmn:subProcess id="Sub_finish" name="Finish the branch">
-      <bpmn:documentation>obra/superpowers:skills/finishing-a-development-branch/SKILL.md, Steps 2 to 6. PLANE NOT YET DRAWN.
+      <bpmn:documentation>obra/superpowers:skills/finishing-a-development-branch/SKILL.md, Steps 2 to 6.
 
 Below this box: detect whether this is a normal repo, a named-branch worktree or a detached HEAD; confirm the base branch; present a three-option menu (merge locally, push and open a PR, keep the branch as-is); execute the choice, re-running the suite on the merged result if merging; then clean up the worktree.
 
@@ -923,6 +923,170 @@ Declared in HUMAN because the phase waits on the human's answer to the menu, and
 This is also where the controller's "Rulings I made" list surfaces — every decision the agent took on the human's behalf during execution, read at the moment they choose what to do with the branch.</bpmn:documentation>
       <bpmn:incoming>f17</bpmn:incoming>
       <bpmn:outgoing>f18</bpmn:outgoing>
+      <bpmn:laneSet id="LF_LS">
+        <bpmn:lane id="LF_human" name="HUMAN operator">
+          <bpmn:flowNodeRef>GF_choice</bpmn:flowNodeRef>
+        </bpmn:lane>
+        <bpmn:lane id="LF_agent" name="AI AGENT">
+          <bpmn:flowNodeRef>Start_F</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>F_base</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>F_menu</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>End_Fkept</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>F_stranded</bpmn:flowNodeRef>
+        </bpmn:lane>
+        <bpmn:lane id="LF_program" name="PROGRAM">
+          <bpmn:flowNodeRef>F_detect</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>F_merge</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>F_push</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>F_test</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>F_pr</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>GF_mgreen</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>End_Fpr</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>GF_cleanmerge</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>End_Fred</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>F_cleanup</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>GF_refused</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>F_delbranch</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>End_Fmerged</bpmn:flowNodeRef>
+        </bpmn:lane>
+      </bpmn:laneSet>
+
+      <bpmn:startEvent id="Start_F" name="suite green">
+        <bpmn:documentation>obra/superpowers:skills/finishing-a-development-branch/SKILL.md, Step 1, verify tests, is drawn in the parent as the full test suite and its green gateway, so this plane starts at Step 2. The agent announces "I'm using the finishing-a-development-branch skill to complete this work."</bpmn:documentation>
+        <bpmn:outgoing>ff1</bpmn:outgoing>
+      </bpmn:startEvent>
+
+      <bpmn:scriptTask id="F_detect" name="Detect the environment&#10;git rev-parse">
+        <bpmn:documentation>obra/superpowers:skills/finishing-a-development-branch/SKILL.md, Step 2: git rev-parse --git-dir, --git-common-dir and --show-toplevel, captured now because Step 5 changes directory before cleanup needs them. The result tells a normal repo from a worktree on a named branch from a detached HEAD, which sets both the menu and the cleanup.</bpmn:documentation>
+        <bpmn:incoming>ff1</bpmn:incoming>
+        <bpmn:outgoing>ff2</bpmn:outgoing>
+      </bpmn:scriptTask>
+
+      <bpmn:task id="F_base" name="Confirm the base branch&#10;finishing-a-development-branch">
+        <bpmn:documentation>obra/superpowers:skills/finishing-a-development-branch/SKILL.md, Step 3. Usually named in the plan, the conversation or the branch's upstream. If it is not known, the agent asks: "This branch split from &lt;your best guess&gt; - is that correct?" Drawn across HUMAN and AGENT because the human answers when asked. "Merging into the wrong base is expensive to undo."</bpmn:documentation>
+        <bpmn:incoming>ff2</bpmn:incoming>
+        <bpmn:outgoing>ff3</bpmn:outgoing>
+      </bpmn:task>
+
+      <bpmn:task id="F_menu" name="Present the options menu&#10;finishing-a-development-branch">
+        <bpmn:documentation>obra/superpowers:skills/finishing-a-development-branch/SKILL.md, Step 4. Exactly three options: merge locally, push and open a PR, keep the branch as-is. From a detached HEAD, only two: no local merge.
+
+Discarding the work is not on the menu. It happens only when the human asks for it in so many words, and then only after they type the word "discard". Like the four stop conditions on the Execute plane, it is a request that can arrive at any point rather than a step, so nothing draws it.</bpmn:documentation>
+        <bpmn:incoming>ff3</bpmn:incoming>
+        <bpmn:outgoing>ff4</bpmn:outgoing>
+      </bpmn:task>
+
+      <bpmn:exclusiveGateway id="GF_choice" name="which option?">
+        <bpmn:documentation>obra/superpowers:skills/finishing-a-development-branch/SKILL.md: "Wait for their answer; the integration decision is theirs." The one human gate on this plane.</bpmn:documentation>
+        <bpmn:incoming>ff4</bpmn:incoming>
+        <bpmn:outgoing>ff5</bpmn:outgoing>
+        <bpmn:outgoing>ff6</bpmn:outgoing>
+        <bpmn:outgoing>ff7</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+
+      <bpmn:scriptTask id="F_merge" name="Merge into the base branch&#10;git merge">
+        <bpmn:documentation>obra/superpowers:skills/finishing-a-development-branch/SKILL.md, Step 5, Option 1: from the main repo root, git checkout &lt;base-branch&gt;, git pull, git merge &lt;feature-branch&gt;.</bpmn:documentation>
+        <bpmn:incoming>ff5</bpmn:incoming>
+        <bpmn:outgoing>ff8</bpmn:outgoing>
+      </bpmn:scriptTask>
+
+      <bpmn:scriptTask id="F_push" name="Push the branch&#10;git push -u origin">
+        <bpmn:documentation>obra/superpowers:skills/finishing-a-development-branch/SKILL.md, Step 5, Option 2. From a detached HEAD, the new branch is named on the remote: git push origin HEAD:refs/heads/&lt;new-branch&gt;.</bpmn:documentation>
+        <bpmn:incoming>ff6</bpmn:incoming>
+        <bpmn:outgoing>ff18</bpmn:outgoing>
+      </bpmn:scriptTask>
+
+      <bpmn:endEvent id="End_Fkept" name="branch kept as-is,&#10;worktree preserved">
+        <bpmn:documentation>obra/superpowers:skills/finishing-a-development-branch/SKILL.md, Step 5, Option 3: report "Keeping branch &lt;name&gt;. Worktree preserved at &lt;path&gt;."</bpmn:documentation>
+        <bpmn:incoming>ff7</bpmn:incoming>
+      </bpmn:endEvent>
+
+      <bpmn:scriptTask id="F_test" name="Run the suite on the merged result&#10;npm test / pytest / cargo test / go test ./...">
+        <bpmn:documentation>obra/superpowers:skills/finishing-a-development-branch/SKILL.md, Step 5, Option 1: verify tests on the merged result. "A green run only proves the tree it ran on."</bpmn:documentation>
+        <bpmn:incoming>ff8</bpmn:incoming>
+        <bpmn:outgoing>ff9</bpmn:outgoing>
+      </bpmn:scriptTask>
+
+      <bpmn:scriptTask id="F_pr" name="Open the pull request&#10;gh pr create, or the forge's own CLI">
+        <bpmn:documentation>obra/superpowers:skills/finishing-a-development-branch/SKILL.md, Step 5, Option 2: create the pull or merge request against the base branch with the forge's tooling, following the repo's PR template, and report the URL.</bpmn:documentation>
+        <bpmn:incoming>ff18</bpmn:incoming>
+        <bpmn:outgoing>ff19</bpmn:outgoing>
+      </bpmn:scriptTask>
+
+      <bpmn:exclusiveGateway id="GF_mgreen" name="merged result&#10;green?">
+        <bpmn:documentation>obra/superpowers:skills/finishing-a-development-branch/SKILL.md. Decided by the suite's exit code, so it sits in PROGRAM like the suite-green gateway in the parent. "A failing merged result stops everything."</bpmn:documentation>
+        <bpmn:incoming>ff9</bpmn:incoming>
+        <bpmn:outgoing>ff10</bpmn:outgoing>
+        <bpmn:outgoing>ff11</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+
+      <bpmn:endEvent id="End_Fpr" name="PR open,&#10;worktree kept">
+        <bpmn:documentation>obra/superpowers:skills/finishing-a-development-branch/SKILL.md: keep the worktree, because the human iterates on PR feedback there. "It stays until the work lands."</bpmn:documentation>
+        <bpmn:incoming>ff19</bpmn:incoming>
+      </bpmn:endEvent>
+
+      <bpmn:exclusiveGateway id="GF_cleanmerge">
+        <bpmn:documentation>Unnamed merge. Cleanup returns here after the stranded files are dealt with.</bpmn:documentation>
+        <bpmn:incoming>ff10</bpmn:incoming>
+        <bpmn:incoming>ff16</bpmn:incoming>
+        <bpmn:outgoing>ff12</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+
+      <bpmn:endEvent id="End_Fred" name="merge red: branch&#10;and worktree kept">
+        <bpmn:documentation>obra/superpowers:skills/finishing-a-development-branch/SKILL.md: stop, leave the worktree and branch in place, and investigate. Nothing has been pushed, so the merge is local and recoverable.</bpmn:documentation>
+        <bpmn:incoming>ff11</bpmn:incoming>
+      </bpmn:endEvent>
+
+      <bpmn:scriptTask id="F_cleanup" name="Remove the worktree&#10;git worktree remove">
+        <bpmn:documentation>obra/superpowers:skills/finishing-a-development-branch/SKILL.md, Step 6, run from the main repo root with the paths captured in Step 2: git worktree remove, then git worktree prune. Only for worktrees superpowers created, under .worktrees/ or worktrees/. A normal repo has nothing to remove, and any other worktree belongs to the host and is left in place.</bpmn:documentation>
+        <bpmn:incoming>ff12</bpmn:incoming>
+        <bpmn:outgoing>ff13</bpmn:outgoing>
+      </bpmn:scriptTask>
+
+      <bpmn:exclusiveGateway id="GF_refused" name="removal&#10;refused?">
+        <bpmn:documentation>obra/superpowers:skills/finishing-a-development-branch/SKILL.md. git refuses when the worktree holds modified or untracked files: files that exist nowhere else. A program decides this one, so it sits in PROGRAM.</bpmn:documentation>
+        <bpmn:incoming>ff13</bpmn:incoming>
+        <bpmn:outgoing>ff14</bpmn:outgoing>
+        <bpmn:outgoing>ff15</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+
+      <bpmn:task id="F_stranded" name="Show the stranded files; commit, move or delete them as told&#10;finishing-a-development-branch">
+        <bpmn:documentation>obra/superpowers:skills/finishing-a-development-branch/SKILL.md, Step 6: never --force on the agent's own initiative. Show git status --porcelain -uall and ask: commit them to the branch, move them into the main repo root, or delete them. Carry out the choice, then remove the worktree. Drawn across HUMAN and AGENT because the human chooses and the agent carries it out.</bpmn:documentation>
+        <bpmn:incoming>ff15</bpmn:incoming>
+        <bpmn:outgoing>ff16</bpmn:outgoing>
+      </bpmn:task>
+
+      <bpmn:scriptTask id="F_delbranch" name="Delete the branch&#10;git branch -d">
+        <bpmn:documentation>obra/superpowers:skills/finishing-a-development-branch/SKILL.md, Step 5, Option 1: once the merged result is green and the worktree is gone, git branch -d &lt;feature-branch&gt;.</bpmn:documentation>
+        <bpmn:incoming>ff14</bpmn:incoming>
+        <bpmn:outgoing>ff17</bpmn:outgoing>
+      </bpmn:scriptTask>
+
+      <bpmn:endEvent id="End_Fmerged" name="merged locally,&#10;worktree removed">
+        <bpmn:documentation>obra/superpowers:skills/finishing-a-development-branch/SKILL.md, Quick Reference, option 1: merged, not pushed, worktree and branch cleaned up.</bpmn:documentation>
+        <bpmn:incoming>ff17</bpmn:incoming>
+      </bpmn:endEvent>
+
+
+      <bpmn:sequenceFlow id="ff1" sourceRef="Start_F" targetRef="F_detect" />
+      <bpmn:sequenceFlow id="ff2" sourceRef="F_detect" targetRef="F_base" />
+      <bpmn:sequenceFlow id="ff3" sourceRef="F_base" targetRef="F_menu" />
+      <bpmn:sequenceFlow id="ff4" sourceRef="F_menu" targetRef="GF_choice" />
+      <bpmn:sequenceFlow id="ff5" name="merge locally" sourceRef="GF_choice" targetRef="F_merge" />
+      <bpmn:sequenceFlow id="ff6" name="push and open a PR" sourceRef="GF_choice" targetRef="F_push" />
+      <bpmn:sequenceFlow id="ff7" name="keep as-is" sourceRef="GF_choice" targetRef="End_Fkept" />
+      <bpmn:sequenceFlow id="ff8" sourceRef="F_merge" targetRef="F_test" />
+      <bpmn:sequenceFlow id="ff9" sourceRef="F_test" targetRef="GF_mgreen" />
+      <bpmn:sequenceFlow id="ff10" name="yes" sourceRef="GF_mgreen" targetRef="GF_cleanmerge" />
+      <bpmn:sequenceFlow id="ff11" name="no" sourceRef="GF_mgreen" targetRef="End_Fred" />
+      <bpmn:sequenceFlow id="ff12" sourceRef="GF_cleanmerge" targetRef="F_cleanup" />
+      <bpmn:sequenceFlow id="ff13" sourceRef="F_cleanup" targetRef="GF_refused" />
+      <bpmn:sequenceFlow id="ff14" name="no" sourceRef="GF_refused" targetRef="F_delbranch" />
+      <bpmn:sequenceFlow id="ff15" name="yes" sourceRef="GF_refused" targetRef="F_stranded" />
+      <bpmn:sequenceFlow id="ff16" sourceRef="F_stranded" targetRef="GF_cleanmerge" />
+      <bpmn:sequenceFlow id="ff17" sourceRef="F_delbranch" targetRef="End_Fmerged" />
+      <bpmn:sequenceFlow id="ff18" sourceRef="F_push" targetRef="F_pr" />
+      <bpmn:sequenceFlow id="ff19" sourceRef="F_pr" targetRef="End_Fpr" />
     </bpmn:subProcess>
     <bpmn:sequenceFlow id="f1" sourceRef="Start_req" targetRef="Gate_merge_in" />
     <bpmn:sequenceFlow id="f8" name="yes — step up" sourceRef="Gate_upgrade_spike" targetRef="Gate_merge_in" />
@@ -2085,6 +2249,209 @@ This is also where the controller's "Rulings I made" list surfaces — every dec
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
   <bpmndi:BPMNDiagram>
-    <bpmndi:BPMNPlane bpmnElement="Sub_finish" />
+    <bpmndi:BPMNPlane id="Pl_Sub_finish" bpmnElement="Sub_finish">
+      <bpmndi:BPMNShape id="LF_human_di" bpmnElement="LF_human" isHorizontal="true" color:background-color="#fdf3f7" color:border-color="#9c8490">
+        <dc:Bounds x="160" y="0" width="3432" height="260" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="LF_agent_di" bpmnElement="LF_agent" isHorizontal="true" color:background-color="#fdf7ee" color:border-color="#9c8d76">
+        <dc:Bounds x="160" y="260" width="3432" height="300" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="LF_program_di" bpmnElement="LF_program" isHorizontal="true" color:background-color="#eef5f4" color:border-color="#7a918d">
+        <dc:Bounds x="160" y="560" width="3432" height="340" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Start_F_di" bpmnElement="Start_F">
+        <dc:Bounds x="250" y="362" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="213" y="405" width="110" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="F_detect_di" bpmnElement="F_detect">
+        <dc:Bounds x="356" y="585" width="250" height="110" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="F_base_di" bpmnElement="F_base">
+        <dc:Bounds x="676" y="105" width="250" height="330" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="F_menu_di" bpmnElement="F_menu">
+        <dc:Bounds x="996" y="325" width="250" height="110" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="GF_choice_di" bpmnElement="GF_choice" isMarkerVisible="true">
+        <dc:Bounds x="1316" y="125" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1276" y="105" width="130" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="F_merge_di" bpmnElement="F_merge">
+        <dc:Bounds x="1566" y="585" width="250" height="110" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="F_push_di" bpmnElement="F_push">
+        <dc:Bounds x="1566" y="745" width="250" height="110" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_Fkept_di" bpmnElement="End_Fkept">
+        <dc:Bounds x="1673" y="362" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1636" y="405" width="110" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="F_test_di" bpmnElement="F_test">
+        <dc:Bounds x="1886" y="585" width="250" height="110" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="F_pr_di" bpmnElement="F_pr">
+        <dc:Bounds x="1886" y="745" width="250" height="110" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="GF_mgreen_di" bpmnElement="GF_mgreen" isMarkerVisible="true">
+        <dc:Bounds x="2206" y="615" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2166" y="581" width="130" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_Fpr_di" bpmnElement="End_Fpr">
+        <dc:Bounds x="2213" y="782" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2176" y="825" width="110" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="GF_cleanmerge_di" bpmnElement="GF_cleanmerge" isMarkerVisible="true">
+        <dc:Bounds x="2326" y="615" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_Fred_di" bpmnElement="End_Fred">
+        <dc:Bounds x="2333" y="782" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2296" y="825" width="110" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="F_cleanup_di" bpmnElement="F_cleanup">
+        <dc:Bounds x="2446" y="585" width="250" height="110" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="GF_refused_di" bpmnElement="GF_refused" isMarkerVisible="true">
+        <dc:Bounds x="2866" y="615" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2826" y="671" width="130" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="F_stranded_di" bpmnElement="F_stranded">
+        <dc:Bounds x="2766" y="105" width="250" height="330" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="F_delbranch_di" bpmnElement="F_delbranch">
+        <dc:Bounds x="3086" y="585" width="250" height="110" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_Fmerged_di" bpmnElement="End_Fmerged">
+        <dc:Bounds x="3406" y="622" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3369" y="665" width="110" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="ff1_di" bpmnElement="ff1">
+        <di:waypoint x="286" y="380" />
+        <di:waypoint x="321" y="380" />
+        <di:waypoint x="321" y="640" />
+        <di:waypoint x="356" y="640" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="ff2_di" bpmnElement="ff2">
+        <di:waypoint x="606" y="640" />
+        <di:waypoint x="641" y="640" />
+        <di:waypoint x="641" y="380" />
+        <di:waypoint x="676" y="380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="ff3_di" bpmnElement="ff3">
+        <di:waypoint x="926" y="380" />
+        <di:waypoint x="996" y="380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="ff4_di" bpmnElement="ff4">
+        <di:waypoint x="1246" y="380" />
+        <di:waypoint x="1281" y="380" />
+        <di:waypoint x="1281" y="150" />
+        <di:waypoint x="1316" y="150" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="ff5_di" bpmnElement="ff5">
+        <di:waypoint x="1366" y="150" />
+        <di:waypoint x="1426" y="150" />
+        <di:waypoint x="1426" y="640" />
+        <di:waypoint x="1566" y="640" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1434" y="622" width="73" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="ff6_di" bpmnElement="ff6">
+        <di:waypoint x="1366" y="150" />
+        <di:waypoint x="1426" y="150" />
+        <di:waypoint x="1426" y="800" />
+        <di:waypoint x="1566" y="800" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1434" y="782" width="101" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="ff7_di" bpmnElement="ff7">
+        <di:waypoint x="1366" y="150" />
+        <di:waypoint x="1426" y="150" />
+        <di:waypoint x="1426" y="380" />
+        <di:waypoint x="1673" y="380" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1434" y="362" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="ff8_di" bpmnElement="ff8">
+        <di:waypoint x="1816" y="640" />
+        <di:waypoint x="1886" y="640" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="ff9_di" bpmnElement="ff9">
+        <di:waypoint x="2136" y="640" />
+        <di:waypoint x="2206" y="640" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="ff10_di" bpmnElement="ff10">
+        <di:waypoint x="2256" y="640" />
+        <di:waypoint x="2326" y="640" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2262" y="620" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="ff11_di" bpmnElement="ff11">
+        <di:waypoint x="2231" y="665" />
+        <di:waypoint x="2231" y="722" />
+        <di:waypoint x="2351" y="722" />
+        <di:waypoint x="2351" y="782" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2239" y="700" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="ff12_di" bpmnElement="ff12">
+        <di:waypoint x="2376" y="640" />
+        <di:waypoint x="2446" y="640" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="ff13_di" bpmnElement="ff13">
+        <di:waypoint x="2696" y="640" />
+        <di:waypoint x="2866" y="640" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="ff14_di" bpmnElement="ff14">
+        <di:waypoint x="2916" y="640" />
+        <di:waypoint x="3086" y="640" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2922" y="620" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="ff15_di" bpmnElement="ff15">
+        <di:waypoint x="2891" y="615" />
+        <di:waypoint x="2891" y="435" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2899" y="585" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="ff16_di" bpmnElement="ff16">
+        <di:waypoint x="2766" y="380" />
+        <di:waypoint x="2351" y="380" />
+        <di:waypoint x="2351" y="615" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="ff17_di" bpmnElement="ff17">
+        <di:waypoint x="3336" y="640" />
+        <di:waypoint x="3406" y="640" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="ff18_di" bpmnElement="ff18">
+        <di:waypoint x="1816" y="800" />
+        <di:waypoint x="1886" y="800" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="ff19_di" bpmnElement="ff19">
+        <di:waypoint x="2136" y="800" />
+        <di:waypoint x="2213" y="800" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
 </bpmn:definitions>
