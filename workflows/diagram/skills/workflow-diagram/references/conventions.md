@@ -129,9 +129,13 @@ Never put anything a reader needs somewhere only one renderer shows it.
 
 ## Stating what determines correctness **(ours)**
 
-**A check is a step.** Draw it as a box in the lane of whoever adjudicates. That encodes what
-determines correctness with no new notation, and where nothing adjudicates there is simply no
-box — an absence a reader can see, rather than a claim they have to take on trust.
+**A check is two steps: producing the evidence, and deciding on it.** Each goes in the lane of
+whoever performs it. A test suite that runs is a PROGRAM step; "suite green?" is a decision in
+the lane of whoever reads the result. A reviewer writing findings is an AI AGENT step; the
+controller deciding what they mean is another. Lanes never mean who is responsible for the
+result being right, only who does the action. Split this way, the diagram encodes what
+determines correctness with no new notation, and where nothing decides there is simply no
+box: an absence a reader can see, rather than a claim they have to take on trust.
 
 Don't restate it in a text annotation. Two related lines have proper homes:
 

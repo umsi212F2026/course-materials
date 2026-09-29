@@ -45,21 +45,26 @@ and the prose disagreed.
 
 ## Three lanes
 
-`HUMAN operator` / `AI AGENT` / `PROGRAM`. **A lane set is a partition** — a node joins at most
-one lane, so a lane names the single role a step sits with: whoever it waits on, or is
-accountable for it.
+`HUMAN operator` / `AI AGENT` / `PROGRAM`. **A lane names who performs the action**: not who
+is accountable for it, and not who decides whether it came out right. A script the agent
+invokes goes in PROGRAM, because the program does the work. A lane set is a partition (a node
+joins at most one lane), so a step with more than one performer needs the treatment below.
 
 A step run by more than one party is said two ways instead. Its **type** carries the hybrid — a
 plain `<bpmn:task>` with no icon means "not simply one kind of performer", and subprocesses
-have no type marker at all, so they already say it. Its **lane** names the primary role. A box
+have no type marker at all, so they already say it. Its **lane** names the main performer. A box
 may still be _drawn_ across two bands; the geometry then says more than the model can, which is
 fine as long as the lane it claims is one it sits in.
 
 Don't try to leave a node lane-less to mean "both". bpmn-js assigns the lane a box mostly
 overlaps whenever you move it, so that only survives until the next nudge.
 
-An empty stretch of the PROGRAM lane is an argument, not a gap: it shows how little is
-machine-adjudicated. Don't fill it to be tidy.
+**A check is two steps.** The step that produces evidence (a script writing a diff, a suite
+running, a reviewer writing findings) goes in the lane of whoever produces it. The decision
+that reads the evidence is a separate step, usually a gateway, in the lane of whoever makes
+it. Kept apart, they show both how much has been formalized into programs and who still makes
+each call. If a phase has no machine decision at all and that matters, say so in a text
+annotation; never pull programs out of PROGRAM to make the point.
 
 ## Working with Paul
 
