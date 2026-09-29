@@ -340,6 +340,7 @@ The skill ends by offering the human a choice of executor — subagent-driven or
       </bpmn:dataOutputAssociation>
       <bpmn:laneSet id="LW_LS">
         <bpmn:lane id="LW_human" name="HUMAN operator">
+          <bpmn:flowNodeRef>W_respond</bpmn:flowNodeRef>
           <bpmn:flowNodeRef>W_choose</bpmn:flowNodeRef>
         </bpmn:lane>
         <bpmn:lane id="LW_agent" name="AI AGENT">
@@ -366,13 +367,18 @@ The skill ends by offering the human a choice of executor — subagent-driven or
         <bpmn:outgoing>wf2</bpmn:outgoing>
         <bpmn:outgoing>wf4</bpmn:outgoing>
       </bpmn:exclusiveGateway>
-      <bpmn:task id="W_split" name="Suggest one plan per subsystem&#10;writing-plans">
+      <bpmn:task id="W_split" name="Ask whether one plan or one per subsystem&#10;writing-plans">
         <bpmn:documentation>obra/superpowers:skills/writing-plans/SKILL.md, "Scope Check": suggest breaking this into separate plans, one per subsystem, each producing working, testable software on its own.
 
-Drawn across HUMAN and AGENT because it is a suggestion the human answers. The skill does not say what happens next; this diagram assumes the plan is then written for the first subsystem, as brainstorming does with sub-projects. Nothing records the others.</bpmn:documentation>
+The skill does not say what happens after the human answers, so no branch is drawn. This diagram assumes the plan is then written for the first subsystem, as brainstorming does with sub-projects. Nothing records the others.</bpmn:documentation>
         <bpmn:incoming>wf2</bpmn:incoming>
-        <bpmn:outgoing>wf3</bpmn:outgoing>
+        <bpmn:outgoing>wf12</bpmn:outgoing>
       </bpmn:task>
+      <bpmn:userTask id="W_respond" name="Respond">
+        <bpmn:documentation>obra/superpowers:skills/writing-plans/SKILL.md, "Scope Check". The human answers the suggestion to split. The skill is silent on how the answer changes what follows.</bpmn:documentation>
+        <bpmn:incoming>wf12</bpmn:incoming>
+        <bpmn:outgoing>wf3</bpmn:outgoing>
+      </bpmn:userTask>
       <bpmn:exclusiveGateway id="GW_merge">
         <bpmn:documentation>Unnamed merge.</bpmn:documentation>
         <bpmn:incoming>wf3</bpmn:incoming>
@@ -425,7 +431,8 @@ The skill never says to commit the plan, so no git step is drawn here. finishing
       <bpmn:dataObjectReference id="DOR_plan_w" name="plan&#10;docs/superpowers/plans/" dataObjectRef="DO_plan" />
       <bpmn:sequenceFlow id="wf1" sourceRef="Start_W" targetRef="GW_scope" />
       <bpmn:sequenceFlow id="wf2" name="yes" sourceRef="GW_scope" targetRef="W_split" />
-      <bpmn:sequenceFlow id="wf3" sourceRef="W_split" targetRef="GW_merge" />
+      <bpmn:sequenceFlow id="wf12" sourceRef="W_split" targetRef="W_respond" />
+      <bpmn:sequenceFlow id="wf3" sourceRef="W_respond" targetRef="GW_merge" />
       <bpmn:sequenceFlow id="wf4" name="no" sourceRef="GW_scope" targetRef="GW_merge" />
       <bpmn:sequenceFlow id="wf5" sourceRef="GW_merge" targetRef="W_files" />
       <bpmn:sequenceFlow id="wf6" sourceRef="W_files" targetRef="W_tasks" />
@@ -892,7 +899,9 @@ This is also where the controller's "Rulings I made" list surfaces — every dec
       <bpmn:outgoing>f18</bpmn:outgoing>
       <bpmn:laneSet id="LF_LS">
         <bpmn:lane id="LF_human" name="HUMAN operator">
+          <bpmn:flowNodeRef>F_baseresp</bpmn:flowNodeRef>
           <bpmn:flowNodeRef>GF_choice</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>F_strandresp</bpmn:flowNodeRef>
         </bpmn:lane>
         <bpmn:lane id="LF_agent" name="AI AGENT">
           <bpmn:flowNodeRef>Start_F</bpmn:flowNodeRef>
@@ -900,6 +909,7 @@ This is also where the controller's "Rulings I made" list surfaces — every dec
           <bpmn:flowNodeRef>F_menu</bpmn:flowNodeRef>
           <bpmn:flowNodeRef>End_Fkept</bpmn:flowNodeRef>
           <bpmn:flowNodeRef>F_stranded</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>F_strandact</bpmn:flowNodeRef>
         </bpmn:lane>
         <bpmn:lane id="LF_program" name="PROGRAM">
           <bpmn:flowNodeRef>F_detect</bpmn:flowNodeRef>
@@ -926,11 +936,18 @@ This is also where the controller's "Rulings I made" list surfaces — every dec
         <bpmn:incoming>ff1</bpmn:incoming>
         <bpmn:outgoing>ff2</bpmn:outgoing>
       </bpmn:scriptTask>
-      <bpmn:task id="F_base" name="Confirm the base branch&#10;finishing-a-development-branch">
-        <bpmn:documentation>obra/superpowers:skills/finishing-a-development-branch/SKILL.md, Step 3. Usually named in the plan, the conversation or the branch's upstream. If it is not known, the agent asks: "This branch split from &lt;your best guess&gt; - is that correct?" Drawn across HUMAN and AGENT because the human answers when asked. "Merging into the wrong base is expensive to undo."</bpmn:documentation>
+      <bpmn:task id="F_base" name="Ask the human to confirm the base branch&#10;finishing-a-development-branch">
+        <bpmn:documentation>obra/superpowers:skills/finishing-a-development-branch/SKILL.md, Step 3. Usually named in the plan, the conversation or the branch's upstream. If it is not known, the agent asks: "This branch split from &lt;your best guess&gt; - is that correct?" "Merging into the wrong base is expensive to undo."
+
+The skill asks only when the base is not already known. This diagram draws the ask every time rather than add a gateway for that condition.</bpmn:documentation>
         <bpmn:incoming>ff2</bpmn:incoming>
-        <bpmn:outgoing>ff3</bpmn:outgoing>
+        <bpmn:outgoing>ff20</bpmn:outgoing>
       </bpmn:task>
+      <bpmn:userTask id="F_baseresp" name="Respond">
+        <bpmn:documentation>obra/superpowers:skills/finishing-a-development-branch/SKILL.md, Step 3. The human confirms or corrects the base branch.</bpmn:documentation>
+        <bpmn:incoming>ff20</bpmn:incoming>
+        <bpmn:outgoing>ff3</bpmn:outgoing>
+      </bpmn:userTask>
       <bpmn:task id="F_menu" name="Present the options menu&#10;finishing-a-development-branch">
         <bpmn:documentation>obra/superpowers:skills/finishing-a-development-branch/SKILL.md, Step 4. Exactly three options: merge locally, push and open a PR, keep the branch as-is. From a detached HEAD, only two: no local merge.
 
@@ -1000,9 +1017,19 @@ Discarding the work is not on the menu. It happens only when the human asks for 
         <bpmn:outgoing>ff14</bpmn:outgoing>
         <bpmn:outgoing>ff15</bpmn:outgoing>
       </bpmn:exclusiveGateway>
-      <bpmn:task id="F_stranded" name="Show the stranded files; commit, move or delete them as told&#10;finishing-a-development-branch">
-        <bpmn:documentation>obra/superpowers:skills/finishing-a-development-branch/SKILL.md, Step 6: never --force on the agent's own initiative. Show git status --porcelain -uall and ask: commit them to the branch, move them into the main repo root, or delete them. Carry out the choice, then remove the worktree. Drawn across HUMAN and AGENT because the human chooses and the agent carries it out.</bpmn:documentation>
+      <bpmn:task id="F_stranded" name="Show the stranded files and ask: commit, move or delete?&#10;finishing-a-development-branch">
+        <bpmn:documentation>obra/superpowers:skills/finishing-a-development-branch/SKILL.md, Step 6: never --force on the agent's own initiative. Show git status --porcelain -uall and ask: commit them to the branch, move them into the main repo root, or delete them (unrecoverable).</bpmn:documentation>
         <bpmn:incoming>ff15</bpmn:incoming>
+        <bpmn:outgoing>ff21</bpmn:outgoing>
+      </bpmn:task>
+      <bpmn:userTask id="F_strandresp" name="Respond">
+        <bpmn:documentation>obra/superpowers:skills/finishing-a-development-branch/SKILL.md, Step 6. The human chooses commit, move or delete. The three choices all end with the worktree removable, so no branch is drawn.</bpmn:documentation>
+        <bpmn:incoming>ff21</bpmn:incoming>
+        <bpmn:outgoing>ff22</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:task id="F_strandact" name="Commit, move or delete them as told&#10;finishing-a-development-branch">
+        <bpmn:documentation>obra/superpowers:skills/finishing-a-development-branch/SKILL.md, Step 6: carry out the choice, then remove the worktree.</bpmn:documentation>
+        <bpmn:incoming>ff22</bpmn:incoming>
         <bpmn:outgoing>ff16</bpmn:outgoing>
       </bpmn:task>
       <bpmn:scriptTask id="F_delbranch" name="Delete the branch&#10;git branch -d">
@@ -1016,7 +1043,8 @@ Discarding the work is not on the menu. It happens only when the human asks for 
       </bpmn:endEvent>
       <bpmn:sequenceFlow id="ff1" sourceRef="Start_F" targetRef="F_detect" />
       <bpmn:sequenceFlow id="ff2" sourceRef="F_detect" targetRef="F_base" />
-      <bpmn:sequenceFlow id="ff3" sourceRef="F_base" targetRef="F_menu" />
+      <bpmn:sequenceFlow id="ff20" sourceRef="F_base" targetRef="F_baseresp" />
+      <bpmn:sequenceFlow id="ff3" sourceRef="F_baseresp" targetRef="F_menu" />
       <bpmn:sequenceFlow id="ff4" sourceRef="F_menu" targetRef="GF_choice" />
       <bpmn:sequenceFlow id="ff5" name="merge locally" sourceRef="GF_choice" targetRef="F_merge" />
       <bpmn:sequenceFlow id="ff6" name="push and open a PR" sourceRef="GF_choice" targetRef="F_push" />
@@ -1029,7 +1057,9 @@ Discarding the work is not on the menu. It happens only when the human asks for 
       <bpmn:sequenceFlow id="ff13" sourceRef="F_cleanup" targetRef="GF_refused" />
       <bpmn:sequenceFlow id="ff14" name="no" sourceRef="GF_refused" targetRef="F_delbranch" />
       <bpmn:sequenceFlow id="ff15" name="yes" sourceRef="GF_refused" targetRef="F_stranded" />
-      <bpmn:sequenceFlow id="ff16" sourceRef="F_stranded" targetRef="GF_cleanmerge" />
+      <bpmn:sequenceFlow id="ff21" sourceRef="F_stranded" targetRef="F_strandresp" />
+      <bpmn:sequenceFlow id="ff22" sourceRef="F_strandresp" targetRef="F_strandact" />
+      <bpmn:sequenceFlow id="ff16" sourceRef="F_strandact" targetRef="GF_cleanmerge" />
       <bpmn:sequenceFlow id="ff17" sourceRef="F_delbranch" targetRef="End_Fmerged" />
       <bpmn:sequenceFlow id="ff18" sourceRef="F_push" targetRef="F_pr" />
       <bpmn:sequenceFlow id="ff19" sourceRef="F_pr" targetRef="End_Fpr" />
@@ -2087,7 +2117,10 @@ Discarding the work is not on the menu. It happens only when the human asks for 
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="W_split_di" bpmnElement="W_split">
-        <dc:Bounds x="496" y="105" width="250" height="330" />
+        <dc:Bounds x="496" y="325" width="250" height="110" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="W_respond_di" bpmnElement="W_respond">
+        <dc:Bounds x="496" y="95" width="250" height="110" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="GW_merge_di" bpmnElement="GW_merge" isMarkerVisible="true">
         <dc:Bounds x="816" y="355" width="50" height="50" />
@@ -2147,9 +2180,14 @@ Discarding the work is not on the menu. It happens only when the human asks for 
           <dc:Bounds x="412" y="360" width="20" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="wf12_di" bpmnElement="wf12">
+        <di:waypoint x="621" y="325" />
+        <di:waypoint x="621" y="205" />
+      </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="wf3_di" bpmnElement="wf3">
-        <di:waypoint x="746" y="380" />
-        <di:waypoint x="816" y="380" />
+        <di:waypoint x="746" y="150" />
+        <di:waypoint x="841" y="150" />
+        <di:waypoint x="841" y="355" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="wf4_di" bpmnElement="wf4">
         <di:waypoint x="381" y="405" />
@@ -2215,7 +2253,10 @@ Discarding the work is not on the menu. It happens only when the human asks for 
         <dc:Bounds x="356" y="585" width="250" height="110" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="F_base_di" bpmnElement="F_base">
-        <dc:Bounds x="676" y="105" width="250" height="330" />
+        <dc:Bounds x="676" y="325" width="250" height="110" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="F_baseresp_di" bpmnElement="F_baseresp">
+        <dc:Bounds x="676" y="95" width="250" height="110" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="F_menu_di" bpmnElement="F_menu">
         <dc:Bounds x="996" y="325" width="250" height="110" />
@@ -2275,7 +2316,13 @@ Discarding the work is not on the menu. It happens only when the human asks for 
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="F_stranded_di" bpmnElement="F_stranded">
-        <dc:Bounds x="2766" y="105" width="250" height="330" />
+        <dc:Bounds x="2766" y="325" width="250" height="110" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="F_strandresp_di" bpmnElement="F_strandresp">
+        <dc:Bounds x="2766" y="95" width="250" height="110" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="F_strandact_di" bpmnElement="F_strandact">
+        <dc:Bounds x="2446" y="325" width="250" height="110" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="F_delbranch_di" bpmnElement="F_delbranch">
         <dc:Bounds x="3086" y="585" width="250" height="110" />
@@ -2298,8 +2345,14 @@ Discarding the work is not on the menu. It happens only when the human asks for 
         <di:waypoint x="641" y="380" />
         <di:waypoint x="676" y="380" />
       </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="ff20_di" bpmnElement="ff20">
+        <di:waypoint x="801" y="325" />
+        <di:waypoint x="801" y="205" />
+      </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="ff3_di" bpmnElement="ff3">
-        <di:waypoint x="926" y="380" />
+        <di:waypoint x="926" y="150" />
+        <di:waypoint x="961" y="150" />
+        <di:waypoint x="961" y="380" />
         <di:waypoint x="996" y="380" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="ff4_di" bpmnElement="ff4">
@@ -2381,8 +2434,17 @@ Discarding the work is not on the menu. It happens only when the human asks for 
           <dc:Bounds x="2899" y="585" width="20" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="ff21_di" bpmnElement="ff21">
+        <di:waypoint x="2891" y="325" />
+        <di:waypoint x="2891" y="205" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="ff22_di" bpmnElement="ff22">
+        <di:waypoint x="2766" y="150" />
+        <di:waypoint x="2571" y="150" />
+        <di:waypoint x="2571" y="325" />
+      </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="ff16_di" bpmnElement="ff16">
-        <di:waypoint x="2766" y="380" />
+        <di:waypoint x="2446" y="380" />
         <di:waypoint x="2351" y="380" />
         <di:waypoint x="2351" y="615" />
       </bpmndi:BPMNEdge>
