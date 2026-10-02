@@ -7,6 +7,7 @@
 //   Unadjudicated — when there was no attempt to rule on, or the learner asserted it:
 //     node workflows/learn/tools/record-attempt.mjs <topic> <goal-id> <label> --outcome abandoned
 //     ... --outcome declared    the learner saying they've got it
+//     ... --outcome elsewhere   the learner did it in class or on a problem set (put where in --note)
 //
 //   --tags a,b                   what the supply returned. From the closed set in lib/slots.mjs
 //   --source study|review|quiz|scan  defaults to study. `quiz` is a practice quiz, whose passes
@@ -53,7 +54,7 @@ const USAGE = `usage:
   node workflows/learn/tools/record-attempt.mjs <topic> <goal-id> <label> --outcome <what>
 
   --axes '{"unaided":"yes|no|unclear","criterion":"met|not met|unclear|unchecked"}'
-  --outcome abandoned | declared
+  --outcome abandoned | declared | elsewhere
   --tags ${Object.keys(TAGS).join(',')}
   --source study | review | quiz | scan   (default study)
   --note "..."`;
@@ -174,7 +175,7 @@ if (flags.axes) {
 } else {
   // `aided` used to live here and is gone. It is now an ordinary attempt with ordinary axes —
   // `unaided: no, criterion: unchecked` — which says more than the outcome word did.
-  const OUTCOMES = ['abandoned', 'declared'];
+  const OUTCOMES = ['abandoned', 'declared', 'elsewhere'];
   if (!OUTCOMES.includes(flags.outcome)) die(`--outcome must be one of: ${OUTCOMES.join(', ')}`);
   record.outcome = flags.outcome;
 }

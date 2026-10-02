@@ -28,7 +28,7 @@ import { readStatus, foldStatus } from './status.mjs';
 //   source      study | review | scan
 //   unaided     yes | no | unclear                        \  the adjudicator's two axes,
 //   criterion   met | not met | unclear | unchecked        /  passed through raw
-//   outcome     abandoned | declared — the caller's own observation, when there was no attempt
+//   outcome     abandoned | declared | elsewhere — the caller's own observation, when there was no attempt
 //               to rule on or the learner asserted it themselves. Exclusive with the two axes
 //   note        optional free text, e.g. why they stopped
 //
