@@ -27,12 +27,18 @@ export function run(script, args) {
     cwd: ROOT,
     encoding: 'utf8',
   });
-  return { code: r.status, stdout: r.stdout, stderr: r.stderr };
+  // A failed spawn leaves status null and stderr null; say why, so a test fails readably.
+  return { code: r.status, stdout: r.stdout, stderr: r.error ? String(r.error.message) : r.stderr };
 }
 
 // survey.mjs takes the topic folder as a path, and --dir for the folder holding topics.
 export function survey(dir) {
-  return JSON.parse(run('survey.mjs', ['--dir', dirname(dir), dir]).stdout);
+  const r = run('survey.mjs', ['--dir', dirname(dir), dir]);
+  try {
+    return JSON.parse(r.stdout);
+  } catch {
+    throw new Error(`survey.mjs did not print JSON (exit ${r.code}). stderr: ${r.stderr}`);
+  }
 }
 
 export const CAP_GOAL = (id, extra = '') =>
