@@ -1,6 +1,9 @@
 // Shared by the tool tests. Each test builds a throwaway topic folder, runs the real tool as a
 // subprocess, and checks what it prints or writes, so the tests exercise the same entry points
 // the skills do.
+//
+// Run the suite from the repo root with: node --test 'workflows/learn/tools/test/*.test.mjs'
+// (quoted, so Node expands the glob itself; the bare directory form fails on Node 22).
 import { mkdtempSync, mkdirSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, dirname, resolve } from 'node:path';

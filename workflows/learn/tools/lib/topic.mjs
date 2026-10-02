@@ -324,6 +324,9 @@ export function surveyTopic(dir) {
       // been passed, or given up, is no longer waiting on anything, whatever the log last said
       // about a deferral.
       deferred: isMet || isRetired ? null : (status.deferredGoals.get(goal.id) ?? null),
+      // EVER RESUMED, whatever the goal's state now. The study tutor reads this to tell a goal the
+      // learner already chose to do here from one it has not yet offered the first-encounter menu.
+      resumed: status.resumedGoals.has(goal.id),
       attempts: attempts.length,
       last: describeAttempts(attempts),
     };

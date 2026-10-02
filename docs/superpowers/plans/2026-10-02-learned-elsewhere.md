@@ -19,7 +19,7 @@
 - New outcome: `elsewhere`. `met()` treats it exactly like `declared`.
 - New phase name, exactly: `waiting elsewhere`.
 - Display strings, exactly: `done elsewhere (<note>)`, or `done elsewhere` with no note; `you said so` for `declared`; `deferred: <where>` in the survey listing.
-- Test command: `node --test workflows/learn/tools/test/`
+- Test command: `node --test 'workflows/learn/tools/test/*.test.mjs'` (the bare directory form fails on Node 22)
 
 ## Review Focus
 
@@ -57,7 +57,7 @@ test('declared after a miss meets the bar and schedules review in 3 days', () =>
 });
 ```
 
-- [ ] **Step 2: Run it.** `node --test workflows/learn/tools/test/`. Expected: PASS. This is a characterization test of existing behavior; if it fails, fix the helpers, not the tools.
+- [ ] **Step 2: Run it.** `node --test 'workflows/learn/tools/test/*.test.mjs'`. Expected: PASS. This is a characterization test of existing behavior; if it fails, fix the helpers, not the tools.
 
 - [ ] **Step 3: Commit.** `git add workflows/learn/tools/test && git commit -m "Start a test suite for the learn tools"`
 

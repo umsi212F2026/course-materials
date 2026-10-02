@@ -179,8 +179,8 @@ export function appendStatus(dir, kindName, { goal, needs, why, reason, where } 
   // be asked about when the goal comes up again, and a deferral that names no place is one nobody
   // can tell from a goal that was simply forgotten.
   if (kindName === 'deferred') {
-    if (!where) throw new Error(`deferred has to say where it will be learned.`);
-    event.where = where;
+    if (!where?.trim()) throw new Error(`deferred has to say where it will be learned.`);
+    event.where = where.trim();
   }
 
   mkdirSync(dir, { recursive: true });
@@ -210,7 +210,10 @@ export function readStatus(dir) {
 //   retired       the learner's reason, or null. Reviving is an event, not a deletion
 //   retiredGoals  goal id → their reason, for the goals given up one at a time
 //   deferredGoals goal id → where it will be learned, for goals set aside until then. Always
-//                 one goal; `resumed` deletes the entry, and the last event wins
+//                 one goal; `resumed` deletes the entry, and the last event wins. Retiring does
+//                 not clear a deferral, so defer, retire, revive brings the old `where` back
+//   resumedGoals  the set of goal ids that have ever had a `resumed` event. Never removed: it is
+//                 the proof the learner already chose to study the goal here
 //   outstanding   one item per goal that has work waiting, in the order the work arrived
 //   announced     every goal the queue has ever heard of
 //
@@ -240,6 +243,7 @@ export function foldStatus(events) {
   let retired = null;
   const retiredGoals = new Map();
   const deferredGoals = new Map();
+  const resumedGoals = new Set();
   const outstanding = new Map();
   const announced = new Set();
 
@@ -259,7 +263,10 @@ export function foldStatus(events) {
       if (e.goal) retiredGoals.delete(e.goal);
       else retired = null;
     } else if (e.kind === 'deferred') deferredGoals.set(e.goal, e.where ?? '');
-    else if (e.kind === 'resumed') deferredGoals.delete(e.goal);
+    else if (e.kind === 'resumed') {
+      deferredGoals.delete(e.goal);
+      resumedGoals.add(e.goal);
+    }
     else if (kind.clears) outstanding.delete(e.goal);
     else if (kind.needs)
       outstanding.set(e.goal, {
@@ -270,5 +277,5 @@ export function foldStatus(events) {
       });
   }
 
-  return { created, retired, retiredGoals, deferredGoals, announced, outstanding: [...outstanding.values()] };
+  return { created, retired, retiredGoals, deferredGoals, resumedGoals, announced, outstanding: [...outstanding.values()] };
 }

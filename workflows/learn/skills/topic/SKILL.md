@@ -41,8 +41,9 @@ It hands you two things: **the phase**, and **what's outstanding**. These six ro
 phases it derives. Where they disagree with the program, the program is right and this has gone
 stale.
 
-| `goals.md` with no goal in the default group                        | nothing has started. Goal setting.                    |
+|                                                                     |                                                       |
 | ------------------------------------------------------------------- | ----------------------------------------------------- |
+| `goals.md` with no goal in the default group                        | nothing has started. Goal setting.                    |
 | goals, no live activities                                           | curation, then study.                                 |
 | live activities, required goals unmet                               | study.                                                |
 | every required goal met, retired or deferred; at least one deferred | `waiting elsewhere`. Study, for the check-in.         |

@@ -120,7 +120,7 @@ Unchanged: review, the quiz, curation.
 ## Tests
 
 This starts the repository's test suite for the learn tools: `node:test`, no dependencies, in
-`workflows/learn/tools/test/`, run with `node --test workflows/learn/tools/test/`. Each test
+`workflows/learn/tools/test/`, run with `node --test 'workflows/learn/tools/test/*.test.mjs'` (the bare directory form fails on Node 22). Each test
 builds a topic folder in a temporary directory and runs the real scripts against it.
 
 - `deferred` without `--where` is refused; with an unknown goal id, refused.

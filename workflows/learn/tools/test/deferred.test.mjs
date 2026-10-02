@@ -17,6 +17,12 @@ test('deferred with --where "" is refused', () => {
   assert.match(r.stderr, /say where/);
 });
 
+test('deferred with a blank --where is refused', () => {
+  const r = run('record-status.mjs', [topic(), 'deferred', 'c-read', '--where', '   ']);
+  assert.notEqual(r.code, 0);
+  assert.match(r.stderr, /say where/);
+});
+
 test('deferred with an unknown goal id is refused', () => {
   const r = run('record-status.mjs', [topic(), 'deferred', 'c-nope', '--where', 'PS3']);
   assert.notEqual(r.code, 0);

@@ -160,7 +160,7 @@ session — `study`, `review` or `topic`, wherever they are — which records it
 
 **A topic at `waiting elsewhere` is waiting on something outside the tutor, not stuck and not
 finished.** Every required goal is met, retired or deferred, and the deferred ones are waiting
-on somewhere else, which `--report` shows as `deferred: <where>`. Name it from those, for
+on somewhere else, which the survey row's `deferred` field holds as the where. Name it from those, for
 example "waiting on PS3". Don't count it among the stuck ones, and don't offer it as work. It
 goes to `study` only for the check-in, when they want to say how it went there.
 

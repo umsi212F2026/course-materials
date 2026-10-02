@@ -165,7 +165,7 @@ export function applySlots(id, fields) {
   };
 }
 
-// Whether a goal is one of the ones the topic has to finish. One consumer: `nothing pending`.
+// Whether a goal is one of the ones the topic has to finish. `derivePhase` reads it for both `nothing pending` and `waiting elsewhere`.
 export const isRequired = (goal) => goal.is_required === 'yes';
 
 // Whether curation has to stamp this goal an entry, because its supply produces its own

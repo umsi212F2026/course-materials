@@ -292,8 +292,7 @@ the learner can always do the goal here.
 
 **The first time you reach a marked goal**, say what the goal is, what would count, and where
 it is taught. "First time" means the goal carries `taught elsewhere`, has no attempts, is not
-currently deferred, and `status.jsonl` has no `resumed` line for it (check with
-`grep '"kind":"resumed"' <topic-folder>/status.jsonl`). Offer it at most once per sitting.
+currently deferred, and its survey row has `resumed: false`. Offer it at most once per sitting.
 Nothing records "do it here", so a learner who chose it and never attempted may see the menu
 once more next session, which is cheap; a `resumed` line proves they already chose. Then offer
 four choices, in one short block:

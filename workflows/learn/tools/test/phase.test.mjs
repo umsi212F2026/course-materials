@@ -12,19 +12,20 @@ function setup() {
   });
 }
 
-const defer = (dir) => run('record-status.mjs', [dir, 'deferred', 'c-b', '--where', 'PS3']);
+const defer = (dir, goal = 'c-b') =>
+  run('record-status.mjs', [dir, 'deferred', goal, '--where', 'PS3']);
 const pass = (dir, goal) => run('record-attempt.mjs', [dir, goal, 'a-x/1', '--axes', PASS]);
 const row = (s, id) => s.groups.flatMap((g) => g.goals).find((g) => g.id === id);
 
 test('a deferred goal is listed after unmet and stays in the fraction', () => {
   const dir = setup();
-  defer(dir);
+  defer(dir, 'c-a');
   const s = survey(dir);
   assert.equal(s.phase, 'studying');
   assert.equal(s.groups[0].total, 2);
   assert.equal(s.groups[0].met, 0);
-  assert.deepEqual(s.groups[0].goals.map((g) => g.id), ['c-a', 'c-b']);
-  assert.equal(row(s, 'c-b').deferred, 'PS3');
+  assert.deepEqual(s.groups[0].goals.map((g) => g.id), ['c-b', 'c-a']);
+  assert.equal(row(s, 'c-a').deferred, 'PS3');
 });
 
 test('everything else met makes the phase waiting elsewhere', () => {
@@ -77,4 +78,17 @@ test('report prints the deferral', () => {
   defer(dir);
   const r = run('survey.mjs', ['--dir', dir + '/..', dir, '--report']);
   assert.match(r.stdout, /c-b.*deferred: PS3/);
+});
+
+test('resumed is true once a goal has been resumed, and stays true', () => {
+  const dir = setup();
+  defer(dir);
+  assert.equal(row(survey(dir), 'c-b').resumed, false);
+  run('record-status.mjs', [dir, 'resumed', 'c-b']);
+  const s = survey(dir);
+  assert.equal(row(s, 'c-b').resumed, true);
+  assert.equal(row(s, 'c-b').deferred, null);
+  assert.equal(row(s, 'c-a').resumed, false);
+  defer(dir);
+  assert.equal(row(survey(dir), 'c-b').resumed, true);
 });
