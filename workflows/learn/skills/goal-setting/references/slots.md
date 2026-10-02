@@ -87,6 +87,10 @@ A supply may read whatever the entry carries beyond its slots — a word's _what
 it bites_ and _nearest confusable_ are inputs to the vocabulary supply, meaningful only to it.
 That is the mirror of the label: data flowing _into_ an implementation rather than out of one.
 
+Likewise `taught elsewhere`, a line saying where a goal is also taught (`PS2; session 5`). It
+is payload read only by the tutor, which uses it to offer the learner the choice of learning the
+goal there. No tool validates or reads it, and it changes nothing about the goal's bar.
+
 A supply returns a **list** of candidates where it has several. One is a legitimate list.
 
 **One supply per goal**, and that is the label contract making itself felt: a label is safe as
@@ -218,6 +222,11 @@ different fold over the same structured fields, not a bar that knows about time.
 rather than as a judged pass: visibly weaker, and it counts. Study offers it after every `not
 met` ruling, alongside trying again and coming back later, and the goal is then judged in review
 like any other. `met()` applies it above the bar dispatch rather than inside any one of them.
+
+**`outcome: elsewhere` is treated the same way.** It records that the learner did the goal
+somewhere else, in class or on a problem set, and it counts as met and goes to review exactly as
+`declared` does. The two stay distinct in the log so the progress view can say _done elsewhere_
+rather than _you said so_.
 
 ### `recurrence` — flag
 

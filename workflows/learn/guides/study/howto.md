@@ -60,6 +60,21 @@ feedback and three choices:
    comes back in a review a few days later, checked just as strictly. So you aren't skipping the
    test, just moving it.
 
+## Goals you'll learn in class
+
+Some goals are also taught in class or on a problem set. When the tutor first reaches one, it
+says what the goal is, what would count, and where it is taught, then offers four choices:
+
+1. **Do it here.** Ordinary study.
+2. **Already done elsewhere.** Say where, if you like. It counts as met, and it comes back in a
+   review a few days later, checked just as strictly.
+3. **I'll learn it there later.** Say where. The tutor stops offering it.
+4. **Remove it.** The goal is dropped, in your words.
+
+You can say you'll pick any goal up elsewhere at any time, marked or not. Once everything else
+is met, the tutor asks once about each deferred goal: is it done there? "Yes" counts it as met.
+"Not yet" leaves it as it is. "Let's do it here" brings it back.
+
 ## Notes
 
 `notes.md` is yours. You write it; the tutor might prompt when something was hard, and can type

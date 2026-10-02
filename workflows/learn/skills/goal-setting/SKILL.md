@@ -301,6 +301,11 @@ and don't count towards it.
 - **PUSH BACK ON SCOPE** — _when an entry has no line back to the stated use, or there are more
   than about three of them._ Say which part of the use fails to support it. The move you'll
   most want to skip, and skipping it is how this conversation fails.
+- **MARK WHAT IS TAUGHT ELSEWHERE**: _when they say a goal is covered in class or in a problem
+  set._ Write `- **taught elsewhere:** <where>` on that entry, in their words for where. It is
+  not a slot and no tool reads it; the tutor does, and offers them the choice of learning it
+  there instead the first time it reaches the goal. Keep the goal and its criterion as they
+  are: the mark changes how the goal is reached, not whether it counts.
 
 ### Any field
 

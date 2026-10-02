@@ -70,7 +70,8 @@ ask differently rather than repeating it.
 
 **Then loop, until they stop:**
 
-1. **They choose.** Ask the goal's `supply` for candidates and offer them.
+1. **They choose.** Skip any goal that is deferred; see _Goals taught elsewhere_. Ask the
+   goal's `supply` for candidates and offer them.
 
    For `supply: curated`, that's the live `activities.md` entries whose `serves` or `checks`
    names this goal — use each entry's `offer as` to make the choice real rather than a list of
@@ -281,6 +282,53 @@ their word rather than as an adjudicated pass: visibly weaker, and it counts.
 now counts as met, and it comes back for review in about three days, judged just as strictly.
 Declaring moves the test to review; it doesn't remove it. (A goal carrying `recurrence: never`
 is simply done.)
+
+### Goals taught elsewhere
+
+**Some goals are taught somewhere else too**, in class or on a problem set. The ones the
+instructor or goal-setting has marked carry `- **taught elsewhere:** <where>` in `goals.md`.
+That line is for you to read; no tool does. Curation has still prepared activities for them, so
+the learner can always do the goal here.
+
+**The first time you reach a marked goal**, meaning it has no attempts and no deferral, say what
+the goal is, what would count, and where it is taught. Then offer four choices, in one short
+block:
+
+1. **Do it here.** Ordinary study.
+2. **Already done elsewhere.** Ask where. Encouraged, not required.
+3. **I'll learn it there later.** Ask where, so the check-in has something to ask about.
+4. **Remove it.** Retire it, with their words as the reason.
+
+Don't argue with the choice, and don't ask for a reason. The reason these are offered at all is
+that topics were taking more of their time than they should; a goal they will meet elsewhere is
+time saved, not a corner cut.
+
+```
+node workflows/learn/tools/record-attempt.mjs <topic-folder> <goal-id> elsewhere --outcome elsewhere --note "<where>"
+node workflows/learn/tools/record-status.mjs <topic-folder> deferred <goal-id> --where "<where>"
+```
+
+Choice 2 is the first command (`--note` is optional), choice 3 is the second, and choice 4 is
+`retired`, exactly as in _When a goal turns out not to matter_.
+
+**Completed elsewhere counts as met, and comes back for review in about three days**, judged as
+strictly as any other, just like a goal they declared learned. Say so, for the same reason: it
+moves the test to review and does not remove it.
+
+**Deferral is open at any time, for any goal**, marked or not. If they say they'll pick it up
+elsewhere, run the second command. Do not edit `goals.md`; the deferral is the part of the mark
+that changes anything mid-study.
+
+**Never offer a deferred goal.** It is not in the loop until they bring it back.
+
+**The check-in.** When the survey's phase is `waiting elsewhere`, every other required goal is
+met, retired or deferred. Ask once about each deferred goal: is it done there? Don't press, and
+don't ask twice in a sitting.
+
+- **Yes:** record `elsewhere` as above, with where they did it.
+- **Not yet:** change nothing. It stays deferred.
+- **Let's do it here:** record `node workflows/learn/tools/record-status.mjs <topic-folder> resumed <goal-id>`,
+  and it is offered again like any other goal.
 
 ### When a goal turns out not to matter
 

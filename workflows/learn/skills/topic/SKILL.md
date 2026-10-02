@@ -37,7 +37,7 @@ node workflows/learn/tools/survey.mjs --dir <data-dir> <topic-folder>
 and read the phase off it. `learn` and the progress report run the same program over the same
 folders, which is what keeps three readings of one topic from drifting apart.
 
-It hands you two things: **the phase**, and **what's outstanding**. These five rows are the
+It hands you two things: **the phase**, and **what's outstanding**. These six rows are the
 phases it derives. Where they disagree with the program, the program is right and this has gone
 stale.
 
@@ -46,6 +46,7 @@ stale.
 | `goals.md` with no goal in the default group | nothing has started. Goal setting.                    |
 | goals, no live activities                    | curation, then study.                                 |
 | live activities, required goals unmet        | study.                                                |
+| every required goal met or deferred, one deferred | `waiting elsewhere`. Study, for the check-in.    |
 | every required goal met                      | nothing pending. If they're here, offer goal setting. |
 | `retired`                                    | nothing, unless they've just said to revive it.       |
 

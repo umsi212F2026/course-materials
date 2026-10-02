@@ -158,6 +158,12 @@ learner's reason — which is a fact about them, not work on offer. Don't count 
 being stuck, and don't raise it. If they say one doesn't matter, that goes to the topic's own
 session — `study`, `review` or `topic`, wherever they are — which records it.
 
+**A topic at `waiting elsewhere` is waiting on class, not stuck and not finished.** Every goal
+that is still theirs to do here is met, and the rest are deferred to somewhere else, which
+`--report` shows as `deferred: <where>`. Say so in those words, don't count it among the stuck
+ones, and don't offer it as work. It goes to `study` only for the check-in, when they want to
+say how it went there.
+
 Retiring is something they say, never something you infer, at either scale. A topic untouched
 for six months is cold, not retired — those are different facts and only one of them is a
 decision.
