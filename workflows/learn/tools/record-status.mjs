@@ -8,6 +8,12 @@
 //   node workflows/learn/tools/record-status.mjs <topic> retired    <goal-id> --reason "..."
 //   node workflows/learn/tools/record-status.mjs <topic> revived
 //   node workflows/learn/tools/record-status.mjs <topic> revived    <goal-id>
+//   node workflows/learn/tools/record-status.mjs <topic> deferred   <goal-id> --where "..."
+//   node workflows/learn/tools/record-status.mjs <topic> resumed    <goal-id>
+//
+// DEFERRING A GOAL ALWAYS NAMES ONE GOAL AND SAYS WHERE IT WILL BE LEARNED. Deferring a goal
+// that is already met is allowed, with a warning on stderr: the learner may know something the
+// log does not, and refusing would only send them round the tool.
 //
 // RETIRING TAKES AN OPTIONAL GOAL. With one, the learner gave that goal up — a word they
 // decided wasn't worth the interval. Without one, they gave the whole topic up. Same decision,
@@ -29,7 +35,8 @@
 
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { readIds } from './lib/topic.mjs';
+import { readIds, attemptsFor } from './lib/topic.mjs';
+import { met } from './lib/bars.mjs';
 import { KINDS, NEEDS, appendStatus } from './lib/status.mjs';
 
 const USAGE = `usage:
@@ -48,7 +55,8 @@ ${Object.entries(KINDS)
 
   --needs ${Object.keys(NEEDS).join(' | ')}   who has to act; required on: blocked
   --why "..."                       what would have to change; required on: blocked
-  --reason "..."                    the learner's own words; required on: retired`;
+  --reason "..."                    the learner's own words; required on: retired
+  --where "..."                     where it will be learned; required on: deferred`;
 
 const die = (msg) => {
   console.error(msg);
@@ -59,7 +67,7 @@ const die = (msg) => {
 // Every flag checked, same as record-attempt.mjs and for the same reason: a misspelling stored
 // under its own name is a required field silently missing, and the line lands on the queue
 // saying less than it was meant to.
-const FLAGS = ['needs', 'why', 'reason'];
+const FLAGS = ['needs', 'why', 'reason', 'where'];
 
 const argv = process.argv.slice(2);
 const positional = [];
@@ -104,6 +112,7 @@ try {
     needs: flags.needs,
     why: flags.why,
     reason: flags.reason,
+    where: flags.where,
   });
 } catch (err) {
   die(`${err.message}\n\n${USAGE}`);
@@ -112,3 +121,9 @@ try {
 console.log(
   [event.kind, event.goal, event.needs && `needs ${event.needs}`].filter(Boolean).join(' · ')
 );
+
+// A deferral of a goal that is already met is recorded, and said out loud.
+if (event.kind === 'deferred') {
+  const goal = readIds(dir).get(event.goal);
+  if (goal && met(goal, attemptsFor(dir, event.goal))) console.error(`${event.goal} is already met; recorded anyway.`);
+}
