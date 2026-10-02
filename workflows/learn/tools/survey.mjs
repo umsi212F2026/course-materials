@@ -111,7 +111,11 @@ for (const s of surveys) {
         console.log(`${render(goal).padEnd(tick)}retired — ${goal.retired}`);
         continue;
       }
-      console.log(goal.met ? `${render(goal).padEnd(tick)}✓` : render(goal));
+      if (goal.deferred) {
+        console.log(`${render(goal).padEnd(tick)}deferred: ${goal.deferred}`);
+        continue;
+      }
+      console.log(goal.met ?`${render(goal).padEnd(tick)}✓` : render(goal));
     }
   }
 

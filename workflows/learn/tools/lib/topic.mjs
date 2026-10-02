@@ -28,8 +28,9 @@ import { readStatus, foldStatus } from './status.mjs';
 //   source      study | review | scan
 //   unaided     yes | no | unclear                        \  the adjudicator's two axes,
 //   criterion   met | not met | unclear | unchecked        /  passed through raw
-//   outcome     abandoned | declared | elsewhere — the caller's own observation, when there was no attempt
-//               to rule on or the learner asserted it themselves. Exclusive with the two axes
+//   outcome     abandoned | declared | elsewhere: the caller's own observation, when there was
+//               no attempt to rule on or the learner asserted it themselves. Exclusive with
+//               the two axes
 //   note        optional free text, e.g. why they stopped
 //
 // THE AXES ARE STORED RAW AND NEVER COLLAPSED ON THE WAY IN. What reads a verdict back out —
@@ -220,7 +221,7 @@ export function attemptsFor(dir, goal) {
 // --- the whole picture of one topic ------------------------------------------
 // What survey.mjs reports and review-due.mjs filters. Derived every time, stored nowhere.
 
-// Five phases, and `in review` is deliberately not one of them: a goal enters review the moment
+// Six phases, and `in review` is deliberately not one of them: a goal enters review the moment
 // it is met, while the rest of the topic is still being studied, so a topic is routinely both.
 export function derivePhase({ retired, goals, live, rows }) {
   if (retired) return 'retired';
@@ -239,7 +240,15 @@ export function derivePhase({ retired, goals, live, rows }) {
   // AND NOT THE RETIRED ONES, or a topic could never finish once a goal was given up. Note
   // `is_required: no` does not already cover this: that says the goal never blocked completion,
   // which is a different claim from the learner having stopped wanting it.
-  if (rows.filter((r) => isRequired(r) && !r.retired).every((r) => r.met)) return 'nothing pending';
+  const open = rows.filter((r) => isRequired(r) && !r.retired);
+
+  // WAITING ELSEWHERE: all that is left is what the learner said they will learn somewhere else.
+  // Nothing here can be studied, but the topic is not finished either, so the tutor's job is to
+  // check in. Checked before `nothing pending`, which it would otherwise be mistaken for.
+  if (open.every((r) => r.met || r.deferred) && open.some((r) => r.deferred))
+    return 'waiting elsewhere';
+
+  if (open.every((r) => r.met)) return 'nothing pending';
 
   if (goals.length && !live.length) return 'in curation';
 
@@ -272,12 +281,15 @@ function groupRows(rows) {
       // `11/12` where the twelfth never can be is a number that can only ever disappoint.
       met: active.filter((g) => g.met).length,
       total: active.length,
-      // UNMET FIRST, THEN MET, THEN RETIRED. Everything is listed — seeing the finished ones is
-      // half of what a progress report is for — but what is left comes first, where someone
-      // deciding what to do next will look. The retired ones are neither outstanding nor
-      // achievements, so they go last. Original order within each part.
+      // UNMET FIRST, THEN DEFERRED, THEN MET, THEN RETIRED. Everything is listed (seeing the
+      // finished ones is half of what a progress report is for), but what is left comes first,
+      // where someone deciding what to do next will look. A deferred goal is not work for this
+      // sitting but is not done either, so it sits between the two, and it stays in `total`.
+      // The retired ones are neither outstanding nor achievements, so they go last. Original
+      // order within each part.
       goals: [
-        ...active.filter((g) => !g.met),
+        ...active.filter((g) => !g.met && !g.deferred),
+        ...active.filter((g) => g.deferred),
         ...active.filter((g) => g.met),
         ...goals.filter((g) => g.retired),
       ],
@@ -294,6 +306,8 @@ export function surveyTopic(dir) {
 
   const rows = goals.map((goal) => {
     const attempts = log.filter((r) => r.goal === goal.id);
+    const isMet = goal.problems.length ? false : met(goal, attempts);
+    const isRetired = status.retiredGoals.has(goal.id);
     return {
       id: goal.id,
       text: goal.text,
@@ -305,7 +319,11 @@ export function surveyTopic(dir) {
       // consumers deciding whether to offer something.
       retired: status.retiredGoals.get(goal.id) ?? null,
       // ONE CODE PATH, no branch on what kind of goal it is. The dispatch is on its own `bar`.
-      met: goal.problems.length ? false : met(goal, attempts),
+      met: isMet,
+      // WHERE THE LEARNER SAYS THEY WILL LEARN IT, or null. MET AND RETIRED WIN: a goal that has
+      // been passed, or given up, is no longer waiting on anything, whatever the log last said
+      // about a deferral.
+      deferred: isMet || isRetired ? null : (status.deferredGoals.get(goal.id) ?? null),
       attempts: attempts.length,
       last: describeAttempts(attempts),
     };
