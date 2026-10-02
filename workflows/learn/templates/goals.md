@@ -134,12 +134,6 @@
   Put only names here. A phrase that reads like a definition rather than a label is not a
   synonym, and DEFINE would then reject the very answer it should accept.
 
-  ANY GOAL may carry `- **taught elsewhere:** PS2; session 5 in-class activity`, naming where
-  else it is taught. The instructor writes it on assigned topics, and goal setting writes it
-  when a learner says something is covered in class. It is not a slot and TOOLS IGNORE IT; only
-  the tutor reads it, to offer the learner the choice of learning the goal there. Omit the line
-  when there is nothing to name.
-
   A word may carry a further line where this learner has a specific wrong idea waiting for
   them — `- **watch for:** thinks an API key is a password`. Rare. It is a HINT TO WHOEVER
   SETS THE MOVE, not an extra thing to satisfy: aim a CATCH or a DISTINGUISH at it and the
@@ -158,6 +152,12 @@
 
   If meeting the vocabulary bar would leave them unable to do the thing, it isn't a word —
   it's a capability, and it gets an ordinary entry with a criterion someone thought about.
+
+  ANY GOAL may carry `- **taught elsewhere:** PS2; session 5 in-class activity`, naming where
+  else it is taught. The instructor writes it on assigned topics, and goal setting writes it
+  when a learner says something is covered in class. It is not a slot and TOOLS IGNORE IT; only
+  the tutor reads it, to offer the learner the choice of learning the goal there. Omit the line
+  when there is nothing to name.
 
   THE ORIENTATION ENTRY is shipped below, filled in, in every topic. It carries five slots and
   they are not yours to change. Delete it only if `what I already have` says this learner has

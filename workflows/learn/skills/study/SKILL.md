@@ -290,18 +290,21 @@ instructor or goal-setting has marked carry `- **taught elsewhere:** <where>` in
 That line is for you to read; no tool does. Curation has still prepared activities for them, so
 the learner can always do the goal here.
 
-**The first time you reach a marked goal**, meaning it has no attempts and no deferral, say what
-the goal is, what would count, and where it is taught. Then offer four choices, in one short
-block:
+**The first time you reach a marked goal**, say what the goal is, what would count, and where
+it is taught. "First time" means the goal carries `taught elsewhere`, has no attempts, is not
+currently deferred, and `status.jsonl` has no `resumed` line for it (check with
+`grep '"kind":"resumed"' <topic-folder>/status.jsonl`). Offer it at most once per sitting.
+Nothing records "do it here", so a learner who chose it and never attempted may see the menu
+once more next session, which is cheap; a `resumed` line proves they already chose. Then offer
+four choices, in one short block:
 
 1. **Do it here.** Ordinary study.
 2. **Already done elsewhere.** Ask where. Encouraged, not required.
 3. **I'll learn it there later.** Ask where, so the check-in has something to ask about.
 4. **Remove it.** Retire it, with their words as the reason.
 
-Don't argue with the choice, and don't ask for a reason. The reason these are offered at all is
-that topics were taking more of their time than they should; a goal they will meet elsewhere is
-time saved, not a corner cut.
+Don't argue with the choice, and don't ask for a reason. A goal they will meet elsewhere is time
+saved, not a corner cut.
 
 ```
 node workflows/learn/tools/record-attempt.mjs <topic-folder> <goal-id> elsewhere --outcome elsewhere --note "<where>"
@@ -328,7 +331,8 @@ don't ask twice in a sitting.
 - **Yes:** record `elsewhere` as above, with where they did it.
 - **Not yet:** change nothing. It stays deferred.
 - **Let's do it here:** record `node workflows/learn/tools/record-status.mjs <topic-folder> resumed <goal-id>`,
-  and it is offered again like any other goal.
+  and it is offered like any other goal, without the first-encounter menu, since the `resumed`
+  line shows they have already chosen.
 
 ### When a goal turns out not to matter
 

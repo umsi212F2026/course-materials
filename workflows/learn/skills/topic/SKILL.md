@@ -41,14 +41,13 @@ It hands you two things: **the phase**, and **what's outstanding**. These six ro
 phases it derives. Where they disagree with the program, the program is right and this has gone
 stale.
 
-|                                              |                                                       |
-| -------------------------------------------- | ----------------------------------------------------- |
-| `goals.md` with no goal in the default group | nothing has started. Goal setting.                    |
-| goals, no live activities                    | curation, then study.                                 |
-| live activities, required goals unmet        | study.                                                |
-| every required goal met or deferred, one deferred | `waiting elsewhere`. Study, for the check-in.    |
-| every required goal met                      | nothing pending. If they're here, offer goal setting. |
-| `retired`                                    | nothing, unless they've just said to revive it.       |
+| `goals.md` with no goal in the default group                        | nothing has started. Goal setting.                    |
+| ------------------------------------------------------------------- | ----------------------------------------------------- |
+| goals, no live activities                                           | curation, then study.                                 |
+| live activities, required goals unmet                               | study.                                                |
+| every required goal met, retired or deferred; at least one deferred | `waiting elsewhere`. Study, for the check-in.         |
+| every required goal met                                             | nothing pending. If they're here, offer goal setting. |
+| `retired`                                                           | nothing, unless they've just said to revive it.       |
 
 **Required** is a slot on the goal, and it defaults to yes. An orientation carries
 `is_required: no`, so a topic isn't held open by one nobody bothered with. **A retired goal
