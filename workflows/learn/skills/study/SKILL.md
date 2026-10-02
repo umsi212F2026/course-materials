@@ -120,6 +120,20 @@ ask differently rather than repeating it.
    Tell them the result afterwards. No need to inform them beforehand that you've sent it for
    checking.
 
+   **After every `not met`, give the feedback and then offer three choices**, in one short
+   block, every time:
+
+   1. **Try again now.** Another item from the same activity's bank, or a fresh instance of the
+      vocabulary move. Where the activity has no bank, offer another live activity for the same
+      goal.
+   2. **Come back to it later.** Something else, or stop. Nothing more to record; the miss is
+      already in the log.
+   3. **Mark it as learned.** See _When the learner marks it learned_, below.
+
+   Judges are deliberately tough, and a learner who has had the feedback is the best placed to
+   say whether another round would teach them anything. Don't argue with the choice, and don't
+   ask for a reason.
+
    **Not every attempt goes to an adjudicator, and the record says so.** See _When nobody
    ruled_ below.
 
@@ -246,14 +260,27 @@ nothing to decide with.
 Then drop it. Stopping is theirs, they have other topics competing for the same half hour, and
 a second offer on the same goal is nagging.
 
-**A goal that won't land has an escape**, and it is the same escape for every kind of goal: the
-learner saying they've got it. That's `--outcome declared`, which satisfies any bar and is
-recorded as their word rather than as an adjudicated pass — visibly weaker, and it counts.
-
 **Stopping is always theirs.** At any point, for any reason, including none. No agreement
 needed, no justification owed, and you don't talk them out of it. Someone who stops with a goal
 unmet has a record saying exactly what they did and how it was ruled, which needs no verdict
 word on top of it.
+
+### When the learner marks it learned
+
+**The learner may say they've got it**, for any kind of goal and at any point. It is one of the
+three choices offered after every `not met`, and they may also say it unprompted. Record it:
+
+```
+node workflows/learn/tools/record-attempt.mjs <topic-folder> <goal-id> <label> --outcome declared --note "<their words, if any>"
+```
+
+`<label>` is the activity just attempted. A declaration satisfies any bar and is recorded as
+their word rather than as an adjudicated pass: visibly weaker, and it counts.
+
+**Then say what follows**, because it is the honest answer to "am I skipping the test?" The goal
+now counts as met, and it comes back for review in about three days, judged just as strictly.
+Declaring moves the test to review; it doesn't remove it. (A goal carrying `recurrence: never`
+is simply done.)
 
 ### When a goal turns out not to matter
 

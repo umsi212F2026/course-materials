@@ -49,6 +49,17 @@ nobody explained.
 If you do get through a task without help, the tutor quietly sends a transcript to an
 independent agent that checks what you did for correctness. It then logs the attempt.
 
+## When the checker says not yet
+
+The checker is deliberately tough. When it says you haven't met the goal, you'll see its
+feedback and three choices:
+
+1. **Try again now**, on another question from the same activity.
+2. **Come back to it later.**
+3. **Mark it as learned.** Your call, and nobody asks you to justify it. It counts as met, and it
+   comes back in a review a few days later, checked just as strictly. So you aren't skipping the
+   test, just moving it.
+
 ## Notes
 
 `notes.md` is yours. You write it; the tutor might prompt when something was hard, and can type
@@ -112,3 +123,5 @@ word. Changing the goals is its own conversation, so this session will be wound 
 
 **"What would I have to do to be finished with this?"** Always answerable, and worth asking
 early.
+
+**"I've got this. Mark it learned."** Any time, not only after the checker says not yet.

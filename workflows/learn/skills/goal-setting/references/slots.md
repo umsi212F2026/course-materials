@@ -215,8 +215,9 @@ across separate sittings_ is an ordinary fourth value here and needs nothing new
 different fold over the same structured fields, not a bar that knows about time.
 
 **A learner's own declaration satisfies any bar**, and is recorded as `outcome: declared`
-rather than as a judged pass — visibly weaker, and it counts. It is the escape for a goal that
-won't land, and `met()` applies it above the bar dispatch rather than inside any one of them.
+rather than as a judged pass: visibly weaker, and it counts. Study offers it after every `not
+met` ruling, alongside trying again and coming back later, and the goal is then judged in review
+like any other. `met()` applies it above the bar dispatch rather than inside any one of them.
 
 ### `recurrence` — flag
 

@@ -799,6 +799,7 @@
           <bpmn:outgoing>s11</bpmn:outgoing>
         </bpmn:exclusiveGateway>
         <bpmn:exclusiveGateway id="S_gate_on" name="carry&#10;on?" default="s13">
+          <bpmn:documentation>After a not-met ruling the learner is offered three choices: try again now, come back later, or mark it learned. Marking it learned is one more pass through record-attempt.mjs, with --outcome declared, which satisfies any bar and sends the goal to review like any other.</bpmn:documentation>
           <bpmn:incoming>s11</bpmn:incoming>
           <bpmn:outgoing>s12</bpmn:outgoing>
           <bpmn:outgoing>s13</bpmn:outgoing>
