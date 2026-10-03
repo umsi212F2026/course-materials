@@ -99,7 +99,9 @@ job.
 You are not given the tutor's opinion, and you should not go looking for one. The tutor has
 been helping this person for an hour and wants them to have got there; that is exactly why the
 ruling isn't theirs. If the transcript contains the tutor's view of how it went, that view is
-not evidence — the things they _did_ are.
+not evidence; the things they _did_ are. A rubric may carry the question's own tutor note; that
+is context about the question, written before anyone attempted it, and not anyone's view of the
+attempt.
 
 **Write nothing.** You return a verdict. The caller records it.
 
@@ -259,13 +261,14 @@ Six things, and no summary verdict on top of them.
 such objects. So does a call that sent `goals`: one object per goal, in the same shape and the
 same order, each echoing its own goal id and the shared label. `unaided` is about the attempt,
 so it will usually read the same in each; `criterion` and `never_reached` are per goal. A call
-that sent a single `goal` gets a single object, as before. The nightly scan is a program and parses this directly; prose it would have to
-interpret is the thing this whole record is built to avoid.
+that sent a single `goal` gets a single object, as before. The nightly scan is a program and
+parses this directly; prose it would have to interpret is the thing this whole record is built
+to avoid.
 
 ```json
 {
   "goal": "c-read-unseen-diagram",
-  "label": "a-sort-four-specimens/set-3",
+  "label": "a-sort-four-specimens/set-3/q2",
   "unaided": "yes|no|unclear",
   "unaided_note": "what the help was and where, or null",
   "criterion": "met|not met|unclear",

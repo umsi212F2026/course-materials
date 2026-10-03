@@ -36,9 +36,10 @@ node workflows/learn/tools/next-item.mjs <topic-folder> --activity <activity-id>
 ```
 
 It prints a `label:`, the goals the question credits, its `tags:`, and whether it is a repeat,
-then `--- learner sees ---` and the text. **Show the learner only what follows that line.** Run
-it again with `--key` for the grading text, which is for the judge and never for the learner,
-and any `--- tutor note ---` is for you. A learner who carries on gets
+then `--- learner sees ---` and the text. **Show the learner only what follows that line, and
+stop at `--- key ---`.** One run with `--key` is enough, since it prints the learner's section
+too: everything from `--- key ---` on is the grading text, for the judge and never for the
+learner, and any `--- tutor note ---` is for you. A learner who carries on gets
 `--after <last label>`, which keeps them in the same scenario where there is more of it. Keep
 the label and the `tags:` line: they go to `record-attempt.mjs` as they are.
 

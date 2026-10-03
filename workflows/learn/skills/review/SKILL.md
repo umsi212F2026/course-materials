@@ -187,8 +187,9 @@ argument.
 
    **A bank question that credits several goals** goes as `goals`, a list of
    `{"goal": …, "criterion": …}` with each criterion resolved, plus the `--key` output as a
-   `--- rubric ---` block ahead of the record. Only the due goal moves the schedule, but every
-   goal the judge rules on is an attempt, and step 4 records each.
+   `--- rubric ---` block ahead of the record. Every goal the judge rules on is an attempt and
+   step 4 records each, but only the due goal's is recorded as a review: the others count as
+   evidence without moving their own review dates.
 
    Both questions still matter here. _Unaided_ looks near-certain because you offered nothing,
    but they may have looked something up, and the judge is the party to decide that rather than
@@ -217,7 +218,10 @@ argument.
    `none`, or `production` or `reception` from the vocabulary supply, and nothing otherwise.
 
    **A question ruled against several goals is one call per goal**, each with its own `--axes`
-   and all with the same label and `--tags`.
+   and all with the same label and `--tags`. Only the due goal's call carries `--source review`;
+   leave the flag off for every other goal the question named. `--source review` is what moves
+   a goal along its intervals, and a goal that was not due should not be moved by a question it
+   happened to share.
 
    A review attempt is an attempt, and the log is what the interval rule is read from. It
    cannot unmake what was shown — nothing can — but a lapse belongs in the record of what
