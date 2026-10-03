@@ -53,6 +53,10 @@ export const REQUIREDNESS = {
 //
 // `learner` IS THE DEFAULT BECAUSE IT FAILS IN THE SAFE DIRECTION. A goal wrongly left out of a
 // quiz is a smaller wrong than a student examined on something they set for themselves.
+//
+// NORMALLY SET ONCE FOR THE TOPIC, in a `**origin:** course` header that every goal inherits
+// (readGoals in topic.mjs). The per-goal slot marks the exception: a goal a learner added to a
+// course topic carries `origin: learner`, and one carrying its own value always wins.
 export const ORIGINS = {
   learner: 'the learner set it, and it is theirs alone',
   course: 'the course set it, and it may be examined',

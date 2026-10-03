@@ -11,7 +11,7 @@
 
 import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { applySlots, isRequired, suppliesItsOwn, DEFAULT_GROUP } from './slots.mjs';
+import { applySlots, ORIGINS, isRequired, suppliesItsOwn, DEFAULT_GROUP } from './slots.mjs';
 import { met, describeAttempts } from './bars.mjs';
 import { readStatus, foldStatus } from './status.mjs';
 
@@ -129,11 +129,29 @@ const listField = (value) =>
 
 const GOALS_HEADING = /^##\s+Goals\s*$/m;
 
+// ORIGIN IS SET ONCE FOR THE TOPIC, in a `**origin:** course` line between the title and
+// `## Goals`, and each goal inherits it unless it writes its own. Whether the goal wrote one is
+// read off the raw fields, because applySlots fills the default in and then "absent" and
+// "wrote learner" look the same. An unknown header value reads as `learner`, the safe
+// direction, and idProblems reports it.
+function headerOrigin(text) {
+  const at = text.search(GOALS_HEADING);
+  const m = (at === -1 ? text : text.slice(0, at)).match(/^\*\*origin:\*\*\s*(\S+)\s*$/m);
+  return m ? m[1] : null;
+}
+
 export function readGoals(dir) {
   const file = join(dir, 'goals.md');
-  if (!existsSync(file)) return { goals: [] };
+  if (!existsSync(file)) return { goals: [], origin: 'learner' };
   const text = readFileSync(file, 'utf8');
-  return { goals: entries(section(text, GOALS_HEADING)).map((e) => applySlots(e.id, e.fields)) };
+  const written = headerOrigin(text);
+  const origin = written && Object.hasOwn(ORIGINS, written) ? written : 'learner';
+  const goals = entries(section(text, GOALS_HEADING)).map((e) => {
+    const goal = applySlots(e.id, e.fields);
+    if (!e.fields.origin) goal.origin = origin;
+    return goal;
+  });
+  return { goals, origin, written };
 }
 
 // Every goal in the topic, keyed by id.
@@ -298,7 +316,7 @@ function groupRows(rows) {
 }
 
 export function surveyTopic(dir) {
-  const { goals } = readGoals(dir);
+  const { goals, origin } = readGoals(dir);
   const log = readLog(dir);
   const live = liveActivities(dir);
   const status = statusOf(dir);
@@ -336,6 +354,7 @@ export function surveyTopic(dir) {
     dir,
     phase: derivePhase({ retired, goals, live, rows }),
     retired,
+    origin,
     groups: groupRows(rows),
     lastTouched: log.length ? log[log.length - 1].at.slice(0, 10) : null,
     // What is waiting, and whether the learner is needed for it. `learn` splits on `needs`:
@@ -360,9 +379,12 @@ export function surveyTopic(dir) {
 // nothing implements is a goal nobody can record an attempt against, and record-attempt.mjs
 // refuses it there rather than writing a line about a goal it can't derive anything from.
 export function idProblems(dir, status = statusOf(dir)) {
-  const { goals } = readGoals(dir);
+  const { goals, written } = readGoals(dir);
   const found = [];
   const seen = new Map();
+
+  if (written && !Object.hasOwn(ORIGINS, written))
+    found.push(`goals.md has origin: ${written}, which is not one of: ${Object.keys(ORIGINS).join(', ')}`);
 
   for (const goal of goals) {
     if (!goal.id) {

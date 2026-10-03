@@ -27,7 +27,7 @@
 import { readFileSync, writeFileSync, existsSync, readdirSync, statSync } from 'node:fs';
 import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { readIds, readActivities } from './lib/topic.mjs';
+import { readIds, readGoals, readActivities } from './lib/topic.mjs';
 import { appendStatus } from './lib/status.mjs';
 import { takeDir } from './lib/workdir.mjs';
 
@@ -120,6 +120,11 @@ const entry = [
   // field is a default written down, which is the thing the comment above is about.
   `- **what it names:**`,
 ];
+
+// A WORD ADDED TO A COURSE TOPIC IS THE LEARNER'S, not the course's. The topic's header makes
+// every goal without its own origin a course goal, so the word has to say otherwise or it would
+// become examinable.
+if (readGoals(dir).origin === 'course') entry.push(`- **origin:** learner`);
 
 const lines = readFileSync(file, 'utf8').split('\n');
 
