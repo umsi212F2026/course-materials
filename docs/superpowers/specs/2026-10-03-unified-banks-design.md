@@ -121,7 +121,9 @@ Each rubric question section carries:
 - `goal:` one or more goal ids, comma-separated. Omitted only for a question that cannot
   establish any goal (a warm-up).
 - `answer:` what a complete answer says.
-- `credit:` what full and half credit mean **for each named goal**.
+- `credit:` what full and half credit mean. A single-goal question has one credit statement, as
+  today. A multi-goal question lists one statement per goal, each tagged with its goal id
+  (`` - `c-weigh-sleep`: full for ... ``); the bank check at curation step 5 requires it.
 - `type:` `free` (default) or `mcq`; for `mcq`, the question body ends in a numbered list and
   `answer` is the 1-based choice.
 - `move:` for a vocabulary question, the move (DEFINE, INTERPRET, DISTINGUISH, CATCH, APPLY). It

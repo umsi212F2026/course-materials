@@ -86,7 +86,7 @@
   - a scenario file with no rubric file: a problem naming the file;
   - a single-file bank fixture (`tasks/items.md` + `rubrics/items.md`, two items): the same objects `readBank` returned before this change (assert `bank`, `id`, `goal`, `prompt`, `rubric` exactly).
 - [ ] **Step 2: Run.** Expected: FAIL.
-- [ ] **Step 3: Implement** `readFolderBanks`, reusing `sections`, `fields`, `unwrap` and `splitChoices`; call it from `readBank` and concatenate. Add a header comment explaining the folder layout and why a missing rubric file is a problem here but not for single files (a folder under `tasks/` exists only to hold a bank).
+- [ ] **Step 3: Implement** `readFolderBanks`, reusing `sections`, `fields`, `unwrap` and `splitChoices`. `fields` matches only one-word names (`[a-z]+`), so widen it to allow spaces (`tutor note`), mapping `tutor note` to `tutorNote`; a multi-goal `credit` written as an indented list folds into the one credit string, which is what the grader takes; call it from `readBank` and concatenate. Add a header comment explaining the folder layout and why a missing rubric file is a problem here but not for single files (a folder under `tasks/` exists only to hold a bank).
 - [ ] **Step 4: Run all tests.** Then, read-only, check real data is unchanged: `node -e "import('./workflows/quiz/tools/lib/bank.mjs').then(m=>{const r=m.readBank('/Users/presnick/Documents/Documents/code/2026/learning-topics/web-backends-2026-09');console.log(r.items.length, r.problems)})"`. Expected: `44 []`.
 - [ ] **Step 5: Commit.** "Read folder banks with scenarios"
 
