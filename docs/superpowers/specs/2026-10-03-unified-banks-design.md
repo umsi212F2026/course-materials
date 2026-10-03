@@ -127,6 +127,15 @@ Each rubric question section carries:
 - `move:` for a vocabulary question, the move (DEFINE, INTERPRET, DISTINGUISH, CATCH, APPLY). It
   sets the attempt's tag through the move table now in `quiz-practice.mjs`, which moves to a shared
   library.
+- `tutor note:` optional; follow-ups specific to this question, for the tutor only: a partner
+  question to compare against if it was served before, a known trap, what to ask when the answer
+  is wrong in a particular way.
+
+**Where tutoring instructions live.** The activity's entry in `activities.md` keeps what holds for
+every question: the method (`tutor role`, `tutor does`, `done when`), `offer as` (used before any
+question is picked), the generator, and curation's records. A note about one scenario (such as two
+made-up vendors sharing a name) goes in that scenario's key; a note about one question goes in its
+`tutor note`. Questions whose method differs are usually two activities.
 
 **Scenario files are named for their content** (`crumbs.md`, `tally.md`, a word's name), even
 when a bank has only one scenario. **Question ids are unique within their scenario**, so a
