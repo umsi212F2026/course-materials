@@ -1,4 +1,4 @@
-// The eight slots, their defaults, and the closed sets they are refused against.
+// The nine slots, their defaults, and the closed sets they are refused against.
 //
 // One module because this is the definition site. A second copy of "what values does `bar`
 // take" is a second answer to what the system can be asked to do, and the gap between them is
@@ -11,7 +11,7 @@
 // NOTHING HERE READS A FILE. workflows/learn/tools/lib/topic.mjs parses goals.md and calls applySlots.
 
 // --- the closed sets ---------------------------------------------------------
-// A slot's value set is closed unless it is data. Data slots — `criterion` and `group` — take
+// A slot's value set is closed unless it is data. Data slots (`criterion`, `group` and `capability`) take
 // arbitrary text, which is why neither of them dispatches to anything.
 
 export const SUPPLIES = {
@@ -114,6 +114,10 @@ export const SLOTS = {
   is_required: { default: 'yes', values: REQUIREDNESS, kind: 'flag' },
   origin: { default: 'learner', values: ORIGINS, kind: 'flag' },
   group: { default: 'capabilities', values: null, kind: 'data' },
+  // A BARE SLUG NAMING WHAT ITS PART-GOALS TOGETHER AMOUNT TO. Goals sharing one are parts of one
+  // capability; survey groups them under it with a fraction. Data, like `group`, and nothing
+  // dispatches on it. Empty means the goal is not a part of anything.
+  capability: { default: '', values: null, kind: 'data' },
 };
 
 export const DEFAULT_GROUP = SLOTS.group.default;

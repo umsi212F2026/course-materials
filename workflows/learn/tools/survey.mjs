@@ -96,26 +96,38 @@ for (const s of surveys) {
 
   // One width across the whole topic, so the columns line up between groups — both the id
   // column and the tick, which is why the lines are built before any of them is printed.
-  const width = Math.max(0, ...s.groups.flatMap((g) => g.goals.map((x) => x.id.length)));
-  const render = (goal) => `    ${goal.id.padEnd(width)}  ${goal.last}`;
-  const tick = Math.max(0, ...s.groups.flatMap((g) => g.goals.map((x) => render(x).length))) + 2;
+  //
+  // PARTS OF A CAPABILITY SIT TWO COLUMNS IN, so the widths are taken from the lines as they
+  // will be rendered, indent included. A part whose capability has no live part left (every
+  // part retired) has no heading to sit under and prints as an ordinary goal.
+  const indentOf = (group, goal) =>
+    group.capabilities.some((c) => c.slug === goal.capability) ? 2 : 0;
+  const render = (goal, indent) =>
+    `    ${' '.repeat(indent)}${goal.id.padEnd(width - indent)}  ${goal.last}`;
+  const width = Math.max(
+    0,
+    ...s.groups.flatMap((g) => g.goals.map((x) => x.id.length + indentOf(g, x)))
+  );
+  const tick = Math.max(0, ...s.groups.flatMap((g) => g.goals.map((x) => render(x, indentOf(g, x)).length))) + 2;
 
   // A RETIRED GOAL IS NEITHER OUTSTANDING NOR AN ACHIEVEMENT. It prints last within its group,
   // marked with the learner's own reason, and it is in neither half of the group's fraction —
   // a goal you abandoned is not a goal you failed. How far it got still shows, because the
   // attempt log is untouched and the row is derived from it like any other.
+  const printGoal = (group, goal) => {
+    const line = render(goal, indentOf(group, goal));
+    if (goal.retired) console.log(`${line.padEnd(tick)}retired: ${goal.retired}`);
+    else if (goal.deferred) console.log(`${line.padEnd(tick)}deferred: ${goal.deferred}`);
+    else console.log(goal.met ? `${line.padEnd(tick)}✓` : line);
+  };
   for (const group of s.groups) {
     console.log(`\n  ${group.name} ${group.met}/${group.total}`);
-    for (const goal of group.goals) {
-      if (goal.retired) {
-        console.log(`${render(goal).padEnd(tick)}retired — ${goal.retired}`);
-        continue;
-      }
-      if (goal.deferred) {
-        console.log(`${render(goal).padEnd(tick)}deferred: ${goal.deferred}`);
-        continue;
-      }
-      console.log(goal.met ? `${render(goal).padEnd(tick)}✓` : render(goal));
+    // Goals with no capability first, as they always printed; then each capability's parts under
+    // its own fraction, keeping the group's order rule within it.
+    for (const goal of group.goals) if (indentOf(group, goal) === 0) printGoal(group, goal);
+    for (const cap of group.capabilities) {
+      console.log(`    ${cap.slug} ${cap.met}/${cap.total}`);
+      for (const goal of group.goals) if (goal.capability === cap.slug) printGoal(group, goal);
     }
   }
 

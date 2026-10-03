@@ -273,6 +273,8 @@ export function derivePhase({ retired, goals, live, rows }) {
   return 'studying';
 }
 
+const CAPABILITY_SLUG = /^[a-z0-9]+(-[a-z0-9]+){1,3}$/;
+
 // Groups exist because goals name them. No declaration, no properties, no report strategy —
 // the name is the label and the report is always count-then-list. Default group first, then
 // others in order of first appearance.
@@ -290,8 +292,21 @@ function groupRows(rows) {
   return order.map((name) => {
     const goals = byName.get(name);
     const active = goals.filter((g) => !g.retired);
+
+    // PARTS OF ONE CAPABILITY, in order of first appearance, by the same rule as the group
+    // fraction: a retired part leaves both halves, a deferred one stays in the total. `goals`
+    // below is untouched, so everything that reads it sees what it always did.
+    const capabilities = [];
+    for (const g of active) {
+      if (!g.capability) continue;
+      let cap = capabilities.find((c) => c.slug === g.capability);
+      if (!cap) capabilities.push((cap = { slug: g.capability, met: 0, total: 0 }));
+      cap.total++;
+      if (g.met) cap.met++;
+    }
     return {
       name,
+      capabilities,
       // A RETIRED GOAL LEAVES BOTH HALVES OF THE FRACTION. `vocabulary 7/12` with one given up
       // is `7/11`, not `7/12` with an unreachable twelfth. A GOAL YOU ABANDONED IS NOT A GOAL
       // YOU FAILED, and a denominator that keeps counting it says otherwise every time the
@@ -330,6 +345,7 @@ export function surveyTopic(dir) {
       id: goal.id,
       text: goal.text,
       group: goal.group,
+      capability: goal.capability,
       is_required: goal.is_required,
       // The learner's own words, or null. GOAL-SCOPED ONLY — a retired topic keeps its goals'
       // rows intact, so `retired with everything met` and `retired with nothing attempted` stay
@@ -399,8 +415,21 @@ export function idProblems(dir, status = statusOf(dir)) {
     if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(goal.id))
       found.push(`goal ${goal.id} isn't an id — lower case, single hyphens between words`);
 
+    if (goal.capability && !CAPABILITY_SLUG.test(goal.capability))
+      found.push(
+        `${goal.id} has capability ${goal.capability}, which isn't a slug (two to four lower-case words with hyphens)`
+      );
+
     found.push(...goal.problems);
   }
+
+  // A capability is made of parts, so one goal alone under a slug is a grouping of nothing.
+  const parts = new Map();
+  for (const goal of goals)
+    if (goal.capability && CAPABILITY_SLUG.test(goal.capability))
+      parts.set(goal.capability, [...(parts.get(goal.capability) ?? []), goal.id]);
+  for (const [slug, ids] of parts)
+    if (ids.length === 1) found.push(`capability ${slug} has only one part (${ids[0]})`);
 
   for (const entry of readActivities(dir)) {
     if (seen.has(entry.id)) found.push(`${entry.id} is both an activity and a goal`);
