@@ -137,6 +137,18 @@ argument.
    answering before. That's exactly the property a review wants and the other moves don't
    have.
 
+   **Before either, try the bank.** Ask for a question that credits the goal that is due:
+
+   ```
+   node workflows/learn/tools/next-item.mjs <topic-folder> --goal <goal-id>
+   ```
+
+   Show the learner only what follows `--- learner sees ---`. It prefers a question they have
+   never been served, then the one served longest ago, so you need not filter by `served`. Run
+   it with `--key` to read the grading text, and keep that from them. **Exit code 2 means no
+   bank question names this goal**, and then the generator runs live, as above. A question may
+   credit other goals as well; that is fine, and step 3 says how it is ruled.
+
    Either way, **don't say what the criterion is.** Just give them the task.
 
 2. **They attempt it cold.** Set the task, then stop talking.
@@ -173,6 +185,11 @@ argument.
    sentence, never the name. It won't infer a missing field, and that's right: a verdict built
    on a guessed criterion is recorded exactly like a real one.
 
+   **A bank question that credits several goals** goes as `goals`, a list of
+   `{"goal": …, "criterion": …}` with each criterion resolved, plus the `--key` output as a
+   `--- rubric ---` block ahead of the record. Only the due goal moves the schedule, but every
+   goal the judge rules on is an attempt, and step 4 records each.
+
    Both questions still matter here. _Unaided_ looks near-certain because you offered nothing,
    but they may have looked something up, and the judge is the party to decide that rather than
    you.
@@ -193,10 +210,14 @@ argument.
    ```
 
    Same call the study phase makes, with `--source review` added. `<label>` is what the supply
-   served, in its own words — the entry id, with the bank item after a slash, or the move and a
-   note on the instance. That's what keeps it from being served back in three months, and
-   there's nowhere else it gets recorded. `--tags` is what the supply returned — `production`
-   or `reception` from the vocabulary supply, nothing at all from the curated one.
+   served, in its own words: for a bank question the `<activity>/<scenario>/<question>` label
+   the picker printed, otherwise the entry id or the move and a note on the instance. That's
+   what keeps it from being served back in three months, and there's nowhere else it gets
+   recorded. `--tags` is what the supply returned: the picker's `tags:` line unless it says
+   `none`, or `production` or `reception` from the vocabulary supply, and nothing otherwise.
+
+   **A question ruled against several goals is one call per goal**, each with its own `--axes`
+   and all with the same label and `--tags`.
 
    A review attempt is an attempt, and the log is what the interval rule is read from. It
    cannot unmake what was shown — nothing can — but a lapse belongs in the record of what
@@ -266,6 +287,7 @@ had earned, and the record deliberately doesn't work that way.
 
 - [`learn`](workflows/learn/skills/learn/SKILL.md) — skill
 - [`topic`](workflows/learn/skills/topic/SKILL.md) — skill
+- [`next-item.mjs`](workflows/learn/tools/next-item.mjs) - tool
 - [`record-attempt.mjs`](workflows/learn/tools/record-attempt.mjs) — tool
 - [`record-status.mjs`](workflows/learn/tools/record-status.mjs) — tool
 - [`review-due.mjs`](workflows/learn/tools/review-due.mjs) — tool

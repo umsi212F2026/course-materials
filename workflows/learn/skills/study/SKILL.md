@@ -81,6 +81,11 @@ ask differently rather than repeating it.
    choice to put to them. See
    [`../goal-setting/references/vocabulary-moves.md`](../goal-setting/references/vocabulary-moves.md).
 
+   **An activity with a bank is served from it.** If `tasks/<activity-id>/` exists in the topic
+   folder, the questions are already written, and running the activity means asking for one with
+   `next-item.mjs`; see [`references/running-an-activity.md`](references/running-an-activity.md).
+   Offering it is no different from any other candidate.
+
    Coming back here after abandoning something, stay on the same goal and offer what's left of
    it, unless they say otherwise.
 
@@ -109,6 +114,12 @@ ask differently rather than repeating it.
    like `vocabulary` — the sentence that reference points at, from
    [`../goal-setting/references/slots.md`](../goal-setting/references/slots.md). Send the
    sentence, never the name. `label` is what the supply served.
+
+   **A question from a bank may credit several goals.** The picker's `goals:` line lists them.
+   Send `goals`, a list of `{"goal": …, "criterion": …}` with each criterion resolved the same
+   way, and add the `--key` output as a `--- rubric ---` block ahead of the record. The judge
+   then returns one ruling per goal, as a JSON array. A question that names one goal, or a live
+   generator, goes as above and comes back as one object.
 
    It won't infer a missing field, and that's right: a verdict built on a guessed criterion is
    recorded exactly like a real one.
@@ -139,6 +150,9 @@ ask differently rather than repeating it.
    ruled_ below.
 
 4. **Record it.** Run `record-attempt.mjs` — see _The record_ — every time, before moving on.
+
+   **A question ruled against several goals is one `record-attempt.mjs` call per goal**, each
+   with that ruling's `--axes`, and all with the question's label and its `--tags`.
 
    Nothing else needs recording about the activity. The log holds what was attempted and how it
    went, and that is what the next tutor reads as where you left off.
@@ -191,8 +205,9 @@ node workflows/learn/tools/record-attempt.mjs <topic-folder> <goal-id> <label> -
 node workflows/learn/tools/record-attempt.mjs <topic-folder> <goal-id> <label> --outcome abandoned
 ```
 
-**`<label>` is what the supply served, in the supply's own words.** For a curated activity that
-is the entry id, and the bank item after a slash — `a-annotate-specimen/specimen-14`. For a
+**`<label>` is what the supply served, in the supply's own words.** For a question from a bank
+it is the label `next-item.mjs` printed, exactly: `<activity>/<scenario>/<question>`. For a
+curated activity run live it is the entry id, and the item after a slash. For a
 vocabulary move it is the move and a few words on the instance —
 `CATCH: subject/verb agreement`. Nothing but that supply reads it back, which is what makes
 free-form safe: it is how the supply avoids serving you the same thing twice, and `served.mjs`
@@ -204,8 +219,9 @@ the same one back, and there is nowhere else it gets written down.
 **`--tags` is what the supply returned**, from a closed system-wide set: `production`,
 `reception`. It is the one structured thing about what was served, and it exists because a
 `bar` has to know whether a move was a production one and cannot read the label. A vocabulary
-CATCH is `--tags production`; a DEFINE is `--tags reception`. **The curated supply returns no
-tags** — omit the flag.
+CATCH is `--tags production`; a DEFINE is `--tags reception`. **For a bank question, pass the
+`tags:` line the picker printed**, unless it says `none`, in which case omit the flag. A
+curated activity run live returns no tags, so omit the flag there too.
 
 **The two axes go in raw**, as the adjudicator returned them:
 
@@ -416,6 +432,7 @@ lose each other's writes, so this one ends first.
 - [`curation`](workflows/learn/skills/curation/SKILL.md) — skill
 - [`goal-setting`](workflows/learn/skills/goal-setting/SKILL.md) — skill
 - [`learn`](workflows/learn/skills/learn/SKILL.md) — skill
+- [`next-item.mjs`](workflows/learn/tools/next-item.mjs) - tool
 - [`record-attempt.mjs`](workflows/learn/tools/record-attempt.mjs) — tool
 - [`record-status.mjs`](workflows/learn/tools/record-status.mjs) — tool
 - [`survey.mjs`](workflows/learn/tools/survey.mjs) — tool

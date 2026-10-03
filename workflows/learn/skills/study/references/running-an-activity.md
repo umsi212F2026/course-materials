@@ -28,6 +28,23 @@ what that move asks for and no more. Rewording DEFINE into something friendlier,
 CATCH item come with a hint about where the error is, changes what the pass would mean, so
 don't do that.
 
+**A bank, where the activity has one.** If `tasks/<activity-id>/` exists in the topic folder, the
+questions are written and you serve one rather than inventing it:
+
+```
+node workflows/learn/tools/next-item.mjs <topic-folder> --activity <activity-id>
+```
+
+It prints a `label:`, the goals the question credits, its `tags:`, and whether it is a repeat,
+then `--- learner sees ---` and the text. **Show the learner only what follows that line.** Run
+it again with `--key` for the grading text, which is for the judge and never for the learner,
+and any `--- tutor note ---` is for you. A learner who carries on gets
+`--after <last label>`, which keeps them in the same scenario where there is more of it. Keep
+the label and the `tags:` line: they go to `record-attempt.mjs` as they are.
+
+**Exit code 2 means nothing is banked for that activity**, and so does there being no
+`tasks/<activity-id>/` folder. Then run the entry's generator live, as above.
+
 **Never quietly run something else.** If you think a different activity would serve them
 better, say so and offer it — the entries are candidates and the learner may choose among them.
 If you think this one is _faulty_, that's a drop; see _Abandoning one_ for what counts. What
@@ -84,10 +101,9 @@ it's a set attempt, judged like any other, and it takes one production pass to f
 
 That's the honest version of the rule: don't credit it silently, do notice it out loud.
 
-If the activity uses a bank, take an item they haven't had. The same call says which are used
-up — `served.mjs` returns whatever the supply wrote as a label, and the curated supply writes
-`<entry-id>/<item>`. You don't track it separately, and there's nowhere to write it down:
-putting the item in the label you pass to `record-attempt.mjs` _is_ recording it.
+If the activity uses a bank, `next-item.mjs` takes an item they haven't had, and says when it is
+a repeat. You don't track it separately, and there's nowhere to write it down: putting the label
+it printed in the call to `record-attempt.mjs` _is_ recording it.
 
 ## At the end of an attempt
 
