@@ -173,12 +173,35 @@ export function readIds(dir) {
 // activities. verify and critique skip those: there is no artifact to confirm and no menu to
 // judge, and dropping one would take the goal's only entry with it.
 
+// A `serves` item `group <name>` is expanded HERE into the ids of every goal in that group, in
+// goals.md order, so `serves` is always a list of goal ids and nothing downstream knows the form
+// exists. Expanding at read time is the point: a word added to the group later is covered with
+// no edit to activities.md. The names written come back as `servesGroups`, which is all
+// idProblems needs to report a group nobody is in. Only `serves` takes it; `checks` does not.
+const GROUP_ITEM = /^group\s+(\S+)$/;
+
+function expandServes(items, goals) {
+  const serves = [];
+  const servesGroups = [];
+  for (const item of items) {
+    const m = item.match(GROUP_ITEM);
+    if (!m) {
+      serves.push(item);
+      continue;
+    }
+    servesGroups.push(m[1]);
+    for (const g of goals) if (g.group === m[1]) serves.push(g.id);
+  }
+  return { serves, servesGroups };
+}
+
 export function readActivities(dir) {
   const file = join(dir, 'activities.md');
   if (!existsSync(file)) return [];
+  const { goals } = readGoals(dir);
   return entries(readFileSync(file, 'utf8')).map(({ id, fields }) => ({
     id,
-    serves: listField(fields.serves),
+    ...expandServes(listField(fields.serves), goals),
     checks: listField(fields.checks),
     origin: fields.origin ?? '',
     generated: /^generated\b/i.test(fields.origin ?? ''),
@@ -437,6 +460,9 @@ export function idProblems(dir, status = statusOf(dir)) {
     for (const id of [...entry.serves, ...entry.checks])
       if (id !== 'all' && !seen.has(id))
         found.push(`${entry.id} names ${id}, which is not in goals.md`);
+    for (const name of entry.servesGroups)
+      if (!goals.some((g) => g.group === name))
+        found.push(`${entry.id} serves group ${name}, which no goal is in`);
 
     // A stamp is for a goal whose supply produces its own activities. On any other goal it is
     // a candidate nobody can run: the tutor would go looking for an instruction that the entry
