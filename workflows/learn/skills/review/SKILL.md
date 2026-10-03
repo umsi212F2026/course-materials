@@ -190,9 +190,9 @@ argument.
    goes without one. One goal goes as `goal` and `criterion`; several go as `goals`, a list of
    `{"goal": …, "criterion": …}` with each criterion resolved. A question that names goals with
    different `adjudicator` slots goes to `study/judge` for all of them. Every goal the judge
-   rules on is an attempt and step 4 records each, but only a goal that is on today's due list
-   is recorded as a review: the others count as evidence without moving them along their
-   intervals.
+   rules on is an attempt and step 4 records each. A goal that was due is recorded as a review.
+   Another named goal is recorded as a review only if it was missed; one that passed counts as
+   evidence without moving it along its intervals, and so does one the judge could not decide.
 
    Both questions still matter here. _Unaided_ looks near-certain because you offered nothing,
    but they may have looked something up, and the judge is the party to decide that rather than
@@ -221,10 +221,22 @@ argument.
    `none`, or `production` or `reception` from the vocabulary supply, and nothing otherwise.
 
    **A question ruled against several goals is one call per goal**, each with its own `--axes`
-   and all with the same label and `--tags`. Every named goal that is on today's due list gets
-   `--source review`; any other named goal omits the flag. `--source review` is what moves
-   a goal along its intervals, and a goal that was not due should not be moved by a question it
-   happened to share.
+   and all with the same label and `--tags`. Which of them carry `--source review`:
+
+   - **A goal that was due:** `--source review`, pass or miss.
+   - **Any other named goal that was missed** (criterion `not met`, or `unaided: no`): also
+     `--source review`.
+   - **Any other named goal that passed:** omit `--source`.
+   - **An inconclusive ruling on a goal that was not due** (criterion `unclear`, or
+     `unaided: unclear`): omit `--source`.
+
+   `--source review` is what moves a goal along its intervals, so the asymmetry is deliberate.
+   A miss on a goal that was not due is as trustworthy as any, because the attempt was cold,
+   and recording it as a review moves the goal one step shorter so it comes back sooner. A
+   pass on one is not worth the same: recorded as a review it would promote the goal a step
+   it was not yet due to earn, whereas a pass without the flag only re-dates it from today at
+   the step it is already on. An inconclusive ruling is no evidence either way, so it leaves
+   that goal's schedule where it was.
 
    A review attempt is an attempt, and the log is what the interval rule is read from. It
    cannot unmake what was shown — nothing can — but a lapse belongs in the record of what
