@@ -32,7 +32,8 @@ a tutor key file) that the quiz cannot read.
 
 ### Topic origin
 
-`goals.md` carries a header line under its title:
+A course topic's `goals.md` carries one line, `**origin:** course`, under its title. For example,
+the top of the cloud-hosting topic's file:
 
 ```
 # Learning goals: cloud hosting
