@@ -13,6 +13,10 @@
 // has since been removed, or a free-text catch such as `CATCH: subject/verb agreement`. Only
 // labels that match a candidate count, so those cannot make anything look served.
 //
+// GOAL-LESS LAST. A question whose goals line is empty is practice: it records nothing, so it is
+// only worth serving when no goal-bearing question is on offer. Among themselves, goal-less
+// items follow the same rules as everything else.
+//
 // TIES go to the same `<activity>/<scenario>` as the question just served (`after`), so a
 // scenario's setup is read once rather than re-read for every question, then to bank order.
 
@@ -33,6 +37,7 @@ export function pick(items, log, { goal, activity, after } = {}) {
   const ranked = candidates
     .map((item, order) => ({ item, order, at: latest.get(item.label) ?? null }))
     .sort((a, b) => {
+      if ((a.item.goals.length === 0) !== (b.item.goals.length === 0)) return a.item.goals.length === 0 ? 1 : -1;
       if ((a.at === null) !== (b.at === null)) return a.at === null ? -1 : 1;
       if (a.at !== null && Date.parse(a.at) !== Date.parse(b.at)) return Date.parse(a.at) - Date.parse(b.at);
       const ag = afterGroup && group(a.item.label) === afterGroup;

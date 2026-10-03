@@ -12,7 +12,7 @@
 
 import { existsSync } from 'node:fs';
 import { readFolderBanks } from '../../quiz/tools/lib/bank.mjs';
-import { readLog } from './lib/topic.mjs';
+import { readLog, readActivities } from './lib/topic.mjs';
 import { pick } from './lib/pick.mjs';
 
 const USAGE = `usage:
@@ -54,7 +54,11 @@ if (!flags.goal === !flags.activity) die(`Give exactly one of --goal and --activ
 const { items, problems } = readFolderBanks(dir);
 if (problems.length) console.error(`warning: ${problems.length} bank problem(s):\n  ${problems.join('\n  ')}`);
 
-const result = pick(items, readLog(dir), { goal: flags.goal, activity: flags.activity, after: flags.after });
+// A DROPPED ACTIVITY'S QUESTIONS ARE NOT SERVED. The entry stays in activities.md as curation's
+// feedback, but the learner is not to meet it. A folder with no entry at all is still served:
+// a bank may exist before curation has written anything about it.
+const dropped = new Set(readActivities(dir).filter((e) => e.dropped).map((e) => e.id));
+const result = pick(items.filter((it) => !dropped.has(it.activity)), readLog(dir), { goal: flags.goal, activity: flags.activity, after: flags.after });
 if (!result) {
   console.error(`no bank questions for ${flags.goal ?? flags.activity}; run the activity's generator live`);
   process.exit(2);
@@ -71,7 +75,15 @@ const lines = [
 ];
 if (item.type === 'mcq') item.choices.forEach((c, i) => lines.push(`${i + 1}. ${c}`));
 if (flags.key) {
-  lines.push('--- key ---', item.type === 'mcq' ? item.choices[item.answer] : item.rubric);
+  // An mcq's key is the scenario's key (when it has one) and then the correct choice, numbered
+  // as the learner saw it.
+  lines.push('--- key ---');
+  if (item.type === 'mcq') {
+    if (item.key) lines.push(item.key);
+    lines.push(`${item.answer + 1}. ${item.choices[item.answer]}`);
+  } else {
+    lines.push(item.rubric);
+  }
   if (item.tutorNote) lines.push('--- tutor note ---', item.tutorNote);
 }
 console.log(lines.join('\n'));

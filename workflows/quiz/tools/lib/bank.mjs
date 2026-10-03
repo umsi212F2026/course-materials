@@ -66,7 +66,8 @@ function fields(body) {
       key = m[1];
       out[key] = m[2].trim();
     } else if (key && line.trim()) {
-      out[key] += ' ' + line.trim();
+      // A LIST ITEM KEEPS ITS OWN LINE (a multi-goal credit is one entry per goal); prose folds.
+      out[key] += (line.trim().startsWith('- ') ? '\n' : ' ') + line.trim();
     } else {
       key = null;
     }
@@ -287,7 +288,7 @@ export function readFolderBanks(dir, label = '') {
             problems.push(`${label3} has no answer in its rubric`);
             continue;
           }
-          // A multi-goal credit written as an indented list is already one folded string.
+          // A multi-goal credit written as an indented list keeps one line per goal (see fields).
           const credit = r.credit ? r.credit.charAt(0).toUpperCase() + r.credit.slice(1) : '';
           const judged = credit ? `${r.answer} ${credit}` : r.answer;
           items.push({ ...common, rubric: key ? `${key}\n\n${judged}` : judged });

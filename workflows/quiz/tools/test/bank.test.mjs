@@ -68,6 +68,7 @@ test("a scenario's questions carry its setup, its key and every goal", () => {
   assert.equal(v1.key, "Must name: sleep.");
   assert.ok(v1.rubric.startsWith("Must name: sleep."));
   assert.ok(v1.rubric.includes("`c-b`: full for cost."));
+  assert.ok(v1.rubric.includes("- `c-a`: full for sleep.\n- `c-b`: full for cost."));
   assert.equal(v1.tutorNote, "Ask about the partner question.");
   assert.equal(readFolderBanks(dir, "src").items[0].bank, "src/a-x");
 });

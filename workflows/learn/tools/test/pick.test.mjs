@@ -62,6 +62,13 @@ test('no candidates gives null', () => {
   assert.equal(pick([A1], [], { goal: 'nope' }), null);
 });
 
+test('a goal-less item ranks after every goal-bearing one under --activity', () => {
+  const practice = item('a-x/s1/q0', []);
+  const r = pick([practice, A1], [], { activity: 'a-x' });
+  assert.equal(r.item.label, 'a-x/s1/q1');
+  assert.equal(pick([practice], [], { activity: 'a-x' }).item.label, 'a-x/s1/q0');
+});
+
 function bank(dir) {
   const put = (rel, text) => {
     mkdirSync(dirname(join(dir, rel)), { recursive: true });
@@ -96,4 +103,28 @@ test('CLI with an unknown goal exits 2 with the message', () => {
   const r = run('next-item.mjs', [dir, '--goal', 'nope']);
   assert.equal(r.code, 2);
   assert.match(r.stderr + r.stdout, /no bank questions for nope; run the activity's generator live/);
+});
+
+test('CLI never serves a dropped activity, but serves a folder with no entry', () => {
+  const dir = makeTopic({
+    goals: CAP_GOAL('g-one'),
+    activities: '### a-x\n- **checks:** g-one\n- **status:** dropped\n',
+  });
+  bank(dir);
+  assert.equal(run('next-item.mjs', [dir, '--goal', 'g-one']).code, 2);
+  const free = makeTopic({ goals: CAP_GOAL('g-one'), activities: '### a-other\n- **checks:** g-one\n' });
+  bank(free);
+  assert.equal(run('next-item.mjs', [free, '--goal', 'g-one']).code, 0);
+});
+
+test('CLI --key on an mcq prints the scenario key and the numbered correct choice', () => {
+  const dir = makeTopic({ goals: CAP_GOAL('g-one') });
+  const put = (rel, text) => {
+    mkdirSync(dirname(join(dir, rel)), { recursive: true });
+    writeFileSync(join(dir, rel), text);
+  };
+  put('tasks/a-x/kettle.md', '# K\n\nA kettle app.\n\n### m1\n\nWhich?\n\n1. Kettle sleeps\n2. Kettle never sleeps\n');
+  put('rubrics/a-x/kettle.md', '# K key\n\nMust name: sleep.\n\n### m1\n\n- **goal:** g-one\n- **type:** mcq\n- **answer:** 2\n');
+  const r = run('next-item.mjs', [dir, '--goal', 'g-one', '--key']);
+  assert.match(r.stdout, /--- key ---\nMust name: sleep\.\n2\. Kettle never sleeps/);
 });
