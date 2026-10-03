@@ -96,7 +96,10 @@ rubrics/<activity-id>/
   <scenario-id>.md    the scenario's shared key, then one `### <question-id>` section per question
 ```
 
-A scenario may hold one question; a vocabulary word is usually a scenario.
+An activity has no bank or one; activities without questions, and generators run live, have no
+folders. A bank has one or more scenarios, and every question is in a scenario. A scenario has one
+or more questions: a question that stands alone, such as one about a vocabulary word, is a
+scenario holding just that question.
 
 Each rubric question section carries:
 
