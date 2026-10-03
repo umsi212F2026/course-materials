@@ -78,6 +78,17 @@ An activity is an exercise shape (critique a worked choice, make the call yourse
 define a word). An activity that has questions carries a **generator** in `activities.md` and,
 for a course topic, the **bank** it drafted. Activities without questions are unchanged.
 
+Three places, for three readers:
+
+| | holds | read by |
+|---|---|---|
+| `activities.md` | what the activity is, how to offer and run it, its generator | tutor, curation |
+| `tasks/<activity-id>/` | what the learner sees | learner, through the tutor or quiz page |
+| `rubrics/<activity-id>/` | how answers are judged | judge, grader, tutor |
+
+Whether an activity has a bank is whether `tasks/<activity-id>/` exists, so an entry no longer
+carries `kind: bank` or a `bank:` path.
+
 ### The generator declares its goals
 
 A generator says which goals its questions bear on, and how a question is mapped to them. This
@@ -89,17 +100,21 @@ generator's goals.
 
 ```
 tasks/<activity-id>/
-  _activity.md        instructions shared by every scenario (optional)
   <scenario-id>.md    the scenario's setup, then one `### <question-id>` section per question
 rubrics/<activity-id>/
-  _activity.md        key shared by every scenario (optional)
   <scenario-id>.md    the scenario's shared key, then one `### <question-id>` section per question
 ```
 
 An activity has no bank or one; activities without questions, and generators run live, have no
-folders. A bank has one or more scenarios, and every question is in a scenario. A scenario has one
-or more questions: a question that stands alone, such as one about a vocabulary word, is a
-scenario holding just that question.
+folders. A bank has one or more scenario files, and every question is in one. A scenario file's
+top part (before its first `###`) is shared by its questions: the setup in `tasks/`, the key in
+`rubrics/`. Nothing is shared across scenario files; an instruction every scenario needs ("answer
+in two or three sentences") is written at the top of each.
+
+**`main-bank` is the reserved name for a scenario file with no shared setup.** Its top part is
+empty and its questions stand alone, though any one of them may set up its own situation in its
+body. A bank may have named scenarios, a `main-bank`, or both. Vocabulary keeps a file per word
+(the word is a natural unit to keep or cut), even though a word has no setup.
 
 Each rubric question section carries:
 
@@ -120,9 +135,8 @@ question's path, `<activity-id>/<scenario-id>/<question-id>`, for example
 `a-judge-plan-weighings/crumbs/v4`. Renaming a scenario only makes the picker treat its questions
 as unseen; whether a goal is met depends on rulings, not labels.
 
-**What each party sees.** The learner: `_activity.md`, the scenario's setup, the one question.
-The judge, grader and tutor: the learner text plus the rubric's `_activity.md`, the scenario key
-and the question's entry. The tutor never shows rubric text to the learner.
+**What each party sees.** The learner: the scenario's setup and the one question. The judge,
+grader and tutor: the learner text plus the scenario's key and the question's rubric entry. The tutor never shows rubric text to the learner.
 
 ### What counts
 
@@ -212,8 +226,8 @@ separate path for words. Kept: the moves reference, the tags, and the `one produ
 - Capability questions in `items.md` move into the activity whose generator would produce them.
 - So `items.md` is split, never turned into a single scenario. Until a topic is migrated it keeps
   working as a single-file bank.
-- Key-file study banks (cloud-hosting) become folders; the key's shared lists become the rubric's
-  `_activity.md` or scenario key, and its cases table becomes per-question entries.
+- Key-file study banks (cloud-hosting) become folders; the key's shared lists become the scenario
+  key, and its cases table becomes per-question entries.
 - One `origin: course` header replaces the per-goal stamps.
 
 Goal ids never change, so every recorded attempt keeps pointing at its goal.
