@@ -113,8 +113,12 @@ Each rubric question section carries:
   sets the attempt's tag through the move table now in `quiz-practice.mjs`, which moves to a shared
   library.
 
-**Question ids are unique within the activity.** The label everywhere (study, review, quiz) is
-`<activity-id>/<question-id>`.
+**Scenario files are named for their content** (`crumbs.md`, `tally.md`, a word's name), even
+when a bank has only one scenario. **Question ids are unique within their scenario**, so a
+scenario may number its questions `q1`, `q2`. The label everywhere (study, review, quiz) is the
+question's path, `<activity-id>/<scenario-id>/<question-id>`, for example
+`a-judge-plan-weighings/crumbs/v4`. Renaming a scenario only makes the picker treat its questions
+as unseen; whether a goal is met depends on rulings, not labels.
 
 **What each party sees.** The learner: `_activity.md`, the scenario's setup, the one question.
 The judge, grader and tutor: the learner text plus the rubric's `_activity.md`, the scenario key
@@ -135,8 +139,8 @@ and the question's entry. The tutor never shows rubric text to the learner.
 - Candidates: with `--goal`, every question in any bank whose rubric names that goal; with
   `--activity`, every question in that activity's bank.
 - Order: questions this learner has never been served (by label, from the attempt log), then the
-  one served longest ago. With `--after`, a tie goes to another question in the same scenario as
-  that label.
+  one served longest ago. With `--after`, a tie goes to a question whose label shares that label's
+  `<activity-id>/<scenario-id>` prefix.
 - Prints the label, the learner text, whether it is a repeat, and its tags. `--key` prints the
   judge's version instead.
 - Old labels in the log that match no question are ignored.
@@ -206,6 +210,8 @@ separate path for words. Kept: the moves reference, the tags, and the `one produ
 - Word questions in `items.md` become `a-words` scenarios; an `a-words` entry is added; the `a-w-*`
   placeholder entries and `supply: vocabulary` lines are removed.
 - Capability questions in `items.md` move into the activity whose generator would produce them.
+- So `items.md` is split, never turned into a single scenario. Until a topic is migrated it keeps
+  working as a single-file bank.
 - Key-file study banks (cloud-hosting) become folders; the key's shared lists become the rubric's
   `_activity.md` or scenario key, and its cases table becomes per-question entries.
 - One `origin: course` header replaces the per-goal stamps.
