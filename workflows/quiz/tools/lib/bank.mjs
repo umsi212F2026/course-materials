@@ -23,9 +23,18 @@
 // ANSWERS ARE 1-BASED IN THE FILE and 0-based in the output. The rubric file is written for a
 // person reading it next to the numbered list in tasks/, and the draw contract already uses an
 // index. Converting here is the only place that has to know.
+//
+// TWO LAYOUTS. A single-file bank is tasks/<name>.md with rubrics/<name>.md, one item per `###`.
+// A FOLDER BANK is tasks/<activity>/<scenario>.md with rubrics/<activity>/<scenario>.md: the top
+// of each file (before its first `###`) is shared by the scenario's questions, the setup in
+// tasks/ and the key in rubrics/, and each `###` is one question. The item's label is
+// <activity>/<scenario>/<question>, and its stratum is the activity. A scenario file with no
+// rubric file is a PROBLEM here, though a single file without one is skipped silently: a folder
+// under tasks/ exists only to hold a bank, whereas a loose tasks/ file may be a study activity.
 
-import { readFileSync, readdirSync, existsSync } from 'node:fs';
+import { readFileSync, readdirSync, existsSync, statSync } from 'node:fs';
 import { join } from 'node:path';
+import { tagsForMove } from '../../../learn/tools/lib/moves.mjs';
 
 // One `### heading` block. Returns [{ id, body }] in file order.
 function sections(text) {
@@ -51,7 +60,8 @@ function fields(body) {
   const out = {};
   let key = null;
   for (const line of body.split('\n')) {
-    const m = /^-\s+\*\*([a-z]+):\*\*\s*(.*)$/.exec(line);
+    // Names may be several words (`tutor note`); a one-word name matches exactly as before.
+    const m = /^-\s+\*\*([a-z]+(?: [a-z]+)*):\*\*\s*(.*)$/.exec(line);
     if (m) {
       key = m[1];
       out[key] = m[2].trim();
@@ -182,6 +192,112 @@ export function readBank(dir, label = '') {
     }
   }
 
+  const folders = readFolderBanks(dir, label);
+  return { items: [...items, ...folders.items], problems: [...problems, ...folders.problems] };
+}
+
+// Everything before the first `###`, minus the file's `#` title line, trimmed.
+function topPart(text) {
+  const out = [];
+  for (const line of text.split('\n')) {
+    if (/^###\s/.test(line)) break;
+    if (/^#\s/.test(line)) continue;
+    out.push(line);
+  }
+  return out.join('\n').trim();
+}
+
+/** Read every folder bank in one source: tasks/<activity>/<scenario>.md against
+ *  rubrics/<activity>/<scenario>.md. Returns { items, problems } like readBank, and readBank
+ *  calls it, so every caller sees both kinds. Problems are collected, never thrown. */
+export function readFolderBanks(dir, label = '') {
+  const items = [];
+  const problems = [];
+  const tasksDir = join(dir, 'tasks');
+  const rubricsDir = join(dir, 'rubrics');
+  if (!existsSync(tasksDir)) return { items, problems };
+
+  const activities = readdirSync(tasksDir)
+    .filter((n) => statSync(join(tasksDir, n)).isDirectory())
+    .sort();
+  for (const activity of activities) {
+    const bank = label ? `${label}/${activity}` : activity;
+    const scenarios = readdirSync(join(tasksDir, activity)).filter((n) => n.endsWith('.md')).sort();
+    for (const file of scenarios) {
+      const scenario = file.replace(/\.md$/, '');
+      const where = `tasks/${activity}/${file}`;
+      const rubricPath = join(rubricsDir, activity, file);
+      if (!existsSync(rubricPath)) {
+        problems.push(`${where} has no rubric file at rubrics/${activity}/${file}, so nothing in it could grade`);
+        continue;
+      }
+
+      const rubricText = readFileSync(rubricPath, 'utf8');
+      const key = topPart(rubricText);
+      const rubrics = new Map();
+      for (const s of sections(rubricText)) {
+        if (rubrics.has(s.id)) problems.push(`${activity}/${scenario}/${s.id} has two rubric entries`);
+        else rubrics.set(s.id, fields(s.body));
+      }
+
+      const taskText = readFileSync(join(tasksDir, activity, file), 'utf8');
+      const setup = topPart(taskText);
+      const seen = new Set();
+      for (const s of sections(taskText)) {
+        const label3 = `${activity}/${scenario}/${s.id}`;
+        if (seen.has(s.id)) {
+          problems.push(`${label3} appears twice in ${where}; question ids must be unique within a scenario`);
+          continue;
+        }
+        seen.add(s.id);
+
+        const r = rubrics.get(s.id);
+        if (!r) {
+          problems.push(`${label3} is in ${where} with no rubric entry, so nothing could grade it`);
+          continue;
+        }
+
+        const { prompt: body, choices } = splitChoices(s.body);
+        const prompt = setup ? `${setup}\n\n${body}` : body;
+        const type = r.type || 'free';
+        const goals = (r.goal ?? '').split(',').map((g) => g.replace(/`/g, '').trim()).filter(Boolean);
+        const common = {
+          bank, activity, scenario, id: s.id, label: label3, goals,
+          ...(goals.length === 1 ? { goal: goals[0] } : {}),
+          ...(r.move ? { move: r.move } : {}),
+          tags: tagsForMove(r.move),
+          type, prompt, setup, key,
+          ...(r.answer ? { expected: r.answer } : {}),
+          ...(r['tutor note'] ? { tutorNote: r['tutor note'] } : {}),
+        };
+
+        if (type === 'mcq') {
+          if (!choices) {
+            problems.push(`${label3} is type mcq but its question carries no numbered choices`);
+            continue;
+          }
+          const n = Number(r.answer);
+          if (!Number.isInteger(n) || n < 1 || n > choices.length) {
+            problems.push(`${label3} has answer: ${r.answer}, which is not one of its ${choices.length} choices`);
+            continue;
+          }
+          items.push({ ...common, choices, answer: n - 1 });
+        } else {
+          if (!r.answer) {
+            problems.push(`${label3} has no answer in its rubric`);
+            continue;
+          }
+          // A multi-goal credit written as an indented list is already one folded string.
+          const credit = r.credit ? r.credit.charAt(0).toUpperCase() + r.credit.slice(1) : '';
+          const judged = credit ? `${r.answer} ${credit}` : r.answer;
+          items.push({ ...common, rubric: key ? `${key}\n\n${judged}` : judged });
+        }
+      }
+      for (const id of rubrics.keys()) {
+        if (!seen.has(id)) problems.push(`${activity}/${scenario}/${id} has a rubric entry but no question in ${where}`);
+      }
+    }
+  }
   return { items, problems };
 }
 
