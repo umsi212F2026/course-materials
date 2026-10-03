@@ -156,7 +156,9 @@ with the learner.
   block below that applies only to activities that can finish a goal — the ones carrying
   `checks`.
 
-  serves        goal ids from the table above, or `all` — which goals this helps with
+  serves        goal ids from the table above, or `all`: which goals this helps with. An item
+                may also be `group <name>`, which stands for every goal in that group, those
+                added later included. A group no goal is in is reported by survey.
   supports      one or more of:
                   orient   first pass; get the shape of the thing
                   deepen   build up a specific part, or connect it to what's known

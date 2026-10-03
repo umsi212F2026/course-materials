@@ -92,6 +92,9 @@ When you ask for your learning status on a topic, you'll see a summary like:
 Goals are grouped — your capabilities, your vocabulary — and each group shows how many are met
 out of how many. **What's left comes first**, because that's what you'd be deciding about.
 
+A capability that was split into parts is listed together, after the single goals, under its own
+line with a fraction of its own, say `read-diagram 1/2`, and its parts indented beneath.
+
 The `c-` and `w-` are just labels saying which kind each one is. You don't type them.
 
 The misses are in there on purpose. Nothing here is graded and nothing reaches an instructor,

@@ -1,4 +1,4 @@
-# Goal slots — the eight questions, and the three contracts
+# Goal slots: the nine questions, and the three contracts
 
 This file carries the rules and the contracts, and no argument — the reasoning behind them is
 recorded outside this repository.
@@ -12,7 +12,7 @@ system asks of any of them.
 the four that differ from the default; an orientation carries five. There are no named types:
 nothing in the system says "this is a word", only that this goal's `supply` is `vocabulary`.
 
-## The eight slots
+## The nine slots
 
 | slot          | question                                           | consumer                                         | default                  |
 | ------------- | -------------------------------------------------- | ------------------------------------------------ | ------------------------ |
@@ -24,6 +24,7 @@ nothing in the system says "this is a word", only that this goal's `supply` is `
 | `is_required` | must this be met for the topic to be finished?     | _nothing pending_, in `derivePhase`              | `yes`                    |
 | `origin`      | who set this goal?                                 | the quiz generator, outside this workflow        | `learner`                |
 | `group`       | what is it reported alongside?                     | the report                                       | `capabilities`           |
+| `capability`  | which larger capability is this one part of?       | the report                                       | _(none)_                 |
 
 Offering is not a slot — it falls out of `supply`. If activities come from a shared generator,
 offering them individually is already wrong.
@@ -40,6 +41,7 @@ The three shapes in use:
 | `is_required` | `yes`                | `yes`                 | `no`          |
 | `origin`      | `learner`            | `learner`             | `learner`     |
 | `group`       | _(default)_          | `vocabulary`          | `orientation` |
+| `capability`  | _(none)_             | _(none)_              | _(none)_      |
 
 They override different subsets, and share only "not the default criterion." Don't reach for
 the pattern; read the row.
@@ -48,7 +50,7 @@ the pattern; read the row.
 
 | kind                  | slots                          | what a value is                                                                                                  |
 | --------------------- | ------------------------------ | ---------------------------------------------------------------------------------------------------------------- |
-| **data or reference** | `criterion`, `group`           | literal text, or a pointer to shared text. Nothing invokes it; something reads it and hands it to an adjudicator |
+| **data or reference** | `criterion`, `group`, `capability` | literal text, or a pointer to shared text. Nothing invokes it; something reads it and hands it to an adjudicator |
 | **strategy**          | `supply`, `adjudicator`, `bar` | always an implementation, always invoked                                                                         |
 | **flag**              | `recurrence`, `is_required`, `origin` | read as data by one consumer                                                                                     |
 
@@ -244,9 +246,16 @@ rather than _you said so_.
 quiz generator, which sits outside the learn loop: the course's rule is that what it set is what
 may be examined, and this is what says which goals those are. Words carry it like anything else.
 
+**A goal usually inherits it.** A `**origin:** course` line in `goals.md`, between the title and
+`## Goals`, sets the topic's origin, and every goal in the topic takes that value unless it
+carries an `- **origin:**` of its own. A header with no such line means `learner`, and survey
+reports a header value that is neither. The slot on a goal is the override, and the one place it
+is written by hand is a goal a student adds to a course topic: stamp it `- **origin:** learner`,
+or it would inherit `course` and become examinable. `new-word.mjs` does this for a word.
+
 **It is stamped when a topic is published, not chosen while it is authored**, which is why no
 shape above overrides it. A course-seeded topic is otherwise indistinguishable from one a learner
-built, deliberately — the course runs goal setting and curation itself and ships the same files, so
+built, deliberately: the course runs goal setting and curation itself and ships the same files, so
 nothing in the learning phase behaves differently. This slot is the single exception.
 
 **`learner` is the default because it fails in the safe direction.** A goal wrongly left out of a
@@ -264,6 +273,19 @@ its own clock.
 
 Two vocabulary groups in one topic — core terms, and BPMN element names — work, and cost
 nothing, because a group is just a name two goals happen to share.
+
+### `capability`: data
+
+A bare slug, matching `^[a-z0-9]+(-[a-z0-9]+){1,3}$`: two to four lower-case words with hyphens,
+and no `c-` prefix, since it names a capability rather than a goal. **Goals sharing a slug are
+the parts of one capability**, written when a single criterion would need one very long question
+to check. Each part keeps its own criterion and its own group, usually the default one, and is
+met, scheduled and reviewed on its own.
+
+Grouping by capability is reporting only, on top of the group. In survey's JSON each group gains
+`capabilities: [{slug, met, total}]` while `goals` still lists every goal. In `--report` the parts
+print after the group's plain goals, under a heading line `<slug> <met>/<total>`, indented two
+more spaces. Survey reports a malformed slug, and a capability with only one part.
 
 ## Tags
 

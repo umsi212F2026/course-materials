@@ -40,6 +40,12 @@
   rename orphans everything recorded against it. An entry that becomes a genuinely different
   capability is a new entry with a new id, not a rename.
 
+  THE ORIGIN LINE. Only a topic the course ships carries one, as `**origin:** course` on its
+  own line between the title above and `## Goals`. Leave it out of a topic you built yourself:
+  absent means `learner`. Every goal inherits the topic's origin unless it carries an
+  `- **origin:**` of its own, which is how a goal a student adds to a course topic stays
+  theirs. survey.mjs reports a header value that is neither `course` nor `learner`.
+
   Words added by workflows/learn/tools/new-word.mjs carry ids too; that script takes the id and never invents
   one. See workflows/learn/skills/add-topic/SKILL.md.
 -->
@@ -78,12 +84,13 @@
   orientation are the same kind of thing here and reach every tool through one code path;
   what differs between them is which SLOTS they carry.
 
-  THE EIGHT SLOTS, what each one asks, and every value in use, are in
+  THE NINE SLOTS, what each one asks, and every value in use, are in
   workflows/learn/skills/goal-setting/references/slots.md. Read it before writing a slot you haven't written
   before; a value nothing implements is refused at read time, by name. Every slot takes exactly
   one value.
 
-  EVERY SLOT DEFAULTS, and an ordinary capability carries none of them:
+  EVERY SLOT DEFAULTS, and an ordinary capability carries none of them (the ninth, `capability`,
+  has no default value: it is simply absent unless you write it):
 
       ### `c-read-unseen-diagram`
 
@@ -158,6 +165,13 @@
   when a learner says something is covered in class. It is not a slot and TOOLS IGNORE IT; only
   the tutor reads it, to offer the learner the choice of learning the goal there. Omit the line
   when there is nothing to name.
+
+  A CAPABILITY SPLIT INTO PARTS. When one criterion could only be checked with a very long
+  question, write the capability as several goals, each with its own criterion, and give them
+  the same `- **capability:** read-unseen-diagram` slug: two to four lower-case words, hyphens,
+  no prefix. They stay ordinary goals in their group, met and reviewed one by one; survey
+  prints them together under the slug with a fraction. One part alone is reported, since a
+  group of one is just a goal.
 
   THE ORIENTATION ENTRY is shipped below, filled in, in every topic. It carries five slots and
   they are not yours to change. Delete it only if `what I already have` says this learner has

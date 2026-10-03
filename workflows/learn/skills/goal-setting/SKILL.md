@@ -59,6 +59,11 @@ follow, not annotations for them to read.
 Either of you can type into any part of it. If they're editing too, take turns so you don't
 clobber what they wrote.
 
+**When the topic is one the course shipped** (its `goals.md` has an `**origin:** course` line
+under the title), write `- **origin:** learner` on every goal you add. Without it the goal
+inherits `course`, and a goal the student set for themselves becomes one they can be examined
+on.
+
 **What you can't do is invent facts about them.** _Where this came from_, _what I already have_
 and _what I'll use it for_ are answers only they have. Typing up what they said is fine —
 transcribe it, paraphrase it, carry a sentence down from the opener. Supplying a plausible
@@ -298,9 +303,15 @@ and don't count towards it.
   would we actually look at?" or "how would we know if you have acquired the capability?"
 - **PROPOSE CANDIDATES** — draft three or four possible criteria. Always more than one, and say
   you expect some to be rejected.
-- **PUSH BACK ON SCOPE** — _when an entry has no line back to the stated use, or there are more
-  than about three of them._ Say which part of the use fails to support it. The move you'll
+- **PUSH BACK ON SCOPE**: _when an entry has no line back to the stated use, or there are more
+  than about three capabilities._ Count a capability once however many parts it has, and an
+  unlabelled goal counts as one. Say which part of the use fails to support it. The move you'll
   most want to skip, and skipping it is how this conversation fails.
+- **SPLIT INTO PARTS**: _when checking a criterion would need one very long question._ Split
+  the capability into part-goals, each with its own criterion, sharing a `- **capability:**`
+  slug (two to four lower-case words, hyphens, no prefix). They stay separate goals, met and
+  reviewed one by one, and survey prints them together under the slug. Don't split to make a
+  goal look bigger: one part alone is reported as a mistake.
 - **MARK WHAT IS TAUGHT ELSEWHERE**: _when they say a goal is covered in class or in a problem
   set._ Write `- **taught elsewhere:** <where>` on that entry, in their words for where. It is
   not a slot and no tool reads it; the tutor does, and offers them the choice of learning it
