@@ -115,11 +115,16 @@ ask differently rather than repeating it.
    [`../goal-setting/references/slots.md`](../goal-setting/references/slots.md). Send the
    sentence, never the name. `label` is what the supply served.
 
-   **A question from a bank may credit several goals.** The picker's `goals:` line lists them.
-   Send `goals`, a list of `{"goal": …, "criterion": …}` with each criterion resolved the same
-   way, and add the `--key` output as a `--- rubric ---` block ahead of the record. The judge
-   then returns one ruling per goal, as a JSON array. A question that names one goal, or a live
-   generator, goes as above and comes back as one object.
+   **Every bank question goes to the judge with its rubric**, the `--key` output as a
+   `--- rubric ---` block ahead of the record, whether it names one goal or several. Only a live
+   generator's question goes without one. The picker's `goals:` line lists what it credits. For
+   one goal, send `goal` and `criterion` as above. For several, send `goals`, a list of
+   `{"goal": …, "criterion": …}` with each criterion resolved the same way, and the judge
+   returns one ruling per goal, as a JSON array. A question that names goals with different
+   `adjudicator` slots goes to `study/judge` for all of them.
+
+   **A question whose `goals:` line is empty is practice.** Run it and discuss it, but record
+   nothing.
 
    It won't infer a missing field, and that's right: a verdict built on a guessed criterion is
    recorded exactly like a real one.

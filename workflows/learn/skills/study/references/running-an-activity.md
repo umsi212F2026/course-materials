@@ -41,7 +41,9 @@ stop at `--- key ---`.** One run with `--key` is enough, since it prints the lea
 too: everything from `--- key ---` on is the grading text, for the judge and never for the
 learner, and any `--- tutor note ---` is for you. A learner who carries on gets
 `--after <last label>`, which keeps them in the same scenario where there is more of it. Keep
-the label and the `tags:` line: they go to `record-attempt.mjs` as they are.
+the label and the `tags:` line: they go to `record-attempt.mjs` as they are. The `--key` text
+also goes to the judge as the question's rubric, whatever the number of goals. A `goals:` line
+that is empty marks practice: run it, record nothing.
 
 **Exit code 2 means nothing is banked for that activity**, and so does there being no
 `tasks/<activity-id>/` folder. Then run the entry's generator live, as above.
