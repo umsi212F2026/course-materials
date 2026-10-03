@@ -12,8 +12,10 @@ plan, implementation). Update this file as items finish or are added.
 3. **Unified question banks.** Spec `specs/2026-10-03-unified-banks-design.md`. Five phases:
    - ~~Phase 1: bank format, picker, multi-goal judge.~~ Done, `10d6158..93158f9`. Plan
      `plans/2026-10-03-unified-banks-phase-1.md`.
-   - Phase 2: goal model (topic origin, capability, `serves: group`, `supply` retired).
-   - Phase 3: vocabulary as `a-words`, with migration.
+   - Phase 2: goal model (topic origin, capability, `serves: group`). Plan
+     `plans/2026-10-03-unified-banks-phase-2.md`.
+   - Phase 3: vocabulary as `a-words`, with migration, and retiring the `supply` slot (moved
+     from phase 2: words depend on `supply: vocabulary` until `a-words` exists).
    - Phase 4: curation with two instructor stops.
    - Phase 5: quiz. Must key questions on `label`, never `id` (folder ids repeat across
      scenarios; `quiz-practice.mjs` keys `byId` and form fields on `id`). Single-source pools
