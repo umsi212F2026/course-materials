@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { pick } from '../lib/pick.mjs';
-import { makeTopic, run, CAP_GOAL } from './helpers.mjs';
+import { makeTopic, run, survey, CAP_GOAL } from './helpers.mjs';
 
 const item = (label, goals = ['g1']) => {
   const [activity, scenario, id] = label.split('/');
@@ -105,16 +105,36 @@ test('CLI with an unknown goal exits 2 with the message', () => {
   assert.match(r.stderr + r.stdout, /no bank questions for nope; run the activity's generator live/);
 });
 
-test('CLI never serves a dropped activity, but serves a folder with no entry', () => {
+test('CLI never serves a dropped activity or a folder with no entry', () => {
   const dir = makeTopic({
     goals: CAP_GOAL('g-one'),
     activities: '### a-x\n- **checks:** g-one\n- **status:** dropped\n',
   });
   bank(dir);
   assert.equal(run('next-item.mjs', [dir, '--goal', 'g-one']).code, 2);
-  const free = makeTopic({ goals: CAP_GOAL('g-one'), activities: '### a-other\n- **checks:** g-one\n' });
-  bank(free);
-  assert.equal(run('next-item.mjs', [free, '--goal', 'g-one']).code, 0);
+  const orphan = makeTopic({ goals: CAP_GOAL('g-one'), activities: '### a-other\n- **checks:** g-one\n' });
+  bank(orphan);
+  assert.equal(run('next-item.mjs', [orphan, '--goal', 'g-one']).code, 2);
+});
+
+test('CLI serves a folder whose activity has a live entry', () => {
+  const dir = makeTopic({ goals: CAP_GOAL('g-one'), activities: '### a-x\n- **checks:** g-one\n' });
+  bank(dir);
+  const r = run('next-item.mjs', [dir, '--goal', 'g-one']);
+  assert.equal(r.code, 0, r.stderr);
+  assert.match(r.stdout, /label: a-x\/crumbs\/v1/);
+});
+
+test('survey reports a tasks folder with no entry in activities.md, and only folders', () => {
+  const dir = makeTopic({ goals: CAP_GOAL('g-one'), activities: '### a-other\n- **checks:** g-one\n' });
+  bank(dir);
+  writeFileSync(join(dir, 'tasks', 'a-single.md'), '### v1\n\nA single-file bank.\n');
+  const { problems } = survey(dir);
+  assert.ok(problems.includes('tasks/a-x/ is a bank with no entry in activities.md'), problems.join('\n'));
+  assert.ok(!problems.some((p) => p.includes('a-single')), problems.join('\n'));
+  const live = makeTopic({ goals: CAP_GOAL('g-one'), activities: '### a-x\n- **checks:** g-one\n' });
+  bank(live);
+  assert.ok(!survey(live).problems.some((p) => p.includes('no entry in activities.md')));
 });
 
 test('CLI --key on an mcq prints the scenario key and the numbered correct choice', () => {

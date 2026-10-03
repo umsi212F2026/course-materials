@@ -9,7 +9,7 @@
 //
 // NOTHING HERE WRITES. Callers do that.
 
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { applySlots, isRequired, suppliesItsOwn, DEFAULT_GROUP } from './slots.mjs';
 import { met, describeAttempts } from './bars.mjs';
@@ -396,6 +396,19 @@ export function idProblems(dir, status = statusOf(dir)) {
           found.push(
             `${entry.id} is marked origin: generated, but ${id} has no supply that produces its own activities`
           );
+  }
+
+  // A tasks/ folder with no entry is a bank nobody offers: no tutor method, no generator, and
+  // next-item.mjs refuses to serve it, so it is dead weight or a misnamed folder. Only
+  // directories count: a plain tasks/*.md is a single-file bank or a study artifact. Checked
+  // only where activities.md exists, since before curation there is nothing to be missing from.
+  if (existsSync(join(dir, 'activities.md'))) {
+    const entered = new Set(readActivities(dir).map((e) => e.id));
+    const tasks = join(dir, 'tasks');
+    if (existsSync(tasks))
+      for (const d of readdirSync(tasks, { withFileTypes: true }))
+        if (d.isDirectory() && !entered.has(d.name))
+          found.push(`tasks/${d.name}/ is a bank with no entry in activities.md`);
   }
 
   // The content files and the lifecycle queue can diverge, and the mitigation is that the

@@ -9,10 +9,13 @@
 // EXIT 2 MEANS THE BANK HAS NOTHING FOR THIS, which is not a failure of the call: the activity
 // has no stored questions and the tutor falls back to generating one live. Exit 1 is a misuse
 // of the command, as in record-status.mjs.
+//
+// A BANK IS SERVED ONLY WHILE ITS ACTIVITY HAS A LIVE ENTRY in activities.md; see below.
 
 import { existsSync } from 'node:fs';
+import { join } from 'node:path';
 import { readFolderBanks } from '../../quiz/tools/lib/bank.mjs';
-import { readLog, readActivities } from './lib/topic.mjs';
+import { readLog, liveActivities } from './lib/topic.mjs';
 import { pick } from './lib/pick.mjs';
 
 const USAGE = `usage:
@@ -54,11 +57,15 @@ if (!flags.goal === !flags.activity) die(`Give exactly one of --goal and --activ
 const { items, problems } = readFolderBanks(dir);
 if (problems.length) console.error(`warning: ${problems.length} bank problem(s):\n  ${problems.join('\n  ')}`);
 
-// A DROPPED ACTIVITY'S QUESTIONS ARE NOT SERVED. The entry stays in activities.md as curation's
-// feedback, but the learner is not to meet it. A folder with no entry at all is still served:
-// a bank may exist before curation has written anything about it.
-const dropped = new Set(readActivities(dir).filter((e) => e.dropped).map((e) => e.id));
-const result = pick(items.filter((it) => !dropped.has(it.activity)), readLog(dir), { goal: flags.goal, activity: flags.activity, after: flags.after });
+// ONLY A LIVE ACTIVITY'S QUESTIONS ARE SERVED, once the topic has an activities.md at all. A
+// dropped entry stays in the file as curation's feedback, but the learner is not to meet it. A
+// folder with no entry is an orphan: it has no tutor method, no offer and no generator behind
+// it, so the tutor would be serving a question it cannot teach from, and every route to one is
+// a mistake (survey reports it, see idProblems). Without activities.md curation has not run,
+// there is nothing to be live or orphaned against, and banks are served as before.
+const hasEntries = existsSync(join(dir, 'activities.md'));
+const live = new Set(liveActivities(dir).map((e) => e.id));
+const result = pick(hasEntries ? items.filter((it) => live.has(it.activity)) : items, readLog(dir), { goal: flags.goal, activity: flags.activity, after: flags.after });
 if (!result) {
   console.error(`no bank questions for ${flags.goal ?? flags.activity}; run the activity's generator live`);
   process.exit(2);
