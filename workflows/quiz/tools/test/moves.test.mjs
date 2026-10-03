@@ -14,3 +14,7 @@ test("a missing or unknown move carries no tag", () => {
   assert.deepEqual(tagsForMove(undefined), []);
   assert.deepEqual(tagsForMove("NOPE"), []);
 });
+
+test("an inherited object key is not a move", () => {
+  assert.deepEqual(tagsForMove("toString"), []);
+});
