@@ -2,7 +2,7 @@
 // subprocess, and checks what it prints or writes, so the tests exercise the same entry points
 // the skills do.
 //
-// Run the suite from the repo root with: node --test 'workflows/learn/tools/test/*.test.mjs'
+// Run the suite from the repo root with: node --test 'workflows/*/tools/test/*.test.mjs'
 // (quoted, so Node expands the glob itself; the bare directory form fails on Node 22).
 import { mkdtempSync, mkdirSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';

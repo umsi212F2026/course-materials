@@ -34,6 +34,8 @@ import { collectAnswers, buildQueue, mergeGrades, CREDIT_VALUE } from "./lib/gra
 // attempt in a topic's log, so this tool already lives on the far side of that boundary; a
 // private copy of how goals.md parses would be one more thing to keep in step with it.
 import { readIds } from "../../learn/tools/lib/topic.mjs";
+// THE MOVE TABLE lives in the learn workflow's library, so quiz and study tag a move the same way.
+import { MOVE_TAGS } from "../../learn/tools/lib/moves.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const REPO = resolve(here, "..", "..", "..");
@@ -42,20 +44,6 @@ const readJson = (p) => JSON.parse(readFileSync(p, "utf8"));
 
 const esc = (s) =>
   String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-
-// WHICH MOVES ARE PRODUCTION ONES, from workflows/learn/skills/goal-setting/references/
-// vocabulary-moves.md. A word carries `bar: one production pass`, and the tag is the only thing
-// that tells the bar whether a move was one, so an item answered here counts toward finishing a
-// word exactly as the same move would in study. The table is five rows and has not changed; if
-// it grows, it grows there and here together, and a move missing below records no tag rather
-// than a wrong one.
-const MOVE_TAGS = {
-  DEFINE: "reception",
-  INTERPRET: "reception",
-  DISTINGUISH: "production",
-  CATCH: "production",
-  APPLY: "production",
-};
 
 /** Every goal named by the draw, keyed by id, with the topic it came from.
  *
