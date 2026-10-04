@@ -202,8 +202,8 @@ argument.
    different `adjudicator` slots goes to `study/judge` for all of them. A goal the picker printed
    a `cases:` line for also gets `cases`, each case the question exercises as
    `{"id": …, "text": …}`, exactly as study sends it; a question set live sends the cases its
-   generator says it carries, the same way. Every goal the judge
-   rules on is an attempt and step 4 records each. A goal that was due is recorded as a review.
+   generator says it carries, the same way. Every goal the judge rules on is an attempt and
+   step 4 records each. A goal that was due is recorded as a review.
    Another named goal is recorded as a review only if it was missed; one that passed counts as
    evidence without moving it along its intervals, and so does one the judge could not decide.
 
@@ -236,9 +236,9 @@ argument.
    goal as `--cases x,y`, or for a question set live the cases its generator says it carries.
    A bank question printing no `cases:` line for such a goal predates its cases: name only the
    cases it actually exercises, judged against their texts in `goals.md`, to the judge and here.
-   If it exercises none, call no judge for that goal and record
-   `{"unaided":"yes","criterion":"unchecked"}` with no `--cases`, which counts toward nothing.
-   `record-attempt.mjs` refuses a ruled attempt on such a goal without it.
+   If it exercises none, call no judge for that goal, and record it with no `--cases` as
+   `{"unaided":"yes","criterion":"unchecked"}`, which counts toward nothing. `record-attempt.mjs`
+   refuses any other ruled attempt on such a goal without `--cases`.
 
    **A question ruled against several goals is one call per goal**, each with its own `--axes`
    and all with the same label and `--tags`. Which of them carry `--source review`:

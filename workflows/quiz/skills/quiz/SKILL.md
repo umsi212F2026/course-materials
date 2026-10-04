@@ -251,8 +251,9 @@ Take all five straight off the row from step 6: `row.topic`, `row.goal`, `row.la
 ruled attempt without it.
 
 **An empty `row.cases` on a goal whose `goals.md` entry has a `cases` slot** means the question
-was written before its goal's cases were. Read the case texts in `goals.md`, name only the cases
-the question actually exercises, and pass those as `--cases`. If it exercises none, the grader's
+was written before its goal's cases were. This is the one thing not on the row: read the case
+texts in `row.topic`'s `goals.md`, name only the cases the question actually exercises, and pass
+those as `--cases`. If it exercises none, the grader's
 ruling cannot count for that goal: record it with
 `--axes '{"unaided":"yes","criterion":"unchecked"}'` in place of `row.axes` and no `--cases`,
 which counts toward nothing. Survey already reports the stale bank.
@@ -260,13 +261,15 @@ which counts toward nothing. Survey already reports the stale bank.
 **A row with a `per_goal` examined several goals, and its `row.goal` is null.** Make one call
 for each entry in `per_goal`, with that entry's `goal` and `axes` in place of the row's and the
 same `row.topic`, `row.label` and `row.tags` on every one: the tags belong to the question, not
-to one of its goals. Each entry carries its own `cases`, treated as `row.cases` is above. Each goal is met or not on its own ruling, which is the whole reason the
-question was graded per goal.
+to one of its goals. Each entry carries its own `cases`, treated as `row.cases` is above. Each
+goal is met or not on its own ruling, which is the whole reason the question was graded per
+goal.
 
 **`row.topic` is an absolute path and goes in exactly as it is**, with nothing to strip, join
 or rebuild: a folder name reassembled into `../learning-topics/<name>` works from one directory
 and fails silently from any other. **Everything this tool takes is on that row, so there is no
-reason to open it.**
+reason to open it**, the case texts for an older question aside, which come from `goals.md` as
+above.
 
 **`row.label` goes in as it stands, and it is not always `row.item`.** A question from a folder
 bank has an `item` qualified by the repository and topic it came from, so that it is unique

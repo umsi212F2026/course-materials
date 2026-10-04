@@ -73,6 +73,14 @@ learner's own word (`declared`, `elsewhere`) still meets the whole goal, as toda
   attempt on a goal with cases unless `--cases` is given (own-word outcomes, `declared` and
   `elsewhere`, need none: they meet the whole goal). So an attempt without `cases` is always
   one recorded before the goal had cases.
+- **An unchecked attempt needs no `--cases`.** A ruled attempt whose criterion is `unchecked`
+  is accepted without it on a goal with cases and stored with `cases: []`, so it counts toward
+  no case (and is not mistaken for a grandfathered one).
+- **An older bank question**, one with no `cases:` line for a goal with cases, is credited only
+  with the cases the tutor judges it actually exercises, from their texts in goals.md, passed to
+  the judge and to `--cases`. If it exercises none, there is no judge call for that goal and the
+  attempt is recorded `criterion: unchecked`. Study serves such a question once for that goal,
+  so it never loops on it; survey reports the stale bank.
 - The practice quiz passes each question's cases into the attempts it records. Quiz scoring,
   drawing and the private grader are unchanged: a quiz scores questions.
 
@@ -106,9 +114,11 @@ is curation's.
 Every case of every goal must be exercised by some live activity, and curation's checkers notice
 when one is not:
 
-- **verify** checks, per goal with cases, that each case is exercised by a banked question's
-  `cases:` line or by a live generator that says it carries that case. A case neither covers is
-  a finding, the same as an empty `checks` cell.
+- **verify** checks, per goal with cases, that each case is exercised by some live activity. A
+  banked activity's coverage comes only from its bank's `cases:` lines, since study serves the
+  bank; a generator's stated case counts only for an activity with no bank. A question with no
+  `cases:` line covers none. A case nothing covers is a finding, the same as an empty `checks`
+  cell.
 - **bank-check** reports, per bank, which cases of its goals it exercises and which it never
   does, so a drafted bank that skips the hard case is seen before verify.
 - **critique** checks that a generator's stated cases are ones its question shapes really carry.

@@ -300,10 +300,10 @@ was written before the cases were. Judge from the case texts in `goals.md` which
 actually exercises, and name only those, to the judge as `cases` and here as `--cases`. If it
 exercises none, nothing can be ruled for that goal: call no judge for it and record
 `{"unaided":"yes","criterion":"unchecked"}` (`"no"` if you helped) with no `--cases`, which
-counts toward nothing. Survey already reports the stale bank. For a question set live, the generator says which cases each question shape
-carries; state the ones this question exercised. An `--outcome` call (`declared`, `elsewhere`,
-`abandoned`) needs none. One ruling covers every case the question lists: a pass passes them
-all, a miss passes none.
+counts toward nothing. Survey already reports the stale bank. For a question set live, the
+generator says which cases each question shape carries; state the ones this question exercised.
+An `--outcome` call (`declared`, `elsewhere`, `abandoned`) needs none. One ruling covers every
+case the question lists: a pass passes them all, a miss passes none.
 
 **The two axes go in raw**, as the adjudicator returned them:
 

@@ -48,9 +48,10 @@ the label, the `tags:` line and any `cases:` lines: they go to `record-attempt.m
 each goal's cases as its `--cases`, and to the judge as `cases`. A goal with cases that has no
 `cases:` line is named by a question written before its cases were: name only the cases it
 actually exercises, judged against their texts in `goals.md`. If it exercises none, record
-`criterion: unchecked` for that goal with no judge call; see the study skill. The `--key` text also goes to the judge as the question's
-rubric, whatever the number of goals. Every banked question names a goal, so an empty
-`goals:` line is a fault survey reports: run it, record nothing.
+`criterion: unchecked` for that goal with no judge call; see the study skill. Study serves such
+a question once. The `--key` text also goes to the judge as the question's rubric, whatever the
+number of goals. Every banked question names a goal, so an empty `goals:` line is a fault survey
+reports: run it, record nothing.
 
 **Within a scenario, questions come in order**, and the picker skips one that is no longer
 needed, because every goal it names is met or has already passed the cases it lists. While the
@@ -71,8 +72,8 @@ this, and you don't tell the learner which cases are left.
 **Exit code 2 means nothing banked is left for that activity**, and so does there being no
 `tasks/<activity-id>/` folder. Then run the entry's generator live, as above. Where the goal has
 cases, the generator says which cases each of its question shapes carries; note the ones the
-question you set exercises, since they go to the judge as `cases` (`{"id": …, "text": …}`, text
-from `goals.md`) and to `record-attempt.mjs` as `--cases`.
+question you set exercises, since they go to the judge as `cases` (`{"id": …, "text": …}`,
+text from `goals.md`) and to `record-attempt.mjs` as `--cases`.
 
 **Never quietly run something else.** If you think a different activity would serve them
 better, say so and offer it — the entries are candidates and the learner may choose among them.
