@@ -189,6 +189,15 @@ same job `offer as` does one level down.
 Order by what you'd suggest if asked, and say why in a clause. Don't rank them formally and
 don't decide. If they leave without choosing, that's the end of it — don't press.
 
+**A course topic may say when it is for.** A survey row's `studyBy` is `{ date, position, of }`
+when the topic's goals.md carries a `**study by:**` line: the date of the session that discusses
+it, and its place among the topics set for that session. Among topics in flight or on offer,
+suggest the one with the earliest date first, and among topics sharing a date, the lower
+position first, saying why in the clause: "cloud-hosting first; it's for Tuesday's session,
+and the other two build on it." A topic with no `studyBy` has no course date; order it by your
+own judgment, after any that do, unless it is part-way through. A date already past still
+orders, but say it was for a session that has happened rather than treating it as urgent.
+
 **"Show me where I stand overall" is always available**, whether or not you name it. Run
 `node workflows/learn/tools/survey.mjs --dir <data-dir> --report`, put its output in front of
 them, and then offer the menu again. Don't summarize the summary or lead with a verdict on it —

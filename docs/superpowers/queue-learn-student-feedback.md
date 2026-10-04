@@ -41,6 +41,7 @@ been merged or pushed.
 | 9 | Every activity checkable; recuration of each topic | generic half **DONE** (with 11); each topic's recuration to do |
 | 10 | APPLY and the student's own work, within personalization | after the release (with item 8) |
 | 11 | Criteria with named cases, each to be shown | **DONE** (spec `specs/2026-10-04-criterion-cases-design.md`, plan `plans/2026-10-04-criterion-cases.md`) |
+| 12 | Course topics in study order (`**study by:**`) | reading side **DONE**; derive from lesson Prep after the release |
 
 Outside this branch, done 2026-10-04 and merged locally but not pushed: this branch into
 course-materials `main`; the six course topics, migrated on learning-topics branch
@@ -225,6 +226,17 @@ merged into main again before that push.
     the question they give away; one scenario may carry questions across capabilities;
     `curation/SKILL.md`'s two statements about key-file study banks are reconciled;
     `next-item.mjs` keeps line structure (a multi-line blockquote currently runs together).
+12. **Course topics in study order.** Raised 2026-10-04: nothing ordered topics against each
+    other, so the learn skill offered three new topics by its own judgment. Done today: a topic
+    may carry `**study by:** <yyyy-mm-dd>, <n> of <m>` beside its origin header (the session
+    that discusses it, and its place among that session's topics); survey reports it as
+    `studyBy` and a malformed line as a problem; the learn skill offers course topics earliest
+    date first, then by place. The three October topics are stamped by hand for 2026-10-06
+    (cloud-hosting 1, database-hosting 2, deploy-config 3). **After the release:**
+    `course-private/tools/publish-topic.mjs` derives the line from the lessons, the same source
+    `tools/canvas-prep.mjs` posts "Prep:" items from: the lesson whose `## Prep` `topic` field
+    names the topic (which may name several, in study order) gives the place, and its meeting's
+    date in `calendar.md` gives the date. A topic no lesson names carries no line.
 
 ## Actions on the learning-topics repository (outside this branch)
 

@@ -148,10 +148,30 @@ function headerOrigin(text) {
   return { value: null, malformed: bad ? bad[0].trim() : null };
 }
 
+// THE SESSION A COURSE TOPIC PREPARES FOR, in a `**study by:** <yyyy-mm-dd>, <n> of <m>` line
+// beside the origin header: the date of the meeting where the topic is discussed, and the
+// topic's place among those set for that meeting (the place is optional). The learn skill offers
+// course topics in that order. It is copied from the lesson's Prep at release, so a topic no
+// lesson names carries no line, and no line is not a problem. A line that does not parse, or a
+// place past its count, is returned as `bad` for idProblems and read as no line.
+function headerStudyBy(text) {
+  const at = text.search(GOALS_HEADING);
+  const head = (at === -1 ? text : text.slice(0, at)).replace(/<!--[\s\S]*?-->/g, '');
+  const line = head.match(/^\*\*study by:\*\*.*$/m);
+  if (!line) return { value: null, bad: null };
+  const m = line[0].match(/^\*\*study by:\*\*\s*(\d{4}-\d{2}-\d{2})(?:\s*,\s*(\d+)\s+of\s+(\d+))?\s*$/);
+  if (!m || Number.isNaN(Date.parse(m[1]))) return { value: null, bad: line[0].trim() };
+  const position = m[2] ? Number(m[2]) : null;
+  const of = m[3] ? Number(m[3]) : null;
+  if (position !== null && (position < 1 || position > of)) return { value: null, bad: line[0].trim() };
+  return { value: { date: m[1], position, of }, bad: null };
+}
+
 export function readGoals(dir) {
   const file = join(dir, 'goals.md');
-  if (!existsSync(file)) return { goals: [], origin: 'learner' };
+  if (!existsSync(file)) return { goals: [], origin: 'learner', studyBy: null };
   const text = readFileSync(file, 'utf8');
+  const { value: studyBy, bad: studyByBad } = headerStudyBy(text);
   const { value: written, malformed } = headerOrigin(text);
   const origin = written && Object.hasOwn(ORIGINS, written) ? written : 'learner';
   const goals = entries(section(text, GOALS_HEADING)).map((e) => {
@@ -159,7 +179,7 @@ export function readGoals(dir) {
     if (!e.fields.origin) goal.origin = origin;
     return goal;
   });
-  return { goals, origin, written, malformed };
+  return { goals, origin, written, malformed, studyBy, studyByBad };
 }
 
 // --- the sequence ------------------------------------------------------------
@@ -443,7 +463,7 @@ function groupRows(rows) {
 }
 
 export function surveyTopic(dir) {
-  const { goals, origin } = readGoals(dir);
+  const { goals, origin, studyBy } = readGoals(dir);
   const log = readLog(dir);
   const live = liveActivities(dir);
   const status = statusOf(dir);
@@ -497,6 +517,9 @@ export function surveyTopic(dir) {
     phase: derivePhase({ retired, goals, live, rows }),
     retired,
     origin,
+    // `{ date, position, of }` or null: which session this course topic prepares for, and its
+    // place among that session's topics. The learn skill offers course topics in this order.
+    studyBy,
     groups: groupRows(rows),
     sequence: { decided: sequence.decided, sets, current: current === -1 ? null : current },
     lastTouched: log.length ? log[log.length - 1].at.slice(0, 10) : null,
@@ -522,11 +545,13 @@ export function surveyTopic(dir) {
 // nothing implements is a goal nobody can record an attempt against, and record-attempt.mjs
 // refuses it there rather than writing a line about a goal it can't derive anything from.
 export function idProblems(dir, status = statusOf(dir)) {
-  const { goals, written, malformed } = readGoals(dir);
+  const { goals, written, malformed, studyByBad } = readGoals(dir);
   const found = [];
   const seen = new Map();
 
   if (malformed) found.push(`goals.md has an origin line that isn't one word: "${malformed}"`);
+  if (studyByBad)
+    found.push(`goals.md has a study by line that isn't "<yyyy-mm-dd>" or "<yyyy-mm-dd>, <n> of <m>": "${studyByBad}"`);
 
   if (written && !Object.hasOwn(ORIGINS, written))
     found.push(`goals.md has origin: ${written}, which is not one of: ${Object.keys(ORIGINS).join(', ')}`);
