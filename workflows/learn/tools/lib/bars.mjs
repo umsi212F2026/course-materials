@@ -12,6 +12,9 @@
 //
 //   given the goal's whole attempt history, return a boolean.
 //
+// A goal that names `cases` has the same contract applied once per case, over the attempts that
+// carry that case; see `met` below.
+//
 // A BOOLEAN, not a rung. Five things consume "has this been met" and every one of them uses it
 // as a binary. Nothing declares a scale, so nothing compares across scales.
 
@@ -98,7 +101,24 @@ export function met(goal, attempts) {
 
   const bar = BARS[goal.bar];
   if (!bar) throw new Error(`${goal.id} has bar: ${goal.bar}, which nothing implements.`);
-  return bar(attempts);
+  // A GOAL THAT NAMES CASES HOLDS ITS OWN BAR FOR EACH ONE, over the attempts that carry that
+  // case. Still an existence test per case, so a bar once true stays true. AN ATTEMPT WITH NO
+  // `cases` FIELD COUNTS TOWARD EVERY CASE: a pass recorded before the goal named cases, or by a
+  // tutor with nothing to say about them, is grandfathered rather than discarded.
+  return goal.cases?.length ? goal.cases.every((c) => bar(forCase(attempts, c.id))) : bar(attempts);
+}
+
+const forCase = (attempts, id) => attempts.filter((r) => !r.cases || r.cases.includes(id));
+
+// How many of a goal's cases its bar holds for, for display. Null when the goal names none.
+export function casesDemonstrated(goal, attempts) {
+  if (!goal.cases?.length) return null;
+  const bar = BARS[goal.bar];
+  if (!bar) throw new Error(`${goal.id} has bar: ${goal.bar}, which nothing implements.`);
+  return {
+    passed: goal.cases.filter((c) => bar(forCase(attempts, c.id))).length,
+    total: goal.cases.length,
+  };
 }
 
 // --- what to print about one goal --------------------------------------------

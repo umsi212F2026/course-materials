@@ -60,3 +60,44 @@ test('a malformed or duplicate case id is a problem naming goal and id, and is l
   const reported = survey(dir).problems;
   assert.ok(reported.some((p) => p.includes('Declines')));
 });
+
+// --- the bar, per case ---------------------------------------------------------
+import { met, casesDemonstrated } from './../lib/bars.mjs';
+
+const G = (bar = 'one unaided pass', ids = ['a', 'b']) => ({
+  id: 'c-x',
+  bar,
+  cases: ids.map((id) => ({ id, text: id })),
+});
+const pass = (cases, extra = {}) => ({ unaided: 'yes', criterion: 'met', ...(cases ? { cases } : {}), ...extra });
+
+test('a goal with cases is unmet until each case has its pass', () => {
+  assert.equal(met(G(), [pass(['a'])]), false);
+  assert.equal(met(G(), [pass(['a']), pass(['b'])]), true);
+  assert.equal(met(G(), [pass(['a', 'b'])]), true);
+});
+
+test('a pass carrying no cases counts toward every case (grandfathered)', () => {
+  assert.equal(met(G(), [pass(null)]), true);
+});
+
+test('the learner\'s own word meets a goal with cases', () => {
+  assert.equal(met(G(), [{ outcome: 'declared' }]), true);
+  assert.equal(met(G(), [{ outcome: 'elsewhere' }]), true);
+});
+
+test('one production pass needs the production tag on each case', () => {
+  const g = G('one production pass');
+  assert.equal(met(g, [pass(['a'], { tags: ['production'] }), pass(['b'])]), false);
+  assert.equal(met(g, [pass(['a'], { tags: ['production'] }), pass(['b'], { tags: ['production'] })]), true);
+});
+
+test('a goal with no cases is unchanged', () => {
+  assert.equal(met({ id: 'c-y', bar: 'one unaided pass', cases: [] }, [pass(['zzz'])]), true);
+  assert.equal(met({ id: 'c-y', bar: 'one unaided pass' }, []), false);
+});
+
+test('casesDemonstrated counts the cases passed, null without cases', () => {
+  assert.deepEqual(casesDemonstrated(G(), [pass(['a'])]), { passed: 1, total: 2 });
+  assert.equal(casesDemonstrated({ id: 'c-y', bar: 'one unaided pass', cases: [] }, []), null);
+});
