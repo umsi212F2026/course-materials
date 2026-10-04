@@ -114,7 +114,7 @@ export function courseOnly(items) {
     const named = it.goals ?? (it.goal ? [it.goal] : []);
     const bad = it.topic ? named.find((g) => originOf(it.topic, g) !== "course") : undefined;
     if (bad === undefined) kept.push(it);
-    else problems.push(`${it.id} dropped: ${bad} is not a course goal`);
+    else problems.push(`${it.id}${it.bank ? ` (${it.bank})` : ""} dropped: ${bad} is not a course goal`);
   }
   return { items: kept, problems };
 }
@@ -142,7 +142,8 @@ export function drawPractice(pool, root, { seed, preferUnseen = true } = {}) {
   // of where it goes. The instructor's bake needs neither and does not carry them.
   const withTopic = strata.map((s) => ({ ...s, items: s.items.map((it) => ({ ...it, topic: topicDir(pool, it, root) })) }));
   const course = courseOnly(withTopic.flatMap((s) => s.items));
-  const keep = new Set(course.items.map((it) => it.id));
+  // By identity, not id: single-file ids repeat across topics in a multi-source draw.
+  const keep = new Set(course.items);
   // An item sitting in two strata would be reported twice; once says it.
   problems.push(...new Set(course.problems));
 
@@ -162,9 +163,10 @@ export function drawPractice(pool, root, { seed, preferUnseen = true } = {}) {
   const items = [];
   const shape = [];
   for (const s of withTopic) {
-    const pickable = s.items.filter((it) => keep.has(it.id));
+    const pickable = s.items.filter((it) => keep.has(it));
     const count = Math.min(s.take, pickable.length);
-    let drawn = pick(pickable, pickable.length, next);
+    // Without preferUnseen only `count` are picked, so later strata consume the same RNG values as before.
+    let drawn = pick(pickable, preferUnseen ? pickable.length : count, next);
     if (preferUnseen) drawn = drawn.map((it) => [seenAt(it), it]).sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0)).map(([, it]) => it);
     drawn = drawn.slice(0, count);
     shape.push({ name: s.name, take: s.take, drawn: drawn.length, ...(s.bank ? { bank: s.bank } : {}) });

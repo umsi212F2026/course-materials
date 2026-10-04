@@ -55,7 +55,9 @@ test("preferUnseen: false keeps the seeded random draw", () => {
   for (const seed of ["a", "b", "c", "d", "e", "f", "g", "h"]) {
     const [it] = drawPractice(pool(1), root, { seed, preferUnseen: false }).items;
     picks.add(it.label);
-    assert.deepEqual(it.label, drawPractice(pool(1), root, { seed, preferUnseen: false }).items[0].label);
+    // Same seed against an empty log: identical, so the log is ignored.
+    const blank = drawPractice(pool(1), fixture({ n: 6 }), { seed, preferUnseen: false }).items[0];
+    assert.equal(it.label, blank.label);
   }
   assert.ok([...picks].some((l) => ["q1", "q2", "q3"].some((q) => l.endsWith(q))));
 });
@@ -64,7 +66,7 @@ test("a learner-origin goal drops the item and is reported; no goal is kept", ()
   const root = fixture({ n: 3, goalOf: { q1: "g1", q2: "gL" } });
   const { items, problems } = drawPractice(pool(3), root, { seed: "x" });
   assert.deepEqual(items.map((i) => i.label).sort(), ["a-x/s1/q1", "a-x/s1/q3"]);
-  assert.ok(problems.includes("learning-topics/t1/a-x/s1/q2 dropped: gL is not a course goal"));
+  assert.ok(problems.includes("learning-topics/t1/a-x/s1/q2 (learning-topics/t1/a-x) dropped: gL is not a course goal"));
 });
 
 test("courseOnly drops a multi-goal item naming any non-course goal, and keeps topicless items", () => {
@@ -83,4 +85,21 @@ test("courseOnly drops a multi-goal item naming any non-course goal, and keeps t
 test("strata carry their bank", () => {
   const { strata } = drawPractice(pool(1), fixture(), { seed: "x" });
   assert.equal(strata[0].bank, "learning-topics/t1/a-x");
+});
+
+test("a dropped item does not stay pickable because another topic's item shares its id", () => {
+  const root = fixture();
+  const put = (path, text) => {
+    mkdirSync(dirname(join(root, path)), { recursive: true });
+    writeFileSync(join(root, path), text);
+  };
+  put("learning-topics/t2/goals.md", "# T\n\n**origin:** course\n\n## Goals\n\n### `h1`\n- **goal:** Do it.\n- **criterion:** Done.\n");
+  for (const [t, goal] of [["t1", "gL"], ["t2", "h1"]]) {
+    put(`learning-topics/${t}/tasks/items.md`, "### q1\n\nQ.\n");
+    put(`learning-topics/${t}/rubrics/items.md`, `### q1\n\n- **answer:** A.\n- **goal:** ${goal}\n`);
+  }
+  const p = { draw: { "learning-topics/t1/items": 1, "learning-topics/t2/items": 1 } };
+  const { items, problems } = drawPractice(p, root, { seed: "x" });
+  assert.deepEqual(items.map((i) => i.bank), ["learning-topics/t2/items"]);
+  assert.ok(problems.some((m) => m.startsWith("q1 (learning-topics/t1/items) dropped: gL")));
 });
