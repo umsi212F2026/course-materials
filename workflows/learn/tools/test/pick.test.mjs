@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
-import { pick, stillNeeded } from '../lib/pick.mjs';
+import { pick, stillNeeded, rankByCase } from '../lib/pick.mjs';
 import { makeTopic, run, survey, CAP_GOAL } from './helpers.mjs';
 
 const item = (label, goals = ['g1']) => {
@@ -113,6 +113,52 @@ test('study: an earlier unserved question still needed blocks a later one in its
   assert.equal(pick([q1, q2], [], { goal: 'g1', caseRank }).item.label, 'a-x/s1/q1');
   // Review keeps no scenario order.
   assert.equal(pick([q1, q2], [], { goal: 'g1', caseRank, review: true }).item.label, 'a-x/s1/q2');
+});
+
+test('rankByCase: never passed ranks -Infinity in review; a question listing no case covers every case', () => {
+  const g = { ...CG, cases: [...CG.cases, { id: 'mid', text: '' }] };
+  const attempts = [passed(['easy'], '2026-10-01T00:00:00Z'), passed(['hard'], '2026-10-02T00:00:00Z')];
+  const review = rankByCase(g, attempts, { review: true });
+  assert.equal(review(withCases('a-x/s1/q1', { g1: ['mid'] })), -Infinity);
+  assert.equal(review(withCases('a-x/s1/q1', { g1: ['hard', 'easy'] })), Date.parse('2026-10-01T00:00:00Z'));
+  assert.equal(review(item('a-x/s1/q1')), -Infinity);
+  const study = rankByCase(g, attempts);
+  assert.equal(study(withCases('a-x/s1/q1', { g1: ['easy'] })), 1);
+  assert.equal(study(item('a-x/s1/q1')), 0);
+  assert.equal(rankByCase({ id: 'g1', bar: 'one unaided pass', cases: [] }, attempts)(item('a-x/s1/q1')), 0);
+});
+
+// The review's reproduction: easy passed live, q3 [hard] served and passed, mid not banked.
+const MIDG = { ...CG, cases: [...CG.cases, { id: 'mid', text: '' }] };
+const midLog = [passed(['easy'], '2026-10-01T00:00:00Z'), { ...passed(['hard'], '2026-10-02T00:00:00Z'), label: 'a-x/s1/q3' }];
+
+test('study never serves a question no longer needed, even with nothing else on offer', () => {
+  const q1 = withCases('a-x/s1/q1', { g1: ['easy'] });
+  const q3 = withCases('a-x/s1/q3', { g1: ['hard'] });
+  const goals = new Map([['g1', MIDG]]);
+  const needed = (it) => stillNeeded(it, goals, new Map([['g1', midLog]]));
+  assert.equal(needed(q1), false);
+  assert.equal(pick([q1, q3], midLog, { goal: 'g1', needed, caseRank: rankByCase(MIDG, midLog) }), null);
+  // Review still serves it.
+  assert.equal(pick([q1, q3], midLog, { goal: 'g1', needed, review: true }).item.label, 'a-x/s1/q1');
+});
+
+test('CLI study exits 2 when only questions no longer needed are banked', () => {
+  const dir = makeTopic({
+    goals: CAP_GOAL('g1', '- **cases:**\n  - `easy`: e\n  - `hard`: h\n  - `mid`: m\n'),
+    activities: '### a-x\n- **checks:** g1\n',
+  });
+  const put = (rel, text) => {
+    mkdirSync(dirname(join(dir, rel)), { recursive: true });
+    writeFileSync(join(dir, rel), text);
+  };
+  put('tasks/a-x/s1.md', '### q1\n\nEasy.\n\n### q3\n\nHard.\n');
+  put('rubrics/a-x/s1.md', '### q1\n\n- **goal:** g1\n- **answer:** X.\n- **cases:** easy\n\n### q3\n\n- **goal:** g1\n- **answer:** Y.\n- **cases:** hard\n');
+  put('evidence/attempts.jsonl', midLog.map((r) => JSON.stringify(r)).join('\n') + '\n');
+  const r = run('next-item.mjs', [dir, '--goal', 'g1']);
+  assert.equal(r.code, 2, r.stdout);
+  assert.match(r.stderr, /no bank questions for g1/);
+  assert.equal(run('next-item.mjs', [dir, '--goal', 'g1', '--review']).code, 0);
 });
 
 test('study: an earlier question no longer needed is skipped', () => {

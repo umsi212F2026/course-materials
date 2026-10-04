@@ -75,7 +75,10 @@ export function pick(items, log, { goal, activity, after, review = false, needed
       else if (!served.has(it.label) && needed(it)) open.set(g, it);
     }
   }
-  const wanted = items.filter((it) => (goal ? it.goals.includes(goal) : it.activity === activity));
+  // STUDY NEVER SERVES A SKIPPED QUESTION: a later one in its scenario may already have given its
+  // answer away. So one no longer needed is no candidate at all, and a goal whose remaining cases
+  // no banked question carries gets null, which sends the tutor to the generator.
+  const wanted = items.filter((it) => (goal ? it.goals.includes(goal) : it.activity === activity) && (review || needed(it)));
   if (!wanted.length) return null;
   const candidates = wanted.filter((it) => !waiting.has(it));
   // EVERY CANDIDATE WAITING IS NOT AN EMPTY BANK. The question holding up the earliest of them is

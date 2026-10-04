@@ -73,7 +73,10 @@ const live = new Set(liveActivities(dir).map((e) => e.id));
 const log = readLog(dir);
 const goalsById = new Map(readGoals(dir).goals.map((g) => [g.id, g]));
 const attemptsByGoal = new Map();
-for (const r of log) attemptsByGoal.set(r.goal, [...(attemptsByGoal.get(r.goal) ?? []), r]);
+for (const r of log) {
+  if (!attemptsByGoal.has(r.goal)) attemptsByGoal.set(r.goal, []);
+  attemptsByGoal.get(r.goal).push(r);
+}
 const result = pick(hasEntries ? items.filter((it) => live.has(it.activity)) : items, log, {
   goal: flags.goal,
   activity: flags.activity,
