@@ -160,15 +160,15 @@ with the learner.
 
 <!--
   One heading per activity, one bullet per field — not a table row. Several values run to
-  a sentence or more, which table cells can't hold, and check activities carry four fields
+  a sentence or more, which table cells can't hold, and check activities carry three fields
   the others don't, which a table would render as columns of empty cells indistinguishable
   from unfilled ones. The Goals block above is a table for the opposite reasons: short
   values, same shape every row.
 
-  FIELDS. Every activity has `serves` through `offer as`. `status` appears only once the
-  activity is dead, and `origin` only on a legacy stamp, which nothing writes now. The
-  block below that applies only to activities that can finish a goal — the ones carrying
-  `checks`.
+  FIELDS. Every activity has `serves` through `offer as`, and one that sets questions has a
+  `generator`. `status` appears only once the activity is dead, and `origin` only on a legacy
+  stamp, which nothing writes now. The block after those applies only to activities that can
+  finish a goal: the ones carrying `checks`.
 
   serves        goal ids from the table above, or `all`: which goals this helps with. An item
                 may also be `group <name>`, which stands for every goal in that group, those
@@ -212,6 +212,13 @@ with the learner.
                 curation/generate may delete a note whose cause it has fixed, and must not
                 otherwise edit one. Each check pass rewrites them.
 
+  generator     the instruction for producing a fresh question: what varies, what is held
+                fixed, how hard, and which of the goals in `checks` a question bears on.
+                Every activity that sets questions has one, whether or not it carries
+                `checks`. Precise enough to run, or to draft a bank from, without asking the
+                curator anything. Where there is no bank the tutor runs it live, so every
+                attempt is a new question.
+
   origin        omit. `generated` marks a legacy stamp from before `a-words`; see the note
                 at the head of this file. Nothing serves from one and nothing new carries it.
 
@@ -245,16 +252,24 @@ with the learner.
                   instance doesn't show they could produce one from nothing. Such an
                   activity is worth having; it just can't finish anything.
 
-  generator       the instruction for producing a fresh question: what varies, what is held
-                  fixed, how hard, and which of the goals in `checks` a question bears on.
-                  Every activity that sets questions has one. Precise enough to run, or to
-                  draft a bank from, without asking the curator anything. Where there is no
-                  bank the tutor runs it live, so every attempt is a new question.
+  worked example  what to show at the first level of help: a solved instance, or an
+                  instruction to work one live and narrate the decisions
+  doesn't show    what a pass here still leaves open, stated as a claim the checker can
+                  contest. Both kinds belong: part of the criterion this activity doesn't
+                  exercise, and what the criterion can't settle even when fully met: "only
+                  one instance exists, so this doesn't show they could do it again."
 
-  BANKS. An activity has a bank when tasks/<activity-id>/ exists; the folder is the whole
-  declaration, and the entry says nothing about it. Course topics have them, drafted from the
-  generator and reviewed by the instructor at curation; a student's own topic runs its
-  generators live. One file per scenario, with a twin under rubrics/:
+                  "Nothing" is a legitimate entry. It's also a strong claim, so expect
+                  curation/critique to test it.
+
+  BANKS. An activity has a bank when tasks/<activity-id>/ and rubrics/<activity-id>/ exist (a
+  tasks folder alone is an older study artifact, and is not read as a bank); the folders are the
+  whole declaration, and the entry says nothing about them. Course topics have them, drafted
+  from the generator and reviewed by the instructor at curation; a student's own topic runs its
+  generators live. Even on a course topic, only an activity with `checks` whose generator
+  invents its own material is banked: one that picks from real items or the learner's own work,
+  an orientation rehearsal, and one without `checks` stay live, since the picker serves a bank
+  whenever one exists. One file per scenario, with a twin under rubrics/:
 
       tasks/<activity-id>/<scenario-id>.md     the setup, then one `### <question-id>` per question
       rubrics/<activity-id>/<scenario-id>.md   the key, then one `### <question-id>` per question
@@ -282,18 +297,10 @@ with the learner.
   key, and a note about one question in its `tutor note`.
 
   RETIRED: `kind` and `bank`. An older entry may still carry `kind: generator | bank | single
-  instance` or a `bank: tasks/...` path; ignore both. What was a single authored instance is a
+  instance` or a `bank:` line; ignore both. When curation converts the entry, any substance in a
+  `bank:` line (where the items live, how they are named, how to pick) moves into `generator`,
+  and a bare path or a `kind:` line is simply deleted. What was a single authored instance is a
   bank with one scenario, and if that is all a check has, say so in `doesn't show`.
-
-  worked example  what to show at the first level of help: a solved instance, or an
-                  instruction to work one live and narrate the decisions
-  doesn't show    what a pass here still leaves open, stated as a claim the checker can
-                  contest. Both kinds belong: part of the criterion this activity doesn't
-                  exercise, and what the criterion can't settle even when fully met — "only
-                  one instance exists, so this doesn't show they could do it again."
-
-                  "Nothing" is a legitimate entry. It's also a strong claim, so expect
-                  curation/critique to test it.
 -->
 
 ### `<activity-id>`

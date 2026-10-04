@@ -87,8 +87,11 @@ default group, activities to work on, and its own `status.jsonl` agreeing with t
 
 That is deliberate, and it is why nothing above needs to know: a topic the course assigned and one
 the learner took through goal setting last week are the same shape by the time either is studied.
-The only thing that tells them apart is each goal's `origin`, which no phase of this workflow
-reads — it is there for the quiz generator, outside the loop.
+The only thing that tells them apart is `origin` in `goals.md`, on the topic or on a goal. Study
+and review never read it. The
+quiz generator does, outside the loop, and so does curation, but only to decide whether an
+instructor's run may take the course path and draft banks; a background run behaves the same on
+either.
 
 ## 1. Start pending work, in the background
 

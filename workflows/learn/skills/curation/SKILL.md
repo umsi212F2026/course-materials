@@ -71,13 +71,25 @@ background, spawned by `learn`, and what runs on any topic whose origin is not `
 generators are run live by the tutor, a fresh question every time, so there is nothing to draft
 and nobody to wait for.
 
+**A plain-path run never edits the generator of an activity that has a bank** (both
+`tasks/<activity-id>/` and `rubrics/<activity-id>/`). That bank was drafted from the generator
+and reviewed against it, and changing one without the other leaves questions nobody chose. If a finding would revise
+such a generator, leave it as it is, and say so in your report: which activity, and what the
+finding was. The next course-path run takes it up.
+
 **The course path adds banks, and two stops for the instructor.** It runs only when both hold:
-the topic's origin is `course` (the `origin` survey reports for it, read from the
-`**origin:** course` line in `goals.md`), and the instructor invoked you in this session and is
-there to review. You are told which by whatever invoked you. **If nobody said this run is the
-instructor's, it isn't**: a background run on a course topic in a student's clone that stopped
-to wait for review would wait forever, and one that drafted banks unreviewed would ship
-questions nobody checked.
+the topic is a course topic, and the instructor invoked you in this session and is there to
+review. You are told which by whatever invoked you.
+
+A topic is a course topic when survey reports its `origin` as `course` (read from the
+`**origin:** course` line under the title of `goals.md`), **or** when every goal in `goals.md`
+carries `- **origin:** course`. The second is how existing course topics look: they predate the
+header. On such a run, _Converting older files_ adds the header first, and you run survey again
+before going on, so everything after reads the topic as survey now reports it.
+
+**If nobody said this run is the instructor's, it isn't**: a background run on a course topic
+in a student's clone that stopped to wait for review would wait forever, and one that drafted
+banks unreviewed would ship questions nobody checked.
 
 Course topics are banked because study, review and the quiz all draw on the same questions, and
 the quiz needs ones a person has read. A student's own topic needs none of that.
@@ -133,7 +145,7 @@ course path the instructor is, at the two stops, and nobody else.
    round, so annotations come back this time. `verify` skips whatever already carries a recent
    marker, which is most of it.
 
-5. **Land the second report. All three streams, and this time findings land too.**
+5. **Place the second report. All three streams, and this time findings are acted on too.**
 
    _Markers_ — into the file, as in step 2.
 
@@ -202,12 +214,23 @@ neither is inferred from anywhere else.
 repository and push nothing until the instructor has finished with the banks. That repository is
 public, and a question nobody has reviewed must not be published by accident.
 
-The layout every
-step writes is in `workflows/learn/templates/activities.md` under BANKS: one file per scenario
-in `tasks/<activity-id>/` and its twin in `rubrics/<activity-id>/`, each question a
-`### <question-id>` section, labelled `<activity-id>/<scenario-id>/<question-id>`.
+The layout every step writes is in `workflows/learn/templates/activities.md` under BANKS: one
+file per scenario in `tasks/<activity-id>/` and its twin in `rubrics/<activity-id>/`, each
+question a `### <question-id>` section, labelled `<activity-id>/<scenario-id>/<question-id>`.
 
-1. **Stop 1, generators.** For each live activity with a generator, run `curation/draft-bank`
+**Only some activities get a bank:** those with `checks` whose generator invents its own
+material. These stay live, with no bank:
+
+- an activity whose generator picks from real items, or from the learner's own work (their own
+  app, their own agent, their own chats);
+- an orientation rehearsal;
+- an activity without `checks`.
+
+The reason is the same for all three. A bank would replace the learner's own material with
+material someone invented, and the picker serves a bank whenever one exists, so the live
+generator would never run again.
+
+1. **Stop 1, generators.** For each live activity that gets a bank, run `curation/draft-bank`
    in `sample` mode: one scenario, its questions and its rubric, into that activity's bank
    folders. Run them concurrently; each writes only its own activity's folders. Then present
    each generator's text beside its sample, by path, and let the instructor react in the
@@ -215,7 +238,9 @@ in `tasks/<activity-id>/` and its twin in `rubrics/<activity-id>/`, each questio
 
    **Revise a generator by handing their feedback to `curation/generate` as findings.** The
    substance of an entry is still the generator's, even when the instructor is the one asking.
-   A revised generator gets a fresh sample, and the instructor sees it before you move on.
+   A revised generator gets a fresh sample, and the instructor sees it before you move on. Its
+   old sample is cut from both folders unless the instructor says to keep it: it was made by
+   text that no longer exists.
 
    **A kept sample is the bank's first scenario,** so nothing about it is thrown away. One the
    instructor cuts is deleted from both folders.
@@ -233,11 +258,11 @@ in `tasks/<activity-id>/` and its twin in `rubrics/<activity-id>/`, each questio
    questions, and one scenario is the cheapest way to see what it actually makes. A fault found
    here costs one sample; found at stop 2 it costs a bank.
 
-2. **Draft the banks.** One `curation/draft-bank` per activity, in `full` mode, as separate
-   agents running in parallel. Each fills its bank to about three questions per goal in the
-   activity's `checks` (for `a-words`, per word), unless the entry says otherwise, and keeps
-   every scenario already there:
-   the kept sample, and anything converted from an older file.
+2. **Draft the banks.** One `curation/draft-bank` per activity that gets a bank (the same ones
+   as stop 1, never the live-only kinds above), in `full` mode, as separate agents running in
+   parallel. Each fills its bank to about three questions per goal in the activity's `checks`
+   (for `a-words`, per word), unless the entry says otherwise, and keeps every scenario already
+   there: the kept sample, and anything converted from an older file.
 
 3. **Check the banks.** First the mechanical floor:
 
@@ -265,7 +290,11 @@ in `tasks/<activity-id>/` and its twin in `rubrics/<activity-id>/`, each questio
    activity's scenarios are redrafted (`full` mode, after cutting the ones it got wrong), and
    only they are checked again before coming back here. The other banks wait where they are.
 
-5. **Land**, which is step 6 as it always is: `curated` for each goal.
+5. **Return to the sequence at its step 6,** _Clear the queue_, which runs as it always does:
+   `curated` for each goal.
+
+   **After stop 2, the instructor decides when the branch is merged and pushed**, not you. Any
+   conversions this run made go on the same branch, so they are published with the banks.
 
 ## Converting older files
 
@@ -273,10 +302,11 @@ On a course topic's next course-path run, the older shapes are converted. Goal i
 so every recorded attempt still points at its goal. Run survey after each, and expect no new
 problems.
 
-- **The origin header, before step 0.** If `goals.md` has no `**origin:** course` line under its
-  title, add one, and remove each goal's `- **origin:** course` stamp, which the header makes
-  redundant. Leave any `- **origin:** learner`: it marks a goal a student added, and it is what
-  keeps that goal out of the quiz.
+- **The origin header, first of all, before step 0.** If `goals.md` has no `**origin:** course`
+  line under its title, add one, and remove each goal's `- **origin:** course` stamp, which the
+  header makes redundant. Leave any `- **origin:** learner`: it marks a goal a student added, and
+  it is what keeps that goal out of the quiz. Then run survey again and confirm it now reports
+  the topic's `origin` as `course`.
 - **Word questions, before step 0, once quiz pools use the new keys (see the queue).** Run
   `node workflows/learn/tools/migrate-words.mjs <topic-folder> --dry-run`, read its summary,
   then run it without `--dry-run`. It moves banked word questions into `tasks/a-words/`, writes
@@ -296,8 +326,11 @@ problems.
   the top of a scenario's task file and its cases become `### <question-id>` sections; the key's
   shared lists become that scenario's key, at the top of its rubric file, and the key's cases
   become per-question rubric entries. Then delete the old pair.
-- **Retired fields.** Delete any `kind:` or `bank:` line from an entry. Both are ignored, so
-  this is tidying rather than repair, but a stale `bank:` path misleads anyone reading.
+- **Retired fields.** Both `kind:` and `bank:` are ignored, but a `bank:` line can carry
+  substance: where the items live, how they are named, how to pick among them. Move any such
+  text into the entry's `generator`, worded as part of it, and then delete the line. Delete a
+  `kind:` line, or a `bank:` line that is only a path, outright: a stale path misleads anyone
+  reading.
 
 ## When to run this phase again
 

@@ -12,6 +12,13 @@ description: Draft one activity's question bank on a course topic, from its gene
 else**: not `activities.md`, not `goals.md`, not another activity's bank. That is what lets one
 drafter per activity run in parallel without treading on each other.
 
+**Only an activity with `checks` whose generator invents its own material gets a bank.** If you
+are handed one whose generator picks from real items or from the learner's own work (their own
+app, their own agent, their own chats), an orientation rehearsal, or an activity without
+`checks`, write nothing and say so in your reply. A bank would replace the learner's own
+material with invented material, and the picker serves a bank whenever one exists, so the live
+generator would never run again.
+
 You are told this directory, the activity and the mode. Do not choose them, and do not guess
 them from the working directory: whatever invoked you established them already.
 
@@ -24,9 +31,10 @@ folders. For `a-words`, the word's entry in `goals.md` (`what it names`, `neares
 its generator.
 
 **For `a-words`, the goals are the words.** It has no `checks`; where this file says "the goals
-in `checks`", read every goal in group `vocabulary` that has no file in `tasks/a-words/` yet.
-Each scenario is one word, named for its goal id, and each question's `goal:` is that one word,
-with its `move:` set.
+in `checks`", read the words in group `vocabulary`. In `sample` mode that is only the words with
+no file in `tasks/a-words/` yet. In `full` mode it is every word, including one sampled at stop
+1, and each is filled to about three questions. Each scenario is one word, named for its goal
+id, and each question's `goal:` is that one word, with its `move:` set.
 
 **The generator is your only brief.** Draft what it says: what varies, what is fixed, how hard,
 which goals a question bears on. Where it leaves you guessing, guess as little as you can and
@@ -42,11 +50,12 @@ not an edge case. Give it enough questions to show how the generator maps onto e
 write it to the same standard as any other.
 
 **`full`: the bank, to its target size.** About three questions per goal in `checks` (per word,
-for `a-words`), unless
-the entry says otherwise. Count what is already in your folders first, by reading each rubric
-entry's `goal:` line; a question naming two goals counts toward both. Then add new scenarios
-until every goal reaches its count. **Never edit or delete a scenario already there**: it is a
-kept sample, or a question converted from an older file, and the instructor has seen it or will.
+for `a-words`), unless the entry says otherwise. Count what is already in your folders first, by
+reading each rubric entry's `goal:` line; a question naming two goals counts toward both. Then
+add new scenarios until every goal reaches its count. **Never edit or delete a scenario or
+question already there**: it is a kept sample, or a question converted from an older file, and the instructor has
+seen it or will. A word in `a-words` has one scenario, its own file, so a word sampled at stop 1
+is filled by adding new questions to the end of its task and rubric files, leaving the ones there as they are.
 
 Vary what the generator says varies. Two scenarios differing only in their names are one
 scenario, and a learner who has met one has met the other.
