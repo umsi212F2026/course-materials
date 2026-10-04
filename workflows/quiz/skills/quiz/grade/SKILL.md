@@ -36,8 +36,15 @@ rule nothing.
 | `answer`    | what the student wrote, verbatim and unedited                                         |
 | `goal`      | the goal id the item examines, or absent where the source has no goals                |
 | `kind`      | `written` or `capability`, where the caller could determine it. See below              |
+| `goals`     | in place of `goal` and `kind`, for a question that examines more than one goal. See below |
 
 Sent as a JSON object per answer, and a batch is an array of them.
+
+**A question that examines more than one goal comes with `goals` and no `goal`.** Each entry is
+`{goal, criterion, kind}`: the goal id, its criterion from `goals.md`, and `kind` as above for
+that goal alone. `criterion` and `kind` may be absent for the reason `kind` may, and the batch
+runner sends the ids alone, which read as entries with only `goal`. A `goal` that is absent
+because `goals` is there is not a missing input.
 
 **If one of the five is missing, say so and rule nothing.** Not the rubric you would have
 written, not the goal the item looks like it examines. A verdict built on an inferred input is
@@ -74,9 +81,29 @@ that nobody established the capability, which moves no review date and establish
 Those two are not in tension: one is a mark, the other is evidence, and this is the case where
 they come apart.
 
+## Questions with more than one goal
+
+**Rule each goal on its own, against that goal's statement in the credit line.** A multi-goal
+credit line is written one line per goal for exactly this. The answer is one answer, but a
+student can reach one goal's statement and miss the other's, and a single mark would record
+both goals the same way when only one of them was shown.
+
+**Half credit on a goal is `not met` for that goal**, as it is for a whole question. Each goal
+takes its own `kind`, so a question can examine one goal met by writing and one met by doing,
+and only the second is `unchecked`.
+
+**Do not settle the goals into one mark.** The caller averages them, and a mark you computed
+beside theirs is a second answer to the same question that nothing reads. Leave the top-level
+`credit` out.
+
+**Where the credit line does not say which part belongs to which goal, rule each against the
+line as a whole and flag it.** That is a line written before multi-goal questions, and the
+flag's clause should say so.
+
 ## What to return
 
-Six things, and no summary verdict on top of them.
+Six things, and no summary verdict on top of them. A question sent with `goals` gets a seventh,
+`per_goal`, and no top-level `credit`.
 
 - **`item`**: the id you were given, echoed back
 - **`credit`**: `full`, `half` or `none`, against the credit line as written. Half only where
@@ -97,6 +124,11 @@ Six things, and no summary verdict on top of them.
   field belongs to the student and is empty on full credit, so a flag on a correct answer has
   nowhere else to put its reason and arrives silent: marked for attention with nothing saying
   what for. That happened to three of the first thirty-one flags.
+- **`per_goal`**: only for a question sent with `goals`. `{ <goal>: { credit, missed, axes } }`,
+  one entry for every goal named and no others, each ruled as above for that goal alone. Its
+  `missed` says what that goal's statement wanted and the answer did not give. The top-level
+  `missed` is still the one the student reads, about the whole answer, and the top-level
+  `axes` still carries `unaided`
 
 **One JSON object per answer, and nothing outside them.** A batch returns an array. The runner
 parses this directly, and prose it would have to interpret is the thing this shape exists to
@@ -108,6 +140,22 @@ avoid.
   "credit": "half",
   "missed": "You said a commit keeps your work, which is right, but not what it keeps that saving does not: the earlier state stays reachable afterwards.",
   "axes": { "unaided": "yes", "criterion": "not met" },
+  "flag": false,
+  "flag_reason": ""
+}
+```
+
+And for a question sent with `goals`:
+
+```json
+{
+  "item": "learning-topics/git-basics/a-history/s1/q2",
+  "missed": "You explained what a commit records, but not how you would get back to one.",
+  "axes": { "unaided": "yes" },
+  "per_goal": {
+    "w-commit": { "credit": "full", "missed": "", "axes": { "unaided": "yes", "criterion": "met" } },
+    "w-restore": { "credit": "half", "missed": "Name the step that brings the files back.", "axes": { "unaided": "yes", "criterion": "not met" } }
+  },
   "flag": false,
   "flag_reason": ""
 }

@@ -19,10 +19,12 @@ plan, implementation). Update this file as items finish or are added.
      `4785f33..0761ad8`.
    - ~~Phase 4: curation with two instructor stops.~~ Done, `64a432a..6e380de`.
    - Rulings made during phases 3 to 5 are in `rulings-unified-banks.md`, for review.
-   - Phase 5: quiz. Must key questions on `label`, never `id` (folder ids repeat across
-     scenarios; `quiz-practice.mjs` keys `byId` and form fields on `id`). Single-source pools
-     (`topic` form) will report a folder bank as "in the topic but the pool's draw does not
-     mention it" until pool keys change.
+   - ~~Phase 5: quiz.~~ Done, from `34f264c`. Plan
+     `plans/2026-10-03-unified-banks-phase-5.md`. Folder ids are qualified on the quiz path;
+     pool keys work at topic, activity and scenario level; practice prefers unseen questions;
+     multi-goal questions are graded and recorded per goal. What the instructor's private
+     tools must change is in `workflows/quiz/tools/CONTRACT.md` (quiz-bake calls `courseOnly`;
+     quiz-comments reads `value` for `partial`; quiz-regrade accepts `per_goal`).
 4. **Help is always available; help just means the attempt doesn't count.** Covers review and the
    practice quiz too: the tutor answers while a quiz page is open and records those answers as not
    independent.
@@ -44,9 +46,10 @@ plan, implementation). Update this file as items finish or are added.
   then the per-goal stamps keep working. Check with `survey.mjs`: each topic's `origin` should
   read `course` and no problems should appear.
 - Run `node workflows/learn/tools/migrate-words.mjs <topic-folder>` on each course topic, with
-  `--dry-run` first to read its summary. WAIT until phase 5 has changed pool keys, and run it as
-  part of each topic's next curation: migrating earlier changes existing quiz draws (sessions 5,
-  7 and 9 draw from the word banks it moves). It moves banked word questions into `a-words`, adds
+  `--dry-run` first to read its summary. Phase 5 is done, so pools may now name folder banks;
+  run it as part of each topic's next curation, and in the same change update any pool that
+  draws from that topic to the new keys (sessions 5, 7 and 9 draw from the word banks it moves,
+  and their keys stop resolving once the banks move). It moves banked word questions into `a-words`, adds
   the `a-words` entry, and removes the word stamps and `supply` lines. Then, during that topic's
   next curation, place each remaining capability question in `items.md` into the activity whose
   generator would produce it.

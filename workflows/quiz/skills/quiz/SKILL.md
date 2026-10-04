@@ -175,6 +175,10 @@ goal's own criterion. **Write `kinds.json` beside it, one entry per goal in that
 
 **Never read this off the goal id.** The `c-` prefix is on both examples above.
 
+**The array already names every goal a question examines**, so a question with two goals puts
+both there, and each gets its own entry. They are decided one at a time like any other: one
+question can examine a goal met by writing and another met by doing.
+
 **Every goal in the array gets an entry, including ones with no written answer to rule on.** A
 goal examined only by multiple choice never reaches step 5, so this is the only place anybody
 asks the question about it, and picking the right option out of four is not evidence that
@@ -198,6 +202,18 @@ Append one verdict per answer to `verdicts.jsonl` in that same directory, as JSO
 {"item":"q-history-vs-undo","uniqname":"me","credit":"half","missed":"...","axes":{"unaided":"yes","criterion":"not met"},"flag":false,"flag_reason":"","at":"<now, ISO 8601>"}
 ```
 
+**An entry carrying `goals` examines more than one goal**, and its `goal` and `criterion` are
+null. Send its `goals` in their place, each with `kind` added from `kinds.json` for that goal.
+The grade skill then rules per goal, and the verdict line carries its `per_goal` as it came back
+and no top-level `credit`:
+
+```
+{"item":"learning-topics/git-basics/a-history/s1/q2","uniqname":"me","missed":"...","axes":{"unaided":"yes"},"per_goal":{"w-commit":{"credit":"full","missed":"","axes":{"unaided":"yes","criterion":"met"}},"w-restore":{"credit":"half","missed":"...","axes":{"unaided":"yes","criterion":"not met"}}},"flag":false,"flag_reason":"","at":"<now, ISO 8601>"}
+```
+
+**`per_goal` names exactly the question's goals.** Scoring refuses a verdict that leaves one out
+or adds one, rather than averaging over whatever is there.
+
 **`unaided` is `yes` unless you know otherwise.** They answered on a page with you not
 watching, which is as unaided as anything in this course gets. Send `no` only where the
 transcript shows this particular answer was discussed or looked up before it was submitted.
@@ -214,28 +230,42 @@ run again rather than reporting a score that is short.
 It returns the score and one row per item, and **every argument step 7 needs is on that row**,
 with `kinds.json` already folded into the axes.
 
+**A question that examined several goals scores the average of its per-goal credits.** Full on
+one goal and none on the other is worth 0.5, and full and half is 0.75, so the score can carry a
+fraction that no single mark would give. Its row's `credit` reads `partial` where the goals
+differ, and its `per_goal` lists each goal's own credit, `missed` and axes.
+
 ### 7. Record every item, before you report anything
 
-One call per item whose row has both a `row.goal` and a `row.topic`:
+One call per item whose row has both a `row.goal` and a `row.topic`, and one per goal on a row
+that has a `per_goal`:
 
 ```
 node workflows/learn/tools/record-attempt.mjs <topic> <goal> "<label>" --tags <tags> --axes '<axes>' --source quiz
 ```
 
-Take all five straight off the row from step 6: `row.topic`, `row.goal`, `row.axes` as it
-stands, and `row.tags` where the row has one.
+Take all five straight off the row from step 6: `row.topic`, `row.goal`, `row.label`,
+`row.axes` as it stands, and `row.tags` where the row has one.
+
+**A row with a `per_goal` examined several goals, and its `row.goal` is null.** Make one call
+for each entry in `per_goal`, with that entry's `goal` and `axes` in place of the row's and the
+same `row.topic`, `row.label` and `row.tags` on every one: the tags belong to the question, not
+to one of its goals. Each goal is met or not on its own ruling, which is the whole reason the
+question was graded per goal.
 
 **`row.topic` is an absolute path and goes in exactly as it is**, with nothing to strip, join
 or rebuild: a folder name reassembled into `../learning-topics/<name>` works from one directory
 and fails silently from any other. **Everything this tool takes is on that row, so there is no
 reason to open it.**
 
-The label is the one thing you build:
-
-- **`<move>: <item>`** where the row has a `move`, which is the label format of a vocabulary
-  move set live. `served.mjs` hands it back the next time this word is studied, so study does not
-  repeat the same shape. `DISTINGUISH: q-history-vs-undo`.
-- **`<item>`** alone where there is no move.
+**`row.label` goes in as it stands, and it is not always `row.item`.** A question from a folder
+bank has an `item` qualified by the repository and topic it came from, so that it is unique
+across the quiz, and a `label` local to its topic, which is what study records the same
+question under: one question, one history. A single-file question's label is `<move>: <item>`
+where it has a move, which is the label format of a vocabulary move set live (`served.mjs`
+hands it back the next time this word is studied, so study does not repeat the same shape:
+`DISTINGUISH: q-history-vs-undo`), and `<item>` alone where it has none. Do not build it
+yourself.
 
 **Leave `--tags` off entirely where `row.tags` is null.** An invented tag is worse than none:
 `production` is what a word's bar reads, and one applied by guesswork would finish a goal that
@@ -327,6 +357,10 @@ and a friendlier version is a different mark's worth of feedback. `expected` is 
 answer, introduced as what earns full credit. On full credit neither applies, and the question
 and their answer are the whole entry.
 
+**A `partial` row is "Partial credit", and says which goal it fell short on.** After the row's
+`missed`, quote the `missed` of each `per_goal` entry below full credit, so the student can tell
+which half of the question they reached.
+
 **Say the correction sentence every time, including on a perfect score.** A learner who does
 not know they can argue will not argue, and a student overruling the grader is the one place in
 this course where they are the human in the loop rather than the subject of it.
@@ -369,6 +403,9 @@ then believe them.
 node workflows/learn/tools/record-attempt.mjs <topic> <goal> "<label>, on review" --tags <tags> --axes '{"unaided":"yes","criterion":"met"}' --source quiz
 ```
 
+On a question that examined several goals, make that call once for each goal they are
+correcting, naming that goal, and leave the goals they are not arguing about as they were.
+
 **The first verdict stays in the log beside it.** Nothing is rewritten and nothing is deleted;
 the log is what happened, and what happened is that it was marked one way and then corrected.
 
@@ -398,8 +435,10 @@ clones would be a queue nobody reads.
 
 ## What not to do
 
-**Do not re-serve a question they have just seen.** The draw is random per run, so a second
-practice quiz on the same session will overlap, and that is fine: what is not fine is answering
+**Do not re-serve a question they have just seen.** The draw puts questions they have never
+attempted first, by their own attempt log, and then the ones attempted longest ago, so a second
+practice quiz on the same session overlaps only once a part of the pool runs out, and that is
+fine: what is not fine is answering
 "can I try that one again" by handing back the same item. Offer another run, or the review
 workflow, which serves a different instance of the same goal.
 
