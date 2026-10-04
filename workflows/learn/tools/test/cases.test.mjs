@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import { makeTopic, survey, CAP_GOAL } from './helpers.mjs';
 import { parseCases } from './../lib/slots.mjs';
 import { readGoals } from './../lib/topic.mjs';
+import { met, casesDemonstrated } from './../lib/bars.mjs';
 
 const THREE =
   '- `declines-risky`: a request that would put a secret in the chat  - `allows-safe`: a request involving no secret - `allows-dashboard`: an instruction to use the host settings ';
@@ -62,8 +63,6 @@ test('a malformed or duplicate case id is a problem naming goal and id, and is l
 });
 
 // --- the bar, per case ---------------------------------------------------------
-import { met, casesDemonstrated } from './../lib/bars.mjs';
-
 const G = (bar = 'one unaided pass', ids = ['a', 'b']) => ({
   id: 'c-x',
   bar,
@@ -100,4 +99,22 @@ test('a goal with no cases is unchanged', () => {
 test('casesDemonstrated counts the cases passed, null without cases', () => {
   assert.deepEqual(casesDemonstrated(G(), [pass(['a'])]), { passed: 1, total: 2 });
   assert.equal(casesDemonstrated({ id: 'c-y', bar: 'one unaided pass', cases: [] }, []), null);
+});
+
+test('casesDemonstrated counts a grandfathered attempt toward every case; cases: [] toward none', () => {
+  assert.deepEqual(casesDemonstrated(G(), [pass(null)]), { passed: 2, total: 2 });
+  assert.deepEqual(casesDemonstrated(G(), [pass([])]), { passed: 0, total: 2 });
+});
+
+test('a cases slot that yields no case, or has stray text, or is empty, is a problem', () => {
+  const p = (v) => parseCases(v).problems;
+  assert.equal(p('a, b').length, 1);
+  assert.equal(p('- declines: no backticks').length, 1);
+  assert.equal(p('- `declines` no colon').length, 1);
+  assert.equal(p('stray - `ok`: fine').length, 1);
+  assert.deepEqual(parseCases('stray - `ok`: fine').cases, [{ id: 'ok', text: 'fine' }]);
+  assert.equal(p('').length, 1);
+  assert.deepEqual(p(undefined), []);
+  const dir = makeTopic({ goals: CAP_GOAL('c-a', '- **cases:** a, b\n') });
+  assert.ok(readGoals(dir).goals[0].problems.some((x) => x.includes('c-a')));
 });

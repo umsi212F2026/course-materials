@@ -122,10 +122,23 @@ export const DEFAULT_GROUP = SLOTS.group.default;
 // pattern, which nobody writes.
 const CASE_ID = /^[a-z0-9]+(-[a-z0-9]+){0,2}$/;
 
+//
+// PARTIAL ENFORCEMENT, BY RULING: when one case is malformed the valid ones are kept and a problem
+// is reported, rather than dropping the lot. Text that yields no case at all is also a problem,
+// never silence: a slot written wrongly must not read as a goal with no cases.
 export function parseCases(value) {
   const cases = [];
   const problems = [];
-  const marks = [...String(value ?? '').matchAll(/(?:^|\s)-\s*`([^`]*)`\s*:/g)];
+  if (value === undefined) return { cases, problems };
+  const raw = String(value);
+  const marks = [...raw.matchAll(/(?:^|\s)-\s*`([^`]*)`\s*:/g)];
+  if (!raw.trim()) {
+    problems.push('cases slot is present but empty');
+  } else if (!marks.length) {
+    problems.push('cases slot has text but no "- `id`: description" case');
+  } else if (raw.slice(0, marks[0].index).trim()) {
+    problems.push('cases slot has text before its first "- `id`: description" case');
+  }
   const seen = new Set();
   marks.forEach((m, i) => {
     const id = m[1].trim();
