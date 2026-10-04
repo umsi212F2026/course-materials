@@ -49,10 +49,10 @@ plan, implementation). Update this file as items finish or are added.
   `--dry-run` first to read its summary. Phase 5 is done, so pools may now name folder banks;
   run it as part of each topic's next curation, and in the same change update any pool that
   draws from that topic to the new keys (sessions 5, 7 and 9 draw from the word banks it moves,
-  and their keys stop resolving once the banks move). It moves banked word questions into `a-words`, adds
-  the `a-words` entry, and removes the word stamps and `supply` lines. Then, during that topic's
-  next curation, place each remaining capability question in `items.md` into the activity whose
-  generator would produce it.
+  and their keys stop resolving once the banks move). It moves banked word questions into
+  `a-words`, adds the `a-words` entry, and removes the word stamps and `supply` lines. Then,
+  during that topic's next curation, place each remaining capability question in `items.md`
+  into the activity whose generator would produce it.
 
 ## Parked ideas
 

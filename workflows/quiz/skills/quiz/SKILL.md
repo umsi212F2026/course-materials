@@ -238,7 +238,7 @@ differ, and its `per_goal` lists each goal's own credit, `missed` and axes.
 ### 7. Record every item, before you report anything
 
 One call per item whose row has both a `row.goal` and a `row.topic`, and one per goal on a row
-that has a `per_goal`:
+that has both a `per_goal` and a `row.topic`:
 
 ```
 node workflows/learn/tools/record-attempt.mjs <topic> <goal> "<label>" --tags <tags> --axes '<axes>' --source quiz
@@ -357,9 +357,12 @@ and a friendlier version is a different mark's worth of feedback. `expected` is 
 answer, introduced as what earns full credit. On full credit neither applies, and the question
 and their answer are the whole entry.
 
-**A `partial` row is "Partial credit", and says which goal it fell short on.** After the row's
-`missed`, quote the `missed` of each `per_goal` entry below full credit, so the student can tell
-which half of the question they reached.
+**A row with a `per_goal` says how each goal went, whatever its credit.** A `partial` row is
+"Partial credit". After the row's `missed`, quote the `missed` of each `per_goal` entry below
+full credit, so the student can tell which part of the question they reached. That holds when
+the goals agree too: a row that is half on both goals reads "Half credit" and still quotes each
+goal's `missed`, since each says something different. A row that is full on every goal has
+nothing to quote.
 
 **Say the correction sentence every time, including on a perfect score.** A learner who does
 not know they can argue will not argue, and a student overruling the grader is the one place in

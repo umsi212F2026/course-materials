@@ -27,6 +27,10 @@ scenarios and across topics, and every map keyed on `id` (form fields, `item_id`
 the seed's duplicate check) needs it unique across a quiz. The qualification happens in
 `readBank`, so it applies on the quiz path only; the study tools see bare ids.
 
+**`readBank(dir)` with no label gives topic-local folder ids**: `a-history/s1/q2`, the same as
+the `label`. That is a third form, and only `readPoolSources`, which passes each source as the
+label, gives the qualified one a draw file carries.
+
 **`label` is topic-local:** `a-history/s1/q2`. It is what study records the same question under.
 
 **`recordLabel(item)` gives the label to record an attempt under**: `label` for a folder
@@ -137,9 +141,11 @@ which a folder question has in the same form, and its duplicate-id check is sati
 qualified ids. The quiz app itself must treat an item id as an opaque string: qualified ids
 contain `/`.
 
-**quiz-grade --queue.** No change. Queue items now carry `goals`. Whatever sends them to the
-grade skill passes a multi-goal item's `goals` through, and the skill rules per goal and returns
-`per_goal`.
+**quiz-grade --queue.** No change. Every queue item now carries `goals`: `[goal]` on a
+single-goal item and `[]` on one with no goal. Whatever sends them to the grade skill passes
+them through as they are. The skill rules per goal and returns `per_goal` only when `goals`
+names more than one goal. With one goal or none it returns today's shape, a top-level `credit`
+and no `per_goal`, so those verdicts merge byte-identically.
 
 **quiz-grade --merge.** No change. `mergeGrades` handles `per_goal`, and the summary line reads
 `score`, which already includes `value`.
@@ -155,11 +161,21 @@ carries.
 
 **quiz-scores.** No change. It reads each student's `score` and `out_of`.
 
-**Also affected, though they do not import `grade.mjs`:** quiz-regrade rejects a fresh verdict
-whose `credit` is not `full`, `half` or `none`, which a per-goal verdict without a top-level
-credit fails; it should accept a verdict with `per_goal` instead. quiz-review shows the merged
-`credit`, so a `partial` item has no credit button pressed; a correction from it is a single
-credit and merges as described above.
+**quiz-bank-check.** Must change. It calls `readBank` with no label, so its folder ids are
+topic-local (see above), which is fine for a check of one topic. But its undeclared-goal check
+reads only `i.goal`, so a typo in a multi-goal question's `goals` passes silently, and
+`tally("goal")` counts every multi-goal question as `(none)`. Both should read `goals`.
+
+**quiz-regrade.** Must change, in two places, for a multi-goal question. The verdict shape its
+prompt mandates is credit-only, and the same prompt tells the agent to follow the grade skill,
+so the prompt needs a `per_goal` variant of that shape. Without it the agent either collapses
+the per-goal rulings into one mark, which merges as if the question had one goal, or writes
+`per_goal` with no top-level `credit`. Its coverage check rejects any fresh verdict whose
+`credit` is not `full`, `half` or `none`, so that second case rolls the regrade back; the check
+should accept a verdict carrying `per_goal` instead.
+
+**quiz-review.** No change needed. It shows the merged `credit`, so a `partial` item has no
+credit button pressed; a correction from it is a single credit and merges as described above.
 
 ## Practice draws
 

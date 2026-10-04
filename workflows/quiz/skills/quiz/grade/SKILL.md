@@ -36,15 +36,17 @@ rule nothing.
 | `answer`    | what the student wrote, verbatim and unedited                                         |
 | `goal`      | the goal id the item examines, or absent where the source has no goals                |
 | `kind`      | `written` or `capability`, where the caller could determine it. See below              |
-| `goals`     | in place of `goal` and `kind`, for a question that examines more than one goal. See below |
+| `goals`     | the goals the question names. Only a list of more than one changes anything. See below |
 
 Sent as a JSON object per answer, and a batch is an array of them.
 
-**A question that examines more than one goal comes with `goals` and no `goal`.** Each entry is
-`{goal, criterion, kind}`: the goal id, its criterion from `goals.md`, and `kind` as above for
-that goal alone. `criterion` and `kind` may be absent for the reason `kind` may, and the batch
-runner sends the ids alone, which read as entries with only `goal`. A `goal` that is absent
-because `goals` is there is not a missing input.
+**A question is multi-goal only when `goals` names more than one goal.** Then `goal` is absent,
+and that is not a missing input. Each entry is `{goal, criterion, kind}`: the goal id, its
+criterion from `goals.md`, and `kind` as above for that goal alone. `criterion` and `kind` may
+be absent for the reason `kind` may, and the batch runner sends the ids alone, which read as
+entries with only `goal`. **A `goals` of one goal or none is the ordinary case**, and the batch
+runner sends one on every item: rule by `goal` and `kind` as always, and return the ordinary
+shape.
 
 **If one of the five is missing, say so and rule nothing.** Not the rubric you would have
 written, not the goal the item looks like it examines. A verdict built on an inferred input is
@@ -102,8 +104,10 @@ flag's clause should say so.
 
 ## What to return
 
-Six things, and no summary verdict on top of them. A question sent with `goals` gets a seventh,
-`per_goal`, and no top-level `credit`.
+Six things, and no summary verdict on top of them. A question whose `goals` names more than one
+goal gets a seventh, `per_goal`, and no top-level `credit`. With one goal or none, return the
+six and no `per_goal`, even though `goals` was sent: a per-goal verdict on a question with no
+goals goes unscored.
 
 - **`item`**: the id you were given, echoed back
 - **`credit`**: `full`, `half` or `none`, against the credit line as written. Half only where
@@ -124,7 +128,7 @@ Six things, and no summary verdict on top of them. A question sent with `goals` 
   field belongs to the student and is empty on full credit, so a flag on a correct answer has
   nowhere else to put its reason and arrives silent: marked for attention with nothing saying
   what for. That happened to three of the first thirty-one flags.
-- **`per_goal`**: only for a question sent with `goals`. `{ <goal>: { credit, missed, axes } }`,
+- **`per_goal`**: only where `goals` names more than one goal. `{ <goal>: { credit, missed, axes } }`,
   one entry for every goal named and no others, each ruled as above for that goal alone. Its
   `missed` says what that goal's statement wanted and the answer did not give. The top-level
   `missed` is still the one the student reads, about the whole answer, and the top-level
@@ -145,7 +149,7 @@ avoid.
 }
 ```
 
-And for a question sent with `goals`:
+And for a question whose `goals` names two:
 
 ```json
 {
