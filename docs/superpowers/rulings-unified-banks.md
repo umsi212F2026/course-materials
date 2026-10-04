@@ -36,3 +36,36 @@ was decided, why, and what it costs if it was wrong. Delete this file once revie
     pass. Cost: a label may want resizing in the editor.
 11. **Left for phase 4:** the `kind: bank` field and old `<entry-id>/<item>` labels still in the
     activities template and curation/verify.
+
+## Phase 4: curation with two instructor stops (`64a432a..6e380de`)
+
+1. **The course path runs only when the instructor runs curation interactively** on a course
+   topic. A background run (spawned by `learn` in a student's clone) on any topic writes
+   activities only and never drafts banks or waits. Cost: a course topic curated in the
+   background gets no new bank until the instructor runs it.
+2. **A course topic** is one whose survey origin is `course`, or whose goals all carry
+   `origin: course` (every existing course topic, which has no header yet). The header is added
+   first, then survey is re-run. Without this the path could never start.
+3. **`checks` stays** as the generator's declaration of which goals its questions can
+   establish; no new field. `kind:` and `bank:` are retired: a bank exists when its folder does.
+   Conversion moves any substantive `bank:` text into the generator and deletes only a bare path
+   or `kind:` (coding-agents has a `bank:` line that is the only statement of its material).
+4. **Only activities with `checks` whose generator invents its material get a bank.** Generators
+   that pick from real items or the learner's own work (own app, agent, chats), orientation
+   rehearsals, and activities without `checks` stay live, because a bank would replace the
+   learner's own material.
+5. **Bank size:** about three questions per goal an activity names, about three per word for
+   `a-words`. Somewhat above today's one or two per capability goal.
+6. **Drafts live on an unpushed branch** until stop 2; the instructor then decides when to merge
+   and push. The repository is public.
+7. **Gates:** `a-words` drafting waits until `migrate-words.mjs` has run on that topic (the tool
+   refuses once `tasks/a-words/` exists), and moving capability questions out of `items.md`
+   waits with it for phase 5, since both change existing quiz draws.
+8. **A legacy authored folder** (`tasks/<dir>/` with no `rubrics/<dir>/`) is skipped as a study
+   artifact rather than reported, so students' old topics stay clean.
+9. **The curation diagram** gained two loops the skill describes (revise a generator at stop 1;
+   fix survey problems before the bank check), and the plane widened. Cost: layout redo in the
+   editor if unwanted.
+10. **Tooling note, not changed:** `workflows/diagram/tools/render.mjs` times out
+    (`Page.captureScreenshot`) on this machine even on unchanged files; a copy launched with
+    headless `shell`, a `protocolTimeout` and `--disable-gpu` renders.

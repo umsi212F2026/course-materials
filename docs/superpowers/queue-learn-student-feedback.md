@@ -15,9 +15,10 @@ plan, implementation). Update this file as items finish or are added.
    - ~~Phase 2: goal model (topic origin, capability, `serves: group`).~~ Done,
      `481a63d..745010b`. Plan `plans/2026-10-03-unified-banks-phase-2.md`. Real course topics
      don't carry the `**origin:** course` header yet; their per-goal stamps still work.
-   - Phase 3: vocabulary as `a-words`, with migration, and retiring the `supply` slot (moved
-     from phase 2: words depend on `supply: vocabulary` until `a-words` exists).
-   - Phase 4: curation with two instructor stops.
+   - ~~Phase 3: vocabulary as `a-words`, `supply` retired, `migrate-words.mjs`.~~ Done,
+     `4785f33..0761ad8`.
+   - ~~Phase 4: curation with two instructor stops.~~ Done, `64a432a..6e380de`.
+   - Rulings made during phases 3 to 5 are in `rulings-unified-banks.md`, for review.
    - Phase 5: quiz. Must key questions on `label`, never `id` (folder ids repeat across
      scenarios; `quiz-practice.mjs` keys `byId` and form fields on `id`). Single-source pools
      (`topic` form) will report a folder bank as "in the topic but the pool's draw does not
