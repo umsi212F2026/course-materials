@@ -69,3 +69,36 @@ was decided, why, and what it costs if it was wrong. Delete this file once revie
 10. **Tooling note, not changed:** `workflows/diagram/tools/render.mjs` times out
     (`Page.captureScreenshot`) on this machine even on unchanged files; a copy launched with
     headless `shell`, a `protocolTimeout` and `--disable-gpu` renders.
+
+## Phase 5: the quiz (`34f264c..d87cf42`)
+
+1. **Qualified ids on the quiz path.** A folder question's `id` in a draw is
+   `<source>/<activity>/<scenario>/<question>`, so every id-keyed map here and in the private
+   tools keeps working; the picker still uses the topic-local `label`. Single-file ids are
+   unchanged. Cost: long ids in draw files.
+2. **Two label shapes until migration:** folder questions are recorded under their path label;
+   single-file questions keep today's `<move>: <id>` (one helper, `recordLabel`, decides).
+3. **A topic-level pool key spreads evenly**, deterministically, across the topic's banks in
+   name order; it yields one stratum per bank, so `quiz-bake` follows it unchanged. A short
+   bank's leftover wraps to earlier banks. Because the spread is per bank, a topic key is not a
+   drop-in for an old `items` key.
+4. **Course goals only** (`courseOnly`): a question naming a goal that isn't `course` (or isn't in
+   goals.md) is dropped and reported. The practice quiz applies it; `quiz-bake` must be taught to
+   call it (see `workflows/quiz/tools/CONTRACT.md`). A topic with no goals.md now draws nothing
+   that has a goal.
+5. **Per-goal verdicts.** A question naming several goals is graded per goal; its value is the
+   mean; its credit is the shared one when all goals agree, else `partial`. A multi-goal verdict
+   without per-goal data is refused, not scored on one mark. Verdicts on single-goal questions
+   merge byte-identically to before.
+6. **The migration gate is open, with conditions.** Migrating a topic and updating every pool
+   that draws from it must be one change; `migrate-words.mjs` now warns for each pool it would
+   shrink. The queue file proposes a mapping for sessions 5, 7 and 9 that keeps each session's
+   old mix (sessions 7 and 9 were nearly nine in ten word questions). Cost: you may want a
+   different mix.
+7. **Private tools need changes before multi-goal questions reach a real quiz:** `quiz-comments`
+   (read `value`), `quiz-regrade` and `quiz-review` (find folder rubrics; accept per-goal
+   verdicts), `quiz-bank-check` (check `goals`), `quiz-bake` (call `courseOnly`), and four tests
+   in `course-private/tests/quiz-draw.test.mjs` (the fixture needs a course goals.md).
+   `CONTRACT.md` lists each. Nothing in course-private was changed.
+8. **Deferred:** a topic-level key also spreads over activities marked dropped, because
+   `bank.mjs` doesn't read activities.md.
