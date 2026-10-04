@@ -2,8 +2,10 @@
 // tasks/a-words/<goal-id>.md and retires the stamps and supply lines that served them.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdirSync, writeFileSync, readFileSync, existsSync, chmodSync } from 'node:fs';
+import { mkdirSync, writeFileSync, readFileSync, existsSync, chmodSync, mkdtempSync } from 'node:fs';
 import { join } from 'node:path';
+import { tmpdir } from 'node:os';
+import { planMigration, poolWarnings } from '../migrate-words.mjs';
 import { makeTopic, run, survey, CAP_GOAL } from './helpers.mjs';
 import { readFolderBanks } from '../../../quiz/tools/lib/bank.mjs';
 
@@ -277,4 +279,35 @@ test('a stamp that was found but could not be removed is warned about by name', 
   const dir = bare('# T\n\n' + TASK('q1', 'One.'), '# R\n\n' + RUB('q1', 'w-a', 'define'), { acts });
   const r = run('migrate-words.mjs', [dir]);
   assert.match(r.stderr, /warning: .*a-w-a.*not removed/);
+});
+
+// A fixture course-materials checkout: quiz-bank/ with the pools given, keyed by file name.
+function repoWith(pools) {
+  const repo = mkdtempSync(join(tmpdir(), 'migrate-repo-'));
+  mkdirSync(join(repo, 'quiz-bank'));
+  for (const [name, pool] of Object.entries(pools)) writeFileSync(join(repo, 'quiz-bank', name), JSON.stringify(pool));
+  return repo;
+}
+
+test('warns for each pool key naming a bank of this topic that the run shrinks or empties', () => {
+  // build() names its topic folder `topic`; items.md holds 4 questions, 1 of them a capability.
+  const repo = repoWith({
+    'session-7.pool.json': {
+      draw: { 'learning-topics/topic/items': 2, 'learning-topics/other/items': 1, 'learning-topics/topic': 3 },
+    },
+    'session-5.pool.json': { topic: 'topic', draw: { items: 1 } },
+  });
+  const dir = build();
+  assert.deepEqual(poolWarnings(planMigration(dir), dir, repo), [
+    'quiz-bank/session-5.pool.json: "items" draws from bank items, which this run takes from 4 questions to 1; update the pool in the same change.',
+    'quiz-bank/session-7.pool.json: "learning-topics/topic/items" draws from bank items, which this run takes from 4 questions to 1; update the pool in the same change.',
+  ]);
+
+  const words = build({ onlyWords: true });
+  assert.match(poolWarnings(planMigration(words), words, repo)[0], /from 3 questions to 0/);
+});
+
+test('with no quiz-bank there are no pool warnings', () => {
+  const dir = build();
+  assert.deepEqual(poolWarnings(planMigration(dir), dir, join(tmpdir(), 'no-such-repo-here')), []);
 });

@@ -46,13 +46,53 @@ plan, implementation). Update this file as items finish or are added.
   then the per-goal stamps keep working. Check with `survey.mjs`: each topic's `origin` should
   read `course` and no problems should appear.
 - Run `node workflows/learn/tools/migrate-words.mjs <topic-folder>` on each course topic, with
-  `--dry-run` first to read its summary. Phase 5 is done, so pools may now name folder banks;
-  run it as part of each topic's next curation, and in the same change update any pool that
-  draws from that topic to the new keys (sessions 5, 7 and 9 draw from the word banks it moves,
-  and their keys stop resolving once the banks move). It moves banked word questions into
-  `a-words`, adds the `a-words` entry, and removes the word stamps and `supply` lines. Then,
-  during that topic's next curation, place each remaining capability question in `items.md`
-  into the activity whose generator would produce it.
+  `--dry-run` first to read its summary. It moves banked word questions into `a-words`, adds
+  the `a-words` entry, and removes the word stamps and `supply` lines. Then, during that topic's
+  next curation, place each remaining capability question in `items.md` into the activity whose
+  generator would produce it.
+
+  **Migrating a topic and updating every pool that draws from it are one change.** Nothing
+  fails if the pool is left alone. Session 5's `words` key stops resolving, which is loud, but
+  in sessions 7 and 9 `items.md` survives holding only the capability questions, so the old
+  `<topic>/items` keys go on resolving and the quiz quietly shrinks to almost nothing: the
+  strata go from 26 and 40 questions to 3 and 4 (session 7), and from 44, 29 and 29 to 5, 3 and
+  4 (session 9). The tool now warns on stderr, per pool key, with the bank's count before and
+  after; treat the warning as the to-do list. The mapping for each real pool, from counts in
+  each `rubrics/<bank>.md` (a question with a `move` is a word question, one without is a
+  capability question):
+
+  - **Session 5** (commits-and-history; `words` held 30 word questions over 8 words, all with a
+    move). Convert it from the topic form, dropping `topic`, so its ids are qualified like every
+    other pool's: `learning-topics/commits-and-history-2026-09/a-words: 4` and
+    `learning-topics/commits-and-history-2026-09/commit-and-restore: 1`. Total 5, mix unchanged.
+  - **Session 7** (total 5). Old: `ps1-data-analysis/knowing-it-is-right: 1`, coding-agents
+    `items: 2` (26 questions: 23 word over 10 words, 3 capability over 3 goals) and react-apps
+    `items: 2` (40: 36 word over 12 words, 4 capability over 2 goals). Expected per quiz: 3.57
+    word questions and 0.43 capability ones. New: keep `knowing-it-is-right: 1`;
+    `learning-topics/coding-agents-2026-09/a-words: 2`;
+    `learning-topics/react-apps-2026-09/a-words: 2`. No `items` key: the nearest whole mix to
+    0.43 capability questions is none, and that was also the old draw's commonest outcome (63%
+    of quizzes had no capability question).
+  - **Session 9** (total 6). Old: `items: 2` each from web-backends (44: 39 word over 13 words,
+    5 capability over 3 goals), software-design (29: 26 word over 9 words, 3 capability over 2
+    goals) and software-construction (29: 25 word over 9 words, 4 capability over 2 goals).
+    Expected per quiz: 5.29 word and 0.71 capability. New:
+    `learning-topics/web-backends-2026-09/a-words: 1`,
+    `learning-topics/web-backends-2026-09/items: 1`,
+    `learning-topics/software-design-2026-09/a-words: 2`,
+    `learning-topics/software-construction-2026-09/a-words: 2`. One capability question,
+    from the topic whose capability bank is largest.
+
+  An `a-words` key plus an `items` key of 1 each for every topic would keep the totals but turn
+  a mix that was nearly nine words in ten into half capability questions, drawn from banks of 3
+  to 5, so it is not used. When a topic's capability questions move into activities, its
+  `items` key moves with them.
+
+  **A topic-level key is not a drop-in replacement.** A topic count is spread evenly over all
+  the topic's banks in name order, whatever their size. `learning-topics/coding-agents-2026-09: 2`
+  would give half the count to the 3-question `items` bank, and in a topic with activity banks
+  as well (react-apps, web-backends, software-construction) it would also draw from banks the
+  old pool never named.
 
 ## Parked ideas
 

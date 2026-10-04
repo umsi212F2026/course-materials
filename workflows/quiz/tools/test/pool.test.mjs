@@ -163,13 +163,15 @@ test("topic form checks exhaustiveness against single-file banks only", () => {
 test("exclude takes qualified folder ids and bare single-file ids", () => {
   const root = workspace(T1);
   const pool = {
-    draw: { "learning-topics/t1/a-x/s2": 2, "learning-topics/t1/items": 4 },
+    draw: { "learning-topics/t1/a-x/s2": 1, "learning-topics/t1/items": 3 },
     exclude: { "learning-topics/t1/a-x/s2/q1": "", i1: "" },
   };
-  const { shape } = drawn(pool, root);
-  assert.deepEqual(shape, [
-    ["learning-topics/t1/a-x/s2", 2, 1],
-    ["learning-topics/t1/items", 4, 3],
+  // Takes that fit what is left, so a problem here can only be an exclude that did not resolve.
+  const { strata, problems } = drawn(pool, root);
+  assert.deepEqual(problems, []);
+  assert.deepEqual(strata.map((s) => s.items.map((i) => i.id)), [
+    ["learning-topics/t1/a-x/s2/q2"],
+    ["i2", "i3", "i4"],
   ]);
 });
 
@@ -196,6 +198,7 @@ test("every real pool draws as it did at 0ce78cb", async (t) => {
   const old = await import(pathToFileURL(join(scratch, "workflows/quiz/tools/lib/bank.mjs")).href);
 
   const dir = join(REPO, "quiz-bank");
+  let compared = 0;
   for (const name of readdirSync(dir).filter((n) => n.endsWith(".pool.json")).sort()) {
     const pool = JSON.parse(readFileSync(join(dir, name), "utf8"));
     const sources = pool.topic
@@ -211,5 +214,8 @@ test("every real pool draws as it did at 0ce78cb", async (t) => {
     const after = shape(applyPool(readPoolSources(pool, ROOT), pool));
     assert.deepEqual(after, before, name);
     t.diagnostic(`${name}: same ${JSON.stringify(after.strata)}, ${after.problems.length} problems`);
+    compared++;
   }
+  // A run that compared nothing proved nothing, and should say so rather than pass.
+  if (!compared) t.skip(`no pool's sources are under ${ROOT}`);
 });

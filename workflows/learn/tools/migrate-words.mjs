@@ -32,12 +32,16 @@
 // NOT ATOMIC. A rename that fails partway through the edits is not rolled back; the files
 // already renamed stay changed, and the new a-words files stay in place.
 //
+// POOLS ARE CHECKED, NOT CHANGED. Before writing (and on --dry-run), every key in this
+// checkout's quiz-bank/*.pool.json that draws from a bank of this topic the run would shrink or
+// empty is warned about on stderr, with the bank's count before and after (see poolWarnings).
+//
 // ONE-SHOT. It refuses if tasks/a-words/ or rubrics/a-words/ already exists, so a second run can
 // never duplicate a question. --dry-run prints the same summary and writes nothing.
 
 import { existsSync, readFileSync, readdirSync, writeFileSync, mkdirSync, rmSync, renameSync } from 'node:fs';
-import { join, dirname, basename } from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { join, dirname, basename, resolve } from 'node:path';
+import { pathToFileURL, fileURLToPath } from 'node:url';
 import { readGoals, readActivities } from './lib/topic.mjs';
 import { rawSections } from '../../quiz/tools/lib/bank.mjs';
 
@@ -284,6 +288,57 @@ export function verifyPlan(plan) {
   return bad;
 }
 
+// --- pools ----------------------------------------------------------------------
+// The course-materials checkout this script lives in: workflows/learn/tools/ -> the repo root.
+const REPO = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
+
+/** One warning per pool key that draws from a legacy bank of this topic the plan would shrink
+ *  or empty, giving the bank's question count before and after.
+ *
+ *  MIGRATING A TOPIC AND UPDATING ITS POOLS ARE ONE CHANGE. A key on a bank that loses its word
+ *  questions keeps resolving and quietly draws from what is left (or, emptied, stops resolving),
+ *  so a session's quiz shrinks with nothing failing. This says so before anything is written. It
+ *  is a warning, not a refusal: the pool is updated in the same change, after the run.
+ *
+ *  A pool names this topic by its folder name, in the topic form (`"topic": "<folder>"`, keys
+ *  are banks) or as the segment after `learning-topics` in a key. A topic-level key is not
+ *  warned about: its total is unchanged, though its spread moves. No quiz-bank/ means no pools
+ *  to check, which is not an error. */
+export function poolWarnings(plan, dir, repo = REPO) {
+  const banks = join(repo, 'quiz-bank');
+  if (!existsSync(banks)) return [];
+  const folder = basename(resolve(dir));
+  const removed = new Set(plan.removals);
+  const counts = new Map();
+  for (const p of plan.legacy) {
+    const before = idList(p.tText).length;
+    const after = removed.has(p.tFile) ? 0 : idList(plan.edits.get(p.tFile) ?? p.tText).length;
+    if (after < before) counts.set(basename(p.tFile, '.md'), [before, after]);
+  }
+  const out = [];
+  for (const name of readdirSync(banks).filter((n) => n.endsWith('.pool.json')).sort()) {
+    let pool;
+    try {
+      pool = JSON.parse(readFileSync(join(banks, name), 'utf8'));
+    } catch {
+      continue;
+    }
+    for (const key of Object.keys(pool.draw ?? {})) {
+      const parts = key.split('/');
+      let bank = null;
+      if (pool.topic) bank = pool.topic === folder ? parts[0] : null;
+      else {
+        const at = parts.indexOf('learning-topics');
+        if (at !== -1 && parts[at + 1] === folder) bank = parts[at + 2] ?? null;
+      }
+      if (!bank || !counts.has(bank)) continue;
+      const [before, after] = counts.get(bank);
+      out.push(`quiz-bank/${name}: "${key}" draws from bank ${bank}, which this run takes from ${before} questions to ${after}; update the pool in the same change.`);
+    }
+  }
+  return out;
+}
+
 function main() {
   // Every flag checked, as in record-status.mjs: a misspelt --dry-run that was ignored would
   // write the migration the caller meant only to preview.
@@ -308,7 +363,7 @@ function main() {
 
   const plan = planMigration(dir);
   if (plan.refusals.length) die(`Refusing, nothing was changed:\n  ${plan.refusals.join('\n  ')}`);
-  for (const w of plan.warnings) console.error(`warning: ${w}`);
+  for (const w of [...plan.warnings, ...poolWarnings(plan, dir)]) console.error(`warning: ${w}`);
   const report = (head) => {
     console.log(head);
     for (const line of plan.summary) console.log(`  ${line}`);

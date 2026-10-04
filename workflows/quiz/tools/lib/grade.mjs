@@ -192,6 +192,12 @@ export function mergeGrades(rows, verdicts, { date, session, corrections = [] })
           continue;
         }
         ({ credit, value, perGoal } = settled);
+      } else if (itemGoals(r.item).length > 1) {
+        // A MULTI-GOAL QUESTION RULED AS ONE MARK would be recorded as if it examined one goal,
+        // so it is left unscored, as a per_goal missing a goal is. Single-goal and goal-less
+        // items never reach this branch, so their verdicts merge exactly as they always did.
+        problems.push(`${r.uniqname} ${r.item.id}: names goals ${itemGoals(r.item).join(", ")} but the verdict has no per_goal`);
+        continue;
       } else {
         credit = v.credit;
       }

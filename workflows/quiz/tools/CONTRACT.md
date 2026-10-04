@@ -11,10 +11,14 @@ back, and what each private tool has to do about it.
 - **Every pool written against single-file banks draws exactly what it drew.** For each pool in
   `quiz-bank/`, `applyPool(readPoolSources(pool, root), pool)` gives the same strata, in the same
   order, with the same items and the same problems. A re-bake of an existing session draws the
-  same questions.
+  same questions, but only until that pool's topics are migrated to folder banks: migrating
+  moves the word questions out of the banks the pool names, and the pool is rewritten in the
+  same change, so from then on a re-bake draws differently.
 - **A single-file question keeps its exact shape**, including its bare `id`.
 - **A verdict without `per_goal` merges byte-identically.** `mergeGrades` returns the same object,
-  key order included, for every verdict and correction that does not use the new fields.
+  key order included, for every verdict and correction that does not use the new fields, on
+  every question naming one goal or none. A question naming several goals is new, and a verdict
+  on it without `per_goal` is a problem (see below).
 
 Two additions sit beside that. Each stratum now carries `bank`, the bank its items come from.
 Each `buildQueue` item now carries `goals`, an array that is always present.
@@ -28,8 +32,12 @@ the seed's duplicate check) needs it unique across a quiz. The qualification hap
 `readBank`, so it applies on the quiz path only; the study tools see bare ids.
 
 **`readBank(dir)` with no label gives topic-local folder ids**: `a-history/s1/q2`, the same as
-the `label`. That is a third form, and only `readPoolSources`, which passes each source as the
-label, gives the qualified one a draw file carries.
+the `label`. That is a third form. `readPoolSources` passes each source as the label, and so
+gives the qualified ids, for a pool in the multi-source form only. A pool in the topic form
+(`"topic": "<folder>"`) reads its one topic without a label, so the folder ids in its draw are
+topic-local too (`a-words/w-merge/q1`). That is fine, since every id in such a draw comes from
+one topic and is unique within it; but a tool must not assume a draw's folder ids always start
+with a source.
 
 **`label` is topic-local:** `a-history/s1/q2`. It is what study records the same question under.
 
@@ -84,7 +92,10 @@ course. It returns `{ items, problems }`, one problem per dropped question:
 <id> (<bank>) dropped: <goal> is not a course goal
 ```
 
-A question naming no goal is kept, and so is one with no `topic`. It reads `item.topic`, the
+A question naming no goal is kept, and so is one with no `topic`. **A topic whose `goals.md` is
+missing or unreadable now draws nothing that names a goal**, since none of its goal ids reads as
+course: a test fixture that builds a topic from bank files alone needs a `goals.md` too (see
+the private tests below). It reads `item.topic`, the
 absolute path to the topic folder, which `topicDir(pool, item, root)` from the same file gives.
 The practice quiz applies it before drawing. **The bake should too**, or the real quiz can
 examine a goal the practice quiz never would.
@@ -107,6 +118,10 @@ goals appear.
 A goal missing from `per_goal`, or one the question does not name, is a problem, and the answer
 is left unscored like an answer with no verdict. A top-level `credit` on such a verdict is not
 read; the grade skill leaves it out.
+
+**A question naming more than one goal must get `per_goal`.** A verdict on it with only a
+top-level `credit` is a problem naming the item and its goals, and the answer is left unscored,
+since merging it would record one mark as if the question examined one goal.
 
 **What `mergeGrades` gives back for that answer:**
 
@@ -166,19 +181,39 @@ topic-local (see above), which is fine for a check of one topic. But its undecla
 reads only `i.goal`, so a typo in a multi-goal question's `goals` passes silently, and
 `tally("goal")` counts every multi-goal question as `(none)`. Both should read `goals`.
 
-**quiz-regrade.** Must change, in two places, for a multi-goal question. The verdict shape its
+**quiz-regrade.** Must change, in three places. The first applies to every folder question,
+single-goal included. `resolveRubrics` (quiz-regrade.mjs, around lines 61-75) builds the rubric
+path as `rubrics/<last segment of bank>.md`, and the tasks path likewise. For a folder question
+the bank is `<source>/<activity>`, so that is `rubrics/a-words.md`, which does not exist, and
+every folder-bank regrade is refused as never released. The rubric path for a folder question
+is `rubrics/<activity>/<scenario>.md` under the source (and the tasks path
+`tasks/<activity>/<scenario>.md`), found from the item's `activity` and `scenario`, or from the
+first two segments of its `label`. quiz-review.mjs calls the same `resolveRubrics` (around line
+592) and needs the same fix. The other two are for a multi-goal question. The verdict shape its
 prompt mandates is credit-only, and the same prompt tells the agent to follow the grade skill,
 so the prompt needs a `per_goal` variant of that shape. Without it the agent either collapses
-the per-goal rulings into one mark, which merges as if the question had one goal, or writes
+the per-goal rulings into one mark, which `mergeGrades` now reports as a problem and leaves
+unscored, or writes
 `per_goal` with no top-level `credit`. Its coverage check rejects any fresh verdict whose
 `credit` is not `full`, `half` or `none`, so that second case rolls the regrade back; the check
 should accept a verdict carrying `per_goal` instead.
 
-**quiz-review.** No change needed. It shows the merged `credit`, so a `partial` item has no
+**quiz-review.** Needs the `resolveRubrics` fix described under quiz-regrade, and nothing
+else. It shows the merged `credit`, so a `partial` item has no
 credit button pressed; a correction from it is a single credit and merges as described above.
+
+## The private tests
+
+**course-private/tests/quiz-draw.test.mjs fails four tests on this branch** (around lines 40,
+57, 62 and 76: the strata, the varying second attempt, the short stratum, and the drawn item's
+goal). Its fixture topic has bank files and no `goals.md`, so `courseOnly` reads its goal
+`w-thing` as not course and drops every item. The fix is in the fixture, not the library: write
+a `goals.md` in the fixture topic with the header line `**origin:** course` and an entry for
+`w-thing` (and any other goal its rubrics name).
 
 ## Practice draws
 
 The practice quiz puts questions the student has never attempted first, then the least recently
-attempted, by the student's own attempt log under `recordLabel`. The real quiz has no attempt
+attempted, by the student's own attempt log under `recordLabel`, comparing attempt times as
+instants. A question naming no goal comes after every goal-bearing one, as in study. The real quiz has no attempt
 logs to read, and the bake draws each stratum by its seeded shuffle, as it always has.

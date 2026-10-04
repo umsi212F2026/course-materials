@@ -87,3 +87,11 @@ test("per_goal must name exactly the item's goals", () => {
   const extra = { item: "q9", uniqname: "me", per_goal: { g1: { credit: "full" }, g2: { credit: "full" }, g3: { credit: "none" } } };
   assert.match(mergeGrades([row(multi, "b")], [extra], opts).problems[0], /q9.*g3/);
 });
+
+test("a multi-goal verdict without per_goal is a problem naming the item, and is left unscored", () => {
+  const v = { item: "q9", uniqname: "me", credit: "full", missed: "" };
+  const out = mergeGrades([row(multi, "b")], [v], opts);
+  assert.equal(out.problems.length, 1);
+  assert.match(out.problems[0], /q9.*g1, g2.*per_goal/);
+  assert.deepEqual(out.students[0].items, []);
+});

@@ -103,3 +103,18 @@ test("a dropped item does not stay pickable because another topic's item shares 
   assert.deepEqual(items.map((i) => i.bank), ["learning-topics/t2/items"]);
   assert.ok(problems.some((m) => m.startsWith("q1 (learning-topics/t1/items) dropped: gL")));
 });
+
+test("attempt times are compared as instants, not as strings", () => {
+  // As strings q1 (T10...-08:00) sorts before q2 (T12...Z); as instants q1 is 18:00Z, the later.
+  const root = fixture({ log: [seen("a-x/s1/q1", "2026-09-01T10:00:00-08:00"), seen("a-x/s1/q2", "2026-09-01T12:00:00Z")] });
+  for (const seed of ["a", "b", "c", "d"]) {
+    assert.deepEqual(drawPractice(pool(1), root, { seed }).items.map((i) => i.label), ["a-x/s1/q2"]);
+  }
+});
+
+test("a question with no goal ranks after a goal-bearing one, even a seen one", () => {
+  const root = fixture({ goalOf: { q2: "g1" }, log: [seen("a-x/s1/q2", "2026-09-01T00:00:00Z")] });
+  for (const seed of ["a", "b", "c", "d"]) {
+    assert.deepEqual(drawPractice(pool(1), root, { seed }).items.map((i) => i.label), ["a-x/s1/q2"]);
+  }
+});
