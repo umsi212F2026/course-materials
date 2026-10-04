@@ -1,6 +1,6 @@
 ---
 name: review
-description: Run everything that has come due for review, across all topics — the learner re-attempts each goal's check cold, it gets adjudicated, and a program sets the next interval. Use when anything is due; it works out what that is itself rather than being told. Not the same as study, which works the other side of the line — goals not yet met.
+description: Run everything that has come due for review, across all topics: the learner re-attempts each goal's check cold, it gets adjudicated, and a program sets the next interval. Use when anything is due; it works out what that is itself rather than being told. Not the same as study, which works the other side of the line: goals not yet met.
 ---
 
 # Review

@@ -456,6 +456,7 @@ real quiz uses. That equality is the entire product.
 
 - [`quiz/grade`](workflows/quiz/skills/quiz/grade/SKILL.md) - skill
 - [`learn`](workflows/learn/skills/learn/SKILL.md) - skill
+- [`update`](workflows/update/skills/update/SKILL.md) - skill
 - [`quiz-practice.mjs`](workflows/quiz/tools/quiz-practice.mjs) - tool
 - [`quiz-draw.mjs`](workflows/quiz/tools/quiz-draw.mjs) - tool
 - [`survey.mjs`](workflows/learn/tools/survey.mjs) - tool

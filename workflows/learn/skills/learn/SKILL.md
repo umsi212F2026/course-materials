@@ -1,6 +1,6 @@
 ---
 name: learn
-description: The way in. Surveys every learning topic, does the agent-only maintenance that doesn't need the learner, surfaces what's due or stuck, helps them choose what to work on, and hands off — to a topic, to a review sitting, or to adding something new. Use whenever someone sits down to learn and hasn't said exactly what they want to do.
+description: The way in. Surveys every learning topic, does the agent-only maintenance that doesn't need the learner, surfaces what's due or stuck, helps them choose what to work on, and hands off: to a topic, to a review sitting, or to adding something new. Use whenever someone sits down to learn and hasn't said exactly what they want to do.
 ---
 
 # Learn
