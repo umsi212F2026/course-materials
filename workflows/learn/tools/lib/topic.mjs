@@ -20,11 +20,12 @@ import { readStatus, foldStatus } from './status.mjs';
 //
 //   at          ISO timestamp
 //   goal        the id from goals.md — a capability, a word, an orientation, all the same here
-//   label       what the supply served, in the supply's own words. OPAQUE: nothing but the
-//               supply that wrote it may parse it, which is what makes free-form safe. For the
-//               curated supply it happens to be the activity id, and a bank item after a slash
-//   tags        from the system-wide closed set in slots.mjs. The one structured thing a supply
-//               returns, and the only part of what it served that `bar` may read
+//   label       what the activity served, in its own words. OPAQUE: nothing but the activity
+//               that wrote it may parse it, which is what makes free-form safe. For a banked
+//               question it is the question's path, which the picker matches; for an activity
+//               run without a bank, the entry id; for a vocabulary move set live, the move
+//   tags        from the system-wide closed set in slots.mjs. The one structured thing an
+//               activity returns, and the only part of what it served that `bar` may read
 //   source      study | review | scan
 //   unaided     yes | no | unclear                        \  the adjudicator's two axes,
 //   criterion   met | not met | unclear | unchecked        /  passed through raw
@@ -169,7 +170,7 @@ export function readIds(dir) {
 
 // --- activities.md -----------------------------------------------------------
 // Three questions are asked of this file here: which entries are live, which goal each one
-// serves or checks, and which were stamped by curation rather than written by it. Everything
+// serves or checks, and which are legacy stamps rather than entries curation wrote. Everything
 // else about an entry is for a tutor to read, not a program.
 //
 // A dropped entry stays in the file — that field is the only feedback curation ever gets — so
@@ -249,7 +250,7 @@ export const isGoalRetired = (dir, goalId) => {
 // --- what has been served ----------------------------------------------------
 // The labels this goal has already been given, most recent first, unmodified.
 //
-// A label is a private channel between a supply and its future self: it wrote the string, it
+// A label is a private channel between an activity and its future self: it wrote the string, it
 // is the only thing that reads it, and the worst case if it repeats itself is "repeats
 // sometimes" rather than a wrong claim about learning. So this returns them and does nothing
 // else — no parsing, no grouping, no interpretation.

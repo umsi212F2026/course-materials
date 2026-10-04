@@ -28,7 +28,7 @@
 //
 //   { kind: created }                                    this folder is a topic
 //   { kind: goal-added,  goal, needs: curation }         a goal exists with nothing built for it
-//   { kind: curated,     goal }                          curation built or stamped its entries
+//   { kind: curated,     goal }                          curation built what serves it
 //   { kind: blocked,     goal, needs, why }              it can't be worked on until X changes
 //   { kind: unblocked,   goal }                          X changed
 //   { kind: retired,     reason }                        the learner gave the topic up

@@ -168,7 +168,7 @@ export const isRequired = (goal) => goal.is_required === 'yes';
 // Whether the scheduler runs for this goal at all. One consumer: record-attempt.mjs.
 export const recurs = (goal) => goal.recurrence === 'spaced';
 
-// Tags arrive from a supply, through the tutor, on the command line. Same treatment as a slot
+// Tags arrive from an activity, through the tutor, on the command line. Same treatment as a slot
 // value: refuse what isn't recognized, and say what is.
 export function checkTags(tags) {
   return tags.filter((t) => !Object.hasOwn(TAGS, t));

@@ -140,8 +140,8 @@ lines.splice(end, 0, '', ...entry);
 writeFileSync(file, lines.join('\n'));
 
 // The entry and the queue line are one act. A word added to goals.md with no `goal-added` event
-// never reaches curation — its stamped entry never gets written, and review would later find a
-// goal with no live entry to check it with. Writing both here is why adding a word can stay a
+// never reaches curation, so a topic with no `a-words` entry yet never gets one written, and the
+// word is left to moves set live. Writing both here is why adding a word can stay a
 // one-line gesture rather than a thing an agent has to remember two halves of.
 appendStatus(dir, 'goal-added', { goal: id });
 

@@ -1,7 +1,7 @@
 // What one attempt established, and what an accumulation of attempts makes true.
 //
 // A BAR IS ALWAYS A PROGRAM, NEVER A SKILL. It cannot need judgement, because judgement already
-// happened upstream — in the adjudicator, which ruled, or in the supply, which tagged. So it
+// happened upstream: in the adjudicator, which ruled, or in the activity, which tagged. So it
 // reads only structured fields: the two axes, `tags`, `outcome`, `source`, `at`. Never the
 // criterion text, never the instruction, never the opaque label.
 //
@@ -66,7 +66,7 @@ export const BARS = {
 
   // Production is the whole bar. A reception move can be passed from having just been told the
   // thing, so a goal met only by those has been recited. What makes a move a production one is
-  // the supply's business; all this reads is the tag it returned.
+  // the activity's business; all this reads is the tag it returned.
   'one production pass': (attempts) => attempts.some((r) => isPass(r) && hasTag(r, 'production')),
 
   // Weak evidence, deliberately, and adjudicated rather than assumed. Orientation's question is

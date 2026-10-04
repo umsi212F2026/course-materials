@@ -9,7 +9,7 @@
 //     ... --outcome declared    the learner saying they've got it
 //     ... --outcome elsewhere   the learner did it in class or on a problem set (put where in --note)
 //
-//   --tags a,b                   what the supply returned. From the closed set in lib/slots.mjs
+//   --tags a,b                   what the activity returned. From the closed set in lib/slots.mjs
 //   --source study|review|quiz|scan  defaults to study. `quiz` is a practice quiz, whose passes
 //                                re-date a goal without moving it along the intervals. `scan` is
 //                                for the daily transcript scan, which is designed but not built
@@ -24,10 +24,11 @@
 // learner who changed their mind mid-session shouldn't meet an error and have to know the word
 // `revive` — see the note beside the printing at the bottom.
 //
-// <label> IS WHAT THE SUPPLY SERVED, in the supply's own words, and it goes in opaque. Nothing
-// but that supply parses it back. For the curated supply it is an activities.md entry id, with
-// a bank item after a slash — `a-annotate-specimen/specimen-14` — because that is what the
-// curated supply chose to write; it is not a format anything else relies on.
+// <label> IS WHAT THE ACTIVITY SERVED, in its own words, and it goes in opaque. For a banked
+// question it is the question's path, `a-words/w-schema/q1`, which the picker in lib/pick.mjs
+// matches to know what has been served; for an activity run without a bank it is the entry id,
+// and for a vocabulary move set live it is the move and a note, `CATCH: subject/verb agreement`.
+// Nothing here or in a bar parses it.
 //
 // THE TWO AXES GO IN RAW. `{"unaided":"yes|no|unclear","criterion":"met|not met|unclear|
 // unchecked"}` is stored as given and never collapsed on the way in. What reads a verdict back
@@ -136,7 +137,7 @@ if (goal.problems.length) {
 }
 
 // --- the tags ----------------------------------------------------------------
-// The one structured thing a supply returns, and the only part of what was served that a bar
+// The one structured thing an activity returns, and the only part of what was served that a bar
 // may read. Closed and system-wide, so a bar can be written against them.
 const tags = (flags.tags ?? '')
   .split(',')
