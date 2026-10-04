@@ -81,8 +81,10 @@ for (const dir of topicFolders()) {
 // the longest, not on whatever folder sorts first.
 due.sort((a, b) => a.due.localeCompare(b.due));
 
+// WAIT FOR THE WRITE BEFORE EXITING: through a pipe stdout is asynchronous, and exiting straight
+// after console.log cuts output past 64 KB off (see survey.mjs).
 if (!report) {
-  console.log(JSON.stringify(due, null, 2));
+  await new Promise((done) => process.stdout.write(`${JSON.stringify(due, null, 2)}\n`, done));
   process.exit(0);
 }
 

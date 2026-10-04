@@ -60,8 +60,12 @@ if (target && !existsSync(target)) {
 
 const surveys = folders.map(surveyTopic);
 
+// WAIT FOR THE WRITE BEFORE EXITING. Through a pipe, which is how an agent reads this, stdout is
+// asynchronous: exiting straight after console.log cut the JSON off at 64 KB, and nine topics
+// were enough to reach that.
 if (!report) {
-  console.log(JSON.stringify(target ? surveys[0] : surveys, null, 2));
+  const json = `${JSON.stringify(target ? surveys[0] : surveys, null, 2)}\n`;
+  await new Promise((done) => process.stdout.write(json, done));
   process.exit(0);
 }
 
