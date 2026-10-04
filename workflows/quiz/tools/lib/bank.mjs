@@ -36,23 +36,38 @@ import { readFileSync, readdirSync, existsSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { tagsForMove } from '../../../learn/tools/lib/moves.mjs';
 
-// One `### heading` block. Returns [{ id, body }] in file order.
-function sections(text) {
-  const out = [];
-  let id = null;
-  let lines = [];
+// The one splitter. A section starts at a `### <id>` line (no fence or comment tracking, and an id
+// outside [A-Za-z0-9-] is not a heading, so that line belongs to the section before it) and runs
+// to the line before the next one. Returns { preamble, sections: [{ id, text }] } with `text`
+// VERBATIM (heading line included, trailing blank lines included) and `preamble` the text before
+// the first section, or null when the file starts with one. Joining the preamble (if any) and
+// each section's text with '\n' gives the file back exactly. Anything that moves or rewrites
+// bank text uses this, so it and the reader of its output cannot disagree about where a
+// question ends.
+export function rawSections(text) {
+  const sections = [];
+  let pre = [];
+  let cur = null;
   for (const line of text.split('\n')) {
     const m = /^###\s+`?([A-Za-z0-9-]+)`?\s*$/.exec(line);
     if (m) {
-      if (id) out.push({ id, body: lines.join('\n').trim() });
-      id = m[1];
-      lines = [];
-    } else if (id) {
-      lines.push(line);
-    }
+      cur = { id: m[1], lines: [line] };
+      sections.push(cur);
+    } else if (cur) cur.lines.push(line);
+    else pre.push(line);
   }
-  if (id) out.push({ id, body: lines.join('\n').trim() });
-  return out;
+  return {
+    preamble: sections.length && !pre.length ? null : pre.join('\n'),
+    sections: sections.map((s) => ({ id: s.id, text: s.lines.join('\n') })),
+  };
+}
+
+// One `### heading` block. Returns [{ id, body }] in file order.
+function sections(text) {
+  return rawSections(text).sections.map((s) => ({
+    id: s.id,
+    body: s.text.split('\n').slice(1).join('\n').trim(),
+  }));
 }
 
 // `- **name:** value`, with continuation lines folded in. Returns { name: value }.

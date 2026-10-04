@@ -3,7 +3,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdirSync, writeFileSync, readFileSync, existsSync } from 'node:fs';
-import { split, verifyWritten } from '../migrate-words.mjs';
 import { join } from 'node:path';
 import { makeTopic, run, survey, CAP_GOAL } from './helpers.mjs';
 import { readFolderBanks } from '../../../quiz/tools/lib/bank.mjs';
@@ -32,8 +31,9 @@ function build({ onlyWords = false } = {}) {
     tasks.push(TASK('q4', 'Do the thing.'));
     rubs.push(RUB('q4', 'c-x', 'apply'));
   }
-  writeFileSync(join(dir, 'tasks/items.md'), '# Items\n\nIntro text.\n\n' + tasks.join(''));
-  writeFileSync(join(dir, 'rubrics/items.md'), '# Rubrics\n\nKey text.\n\n' + rubs.join(''));
+  // Preamble prose would keep an emptied pair (see the test for it), so only the full build has any.
+  writeFileSync(join(dir, 'tasks/items.md'), '# Items\n\n' + (onlyWords ? '' : 'Intro text.\n\n') + tasks.join(''));
+  writeFileSync(join(dir, 'rubrics/items.md'), '# Rubrics\n\n' + (onlyWords ? '' : 'Key text.\n\n') + rubs.join(''));
   return dir;
 }
 
@@ -124,7 +124,8 @@ function bare(tasks, rubs, { acts = '', goalsExtra = '' } = {}) {
 test('a code fence with # lines inside a moved question is not split', () => {
   const q1 = '### q1\n\nRun:\n\n```sh\n# a comment\nls\n```\n\nWhy?\n\n';
   const dir = bare('# T\n\n' + q1 + TASK('q2', 'Two.'), '# R\n\n' + RUB('q1', 'w-a', 'define') + RUB('q2', 'w-a', 'use'));
-  assert.equal(run('migrate-words.mjs', [dir]).code, 0);
+  const r = run('migrate-words.mjs', [dir]);
+  assert.equal(r.code, 0, r.stderr);
   assert.ok(read(dir, 'tasks/a-words/w-a.md').includes(q1.trimEnd()));
   assert.equal(readFolderBanks(dir).items.length, 2);
 });
@@ -141,8 +142,6 @@ test('an HTML comment holding a ### heading survives stamp and supply removal', 
   assert.doesNotMatch(acts, /a-w-a/);
   assert.ok(read(dir, 'goals.md').includes('<!--\n- **supply:** vocabulary\n-->'));
   assert.doesNotMatch(read(dir, 'goals.md').replace(/<!--[\s\S]*?-->/g, ''), /supply/);
-  const stamp = split(STAMP('a-w-a', 'w-a'), 'doc').find((s) => s.id);
-  assert.equal(stamp.raw.trimEnd(), '### a-w-a\n- **checks:** w-a\n- **origin:** generated');
 });
 
 test('a last question with no trailing blank line, and an unbackticked heading, move intact', () => {
@@ -164,16 +163,82 @@ test('rubrics/a-words alone also makes it refuse', () => {
 test('an id the splitter cannot read is warned about and left in place', () => {
   const dir = bare('# T\n\n' + TASK('q1', 'One.') + '### q_2\n\nodd\n', '# R\n\n' + RUB('q1', 'w-a', 'define'));
   const r = run('migrate-words.mjs', [dir]);
-  assert.match(r.stderr, /q_2/);
+  assert.match(r.stderr, /q_2.*travel with the question before/);
 });
 
-test('verifyWritten catches a section that differs from its source', () => {
-  const dir = build();
+test('a stamp keeps a trailing comment, prose and #### lines, even as the last entry', () => {
+  const tail = '\n<!-- keep me -->\nSome prose.\n#### Deep\nmore\n';
+  const dir = bare('# T\n\n' + TASK('q1', 'One.'), '# R\n\n' + RUB('q1', 'w-a', 'define'), {
+    acts: '# Activities\n\n' + CURATED + '\n' + STAMP('a-w-a', 'w-a').trimEnd() + '\n' + tail,
+  });
+  assert.equal(run('migrate-words.mjs', [dir]).code, 0);
+  const acts = read(dir, 'activities.md');
+  assert.ok(acts.includes(tail.trimStart().trimEnd()));
+  assert.doesNotMatch(acts, /a-w-a/);
+  assert.ok(acts.includes(CURATED));
+});
+
+test('a stamp that is the last entry leaves the file ending in a newline', () => {
+  const dir = bare('# T\n\n' + TASK('q1', 'One.'), '# R\n\n' + RUB('q1', 'w-a', 'define'), {
+    acts: '# Activities\n\n' + CURATED + '\n### a-w-a\n- **checks:** w-a\n- **origin:** generated\n',
+  });
   run('migrate-words.mjs', [dir]);
-  const file = (p) => join(dir, p);
-  const good = { tFile: file('tasks/a-words/w-b.md'), rFile: file('rubrics/a-words/w-b.md'), tasks: [TASK('q2', 'About b.')], rubrics: [RUB('q2', 'w-b', 'contrast')] };
-  assert.deepEqual(verifyWritten(new Map([['w-b', good]])), []);
-  const bad = { ...good, tasks: [TASK('q2', 'About b, tampered.')] };
-  assert.equal(verifyWritten(new Map([['w-b', bad]])).length, 1);
-  assert.equal(verifyWritten(new Map([['w-b', { ...good, tFile: file('tasks/a-words/none.md') }]])).length, 1);
+  assert.ok(read(dir, 'activities.md').startsWith('# Activities\n\n' + CURATED));
+  assert.ok(read(dir, 'activities.md').endsWith('\n'));
+});
+
+test('nested and mixed fences move intact and nothing is duplicated', () => {
+  const q1 = '### q1\n\n````md\n```sh\nls\n```\n~~~\n````\n\nWhy?\n\n';
+  const dir = bare('# T\n\n' + q1 + TASK('q2', 'Two.'), '# R\n\n' + RUB('q1', 'w-a', 'define') + RUB('q2', 'w-a', 'use'));
+  assert.equal(run('migrate-words.mjs', [dir]).code, 0);
+  assert.ok(read(dir, 'tasks/a-words/w-a.md').includes(q1.trimEnd()));
+  assert.equal(readFolderBanks(dir).items.length, 2);
+});
+
+test('an unclosed fence or an inline comment opener does not fold later questions in', () => {
+  const tasks = '# T\n\n### q1\n\nOpen ```\nand `<!--` here.\n\n' + TASK('q4', 'Capability.');
+  const rubs = '# R\n\n' + RUB('q1', 'w-a', 'define') + RUB('q4', 'c-x', 'apply');
+  const dir = bare(tasks, rubs);
+  assert.equal(run('migrate-words.mjs', [dir]).code, 0);
+  assert.equal(read(dir, 'tasks/i.md'), '# T\n\n' + TASK('q4', 'Capability.'));
+  assert.equal(read(dir, 'rubrics/i.md'), '# R\n\n' + RUB('q4', 'c-x', 'apply'));
+});
+
+function refuses(dir, pattern) {
+  const before = ['tasks/i.md', 'rubrics/i.md', 'activities.md', 'goals.md'].map((p) => read(dir, p));
+  const r = run('migrate-words.mjs', [dir]);
+  assert.equal(r.code, 1);
+  assert.match(r.stderr, pattern);
+  assert.deepEqual(['tasks/i.md', 'rubrics/i.md', 'activities.md', 'goals.md'].map((p) => read(dir, p)), before);
+  assert.equal(existsSync(join(dir, 'tasks/a-words')), false);
+}
+
+test('refuses a duplicate task id', () => {
+  refuses(bare('# T\n\n' + TASK('q1', 'One.') + TASK('q1', 'Again.'), '# R\n\n' + RUB('q1', 'w-a', 'define')), /q1 appears twice/);
+});
+
+test('refuses a duplicate rubric id', () => {
+  refuses(bare('# T\n\n' + TASK('q1', 'One.'), '# R\n\n' + RUB('q1', 'w-a', 'define') + RUB('q1', 'w-a', 'use')), /q1 appears twice/);
+});
+
+test('refuses a question with no rubric entry, and a rubric with no question', () => {
+  refuses(bare('# T\n\n' + TASK('q1', 'One.') + TASK('q2', 'Two.'), '# R\n\n' + RUB('q1', 'w-a', 'define')), /q2 is in .* no rubric entry/);
+  refuses(bare('# T\n\n' + TASK('q1', 'One.'), '# R\n\n' + RUB('q1', 'w-a', 'define') + RUB('q2', 'w-a', 'use')), /q2 is in .* no question/);
+});
+
+test('refuses CRLF in goals.md, and in a bank file, and writes nothing', () => {
+  const dir = bare('# T\n\n' + TASK('q1', 'One.'), '# R\n\n' + RUB('q1', 'w-a', 'define'));
+  writeFileSync(join(dir, 'goals.md'), read(dir, 'goals.md').replace(/\n/g, '\r\n'));
+  refuses(dir, /CRLF/);
+  const dir2 = bare('# T\r\n\r\n' + TASK('q1', 'One.'), '# R\n\n' + RUB('q1', 'w-a', 'define'));
+  refuses(dir2, /CRLF/);
+});
+
+test('a pair emptied of questions but holding preamble prose is kept, with a warning', () => {
+  const dir = bare('# T\n\nKeep this prose.\n\n' + TASK('q1', 'One.'), '# R\n\n' + RUB('q1', 'w-a', 'define'));
+  const r = run('migrate-words.mjs', [dir]);
+  assert.equal(r.code, 0, r.stderr);
+  assert.match(r.stderr, /were kept/);
+  assert.match(read(dir, 'tasks/i.md'), /Keep this prose\./);
+  assert.equal(existsSync(join(dir, 'rubrics/i.md')), true);
 });

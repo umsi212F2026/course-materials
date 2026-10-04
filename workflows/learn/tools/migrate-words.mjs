@@ -21,18 +21,22 @@
 // `- **supply:** vocabulary` lines are removed from goals.md. Those edits cut by entry boundaries
 // (a `### ` heading to the next `### ` or `## `), so the rest of the file is untouched.
 //
-// SAFETY. The splitter ignores headings inside code fences and HTML comments (a question may
-// quote a shell comment, a template comment may show a `### <id>` heading). The new a-words files
-// are written FIRST and re-read against their sources; only if every moved section is
-// byte-identical are the legacy files edited or deleted, so a failure never loses a question.
+// SAFETY. Bank files are split exactly as bank.mjs splits them (rawSections), so what this moves
+// is what the reader of the result sees. The tool REFUSES, writing nothing, on a file with CRLF
+// line endings, a duplicate section id, or a question whose rubric or task is missing. The new
+// a-words files are written first and checked against the legacy pair by a count of every
+// non-blank line (the moved text must reappear, once, and nothing else may change); only then are
+// legacy files edited (temp file, then rename) or deleted. A pair is deleted only when nothing
+// but a title is left in it.
 //
-// ONE-SHOT. It refuses if tasks/a-words/ or rubrics/a-words/ already exists, so a second run can never duplicate a
-// question. --dry-run prints the same summary and writes nothing.
+// ONE-SHOT. It refuses if tasks/a-words/ or rubrics/a-words/ already exists, so a second run can
+// never duplicate a question. --dry-run prints the same summary and writes nothing.
 
-import { existsSync, readFileSync, readdirSync, writeFileSync, mkdirSync, rmSync } from 'node:fs';
-import { join, dirname } from 'node:path';
+import { existsSync, readFileSync, readdirSync, writeFileSync, mkdirSync, rmSync, renameSync } from 'node:fs';
+import { join, dirname, basename } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { readGoals, readActivities } from './lib/topic.mjs';
+import { rawSections } from '../../quiz/tools/lib/bank.mjs';
 
 const USAGE = `usage:
   node workflows/learn/tools/migrate-words.mjs <topic-folder> [--dry-run]
@@ -44,14 +48,14 @@ const die = (msg) => {
   process.exit(1);
 };
 
-// --- raw splitting -----------------------------------------------------------
-// bank.mjs trims and parses its sections; moving text needs them untouched. A segment runs from
-// a boundary line to the next, trailing blank lines included, and the segments concatenate back
-// to the file exactly (joined by the newline split() consumed).
-const HEADING = /^#{1,3}\s/;
-const ID = /^###\s+`?([A-Za-z0-9-]+)`?\s*$/;
+const nonBlank = (text) => text.split('\n').filter((l) => l.trim());
+const rejoin = (preamble, sections) => [...(preamble === null ? [] : [preamble]), ...sections.map((s) => s.text)].join('\n');
+const idList = (text) => rawSections(text).sections.map((s) => s.id);
 
-// Which lines START outside a code fence and outside an HTML comment. Only those can be headings.
+// --- activities.md and goals.md ----------------------------------------------
+// These are not banks, so they are edited by lines, and only the lines named: an entry's heading,
+// the bullets and indented continuations directly under it, and the blank lines among them. The
+// first line that is none of those ends the entry, so a comment or prose that follows survives.
 function liveLines(lines) {
   let fence = false;
   let comment = false;
@@ -63,104 +67,135 @@ function liveLines(lines) {
   });
 }
 
-/** mode 'bank': only `### <id>` starts a segment, as in bank.mjs, so any other heading stays in
- *  the question it follows. mode 'doc' (activities.md): every `#`..`###` heading is a boundary,
- *  so an entry ends at the next `### ` or `## `. Only a `### <id>` segment carries an id. */
-export function split(text, mode = 'bank') {
+// Remove, from `text`, every block whose first line `isStart(line)` accepts (outside fences and
+// comments), with its continuation lines (indented) and, when `withBlanks`, the column-0 bullets
+// and blank lines of an activities entry. A goal's other fields are bullets too, so a supply
+// line takes only its indented continuations. Returns { text, count }.
+function removeBlocks(text, isStart, withBlanks) {
   const lines = text.split('\n');
   const live = liveLines(lines);
-  const segs = [];
-  lines.forEach((line, i) => {
-    const boundary = live[i] && (mode === 'bank' ? ID.test(line) : HEADING.test(line));
-    if (boundary || !segs.length) segs.push({ id: ID.exec(line)?.[1] ?? null, lines: [] });
-    segs.at(-1).lines.push(line);
-  });
-  return segs.map((s) => ({ id: s.id, raw: s.lines.join('\n') }));
-}
-
-const joinSegs = (segs) => segs.map((s) => s.raw).join('\n');
-const hasMore = (segs) => segs.some((s) => s.id);
-
-// A `### ` heading the splitter cannot read as an id cannot move, so say so.
-function unreadable(text) {
-  const lines = text.split('\n');
-  const live = liveLines(lines);
-  return lines.filter((l, i) => live[i] && /^###\s/.test(l) && !ID.test(l));
-}
-
-// --- verification ------------------------------------------------------------
-/** Re-read each new a-words file and confirm every moved section is byte-identical to its source
- *  and that nothing else is in it. `moved` is Map goal -> { tFile, rFile, tasks, rubrics } where
- *  tasks and rubrics are the raw source sections. Returns a list of mismatch descriptions. */
-export function verifyWritten(moved) {
-  const bad = [];
-  for (const [goal, m] of moved) {
-    for (const [file, want] of [[m.tFile, m.tasks], [m.rFile, m.rubrics]]) {
-      if (!existsSync(file)) {
-        bad.push(`${file} was not written`);
-        continue;
-      }
-      const got = split(readFileSync(file, 'utf8')).filter((x) => x.id);
-      if (got.length !== want.length) bad.push(`${file} holds ${got.length} sections, expected ${want.length} for ${goal}`);
-      want.forEach((raw, i) => {
-        if (got[i]?.raw.trimEnd() !== raw.trimEnd()) bad.push(`${file} section ${i + 1} differs from its source`);
-      });
+  const out = [];
+  let count = 0;
+  for (let i = 0; i < lines.length; i++) {
+    if (!(live[i] && isStart(lines[i]))) {
+      out.push(lines[i]);
+      continue;
     }
+    count++;
+    let j = i + 1;
+    let end = i + 1;
+    while (j < lines.length) {
+      const l = lines[j];
+      if ((withBlanks && /^[-*]\s/.test(l)) || /^\s+\S/.test(l)) end = ++j;
+      else if (!l.trim() && withBlanks) j++;
+      else break;
+    }
+    // Trailing blank lines go only if something follows them, so a final entry keeps the file's last newline.
+    i = withBlanks && j < lines.length ? j - 1 : end - 1;
   }
-  return bad;
+  return { text: out.join('\n'), count };
 }
 
 // --- plan --------------------------------------------------------------------
-function plan(dir) {
-  const { goals } = readGoals(dir);
-  const words = new Map(goals.filter((g) => g.group === 'vocabulary').map((g) => [g.id, g]));
+const A_WORDS = `### \`a-words\`
 
-  const created = new Map(); // new a-words files
-  const edits = new Map(); // existing files rewritten
+- **serves:** group vocabulary
+- **generator:** the five moves in \`workflows/learn/skills/goal-setting/references/vocabulary-moves.md\`, set for one word at a time from its \`what it names\`, \`nearest confusable\` and \`synonyms\`. Each question names that word's goal and carries its move.
+- **learner does:** answers one short question about one word
+- **tutor role:** examiner
+- **tutor does:** sets the question as served, without rewording it or hinting; when the bank has nothing for the word, sets one move live, as vocabulary-moves.md describes
+- **offer as:** not offered as a choice; a word's question is set when that word is studied or due
+`;
+
+/** Work out everything without touching disk. Returns { refusals, warnings, summary, created,
+ *  edits, removals, moved, legacy } where `refusals` non-empty means nothing may be written.
+ *  `legacy` is the before-state of each pair, kept for verification. */
+export function planMigration(dir) {
+  const refusals = [];
+  const warnings = [];
+  const summary = [];
+  const created = new Map();
+  const edits = new Map();
   const removals = [];
   const moved = new Map();
-  const summary = [];
-  const warnings = [];
+  const legacy = [];
 
   const tasksDir = join(dir, 'tasks');
   const rubricsDir = join(dir, 'rubrics');
+  const goalsFile = join(dir, 'goals.md');
+  const actsFile = join(dir, 'activities.md');
   const names = existsSync(tasksDir)
     ? readdirSync(tasksDir).filter((n) => n.endsWith('.md') && existsSync(join(rubricsDir, n))).sort()
     : [];
 
-  for (const name of names) {
+  // Every file the tool would read or touch is checked for CRLF first: readGoals misreads it, so
+  // going on would move nothing yet still strip supply lines.
+  const touched = [goalsFile, actsFile, ...names.flatMap((n) => [join(tasksDir, n), join(rubricsDir, n)])];
+  for (const f of touched) if (existsSync(f) && readFileSync(f, 'utf8').includes('\r')) refusals.push(`${f} has CRLF line endings; convert it to LF first.`);
+  if (refusals.length) return { refusals };
+
+  const { goals } = readGoals(dir);
+  const words = new Map(goals.filter((g) => g.group === 'vocabulary').map((g) => [g.id, g]));
+
+  const seenT = new Map();
+  const seenR = new Map();
+  const pairs = names.map((name) => {
     const tFile = join(tasksDir, name);
     const rFile = join(rubricsDir, name);
-    const tText = readFileSync(tFile, 'utf8');
-    const rText = readFileSync(rFile, 'utf8');
-    for (const [f, text] of [[tFile, tText], [rFile, rText]])
-      for (const h of unreadable(text)) warnings.push(`${f}: "${h}" is not a readable section id, so it cannot move`);
-    const t = split(tText);
-    const r = split(rText);
-    const taskById = new Map(t.filter((b) => b.id).map((b) => [b.id, b]));
-    const takenIds = new Set();
-    for (const rb of r.filter((b) => b.id)) {
-      const goal = /^-\s+\*\*goal:\*\*\s*(.*)$/m.exec(rb.raw)?.[1].replace(/`/g, '').trim();
-      const tb = taskById.get(rb.id);
-      if (!goal || !words.has(goal) || !tb) continue;
-      takenIds.add(rb.id);
+    const t = rawSections(readFileSync(tFile, 'utf8'));
+    const r = rawSections(readFileSync(rFile, 'utf8'));
+    for (const [file, sec, seen] of [[tFile, t, seenT], [rFile, r, seenR]])
+      for (const s of sec.sections) {
+        if (seen.has(s.id)) refusals.push(`${s.id} appears twice (in ${seen.get(s.id)} and ${file}); ids must be unique.`);
+        else seen.set(s.id, file);
+      }
+    const tIds = new Set(t.sections.map((s) => s.id));
+    const rIds = new Set(r.sections.map((s) => s.id));
+    for (const id of tIds) if (!rIds.has(id)) refusals.push(`${id} is in ${tFile} but has no rubric entry in ${rFile}.`);
+    for (const id of rIds) if (!tIds.has(id)) refusals.push(`${id} is in ${rFile} but has no question in ${tFile}.`);
+    for (const [f, text] of [[tFile, readFileSync(tFile, 'utf8')], [rFile, readFileSync(rFile, 'utf8')]])
+      for (const line of text.split('\n'))
+        if (/^###\s/.test(line) && !/^###\s+`?[A-Za-z0-9-]+`?\s*$/.test(line))
+          warnings.push(`${f}: "${line}" is not a readable section id, so it will travel with the question before it.`);
+    return { name, tFile, rFile, t, r, tText: readFileSync(tFile, 'utf8'), rText: readFileSync(rFile, 'utf8') };
+  });
+  if (refusals.length) return { refusals };
+
+  for (const pr of pairs) {
+    legacy.push({ tFile: pr.tFile, rFile: pr.rFile, tText: pr.tText, rText: pr.rText });
+    const taskById = new Map(pr.t.sections.map((s) => [s.id, s]));
+    const taken = new Set();
+    for (const rb of pr.r.sections) {
+      const goal = /^-\s+\*\*goal:\*\*\s*(.*)$/m.exec(rb.text)?.[1].replace(/`/g, '').trim();
+      if (!goal || !words.has(goal)) continue;
+      taken.add(rb.id);
       if (!moved.has(goal))
-        moved.set(goal, {
-          tFile: join(tasksDir, 'a-words', `${goal}.md`),
-          rFile: join(rubricsDir, 'a-words', `${goal}.md`),
-          tasks: [],
-          rubrics: [],
-        });
-      moved.get(goal).tasks.push(tb.raw);
-      moved.get(goal).rubrics.push(rb.raw);
+        moved.set(goal, { tFile: join(tasksDir, 'a-words', `${goal}.md`), rFile: join(rubricsDir, 'a-words', `${goal}.md`), tasks: [], rubrics: [], ids: [] });
+      const m = moved.get(goal);
+      m.tasks.push(taskById.get(rb.id).text);
+      m.rubrics.push(rb.text);
+      m.ids.push(rb.id);
     }
-    if (!takenIds.size) continue;
-    const tLeft = t.filter((b) => !takenIds.has(b.id));
-    const rLeft = r.filter((b) => !takenIds.has(b.id));
-    if (!hasMore(tLeft) && !hasMore(rLeft)) removals.push(tFile, rFile);
+    if (!taken.size) continue;
+    const tLeft = pr.t.sections.filter((s) => !taken.has(s.id));
+    const rLeft = pr.r.sections.filter((s) => !taken.has(s.id));
+    const tText = rejoin(pr.t.preamble, tLeft);
+    const rText = rejoin(pr.r.preamble, rLeft);
+    if (tLeft.length || rLeft.length) {
+      edits.set(pr.tFile, tText);
+      edits.set(pr.rFile, rText);
+      continue;
+    }
+    // A pair with nothing left is deleted only if all that remains is a title.
+    const titleOnly = (pre) => {
+      const lines = nonBlank(pre ?? '');
+      return lines.length === 0 || (lines.length === 1 && /^#\s/.test(lines[0]));
+    };
+    if (titleOnly(pr.t.preamble) && titleOnly(pr.r.preamble)) removals.push(pr.tFile, pr.rFile);
     else {
-      edits.set(tFile, joinSegs(tLeft));
-      edits.set(rFile, joinSegs(rLeft));
+      edits.set(pr.tFile, tText);
+      edits.set(pr.rFile, rText);
+      warnings.push(`${pr.tFile} and ${pr.rFile} have no questions left but hold other text, so they were kept.`);
     }
   }
 
@@ -173,21 +208,16 @@ function plan(dir) {
   }
   for (const f of removals) summary.push(`removed ${f}`);
 
-  // --- activities.md ---
-  const actsFile = join(dir, 'activities.md');
+  // activities.md: stamps, then the a-words entry.
   const original = existsSync(actsFile) ? readFileSync(actsFile, 'utf8') : '';
   const activities = readActivities(dir);
   const onlyWords = (ids) => ids.length > 0 && ids.every((id) => words.has(id));
-  const stamps = new Set(
-    activities.filter((e) => e.generated && onlyWords([...e.serves, ...e.checks])).map((e) => e.id)
-  );
+  const stamps = new Set(activities.filter((e) => e.generated && onlyWords([...e.serves, ...e.checks])).map((e) => e.id));
   let acts = original;
   if (stamps.size) {
-    const segs = split(acts, 'doc');
-    const kept = segs.filter((e) => !stamps.has(e.id));
-    const gone = segs.filter((e) => stamps.has(e.id)).map((e) => e.id);
-    acts = joinSegs(kept);
-    if (gone.length) summary.push(`removed ${gone.length} stamped entr${gone.length === 1 ? 'y' : 'ies'} from activities.md: ${gone.join(', ')}`);
+    const r = removeBlocks(acts, (l) => { const m = /^###\s+`?([A-Za-z0-9-]+)`?\s*$/.exec(l); return !!m && stamps.has(m[1]); }, true);
+    acts = r.text;
+    if (r.count) summary.push(`removed ${r.count} stamped entr${r.count === 1 ? 'y' : 'ies'} from activities.md`);
   }
   if (!activities.some((e) => e.id === 'a-words')) {
     acts = acts.replace(/\n*$/, '') + (acts.trim() ? '\n\n' : '') + A_WORDS;
@@ -195,31 +225,59 @@ function plan(dir) {
   }
   if (acts !== original) edits.set(actsFile, acts);
 
-  // --- goals.md ---
-  const goalsFile = join(dir, 'goals.md');
-  const goalLines = readFileSync(goalsFile, 'utf8').split('\n');
-  const live = liveLines(goalLines);
-  const keep = goalLines.filter((l, i) => !(live[i] && /^- \*\*supply:\*\* vocabulary[ \t]*\r?$/.test(l)));
-  const supplyCount = goalLines.length - keep.length;
-  if (supplyCount) {
-    edits.set(goalsFile, keep.join('\n'));
-    summary.push(`removed ${supplyCount} supply line${supplyCount === 1 ? '' : 's'} from goals.md`);
+  // goals.md: the retired supply lines.
+  const goalsText = readFileSync(goalsFile, 'utf8');
+  const g = removeBlocks(goalsText, (l) => /^- \*\*supply:\*\* vocabulary[ \t]*$/.test(l), false);
+  if (g.count) {
+    edits.set(goalsFile, g.text);
+    summary.push(`removed ${g.count} supply line${g.count === 1 ? '' : 's'} from goals.md`);
   }
-  return { created, edits, removals, moved, summary, warnings };
+  return { refusals, warnings, summary, created, edits, removals, moved, legacy };
 }
 
-const A_WORDS = `### \`a-words\`
-
-- **serves:** group vocabulary
-- **generator:** the five moves in \`workflows/learn/skills/goal-setting/references/vocabulary-moves.md\`, set for one word at a time from its \`what it names\`, \`nearest confusable\` and \`synonyms\`. Each question names that word's goal and carries its move.
-- **learner does:** answers one short question about one word
-- **tutor role:** examiner
-- **tutor does:** sets the question as served, without rewording it or hinting; when the bank has nothing for the word, sets one move live, as vocabulary-moves.md describes
-- **offer as:** not offered as a choice; a word's question is set when that word is studied or due
-`;
+/** Check the new files on disk against the legacy pairs, without trusting the splitter's own
+ *  idea of a section: every non-blank line before the run must be accounted for exactly once
+ *  after it (planned legacy files plus the new files), ignoring only the title lines the tool
+ *  added and the titles of pairs it deletes; and the legacy ids left must be the old ids minus
+ *  the moved ones. Returns mismatch descriptions, empty when all is well. */
+export function verifyPlan(plan) {
+  const bad = [];
+  const tally = (m, lines, d) => lines.forEach((l) => m.set(l, (m.get(l) ?? 0) + d));
+  const counts = new Map();
+  const removed = new Set(plan.removals);
+  for (const p of plan.legacy) {
+    for (const [f, text] of [[p.tFile, p.tText], [p.rFile, p.rText]]) {
+      let lines = nonBlank(text);
+      if (removed.has(f) && /^#\s/.test(lines[0] ?? '')) lines = lines.slice(1);
+      tally(counts, lines, 1);
+      tally(counts, nonBlank(plan.edits.get(f) ?? (removed.has(f) ? '' : text)), -1);
+    }
+  }
+  const movedIds = new Set();
+  for (const [goal, m] of plan.moved) {
+    for (const f of [m.tFile, m.rFile]) {
+      if (!existsSync(f)) {
+        bad.push(`${f} was not written`);
+        continue;
+      }
+      tally(counts, nonBlank(readFileSync(f, 'utf8')).slice(1), -1);
+    }
+    m.ids.forEach((id) => movedIds.add(id));
+    for (const [f, n] of [[m.tFile, m.ids.length], [m.rFile, m.ids.length]])
+      if (existsSync(f) && idList(readFileSync(f, 'utf8')).join() !== m.ids.join()) bad.push(`${f} does not hold ${goal}'s questions ${m.ids.join(', ')} in order`);
+  }
+  for (const [line, n] of counts) if (n !== 0) bad.push(`line count differs by ${n}: ${line.slice(0, 80)}`);
+  for (const p of plan.legacy)
+    for (const [f, text] of [[p.tFile, p.tText], [p.rFile, p.rText]]) {
+      if (removed.has(f)) continue;
+      const want = idList(text).filter((id) => !movedIds.has(id)).join();
+      const got = idList(plan.edits.get(f) ?? text).join();
+      if (want !== got) bad.push(`${f} would keep ids [${got}], expected [${want}]`);
+    }
+  return bad;
+}
 
 function main() {
-  // --- arguments ---
   // Every flag checked, as in record-status.mjs: a misspelt --dry-run that was ignored would
   // write the migration the caller meant only to preview.
   const FLAGS = ['dry-run'];
@@ -238,30 +296,41 @@ function main() {
   if (!dir) die(USAGE);
   if (extra.length) die(`Too many arguments: ${extra.map((a) => `"${a}"`).join(' ')}\n\n${USAGE}`);
   if (!existsSync(dir)) die(`${dir} does not exist.`);
-  for (const d of [join(dir, 'tasks', 'a-words'), join(dir, 'rubrics', 'a-words')])
-    if (existsSync(d)) die(`${d} already exists; nothing was changed.`);
+  const newDirs = [join(dir, 'tasks', 'a-words'), join(dir, 'rubrics', 'a-words')];
+  for (const d of newDirs) if (existsSync(d)) die(`${d} already exists; nothing was changed.`);
 
-  const { created, edits, removals, moved, summary, warnings } = plan(dir);
-  for (const w of warnings) console.error(`warning: ${w}`);
+  const plan = planMigration(dir);
+  if (plan.refusals.length) die(`Refusing, nothing was changed:\n  ${plan.refusals.join('\n  ')}`);
+  for (const w of plan.warnings) console.error(`warning: ${w}`);
   console.log(flags['dry-run'] ? 'dry run, nothing written:' : 'migrated:');
-  for (const line of summary) console.log(`  ${line}`);
-  if (!summary.length) console.log('  nothing to do');
+  for (const line of plan.summary) console.log(`  ${line}`);
+  if (!plan.summary.length) console.log('  nothing to do');
   if (flags['dry-run']) return;
 
-  // NEW FILES FIRST, THEN VERIFIED, THEN EDITS, THEN DELETIONS. Until every moved section has
-  // been read back identical, the legacy files are untouched and the move can be undone.
-  for (const [path, text] of created) {
-    mkdirSync(dirname(path), { recursive: true });
-    writeFileSync(path, text);
+  // NEW FILES FIRST, THEN VERIFIED, THEN EDITS, THEN DELETIONS.
+  const undo = () => {
+    for (const d of newDirs) rmSync(d, { recursive: true, force: true });
+  };
+  try {
+    for (const [path, text] of plan.created) {
+      mkdirSync(dirname(path), { recursive: true });
+      writeFileSync(path, text, { flag: 'wx' });
+    }
+  } catch (err) {
+    undo();
+    die(`Could not write the new files, nothing was changed: ${err.message}`);
   }
-  const bad = verifyWritten(moved);
+  const bad = verifyPlan(plan);
   if (bad.length) {
-    for (const path of created.keys()) rmSync(path, { force: true });
-    for (const d of [join(dir, 'tasks', 'a-words'), join(dir, 'rubrics', 'a-words')]) rmSync(d, { recursive: true, force: true });
+    undo();
     die(`Verification failed, nothing was changed:\n  ${bad.join('\n  ')}`);
   }
-  for (const [path, text] of edits) writeFileSync(path, text);
-  for (const path of removals) rmSync(path);
+  for (const [path, text] of plan.edits) {
+    const tmp = join(dirname(path), `.${basename(path)}.migrate-tmp`);
+    writeFileSync(tmp, text);
+    renameSync(tmp, path);
+  }
+  for (const path of plan.removals) rmSync(path);
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) main();
