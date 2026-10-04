@@ -73,7 +73,8 @@ or bundles two capabilities, is `curation/critique`'s to re-check.
 
 ## 2. References resolve
 
-- Every `serves` id is a goal in the Goals table, or `all`.
+- Every `serves` id is a goal in the Goals table, or `all`, or `group <name>` naming a group some
+  goal is in.
 - Every `checks` id is a goal in the Goals table.
 - Every goal in `goals.md` whose `supply` is `curated` — the default, so most of them — has a
   row in the Goals table. A goal supplied any other way has no row and never should; see §5.
@@ -96,7 +97,8 @@ A field that's present but empty is missing. Say which.
 
 ## 4. The Coverage table matches
 
-Rebuild it from the `serves` and `checks` fields of the live entries and compare, cell by cell.
+Rebuild it from the `serves` and `checks` fields of the live entries (expanding a `group <name>`
+to every goal in that group) and compare, cell by cell.
 Dropped entries don't appear; `blocked` cells stay as they are.
 
 It's supposed to be derived, so any difference means it's stale — and a stale Coverage table is

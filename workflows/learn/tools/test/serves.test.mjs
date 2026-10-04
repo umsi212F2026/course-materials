@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { appendFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { makeTopic, CAP_GOAL } from './helpers.mjs';
+import { makeTopic, run, CAP_GOAL } from './helpers.mjs';
 import { readActivities, idProblems } from '../lib/topic.mjs';
 
 const WORD = (id) => CAP_GOAL(id, '- **group:** vocabulary\n');
@@ -35,4 +35,10 @@ test('a group no goal is in is a problem, and its token is not reported as an un
 
 test('a group that has goals raises no problem', () => {
   assert.ok(!idProblems(topic('group vocabulary')).some((p) => p.startsWith('a-x')));
+});
+
+test('a retired goal in the group is still in the expansion', () => {
+  const dir = topic('group vocabulary');
+  run('record-status.mjs', [dir, 'retired', 'w-a', '--reason', 'x']);
+  assert.deepEqual(readActivities(dir)[0].serves, ['w-a', 'w-b']);
 });

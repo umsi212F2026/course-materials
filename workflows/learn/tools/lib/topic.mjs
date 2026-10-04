@@ -133,25 +133,31 @@ const GOALS_HEADING = /^##\s+Goals\s*$/m;
 // `## Goals`, and each goal inherits it unless it writes its own. Whether the goal wrote one is
 // read off the raw fields, because applySlots fills the default in and then "absent" and
 // "wrote learner" look the same. An unknown header value reads as `learner`, the safe
-// direction, and idProblems reports it.
+// direction, and idProblems reports it. Comments are stripped first, as entries() does, so a
+// line in the template's guidance comment is not read as the header. A line that starts
+// `**origin:**` but isn't one word is returned as `malformed`, so idProblems can say so
+// instead of the topic silently reading as learner.
 function headerOrigin(text) {
   const at = text.search(GOALS_HEADING);
-  const m = (at === -1 ? text : text.slice(0, at)).match(/^\*\*origin:\*\*\s*(\S+)\s*$/m);
-  return m ? m[1] : null;
+  const head = (at === -1 ? text : text.slice(0, at)).replace(/<!--[\s\S]*?-->/g, '');
+  const m = head.match(/^\*\*origin:\*\*\s*(\S+)\s*$/m);
+  if (m) return { value: m[1], malformed: null };
+  const bad = head.match(/^\*\*origin:\*\*.*$/m);
+  return { value: null, malformed: bad ? bad[0].trim() : null };
 }
 
 export function readGoals(dir) {
   const file = join(dir, 'goals.md');
   if (!existsSync(file)) return { goals: [], origin: 'learner' };
   const text = readFileSync(file, 'utf8');
-  const written = headerOrigin(text);
+  const { value: written, malformed } = headerOrigin(text);
   const origin = written && Object.hasOwn(ORIGINS, written) ? written : 'learner';
   const goals = entries(section(text, GOALS_HEADING)).map((e) => {
     const goal = applySlots(e.id, e.fields);
     if (!e.fields.origin) goal.origin = origin;
     return goal;
   });
-  return { goals, origin, written };
+  return { goals, origin, written, malformed };
 }
 
 // Every goal in the topic, keyed by id.
@@ -418,9 +424,11 @@ export function surveyTopic(dir) {
 // nothing implements is a goal nobody can record an attempt against, and record-attempt.mjs
 // refuses it there rather than writing a line about a goal it can't derive anything from.
 export function idProblems(dir, status = statusOf(dir)) {
-  const { goals, written } = readGoals(dir);
+  const { goals, written, malformed } = readGoals(dir);
   const found = [];
   const seen = new Map();
+
+  if (malformed) found.push(`goals.md has an origin line that isn't one word: "${malformed}"`);
 
   if (written && !Object.hasOwn(ORIGINS, written))
     found.push(`goals.md has origin: ${written}, which is not one of: ${Object.keys(ORIGINS).join(', ')}`);

@@ -76,7 +76,8 @@ gap. Don't add rows and don't remove them; that table's membership is the orches
    row may be blocked. A file holding only the template skeleton is the case where every row is
    missing, which is a difference of degree and not of kind.
 4. Regenerate the Coverage table. It's derived from the `serves` and `checks` fields of the
-   live entries, so anything you added or re-tagged has made it stale.
+   live entries (a `group <name>` in `serves` expands to every goal in that group), so anything you
+   added or re-tagged has made it stale.
 
 ### Second call: work the findings
 
@@ -285,7 +286,8 @@ Every Coverage row is complete or blocked — including `orientation` — and:
 
 - Every goal in the Goals table has **at least one activity that isn't a check** — something to
   do before being checked is possible.
-- Every `serves` and `checks` id **exists in the Goals table**, or is `all`.
+- Every `serves` and `checks` id **exists in the Goals table**, or is `all`; a `serves` item may
+  also be `group <name>`, naming a group some goal is in.
 - Every activity carrying `checks` **names a `kind`**, and any bank says how to pick from it.
 - Every artifact is **verified, or explicitly flagged as unverified**.
 

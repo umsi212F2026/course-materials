@@ -61,3 +61,15 @@ test('new-word stamps learner on a course topic only', () => {
   assert.ok(addWord('**origin:** course\n\n').includes('- **origin:** learner'));
   assert.ok(!addWord('').includes('- **origin:** learner'));
 });
+
+test('an origin line inside an HTML comment is ignored', () => {
+  const dir = topicWith('<!--\n**origin:** course\n-->\n\n', CAP_GOAL('c-a'));
+  assert.equal(readGoals(dir).origin, 'learner');
+  assert.equal(readGoals(dir).goals[0].origin, 'learner');
+});
+
+test('an origin line with trailing text is reported and the topic stays learner', () => {
+  const dir = topicWith('**origin:** course (shipped)\n\n', CAP_GOAL('c-a'));
+  assert.equal(readGoals(dir).origin, 'learner');
+  assert.ok(survey(dir).problems.includes('goals.md has an origin line that isn\'t one word: "**origin:** course (shipped)"'));
+});

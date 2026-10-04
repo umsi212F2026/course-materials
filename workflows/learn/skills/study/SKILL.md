@@ -74,8 +74,9 @@ ask differently rather than repeating it.
    goal's `supply` for candidates and offer them.
 
    For `supply: curated`, that's the live `activities.md` entries whose `serves` or `checks`
-   names this goal — use each entry's `offer as` to make the choice real rather than a list of
-   titles. Suggest when asked.
+   names this goal (a `serves` item may be `group <name>`, which names every goal in that group,
+   including ones added later): use each entry's `offer as` to make the choice real rather than
+   a list of titles. Suggest when asked.
 
    For `supply: vocabulary`, there is one candidate and it is the move you set, so there is no
    choice to put to them. See

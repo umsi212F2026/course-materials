@@ -62,7 +62,7 @@ clobber what they wrote.
 **When the topic is one the course shipped** (its `goals.md` has an `**origin:** course` line
 under the title), write `- **origin:** learner` on every goal you add. Without it the goal
 inherits `course`, and a goal the student set for themselves becomes one they can be examined
-on.
+on. `new-word.mjs` already stamps the words it adds, so don't write the line again for those.
 
 **What you can't do is invent facts about them.** _Where this came from_, _what I already have_
 and _what I'll use it for_ are answers only they have. Typing up what they said is fine —

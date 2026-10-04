@@ -178,9 +178,10 @@
   seen the area laid out before; then say so there and let curation write
   `n/a — already oriented`.
 
-  HOW MANY CAPABILITY ENTRIES. Usually one is enough — a second means the use needs a
-  genuinely separate ability, not a restatement of the first. Past about three, something has
-  been scoped wrong.
+  HOW MANY CAPABILITIES. Usually one is enough: a second means the use needs a genuinely
+  separate ability, not a restatement of the first. Past about three, something has been scoped
+  wrong. A capability split into parts that share a `capability:` slug counts once, and a goal
+  with no slug counts as one.
 
   THE ABSENCE OF ANY CAPABILITY ENTRY IS LOAD-BEARING. "This file has no goal in the default
   group" is what the rest of the workflow reads as *goal setting hasn't happened* — it's the

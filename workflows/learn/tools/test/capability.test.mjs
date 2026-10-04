@@ -64,3 +64,10 @@ test('a capability on one goal is reported as having one part', () => {
   const dir = makeTopic({ goals: CAP_GOAL('c-a', CAP) });
   assert.ok(survey(dir).problems.includes('capability weigh-hosting-plans has only one part (c-a)'));
 });
+
+test('--report prints a retired goal as retired: <reason>', () => {
+  const dir = setup();
+  run('record-status.mjs', [dir, 'retired', 'c-p3', '--reason', 'no longer needed']);
+  const r = run('survey.mjs', ['--dir', dir + '/..', dir, '--report']);
+  assert.match(r.stdout, /retired: no longer needed/);
+});

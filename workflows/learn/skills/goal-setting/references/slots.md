@@ -11,6 +11,7 @@ system asks of any of them.
 **Every slot defaults.** An ordinary capability carries no slot values at all. A word carries
 the four that differ from the default; an orientation carries five. There are no named types:
 nothing in the system says "this is a word", only that this goal's `supply` is `vocabulary`.
+`capability` is the one slot with no default: it is simply absent on a goal that isn't a part.
 
 ## The nine slots
 
@@ -253,7 +254,7 @@ reports a header value that is neither. The slot on a goal is the override, and 
 is written by hand is a goal a student adds to a course topic: stamp it `- **origin:** learner`,
 or it would inherit `course` and become examinable. `new-word.mjs` does this for a word.
 
-**It is stamped when a topic is published, not chosen while it is authored**, which is why no
+**It is stamped on the topic when it is published, not chosen while it is authored**, which is why no
 shape above overrides it. A course-seeded topic is otherwise indistinguishable from one a learner
 built, deliberately: the course runs goal setting and curation itself and ships the same files, so
 nothing in the learning phase behaves differently. This slot is the single exception.
