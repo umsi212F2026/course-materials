@@ -50,6 +50,9 @@ export function settleMcq(item, text) {
   return text !== null && text.trim() === String(item.answer) ? "full" : "none";
 }
 
+/** The goals an item names: its `goals` when it carries them, else its one `goal`, else none. */
+export const itemGoals = (item) => item.goals ?? (item.goal ? [item.goal] : []);
+
 /** The free answers, grouped by the question they answer. An item with no answers at all
  *  is left out: there is nothing to rule on, and an empty group in the queue reads as work
  *  to do. */
@@ -63,6 +66,10 @@ export function buildQueue(rows) {
         item: r.item.id,
         bank: r.item.bank ?? null,
         goal: r.item.goal ?? null,
+        // EVERY GOAL THE QUESTION NAMES, ALWAYS AN ARRAY. A folder question may name several,
+        // and then `goal` above is null and this is the only place the grader learns what it
+        // is ruling on per goal. A single-file item names one or none, and gets `[goal]` or `[]`.
+        goals: itemGoals(r.item),
         prompt: r.item.prompt,
         rubric: r.item.rubric,
         answers: [],
@@ -71,6 +78,43 @@ export function buildQueue(rows) {
     groups.get(r.item.id).answers.push({ uniqname: r.uniqname, answer: r.text });
   }
   return [...groups.values()];
+}
+
+/** A per-goal verdict settled into one mark, or a string saying why it cannot be.
+ *
+ *  IT MUST NAME EXACTLY THE QUESTION'S GOALS. A goal left out is not a goal the student got
+ *  nothing on, and averaging over the rest would quietly score a two-goal question as if it had
+ *  one: that is a claim about the grading run, so it is a problem, as a missing verdict is.
+ *
+ *  The value is the mean of the per-goal credits. The credit is the one they share when they all
+ *  agree and `partial` when they do not; `partial` has no entry in CREDIT_VALUE on purpose, so
+ *  anything that scores a multi-goal item has to read its `value`. Each goal gets its own axes,
+ *  because each is recorded against its own goal: half credit on a goal is `not met` for it. */
+function settlePerGoal(item, perGoal, unaided) {
+  const want = itemGoals(item);
+  const missing = want.filter((g) => !Object.hasOwn(perGoal, g));
+  if (missing.length) return `per_goal is missing ${missing.join(", ")}`;
+  const extra = Object.keys(perGoal).filter((g) => !want.includes(g));
+  if (extra.length) return `per_goal names ${extra.join(", ")}, which the question does not`;
+  if (!want.length) return "per_goal given, but the question names no goal";
+
+  const settled = {};
+  for (const g of want) {
+    const p = perGoal[g] ?? {};
+    if (!Object.hasOwn(CREDIT_VALUE, p.credit)) return `per_goal ${g}: credit "${p.credit}" is not full, half or none`;
+    const own = p.axes?.unaided === "no" || p.axes?.unaided === "unclear" ? p.axes.unaided : unaided;
+    settled[g] = {
+      credit: p.credit,
+      missed: p.missed ?? "",
+      axes: { unaided: own, criterion: p.axes?.criterion === "unchecked" ? "unchecked" : p.credit === "full" ? "met" : "not met" },
+    };
+  }
+  const credits = want.map((g) => settled[g].credit);
+  return {
+    credit: credits.every((c) => c === credits[0]) ? credits[0] : "partial",
+    value: credits.reduce((t, c) => t + CREDIT_VALUE[c], 0) / credits.length,
+    perGoal: settled,
+  };
 }
 
 /** Fold the verdicts back onto the rows and score each student.
@@ -113,6 +157,10 @@ export function mergeGrades(rows, verdicts, { date, session, corrections = [] })
     // through before submitting is not an unaided one. The grade skill is the only thing that
     // can see the difference, so where it reports one, that is what gets recorded.
     let unaided = "yes";
+    // SET ONLY BY A PER-GOAL VERDICT, and absent from the output otherwise, which is what keeps
+    // a verdict without `per_goal` merging to exactly the object it always has.
+    let value = null;
+    let perGoal = null;
 
     if (r.item.type === "mcq") {
       credit = settleMcq(r.item, r.text);
@@ -129,7 +177,6 @@ export function mergeGrades(rows, verdicts, { date, session, corrections = [] })
         continue;
       }
       used.add(key);
-      credit = v.credit;
       missed = v.missed ?? "";
       flag = Boolean(v.flag);
       // WHY IT IS FLAGGED IS NOT WHAT THE STUDENT IS TOLD. `missed` is written to the student
@@ -137,14 +184,24 @@ export function mergeGrades(rows, verdicts, { date, session, corrections = [] })
       // reason and three of them came out silent: flagged, with nobody able to reconstruct
       // what for. This field is the reviewer's.
       flagReason = v.flag_reason ?? "";
-      criterion = credit === "full" ? "met" : "not met";
       if (v.axes?.unaided === "no" || v.axes?.unaided === "unclear") unaided = v.axes.unaided;
+      if (v.per_goal) {
+        const settled = settlePerGoal(r.item, v.per_goal, unaided);
+        if (typeof settled === "string") {
+          problems.push(`${r.uniqname} ${r.item.id}: ${settled}`);
+          continue;
+        }
+        ({ credit, value, perGoal } = settled);
+      } else {
+        credit = v.credit;
+      }
+      criterion = credit === "full" ? "met" : "not met";
       // A CAPABILITY ITEM IS MARKED AND ESTABLISHES NOTHING, and those two are not in tension:
       // one is a mark, the other is evidence. The student answered the question that was asked,
       // so the credit stands; nobody watched them do the thing, so the criterion is `unchecked`
       // and no review date moves on it.
       if (v.axes?.criterion === "unchecked") criterion = "unchecked";
-      if (!Object.hasOwn(CREDIT_VALUE, credit)) {
+      if (!perGoal && !Object.hasOwn(CREDIT_VALUE, credit)) {
         problems.push(`${r.uniqname} ${r.item.id}: credit "${credit}" is not full, half or none`);
         continue;
       }
@@ -174,6 +231,10 @@ export function mergeGrades(rows, verdicts, { date, session, corrections = [] })
         corrected = true;
         graderCredit = credit;
         credit = fix.credit;
+        // A CORRECTION REPLACES THE AVERAGE, because it is one mark on the whole question and
+        // the instructor gave it knowing what the per-goal rulings were. Those stay beside it
+        // in `per_goal`, as the grader's, for the same reason `grader_credit` does.
+        value = null;
         if (typeof fix.comment === "string") missed = fix.comment;
         // A CORRECTION CHANGES THE MARK, NOT WHETHER ANYBODY WATCHED. `unchecked` on a
         // capability item says nobody established the capability, and a second opinion on how
@@ -193,6 +254,8 @@ export function mergeGrades(rows, verdicts, { date, session, corrections = [] })
       corrected,
       grader_credit: graderCredit,
       axes: { unaided, criterion },
+      ...(value !== null ? { value } : {}),
+      ...(perGoal ? { per_goal: perGoal } : {}),
     });
   }
 
@@ -211,7 +274,7 @@ export function mergeGrades(rows, verdicts, { date, session, corrections = [] })
 
   const list = [...students.values()].map((s) => ({
     ...s,
-    score: Number(s.items.reduce((t, i) => t + CREDIT_VALUE[i.credit], 0).toFixed(2)),
+    score: Number(s.items.reduce((t, i) => t + (i.value ?? CREDIT_VALUE[i.credit]), 0).toFixed(2)),
     out_of: s.items.length,
   }));
   list.sort((a, b) => a.uniqname.localeCompare(b.uniqname));
