@@ -1,7 +1,29 @@
 # Queue: learn workflow changes from student feedback
 
 Branch `learn-student-feedback`. Each item is its own design cycle (design, spec where needed,
-plan, implementation). Update this file as items finish or are added.
+plan, implementation). Update this file as items finish or are added. Nothing on this branch has
+been merged or pushed.
+
+## How work proceeds here
+
+- **Design first.** Brainstorm with the instructor one question at a time, recommend an option,
+  then write a spec to `docs/superpowers/specs/`. Bounded changes get a short design in chat
+  instead.
+- **Plan, then implement with subagents.** A plan in `docs/superpowers/plans/`, one task per
+  test cycle, run with fresh implementer and reviewer subagents; a whole-phase review at the end
+  on the most capable model, then one fix wave and one re-review. The working ledger lives in
+  `.superpowers/sdd/<plan>/` (gitignored, deleted when the plan finishes).
+- **Rulings.** Decisions made without the instructor go in a committed rulings file
+  (`rulings-unified-banks.md` for item 3) with what each costs if wrong.
+- **Checks.** Tests: `node --test 'workflows/*/tools/test/*.test.mjs'`; add
+  `SOURCES_ROOT=/Users/presnick/Documents/Documents/code/2026` so the pool compatibility test
+  compares real pools. Skills: `node workflows/develop/tools/check-skills.mjs`. Diagrams:
+  `node workflows/diagram/tools/check-di.mjs workflows/learn/learn.bpmn`, and bpmnlint from the
+  main checkout (this worktree has no `node_modules`):
+  `/Users/presnick/Documents/Documents/code/2026/course-materials/workflows/diagram/tools/node_modules/.bin/bpmnlint -c workflows/diagram/.bpmnlintrc <file>`.
+- **Real data is read-only.** Learning topics live in
+  `/Users/presnick/Documents/Documents/code/2026/learning-topics`; copy into a scratch folder to
+  try anything that writes.
 
 ## In order
 
@@ -18,25 +40,59 @@ plan, implementation). Update this file as items finish or are added.
    - ~~Phase 3: vocabulary as `a-words`, `supply` retired, `migrate-words.mjs`.~~ Done,
      `4785f33..0761ad8`.
    - ~~Phase 4: curation with two instructor stops.~~ Done, `64a432a..6e380de`.
-   - Rulings made during phases 3 to 5 are in `rulings-unified-banks.md`, for review.
-   - ~~Phase 5: quiz.~~ Done, from `34f264c`. Plan
+   - Rulings made during phases 3 to 5 are in `rulings-unified-banks.md`, for review. Reviewed
+     so far: phase 3 ruling 6 (the instructor chose hyphens after every entry-point name and no
+     dashes in descriptions; done in `eecd4ff`, `d6f1ba1`); phase 5 rulings 3 and 4 accepted.
+     The instructor also asked that `CONTRACT.md` be deleted (DRY); done in `ecc362c`.
+   - ~~Phase 5: quiz.~~ Done, `34f264c..ecc362c`. Plan
      `plans/2026-10-03-unified-banks-phase-5.md`. Folder ids are qualified on the quiz path;
      pool keys work at topic, activity and scenario level; practice prefers unseen questions;
      multi-goal questions are graded and recorded per goal. What the instructor's private
      tools must change is under "Actions on course-private" below.
-4. **Help is always available; help just means the attempt doesn't count.** Covers review and the
-   practice quiz too: the tutor answers while a quiz page is open and records those answers as not
-   independent.
-5. **Sequenced sets of goals.** Goal-setting decides an order: a sequence of sets, random within a
-   set (vocabulary before integrative capabilities). Builds on the capability hierarchy.
-6. **Progress view.** The sequence of sets drawn as columns, with marks for attempts and passes,
-   shown at the start of a session and after each task.
-7. **Web side panel for tutor-initiated questions.** Questions open in a page beside the chat, and
-   the chat notices Submit. The chat stays responsive; using it during a question is recorded and
-   makes the answer not independent. Start with a feasibility test in Codex.
-8. **Personalized problem-set questions** (spec B). Banks that belong to one student; a generator
-   that reads a problem-set repo, run by the tutor in study and by the grading container for
-   quizzes; an agent checks each question against the student's repo.
+4. **Help is always available; help just means the attempt doesn't count.** A student reported
+   the agent refusing to engage because it wanted an independent test. Study already gives help
+   when asked; the refusals come from review (`review/SKILL.md`, "Offer no help ... until it has
+   been ruled on"; it says the attempt is meant to be cold and helps only if they insist) and from
+   the practice quiz (`quiz/SKILL.md`, "say you cannot answer until they submit"). The
+   instructor's decision: the tutor always discusses and guides, in review and in the practice
+   quiz too, and simply records the attempt as not independent (`unaided: no`). For work done in
+   a web page the student knows whether they got help, so there is little room for
+   self-deception. Bounded change (skill text); design in chat, then implement.
+5. **Sequenced sets of goals.** Goal-setting also decides an order in which goals are tackled: a
+   sequence of sets, with random order within a set; vocabulary generally comes before the
+   integrative capability goals. Builds on the capability hierarchy from item 3 (part-goals share
+   a `capability:` slug). Needs a design: where the order is written (goals.md), and how study
+   offers the next goal from it.
+6. **Progress view.** Metacognitive information for the student: the sequence of sets from item 5
+   drawn as columns, with checkmarks and other marks for attempts and completions (and, from
+   item 2, deferred and done-elsewhere), shown at the start of a session and again after each
+   task. The instructor wants hierarchy (capabilities grouping their parts) so a topic doesn't
+   read as an overwhelming list. Survey already gives the data (`groups[].capabilities`, rows with
+   `met`, `deferred`, `last`). Rendering in chat or in item 7's web panel is open.
+7. **Web side panel for tutor-initiated questions.** Questions the tutor sets open in a web page
+   beside the chat, so the chat stays mostly student-initiated; the chat notices when the student
+   presses Submit. The chat stays responsive throughout; if the student uses it during a question,
+   that is recorded and the page's answer is not treated as independent. Precedent: the practice
+   quiz serves a page on 127.0.0.1 from a foreground process that exits on Submit
+   (`workflows/quiz/tools/quiz-practice.mjs`). Students run Codex, so start with a feasibility
+   test of the Submit notification there before writing a spec.
+8. **Personalized problem-set questions** (spec B, not yet written). Decided so far:
+   - A bank can belong to one student. A generator that reads a problem-set repo lives in
+     `activities.md` like any generator (public).
+   - **Study:** the tutor runs it on the student's own problem-set repo and adds the questions to
+     that student's bank in their learning-topics clone; served and reviewed like any bank.
+   - **Quiz:** the instructor runs the same generator in the grading pass (each student repo is
+     already processed in a Docker container), producing per-student questions and rubrics on the
+     private side; `quiz-bake` draws them by uniqname. The quiz never uses student-generated
+     questions (a student could pick easy ones or soften a rubric).
+   - **Review:** the instructor reviews the generator plus a sample of its output; an agent checks
+     every question against that student's repo (answer true of their code, rubric faithful to
+     the goal's criterion). This loosens "instructor reviews the bank" for this category only.
+   - **Goals:** no problem-set goals. The generator is aimed at topic goals that the problem set
+     exercises, and each question's rubric names them; a question fitting no goal is quiz-only
+     (as problem-set follow-ups are today) and never enters study or review.
+   - Builds on item 3's bank format and picker; the private-side steps would be described as an
+     interface for course-private to implement.
 
 ## Actions on the learning-topics repository (outside this branch)
 
@@ -159,6 +215,23 @@ reach a real quiz. The mechanisms are explained in the header comments of
 - Untested: a header after `## Goals` is ignored; one- and five-word slugs rejected;
   `serves: group capabilities` (the default group) expands; a backticked group item expands.
 
-## Housekeeping
+## Deferred minors from item 3, phases 3 to 5
 
-- `.superpowers/` (subagent scratch) is not in `.gitignore`. Nothing from it has been committed.
+- `migrate-words.mjs`: the unreadable-id warning is worded wrongly for a line in the preamble; a
+  column-0 bullet after a blank line under a stamp is removed with it; a split that falls inside
+  a fence puts a blank line inside the fence; it takes the first `goal:` line where `bank.mjs`
+  takes the last (malformed rubrics only); a failed rename partway through the edits is not
+  rolled back.
+- No test pins that a topic whose only entries are stamps reads `in curation`.
+- `curation/SKILL.md`: paragraph flow before "The layout every step writes"; an awkward wrap in
+  `curation/draft-bank`.
+- `learn.bpmn`: the curation lane's `C_revise` and `C_sample` writes are documented but not drawn
+  as data associations; a long corridor for the plain-path flow.
+- A topic-level pool key also spreads over activities marked dropped (`bank.mjs` doesn't read
+  activities.md).
+- `grade.test.mjs` byte-identity fixture lacks the no-verdict and orphan-verdict cases.
+- `quiz-practice.mjs` keys goal criteria and `kinds.json` by bare goal id across topics (two
+  topics sharing a goal id in one draw would share one entry); pre-existing.
+- `workflows/diagram/tools/render.mjs` times out (`Page.captureScreenshot`) on this machine even
+  on unchanged files; a copy launched with headless `shell`, a `protocolTimeout` and
+  `--disable-gpu` renders.
