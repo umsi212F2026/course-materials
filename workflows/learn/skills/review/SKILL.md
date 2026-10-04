@@ -139,10 +139,12 @@ argument.
    **Exit code 2 means no bank question names this goal**, and then the task comes from the
    goal's activity, run live:
 
-   **An ordinary goal**: the task is the entry itself. Prefer `kind: generator`, which produces a
-   fresh instance. A bank the picker doesn't serve, such as a numbered range in a book, is fine
-   if it has items whose labels aren't in `served`. A `single instance` already in `served` is
-   the weakest form there is; if it's all there is, use it.
+   **An ordinary goal**: the task comes from the entry itself. Every activity with questions has
+   a generator, and a bank only when its `tasks/<activity-id>/` folder exists; with no bank
+   question naming this goal, run the generator live for a fresh question. A generator that
+   picks from real items, such as a numbered range in a book, is fine if it has items whose
+   labels aren't in `served`. An item already in `served` is the weakest form there is; if
+   it's all there is, use it.
 
    **A word**: set one move live from
    [`../goal-setting/references/vocabulary-moves.md`](../goal-setting/references/vocabulary-moves.md),

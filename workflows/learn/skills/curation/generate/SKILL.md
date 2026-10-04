@@ -77,7 +77,8 @@ Don't add rows and don't remove them; that table's membership is the orchestrato
    missing, which is a difference of degree and not of kind.
 4. Regenerate the Coverage table. It's derived from the `serves` and `checks` fields of the
    live entries (a `group <name>` in `serves` expands to every goal in that group), so anything you
-   added or re-tagged has made it stale.
+   added or re-tagged has made it stale. A goal's `checks` cell also counts a live activity whose
+   bank holds a question whose rubric `goal:` names it.
 
 ### Second call: work the findings
 
@@ -101,7 +102,8 @@ delete that note.
   else on the second pass. If no replacement can be built, the row is blocked — see _When a row
   can't be filled_.
 
-Regenerate the Coverage table if anything you did changed a `serves` or `checks` field.
+Regenerate the Coverage table if anything you did changed a `serves` or `checks` field. It is
+built the same way as on the first call, banks included.
 
 ### Either call
 

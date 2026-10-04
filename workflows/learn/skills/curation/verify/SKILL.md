@@ -104,7 +104,8 @@ A field that's present but empty is missing. Say which.
 ## 4. The Coverage table matches
 
 Rebuild it from the `serves` and `checks` fields of the live entries (expanding a `group <name>`
-to every goal in that group) and compare, cell by cell.
+to every goal in that group) and compare, cell by cell. A goal's `checks` cell also counts a
+live activity whose bank, `tasks/<activity-id>/`, holds a question whose rubric `goal:` names it.
 Dropped entries don't appear; `blocked` cells stay as they are.
 
 It's supposed to be derived, so any difference means it's stale — and a stale Coverage table is

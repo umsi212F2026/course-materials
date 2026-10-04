@@ -24,9 +24,9 @@ the entries the generator wrote.
 every one of those carrying `checks`, §3 the file as a whole, §4 every `blocked` cell.
 
 **Read only `goals.md` and `activities.md`**, plus anything they point at, and an activity's
-bank folder if it has one, when you need them to judge an entry. You don't have access to the conversation that produced them. The point of this
-pass is that you don't know what the author meant — you can only see what they wrote, which is
-the position the tutor will be in.
+bank folder if it has one, when you need them to judge an entry. You don't have access to the
+conversation that produced them. The point of this pass is that you don't know what the author
+meant: you can only see what they wrote, which is the position the tutor will be in.
 
 **Write nothing.** You return a report; the orchestrator is the only thing that touches the
 file.

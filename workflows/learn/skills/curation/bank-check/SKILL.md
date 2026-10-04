@@ -41,6 +41,11 @@ label, verbatim and marked `question` (or `scenario`, for one about a whole file
 check everything else anyway. Don't re-derive what survey checks; spend the reading on what it
 can't.
 
+**One mechanical check survey doesn't make: every id on a question's `goal:` line is in its
+activity's `checks`.** For `a-words`, which has no `checks`, the ids must be words in group
+`vocabulary`. Report any that isn't as a `question` finding. A question claiming a goal its
+generator never declared collects evidence the generator was never reviewed for.
+
 ## Every question, five checks
 
 For each `### <question-id>` in each `tasks/<activity-id>/<scenario-id>.md`, read the
@@ -83,10 +88,10 @@ Every finding carries one mark, which says what has to change:
 
 ## Reporting
 
-Grouped by activity. Each finding gives its label, its mark, which of the five checks it fails,
+Grouped by activity. Each finding gives its label, its mark, which check it fails,
 what is wrong, and what would fix it. The label is the question's,
-`<activity-id>/<scenario-id>/<question-id>`; for a `scenario` finding, `<activity-id>/<scenario-id>`;
-for a `generator` finding, the activity id.
+`<activity-id>/<scenario-id>/<question-id>`; for a `scenario` finding,
+`<activity-id>/<scenario-id>`; for a `generator` finding, the activity id.
 
 Then what you checked and found nothing wrong in: per activity, how many scenarios and questions
 you read. A bank check that returns "no findings" without saying what it read is

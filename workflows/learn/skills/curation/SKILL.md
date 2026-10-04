@@ -193,7 +193,16 @@ course path the instructor is, at the two stops, and nobody else.
 
 ## The course path
 
-Between steps 5 and 6, and only when _Who runs it decides the path_ says so. The layout every
+Between steps 5 and 6, and only when _Who runs it decides the path_ says so. It starts when the
+instructor invokes curation directly, names the topic folder and says the run is theirs. That
+folder is what this run operates on, with its parent as the `<data-dir>` survey takes, and
+neither is inferred from anywhere else.
+
+**Drafts stay on a branch until stop 2 is done.** Commit them on a branch of the topic's
+repository and push nothing until the instructor has finished with the banks. That repository is
+public, and a question nobody has reviewed must not be published by accident.
+
+The layout every
 step writes is in `workflows/learn/templates/activities.md` under BANKS: one file per scenario
 in `tasks/<activity-id>/` and its twin in `rubrics/<activity-id>/`, each question a
 `### <question-id>` section, labelled `<activity-id>/<scenario-id>/<question-id>`.
@@ -214,13 +223,20 @@ in `tasks/<activity-id>/` and its twin in `rubrics/<activity-id>/`, each questio
    `a-words` takes part only for a word with no file in `tasks/a-words/`. Its generator is
    fixed text, so feedback on it is about the vocabulary moves, and goes in your reply.
 
+   **Skip `a-words` entirely, here and in step 2, until `migrate-words.mjs` has run on the
+   topic.** You can tell it hasn't when a single-file bank, a `tasks/<name>.md` with its
+   `rubrics/<name>.md`, has a rubric entry whose `goal:` names a word. Drafting would create
+   `tasks/a-words/`, and the migration then refuses to run, for good, leaving those questions
+   stranded where nothing serves them as words.
+
    Why a sample at all: a generator's text reads well long after it has stopped producing good
    questions, and one scenario is the cheapest way to see what it actually makes. A fault found
    here costs one sample; found at stop 2 it costs a bank.
 
 2. **Draft the banks.** One `curation/draft-bank` per activity, in `full` mode, as separate
    agents running in parallel. Each fills its bank to about three questions per goal in the
-   activity's `checks`, unless the entry says otherwise, and keeps every scenario already there:
+   activity's `checks` (for `a-words`, per word), unless the entry says otherwise, and keeps
+   every scenario already there:
    the kept sample, and anything converted from an older file.
 
 3. **Check the banks.** First the mechanical floor:

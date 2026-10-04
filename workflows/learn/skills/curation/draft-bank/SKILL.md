@@ -23,6 +23,11 @@ folders. For `a-words`, the word's entry in `goals.md` (`what it names`, `neares
 `synonyms`) and `workflows/learn/skills/goal-setting/references/vocabulary-moves.md`, which is
 its generator.
 
+**For `a-words`, the goals are the words.** It has no `checks`; where this file says "the goals
+in `checks`", read every goal in group `vocabulary` that has no file in `tasks/a-words/` yet.
+Each scenario is one word, named for its goal id, and each question's `goal:` is that one word,
+with its `move:` set.
+
 **The generator is your only brief.** Draft what it says: what varies, what is fixed, how hard,
 which goals a question bears on. Where it leaves you guessing, guess as little as you can and
 say so in your reply. A gap you quietly filled looks, to the instructor, like a generator that
@@ -36,7 +41,8 @@ not an edge case. Give it enough questions to show how the generator maps onto e
 `checks`, usually one or two per goal. If it is kept, it becomes the bank's first scenario, so
 write it to the same standard as any other.
 
-**`full`: the bank, to its target size.** About three questions per goal in `checks`, unless
+**`full`: the bank, to its target size.** About three questions per goal in `checks` (per word,
+for `a-words`), unless
 the entry says otherwise. Count what is already in your folders first, by reading each rubric
 entry's `goal:` line; a question naming two goals counts toward both. Then add new scenarios
 until every goal reaches its count. **Never edit or delete a scenario already there**: it is a
@@ -58,13 +64,12 @@ one `### <question-id>` section per question, in both files, with the same ids.
 
 ```
 Crumbs is a two-person bakery moving its order form off a spreadsheet. It takes about forty
-orders a week, most of them on Friday evening. Neither owner writes code. Answer a written
-question in two or three sentences.
+orders a week, most of them on Friday evening. Neither owner writes code.
 
 ### q1
 
 Crumbs is offered a plan that bills by the request, and one that bills a flat monthly fee.
-Which suits it better, and why?
+Which suits it better, and why? Answer in two or three sentences.
 
 ### q2
 
@@ -118,7 +123,8 @@ The rules behind that example:
   question.
 - **The rubric fields**, as `- **name:** value` lines:
   - `goal:` the goal ids this question bears on, from the activity's `checks` and nowhere else,
-    comma-separated.
+    comma-separated. A warm-up that cannot establish any goal omits it, and counts toward
+    nothing.
   - `answer:` what a complete answer says. For an mcq, the 1-based number of the right choice.
   - `credit:` what full and half credit mean. A single-goal question has one statement. **A
     question naming two or more goals lists one statement per goal**, as an indented list, each
