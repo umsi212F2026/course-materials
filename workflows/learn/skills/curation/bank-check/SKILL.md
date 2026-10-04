@@ -49,6 +49,13 @@ activity's `checks`.** For `a-words`, which has no `checks`, the ids must be wor
 `vocabulary`. Report any that isn't as a `question` finding. A question claiming a goal its
 generator never declared collects evidence the generator was never reviewed for.
 
+**For `a-words`, also check each word's bank against "What a word's bank holds" in
+vocabulary-moves.md**: one DISTINGUISH question per entry on the word's `nearest confusable`
+line, aimed at that entry, and one or two CATCH questions. Report a DEFINE, INTERPRET or APPLY
+question in a bank drafted under this rule, a confusable with no DISTINGUISH question, and a
+DISTINGUISH aimed at a synonym. In a released topic's older bank, list its DEFINE and INTERPRET
+questions instead, for the instructor to decide at the course path's recuration.
+
 ## Every question, six checks
 
 For each `### <question-id>` in each `tasks/<activity-id>/<scenario-id>.md`, read the

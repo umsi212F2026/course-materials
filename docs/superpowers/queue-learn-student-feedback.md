@@ -180,6 +180,15 @@ merged into main again before that push.
      `a-sort-missing-claims`, and `a-list-own-app-memory` (the student's own app, so a live
      question activity).
 
+   **Word banks, at the same recuration.** Since 2026-10-04 a word's bank holds one DISTINGUISH
+   per `nearest confusable` entry and one or two CATCH, nothing else; DEFINE and INTERPRET are set
+   live as help after a miss (`vocabulary-moves.md`, "What a word's bank holds"). The six
+   released topics' `a-words` banks still hold 78 reception questions (47 DEFINE, 31 INTERPRET,
+   of 179). They stay until each topic's recuration, which shows them to the instructor to
+   decide whether they really go. **Open question for that review:** whether DEFINE and
+   INTERPRET should simply count as production moves, dropping the reception/production
+   distinction (and the `production` tag the word bar reads) altogether.
+
    Why it matters: each capability goal carries two or three of these at 15 to 45 minutes each,
    none of which can move it to met (web-backends `c-trace-action` alone has about 90 minutes).
    This is likely part of why students have not finished topics in reasonable time. The three new

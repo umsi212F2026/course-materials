@@ -33,8 +33,12 @@ files already in your two folders. For `a-words`, the word's entry in `goals.md`
 **For `a-words`, the goals are the words.** It has no `checks`; where this file says "the goals
 in `checks`", read the words in group `vocabulary`. In `sample` mode that is only the words with
 no file in `tasks/a-words/` yet. In `full` mode it is every word, including one sampled at stop
-1, and each is filled to about three questions. Each scenario is one word, named for its goal
-id, and each question's `goal:` is that one word, with its `move:` set.
+1. Each scenario is one word, named for its goal id, and each question's `goal:` is that one
+word, with its `move:` set. **A word's bank is one DISTINGUISH question per entry on its
+`nearest confusable` line, then one or two CATCH questions, and nothing else**: no DEFINE or
+INTERPRET (reception moves, which can never meet the word's bar; the tutor sets them live as
+help) and no APPLY (it needs the learner's own work). See "What a word's bank holds" in
+vocabulary-moves.md. A word's target size is that, not three.
 
 **The generator is your only brief.** Draft what it says: what varies, what is fixed, how hard,
 which goals a question bears on. Where it leaves you guessing, guess as little as you can and
@@ -49,8 +53,8 @@ not an edge case. Give it enough questions to show how the generator maps onto e
 `checks`, usually one or two per goal. If it is kept, it becomes the bank's first scenario, so
 write it to the same standard as any other.
 
-**`full`: the bank, to its target size.** About three questions per goal in `checks` (per word,
-for `a-words`), unless the entry says otherwise. Count what is already in your folders first, by
+**`full`: the bank, to its target size.** About three questions per goal in `checks` (for
+`a-words`, the per-word size above), unless the entry says otherwise. Count what is already in your folders first, by
 reading each rubric entry's `goal:` line; a question naming two goals counts toward both. Read
 the `cases:` lines too. Then add new scenarios until every goal reaches its count and every case
 of every goal with cases is exercised by at least one question, the hard case as surely as the

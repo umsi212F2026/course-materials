@@ -120,6 +120,11 @@ ask differently rather than repeating it.
    `<MOVE>: <instance>`. That is also how a word is served in an older topic with no `a-words`
    entry.
 
+   **After a missed word question, a DEFINE or INTERPRET may follow as help.** Set it live for
+   that word to rebuild what the word names, record it `unaided: no` (it is help, so it counts
+   toward nothing), then go back to a production question. These two are never banked; see
+   "What a word's bank holds" in vocabulary-moves.md.
+
    **An activity with a bank is served from it.** If `tasks/<activity-id>/` exists in the topic
    folder, the questions are already written, and running the activity means asking for one with
    `next-item.mjs`; see [`references/running-an-activity.md`](references/running-an-activity.md).

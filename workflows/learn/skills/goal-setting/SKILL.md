@@ -267,9 +267,11 @@ writes only _what it names_, and leaves it blank: it is a pointer, not a definit
 topology latitude, enough to recognise the word when it turns up. _Nearest confusable_ and
 _synonyms_ are lines you add where there is something to put in them, and plenty of words
 haven't got either; omit the line rather than reaching, since an empty optional field is a
-default written down. All three are facts about the subject rather than about them, so fill
-them
-silently and don't narrate it. They are read by the `a-words` generator and by nothing else.
+default written down. **Where a word has several real near misses, list each one**: each
+becomes a DISTINGUISH question in the word's bank, so the confusables are what give a word more
+than its one or two CATCH questions. But only a term a learner might actually mix up with this
+one, never a synonym and never one added to make the bank bigger. All three are facts about the
+subject rather than about them, so fill them silently and don't narrate it. They are read by the `a-words` generator and by nothing else.
 
 **Moves**
 
