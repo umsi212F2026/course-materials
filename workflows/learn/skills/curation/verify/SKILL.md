@@ -140,14 +140,14 @@ second definition site this design exists to avoid.
 ## 6. Every case is exercised
 
 For each goal in `goals.md` with a `cases` slot, each of its cases must be exercised by some
-live activity, live meaning not dropped: a banked question whose rubric `cases:` line lists it
-for that goal, or any live activity whose generator says a kind of its questions carries it.
-A banked activity's generator counts too, since study runs it live when no bank question it
-still needs remains. A case neither covers is a finding, the same as an empty `checks` cell,
-keyed to the goal and naming the case.
+live activity, live meaning not dropped. For a banked activity only its bank counts: a question
+whose rubric `cases:` line lists the case for that goal. A generator's stated case counts only
+for an activity with no bank. A case nothing covers is a finding, the same as an empty `checks`
+cell, keyed to the goal and naming the case.
 
 A banked question on such a goal with no `cases:` line was written before the goal had cases,
-and counts as exercising all of them; survey reports it, so don't report it again here.
+and covers none of them here, since which it exercises is only settled question by question in
+study. Survey reports it, so don't report it again here.
 
 ---
 
