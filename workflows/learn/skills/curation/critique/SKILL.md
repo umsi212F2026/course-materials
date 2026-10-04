@@ -23,8 +23,8 @@ the entries the generator wrote.
 **Work all four sections; each has its own unit.** §1 is every entry the generator wrote, §2
 every one of those carrying `checks`, §3 the file as a whole, §4 every `blocked` cell.
 
-**Read only `goals.md` and `activities.md`** — plus anything they point at, if you need it to
-judge an entry. You don't have access to the conversation that produced them. The point of this
+**Read only `goals.md` and `activities.md`**, plus anything they point at, and an activity's
+bank folder if it has one, when you need them to judge an entry. You don't have access to the conversation that produced them. The point of this
 pass is that you don't know what the author meant — you can only see what they wrote, which is
 the position the tutor will be in.
 
@@ -48,7 +48,9 @@ With no knowledge of what the author intended:
 - **Does `offer as` name a real difference** from its neighbors? "A good introduction" is not a
   characterization, and a menu whose candidates all sound the same is not a choice.
 - **Could a generator be run from what's written**, without asking the author what they meant?
-  What varies, what stays fixed, how hard — all three, or the tutor is inventing them.
+  What varies, what stays fixed, how hard, and which goals its questions bear on: all four, or
+  the tutor is inventing them. On a course topic an agent drafts a bank from that text alone, so
+  a gap here becomes a bank of questions testing whatever the drafter guessed.
 
 ## 2. Check the checks
 
@@ -62,6 +64,17 @@ An engaging exercise about the right subject that tests something adjacent will 
 wrong thing, and nothing downstream will catch it. This is the most consequential finding
 available in this pass. Say which part of the criterion goes untested, and whether
 `doesn't show` admits it.
+
+**Is the generator's goal mapping right?** `checks` may name several goals, and the generator
+says which of its questions bear on which. Ask it of each goal in turn: would a question the
+generator maps to this goal, answered in full, establish this goal's criterion? A mapping that
+claims a goal its questions only brush against certifies that goal too easily; one that leaves
+out a goal its questions plainly test leaves it unmet for no reason.
+
+**If the activity's bank folder `tasks/<activity-id>/` holds a scenario**, read one and ask
+whether it would test what the generator claims. A generator whose text reads well and whose
+scenario tests something else is a finding against the generator, keyed to the entry. A
+`kind:` or `bank:` line on an older entry is retired; it is not a finding.
 
 ## 3. Look at the menu as a whole
 

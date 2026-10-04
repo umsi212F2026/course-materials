@@ -125,7 +125,8 @@ with the learner.
   neither do the words it serves; nothing is ever missing for those.
 
   study   live activities whose `serves` includes this goal and which are not checks
-  checks  live activities whose `checks` is this goal
+  checks  live activities whose `checks` names this goal, or whose bank holds a question
+          whose rubric `goal:` names it
   notes   authored by curation/critique, placed by the orchestrator. Usually empty. For deficiencies an empty cell can't
           express — most often that every check for this goal shares the same
           `doesn't show`, so the coverage is only apparent.
@@ -159,7 +160,7 @@ with the learner.
 
 <!--
   One heading per activity, one bullet per field — not a table row. Several values run to
-  a sentence or more, which table cells can't hold, and check activities carry five fields
+  a sentence or more, which table cells can't hold, and check activities carry four fields
   the others don't, which a table would render as columns of empty cells indistinguishable
   from unfilled ones. The Goals block above is a table for the opposite reasons: short
   values, same shape every row.
@@ -231,45 +232,58 @@ with the learner.
 
   ONLY FOR ACTIVITIES THAT CAN FINISH A GOAL
 
-  checks          the one goal id an unaided attempt at this would settle. Usually a single
-                  id, and always a subset of `serves` — an activity can help with several
-                  goals while only settling one. The pass condition is that goal's criterion
-                  from the table above, applied as written; don't restate it here or the two
-                  will drift.
+  checks          the goals an unaided attempt at this activity's questions can establish:
+                  one id or several, comma-separated, and always a subset of `serves`. An
+                  activity can help with several goals while settling fewer. This is the
+                  generator's declaration of what its questions bear on; in a bank, each
+                  question's rubric `goal:` line narrows it to the ones that question bears
+                  on. The pass condition is each goal's criterion from the table above,
+                  applied as written; don't restate it here or the two will drift.
 
                   Omit it when an unaided attempt still wouldn't establish the criterion,
-                  because the activity does part of the work itself — completing a partial
+                  because the activity does part of the work itself: completing a partial
                   instance doesn't show they could produce one from nothing. Such an
                   activity is worth having; it just can't finish anything.
 
-  kind            generator | bank | single instance
+  generator       the instruction for producing a fresh question: what varies, what is held
+                  fixed, how hard, and which of the goals in `checks` a question bears on.
+                  Every activity that sets questions has one. Precise enough to run, or to
+                  draft a bank from, without asking the curator anything. Where there is no
+                  bank the tutor runs it live, so every attempt is a new question.
 
-  generator       the instruction for producing a fresh instance: what to vary, what to
-                  hold constant, how hard. Precise enough to run without asking the curator
-                  anything. The default for anything recurring — it never runs out, and
-                  every attempt is a new item.
+  BANKS. An activity has a bank when tasks/<activity-id>/ exists; the folder is the whole
+  declaration, and the entry says nothing about it. Course topics have them, drafted from the
+  generator and reviewed by the instructor at curation; a student's own topic runs its
+  generators live. One file per scenario, with a twin under rubrics/:
 
-  bank            a set of ready items: `tasks/<folder>`, a numbered range in a book, a
-                  folder of real specimens. Say how many there are and how the tutor should
-                  pick — usually "any not yet used". The right choice when the items must be
-                  real, or when good ones take care to build and someone already built them.
-                  It can be exhausted, so say what to do when it runs low.
+      tasks/<activity-id>/<scenario-id>.md     the setup, then one `### <question-id>` per question
+      rubrics/<activity-id>/<scenario-id>.md   the key, then one `### <question-id>` per question
 
-                  SAY HOW AN ITEM IS NAMED, because "any not yet used" only works if used
-                  items can be told apart afterwards. Don't invent a scheme: the item already
-                  has a name. A folder of files is named by filename; a numbered range in a
-                  book by its number, which means something because this entry names the book.
-                  Whatever you say here is what the tutor puts after the slash in the label it
-                  passes to record-attempt.mjs — `<entry-id>/<item>` — and what a later
-                  session reads back from served.mjs to avoid re-serving.
+  A file's top part, before its first `###`, is shared by that scenario's questions; nothing is
+  shared across files. `main-bank` is the reserved scenario name for questions with no shared
+  setup. Scenario files are named for their content (`crumbs.md`), question ids are unique
+  within their scenario, and a question's label everywhere is its path,
+  `<activity-id>/<scenario-id>/<question-id>`. workflows/learn/tools/next-item.mjs serves from
+  banks, unseen questions first; workflows/learn/tools/survey.mjs reports a malformed bank, and
+  a bank folder with no entry here.
 
-                  A generator needs none of this — every instance is fresh, so there is
-                  nothing to have used up. A single instance is its own entry.
+  Each rubric question section carries:
 
-  single instance one item, `tasks/<file>` or a pointer to something real. Fine for a first
-                  attempt, weak thereafter: a goal comes back in review for months, and the
-                  same item on the third visit tests memory of that item rather than the
-                  goal. If a check activity has only one instance, say so in `doesn't show`.
+      goal:        ids from `checks`, comma-separated
+      answer:      what a complete answer says
+      credit:      what full and half credit mean. A question naming two or more goals lists
+                   one statement per goal, each starting `<goal-id>`: with the id in backticks
+      type:        free (the default) or mcq; an mcq's question ends in a numbered list and
+                   `answer` is the 1-based choice
+      move:        for a word's question, its move
+      tutor note:  optional; follow-ups for this one question, for the tutor only
+
+  What holds for every question stays in the entry here. A note about one scenario goes in its
+  key, and a note about one question in its `tutor note`.
+
+  RETIRED: `kind` and `bank`. An older entry may still carry `kind: generator | bank | single
+  instance` or a `bank: tasks/...` path; ignore both. What was a single authored instance is a
+  bank with one scenario, and if that is all a check has, say so in `doesn't show`.
 
   worked example  what to show at the first level of help: a solved instance, or an
                   instruction to work one live and narrate the decisions

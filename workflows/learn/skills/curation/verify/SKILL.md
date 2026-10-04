@@ -91,8 +91,13 @@ or bundles two capabilities, is `curation/critique`'s to re-check.
 Every live entry has `serves`, `supports`, `artifact`, `learner does`, `tutor role`,
 `tutor does`, `done when`, `offer as`.
 
-Every entry carrying `checks` also has `kind`, `worked example`, `doesn't show` — and if `kind`
-is a bank, says how many items and how to pick from it.
+Every entry carrying `checks` also has `worked example` and `doesn't show`, and a `generator`
+if it sets the learner questions.
+
+`kind` and `bank` are retired. An older entry may still carry `kind: bank` or a
+`bank: tasks/...` path; ignore both lines, and report neither as a finding nor as missing
+anything. Whether an activity has a bank is whether `tasks/<activity-id>/` exists, and checking
+that bank is not this pass's job.
 
 A field that's present but empty is missing. Say which.
 

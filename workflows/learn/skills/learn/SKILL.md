@@ -103,6 +103,11 @@ Nobody wrote a note saying so; the queue just still has them on it.
 learner is in front of you wanting to do something, and making them watch housekeeping is a bad
 trade for a slightly fuller menu.
 
+**Say it is a background run when you spawn it.** Curation run that way never drafts question
+banks and never waits for the instructor's review, even on a course topic: it writes activities
+only, and their generators run live until a reviewed bank arrives from the course. Banks are
+drafted only when the instructor runs curation on a course topic themselves.
+
 Mention it in a clause when you offer — "that one's being refilled, give it a few minutes" —
 and don't offer that topic until it's done.
 

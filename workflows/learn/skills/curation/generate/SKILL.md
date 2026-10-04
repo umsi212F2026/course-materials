@@ -86,6 +86,11 @@ entry by entry and stop — don't go looking for gaps you didn't create. The orc
 what comes back against what it handed you, and a revision that quietly does more makes the
 second check pass read a different file.
 
+On a course topic you may be called again with the same shape of input: the instructor's
+feedback on a generator, seen beside a sample scenario it produced. Work it exactly the same
+way, and touch only the generators it names. If a fix removes the cause of a `check note`,
+delete that note.
+
 - **Disagreeing is allowed.** Leave that entry alone and say why in your reply, rather than
   silently declining.
 - **Some findings resolve by recording rather than fixing.** An artifact you can't verify keeps
@@ -133,7 +138,8 @@ can't, or you're recalling a source rather than looking at it, say so in the ent
 `artifact: <thing> — NOT VERIFIED, tutor should check before offering`. An honestly flagged
 guess is usable. A confident wrong one is worse than nothing.
 
-The same applies to a bank: "exercises 3.1–3.20" is a claim about a book. Check it.
+The same applies to a generator that picks from real items: "exercises 3.1 to 3.20" is a claim
+about a book. Check it.
 
 ## Over-generate, don't choose
 
@@ -189,29 +195,32 @@ nodding, it isn't an activity yet.
 
 ## Check activities in particular
 
-An activity carrying `checks` is adjudicated against exactly one goal's criterion, named in
-`checks`. Read that criterion and ask: _would passing this actually establish it?_ It is easy
-to write an engaging exercise about the subject that tests something adjacent — and neither you
-nor the tutor will notice, because it will simply certify the wrong thing.
+An activity carrying `checks` is adjudicated against the criteria of the goals named there,
+each separately. Read each criterion and ask: _would passing this actually establish it?_ It is
+easy to write an engaging exercise about the subject that tests something adjacent, and neither
+you nor the tutor will notice, because it will simply certify the wrong thing.
 
-Prefer **generators**. A goal comes back in review for months after it's first met, so anything
-that recurs benefits from fresh instances. A generator must be precise enough for the tutor to
-run without asking you anything: what varies, what stays fixed, how hard.
+**Every activity with questions gets a generator**, and it says four things:
 
-Use a **bank** when items must be real, or when good ones take care to build and someone
-already built them. Say how many and how to pick.
+- **what varies** from one question to the next;
+- **what is fixed**, so every question tests the same capability;
+- **how hard**;
+- **which goals its questions bear on**, which is `checks`, and how a question maps onto them
+  when there is more than one: which kind of question bears on which goal, or on several.
 
-As a last resort, use a **single instance**. If it's just too hard to have multiple similar
-tasks that demonstrate a capability, the fallback is to have the student repeat the same task.
-This is the least desirable option because the student can memorize the solution, and should be
-avoided if at all possible.
+There is no `kind` to choose. A goal comes back in review for months after it's first met, so
+fresh questions matter, and a generator is what supplies them. On a student's own topic the
+tutor runs it live. On a course topic curation also drafts a bank from it, with an agent that
+has only your text to go on, and the instructor reviews that bank.
 
-**Exercises you write yourself go in `tasks/`, not in `activities.md`.** A bank you authored is
-a folder there; a single instance you authored is a file there. The entry points at it.
+**So it must be precise enough to draft a bank from without asking you anything.** If two
+drafters reading it would produce questions testing different things, or one of them would have
+to guess how hard, it isn't finished. A checker reads it the same way.
 
-Nothing else goes there. A bank that already exists — a numbered exercise range, a folder of
-real specimens — is referenced where it lives, and a **generator has no items at all**: the
-tutor produces them when it runs the activity, which is the whole point of preferring one.
+When the questions must be real (a numbered exercise range, a folder of real specimens), the
+generator picks rather than invents: it names where they live and how to choose among them.
+Nothing you write goes under `tasks/` or `rubrics/`; banks are drafted later, from the
+generator, on the course path only.
 
 Fill in `doesn't show` honestly. It's what lets the tutor notice a goal is covered only by
 tasks that all miss the same thing, and it's the one field where an admission costs you nothing
@@ -287,7 +296,8 @@ Every Coverage row is complete or blocked — including `orientation` — and:
   do before being checked is possible.
 - Every `serves` and `checks` id **exists in the Goals table**, or is `all`; a `serves` item may
   also be `group <name>`, naming a group some goal is in.
-- Every activity carrying `checks` **names a `kind`**, and any bank says how to pick from it.
+- Every activity with questions **has a generator** saying what varies, what is fixed, how
+  hard, and which of its `checks` goals a question bears on.
 - Every artifact is **verified, or explicitly flagged as unverified**.
 
 `curation/verify` checks all of this and more — required fields, the Coverage table matching
