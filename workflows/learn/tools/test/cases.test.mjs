@@ -160,3 +160,59 @@ test('a question on a goal with cases that lists its cases raises nothing', () =
   const found = bankTopic(WITH, '### q1\n\n- **goal:** c-a\n- **answer:** X.\n- **cases:** one, two\n');
   assert.ok(!found.some((p) => p.includes('a-x/s1/q1')), found.join('\n'));
 });
+
+// --- recording cases ----------------------------------------------------------------------
+import { readFileSync } from 'node:fs';
+import { run } from './helpers.mjs';
+
+const AXES = '{"unaided":"yes","criterion":"met"}';
+const withCases = () =>
+  makeTopic({ goals: CAP_GOAL('c-a', block([['one', 'first'], ['two', 'second']])) + '\n' + CAP_GOAL('c-b') });
+const lastAttempt = (dir) =>
+  JSON.parse(readFileSync(join(dir, 'evidence', 'attempts.jsonl'), 'utf8').trim().split('\n').pop());
+
+test('record-attempt stores --cases on the attempt', () => {
+  const dir = withCases();
+  const r = run('record-attempt.mjs', [dir, 'c-a', 'a-x/s1/q1', '--axes', AXES, '--cases', 'one,two']);
+  assert.equal(r.code, 0, r.stderr);
+  assert.deepEqual(lastAttempt(dir).cases, ['one', 'two']);
+});
+
+test('record-attempt refuses an undeclared case, naming the goal\'s cases', () => {
+  const r = run('record-attempt.mjs', [withCases(), 'c-a', 'l', '--axes', AXES, '--cases', 'nope']);
+  assert.notEqual(r.code, 0);
+  assert.match(r.stderr, /nope/);
+  assert.match(r.stderr, /one, two/);
+});
+
+test('record-attempt refuses --cases on a goal that has none', () => {
+  const r = run('record-attempt.mjs', [withCases(), 'c-b', 'l', '--axes', AXES, '--cases', 'one']);
+  assert.notEqual(r.code, 0);
+  assert.match(r.stderr, /no cases/);
+});
+
+test('a ruled attempt on a goal with cases needs --cases', () => {
+  const r = run('record-attempt.mjs', [withCases(), 'c-a', 'l', '--axes', AXES]);
+  assert.notEqual(r.code, 0);
+  assert.match(r.stderr, /one, two/);
+});
+
+test('an --outcome needs no --cases, and a goal without cases records as before', () => {
+  const dir = withCases();
+  assert.equal(run('record-attempt.mjs', [dir, 'c-a', 'l', '--outcome', 'declared']).code, 0);
+  assert.equal(run('record-attempt.mjs', [dir, 'c-b', 'l', '--axes', AXES]).code, 0);
+  assert.ok(!('cases' in lastAttempt(dir)));
+});
+
+test('next-item prints the cases a question exercises', () => {
+  const dir = makeTopic({
+    goals: CAP_GOAL('c-a', block([['one', 'first'], ['two', 'second']])),
+    activities: '### a-x\n- **checks:** c-a\n',
+  });
+  mkdirSync(join(dir, 'tasks/a-x'), { recursive: true });
+  mkdirSync(join(dir, 'rubrics/a-x'), { recursive: true });
+  writeFileSync(join(dir, 'tasks/a-x/s1.md'), '### q1\n\nName it.\n');
+  writeFileSync(join(dir, 'rubrics/a-x/s1.md'), '### q1\n\n- **goal:** c-a\n- **answer:** X.\n- **cases:** one, two\n');
+  const r = run('next-item.mjs', [dir, '--goal', 'c-a']);
+  assert.match(r.stdout, /tags: none\ncases: c-a: one, two\n/);
+});

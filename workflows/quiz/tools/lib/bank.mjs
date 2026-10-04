@@ -104,11 +104,18 @@ function fields(body) {
 // A question body is prose, optionally followed by a numbered list that is the mcq's choices.
 // Markdown wraps prose at the column, and a hard newline inside a sentence would reach the
 // student verbatim. Single newlines become spaces; blank lines stay, so a two-paragraph question
-// keeps its break.
+// keeps its break. A LINE STARTING `>` KEEPS ITS NEWLINE, because a blockquote is lines the author
+// broke on purpose (a quoted exchange, a snippet), and joining them made one run-on line.
 function unwrap(text) {
   return text
     .split(/\n\s*\n/)
-    .map((para) => para.split('\n').map((l) => l.trim()).join(' ').trim())
+    .map((para) =>
+      para
+        .split('\n')
+        .map((l) => l.trim())
+        .reduce((out, l, i) => out + (i === 0 ? '' : l.startsWith('>') ? '\n' : ' ') + l, '')
+        .trim()
+    )
     .join('\n\n');
 }
 

@@ -246,11 +246,12 @@ node workflows/learn/tools/record-attempt.mjs <topic> <goal> "<label>" --tags <t
 ```
 
 Take all five straight off the row from step 6: `row.topic`, `row.goal`, `row.label`,
-`row.axes` as it stands, and `row.tags` where the row has one.
+`row.axes` as it stands, and `row.tags` where the row has one. Add `--cases <row.cases, comma-joined>`
+when `row.cases` is not empty: a goal with cases refuses a ruled attempt without it.
 
 **A row with a `per_goal` examined several goals, and its `row.goal` is null.** Make one call
 for each entry in `per_goal`, with that entry's `goal` and `axes` in place of the row's and the
-same `row.topic`, `row.label` and `row.tags` on every one: the tags belong to the question, not
+same `row.topic`, `row.label` and `row.tags` on every one (but each entry's own `cases`): the tags belong to the question, not
 to one of its goals. Each goal is met or not on its own ruling, which is the whole reason the
 question was graded per goal.
 

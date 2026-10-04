@@ -76,6 +76,10 @@ const lines = [
   `label: ${item.label}`,
   `goals: ${item.goals.join(', ')}`,
   `tags: ${item.tags?.length ? item.tags.join(', ') : 'none'}`,
+  // ONE LINE PER GOAL THE QUESTION GIVES CASES FOR, so the tutor passes them to record-attempt --cases.
+  ...Object.entries(item.cases ?? {})
+    .filter(([, c]) => c.length)
+    .map(([g, c]) => `cases: ${g}: ${c.join(', ')}`),
   `repeat: ${repeat ? `yes (last served ${lastServed.slice(0, 10)})` : 'no'}`,
   '--- learner sees ---',
   item.prompt,

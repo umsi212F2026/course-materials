@@ -215,3 +215,12 @@ test('a per-goal entry for a goal the question does not name is a problem', () =
   const { problems } = readBank(caseBank('c-a', 'c-a: x; c-z: y'));
   assert.ok(problems.some((p) => p.includes('a-x/s1/q1') && p.includes('c-z') && /does not name/.test(p)), problems.join('\n'));
 });
+
+test("a blockquote in a question keeps its lines; ordinary wrapping still joins", () => {
+  const dir = source({
+    "tasks/a-x/s.md": "### q1\n\nShe wrote:\n\n> first line\n> second line\n\nAnd then it\nwrapped here.\n",
+    "rubrics/a-x/s.md": "### q1\n\n- **answer:** X.\n",
+  });
+  const { items } = readFolderBanks(dir);
+  assert.equal(items[0].prompt, "She wrote:\n\n> first line\n> second line\n\nAnd then it wrapped here.");
+});
