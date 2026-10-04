@@ -61,10 +61,12 @@ been merged or pushed.
    a web page the student knows whether they got help, so there is little room for
    self-deception. Bounded change (skill text); design in chat, then implement.
 5. ~~**Sequenced sets of goals.**~~ Done, `9332b07`, `f7beb10`, `2f20d5b` and `6b023e3` (which
-   taught goal-setting and study the sequence), and `3e8b2e6` (the final fix wave). Spec `specs/2026-10-04-goal-sequence-design.md`. A
-   `## Sequence` section in goals.md, `next-goal.mjs` for study, survey problems for an item
-   that matches nothing, a goal in two sets and a goal in none. Migration is under "Actions on
-   the learning-topics repository".
+   taught goal-setting and study the sequence), `3e8b2e6` and `f9bade0` (the final fix wave).
+   Spec `specs/2026-10-04-goal-sequence-design.md`. A `## Sequence` section above `## Goals`,
+   `next-goal.mjs` for study (`--skip` for goals set aside in the sitting; goals with nothing
+   live are never picked), survey problems for an item that matches nothing, a goal in two
+   sets, a goal in none, and an entry stranded inside the section. Migration is under "Actions
+   on the learning-topics repository".
 6. **Progress view.** Metacognitive information for the student: the sequence of sets from item 5
    drawn as columns, with checkmarks and other marks for attempts and completions (and, from
    item 2, deferred and done-elsewhere), shown at the start of a session and again after each
@@ -102,7 +104,7 @@ been merged or pushed.
   above `## Goals`), and remove the per-goal `origin: course` stamps it makes redundant. Until
   then the per-goal stamps keep working. Check with `survey.mjs`: each topic's `origin` should
   read `course` and no problems should appear.
-- Add a `## Sequence` section to each course topic's `goals.md`, after `## Goals`: a short
+- Add a `## Sequence` section to each course topic's `goals.md`, just above `## Goals`: a short
   default (`1. orientation`, `2. vocabulary`, `3. capabilities`), adjusted per topic where a
   capability is basic enough to come with the words, or parts build on each other. Until then
   survey reports `sequence: not decided yet` and the default order applies, which is not a
