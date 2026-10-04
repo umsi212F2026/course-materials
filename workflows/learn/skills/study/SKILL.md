@@ -293,7 +293,9 @@ Any other activity run live returns no tags, so omit the flag there too.
 `cases` slot needs it on every call with `--axes`; `record-attempt.mjs` refuses the call without
 it, and refuses a case the goal does not declare or `--cases` on a goal with none. **For a bank
 question, pass the `cases: <goal>: x, y` line the picker printed for that goal**, as
-`--cases x,y`. For a question set live, the generator says which cases each question shape
+`--cases x,y`. A bank question that names a goal with cases but prints no `cases:` line for it
+was written before the cases were, and counts as exercising all of them, so pass every case the
+goal declares. For a question set live, the generator says which cases each question shape
 carries; state the ones this question exercised. An `--outcome` call (`declared`, `elsewhere`,
 `abandoned`) needs none. One ruling covers every case the question lists: a pass passes them
 all, a miss passes none.
@@ -324,8 +326,7 @@ couldn't tell — that's `unclear`. Two cases, and both are ordinary:
   part the criterion examines, say. Record `{"unaided":"yes","criterion":"unchecked"}`. It moves
   no date and establishes nothing, which is exactly right.
 
-Both are ruled attempts in `record-attempt.mjs`'s eyes, so a goal with cases still needs
-`--cases` on them.
+Both carry `--axes`, so on a goal with cases both need `--cases` as well.
 
 So **whether to invoke an adjudicator is your judgement, not a rule.** Invoke one when the
 attempt might establish something. `unchecked` is the honest record of the times it wouldn't.

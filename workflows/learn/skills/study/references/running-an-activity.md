@@ -45,21 +45,25 @@ too: everything from `--- key ---` on is the grading text, for the judge and nev
 learner, and any `--- tutor note ---` is for you. A learner who carries on gets
 `--after <last label>`, which keeps them in the same scenario where there is more of it. Keep
 the label, the `tags:` line and any `cases:` lines: they go to `record-attempt.mjs` as they are,
-each goal's cases as its `--cases`. The `--key` text also goes to the judge as the question's
+each goal's cases as its `--cases`. A goal with cases that has no `cases:` line is named by a
+question written before its cases were, which counts as exercising them all: pass every case
+the goal declares. The `--key` text also goes to the judge as the question's
 rubric, whatever the number of goals. A `goals:` line that is empty marks practice: run it,
 record nothing.
 
 **Within a scenario, questions come in order**, and the picker skips one that is no longer
 needed, because every goal it names is met or has already passed the cases it lists. While the
 goal is unmet it never serves a skipped question, so a later question may give an earlier one's
-answer away. A line `served first: keeps <activity>/<scenario> in order` means this goal's next
-question waits behind an earlier one in its scenario that is still needed, so that one is served
-instead, and it may name a different goal. Run it and record it like any other question, one
-attempt per goal it names.
+answer away. A line `served first: keeps <activity>/<scenario> in order` means every question
+you asked for waits behind an earlier one in its scenario that is still needed, so that one is
+served instead, and it may name a different goal. Run it and record it like any other question,
+one attempt per goal it names.
 
-**What the picker prefers.** In study, a question on a case of the goal not yet passed. In
-review, with `--review`, the case passed longest ago, so successive reviews rotate through
-them. You don't steer either, and you don't tell the learner which cases are left.
+**What the picker prefers.** With `--goal`, in study, a question on a case of that goal not yet
+passed; in review, with `--review`, the case passed longest ago, so successive reviews rotate
+through them. With `--activity`, study serves only questions still needed, so one carrying an
+unpassed case or an unmet goal, until none is left and repeats begin. You don't steer any of
+this, and you don't tell the learner which cases are left.
 
 **Exit code 2 means nothing is banked for that activity**, and so does there being no
 `tasks/<activity-id>/` folder. Then run the entry's generator live, as above. Where the goal has

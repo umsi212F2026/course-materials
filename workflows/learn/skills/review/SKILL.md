@@ -132,13 +132,13 @@ argument.
    ```
 
    **Always with `--review`.** Without it the picker is studying: it keeps scenario order, and
-   may serve a question on another goal first to keep it, which a review has no use for. Show the learner only
-   what follows `--- learner sees ---`. It prefers a question they have never been served, then
-   the one served longest ago, so you need not filter by `served`. For a goal with cases it
-   prefers first a question on the case passed longest ago, so successive reviews rotate through
-   them; keep its `cases:` lines for step 4. Run
-   it with `--key` to read the grading text, and keep that from them. A question may credit
-   other goals as well; that is fine, and step 3 says how it is ruled.
+   may serve a question on another goal first to keep it, which a review has no use for. Show
+   the learner only what follows `--- learner sees ---`. It prefers a question they have never
+   been served, then the one served longest ago, so you need not filter by `served`. For a goal
+   with cases it prefers first a question on the case passed longest ago, so successive reviews
+   rotate through them; keep its `cases:` lines for step 4. Run it with `--key` to read the
+   grading text, and keep that from them. A question may credit other goals as well; that is
+   fine, and step 3 says how it is ruled.
 
    **Exit code 2 means no bank question names this goal**, and then the task comes from the
    goal's activity, run live:
@@ -233,6 +233,8 @@ argument.
    `none`, or `production` or `reception` for a vocabulary move set live, and nothing otherwise.
    **A goal with cases also takes `--cases`**, the picker's `cases: <goal>: x, y` line for that
    goal as `--cases x,y`, or for a question set live the cases its generator says it carries.
+   A bank question printing no `cases:` line for such a goal predates its cases and counts as
+   exercising all of them, so pass every case the goal declares.
    `record-attempt.mjs` refuses a ruled attempt on such a goal without it.
 
    **A question ruled against several goals is one call per goal**, each with its own `--axes`
