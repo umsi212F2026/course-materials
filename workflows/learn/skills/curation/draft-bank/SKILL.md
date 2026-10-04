@@ -176,9 +176,9 @@ on another's answer to be answered, which a learner who skipped it never saw.
 **The learner's text states the task, never the scoring.** Say what to do ("name every gap and
 every mismatch, or say there are none"), not what full credit requires. A criterion's guard, such
 as "and nothing that isn't one" or "name nothing the terms don't support", belongs in the rubric:
-written into the setup or the question, it tells the learner which trap a case sets. Nor does a
-setup tell the learner what to leave out. Something outside the goal is simply absent from the
-scenario, and how to rule on a learner who raises it anyway goes in the key.
+written into the setup or the question, it tells the learner which trap a case sets. A setup may
+say what the scenario contains and that something is outside it ("the plans below leave the
+database out"), but how to rule on a learner who raises it anyway goes in the key.
 
 **One ruling covers a question's cases.** A pass passes every case the question lists and a
 miss passes none. Where a learner could get one case right and another wrong, write separate
