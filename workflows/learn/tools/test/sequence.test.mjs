@@ -143,10 +143,12 @@ test('an entry written inside the Sequence section is reported, above Goals or b
   assert.ok(survey(topic([word('w-a'), CAP_GOAL('c-a')], seq)).problems.includes(msg));
 });
 
-test('a group or slug listed in two sets: the first wins, and no problem is reported', () => {
+test('a group or slug listed in two sets: the first wins, and it is reported like a goal id', () => {
   const dir = topic([word('w-a'), CAP_GOAL('c-p1', CAP)], '1. vocabulary, weigh-hosting-plans\n2. vocabulary, weigh-hosting-plans');
   assert.deepEqual(setsOf(dir), [['w-a', 'c-p1'], []]);
-  assert.deepEqual(survey(dir).problems.filter((p) => /equence|no set/.test(p)), []);
+  const p = survey(dir).problems;
+  assert.ok(p.includes('Sequence lists vocabulary in two sets'), p.join('\n'));
+  assert.ok(p.includes('Sequence lists weigh-hosting-plans in two sets'), p.join('\n'));
 });
 
 test('a topic built from the real template has a decided three-set sequence and one Sequence heading', () => {

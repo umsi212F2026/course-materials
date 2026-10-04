@@ -55,7 +55,8 @@ origin header and `migrate-words.mjs` (a queue action on the learning-topics rep
 ## Survey
 
 - **Problems:** a Sequence item that matches no group, capability slug or goal id (the three
-  standard groups are always valid, even while empty); a goal id listed in two sets; a goal that
+  standard groups are always valid, even while empty); any item (goal id, slug or group) listed in
+  two sets; a goal that
   lands in no set; a `###` entry written inside the Sequence section, where it is not read as a
   goal.
 - **JSON** gains `sequence`: `{ decided: boolean, sets: [{ goals: [{ id, state }] }], current }`,

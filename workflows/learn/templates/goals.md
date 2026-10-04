@@ -99,12 +99,13 @@
   THE MOST SPECIFIC MENTION WINS. A goal goes in the set that lists its id; failing that, the
   set that lists its capability slug; failing that, the first set that lists its group. So a
   capability named by id can sit with the words, and a word named by id can come last. A word
-  added mid-topic lands wherever its group is listed, with no edit here. A slug or a group
-  listed in two sets counts in the first, and nothing is reported; a goal id in two sets is.
+  added mid-topic lands wherever its group is listed, with no edit here. Any item listed in
+  two sets is reported: a goal can't be in two places, and a second mention of a slug or a
+  group can never place anything, since the first already has.
 
   EVERY GOAL MUST LAND IN A SET. There is no catch-all, and a goal named nowhere is a problem
-  survey.mjs reports, as it does an item that matches nothing and a goal id listed in two
-  sets. The three standard groups, orientation, vocabulary and capabilities, may stay listed
+  survey.mjs reports, as it does an item that matches nothing and an item listed in two sets.
+  The three standard groups, orientation, vocabulary and capabilities, may stay listed
   while nothing is in them yet; any other name has to match a group, slug or goal. A topic
   with no Sequence section at all is a decision not yet made, not a problem: it is worked in
   the order orientation, vocabulary, capabilities, then any other group, until goal-setting

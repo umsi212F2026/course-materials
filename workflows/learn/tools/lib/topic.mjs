@@ -175,8 +175,9 @@ export function readGoals(dir) {
 // false. The order used meanwhile is the three standard groups, then any other in order of first
 // appearance. A topic that has the section must place every goal: there is no catch-all.
 //
-// A GROUP OR SLUG LISTED IN TWO SETS: THE FIRST WINS (findIndex below), and no problem is
-// reported. Only a goal id listed twice is, since that one is plainly a mistake.
+// ANY ITEM LISTED IN TWO SETS IS REPORTED, whether a goal id, a slug or a group. For a goal id
+// it is a contradiction; for a slug or a group the first mention wins (findIndex below), so
+// the second can never place anything and is dead text, most likely a slip.
 //
 // THE THREE STANDARD GROUPS ARE ALWAYS VALID ITEMS, even with no goal in them yet, because the
 // template's default lists all three before a word or a capability exists. Any other name must
@@ -212,12 +213,10 @@ export function readSequence(dir, goals) {
   const names = new Set();
   for (const g of goals) for (const n of [g.id, g.capability, g.group]) if (n) names.add(n);
   for (const n of DEFAULT_SEQUENCE) names.add(n);
-  const ids = new Set(goals.map((g) => g.id));
   const listed = new Map();
   lines.forEach((items, i) => {
     for (const item of items) {
       if (!names.has(item)) problems.push(`Sequence names ${item}, which is no group, capability or goal`);
-      if (!ids.has(item)) continue;
       if (!listed.has(item)) listed.set(item, new Set());
       listed.get(item).add(i);
     }
