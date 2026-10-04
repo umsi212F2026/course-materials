@@ -40,6 +40,7 @@ been merged or pushed.
 | 8 | Personalized problem-set questions | deferred (spec B not written) |
 | 9 | Every activity checkable; recuration of each topic | to do (design first) |
 | 10 | APPLY and the student's own work, within personalization | after the release (with item 8) |
+| 11 | Criteria with named cases, each to be shown | design in progress (needed for today's curation) |
 
 Outside this branch, done 2026-10-04 and merged locally but not pushed: this branch into
 course-materials `main`; the six course topics, migrated on learning-topics branch
@@ -199,6 +200,22 @@ merged into main again before that push.
     - the quiz: an APPLY answer cannot be judged without the student's work, so either the quiz
       path drops APPLY questions or the grader judges only whether the instance is genuine;
     - how "theirs" is checked: their assignments repository, git log, or problem-set repo.
+11. **Criteria with named cases.** Raised 2026-10-04 while curating deploy-config-2026-10.
+    Under `bar: one unaided pass`, one full-credit unaided answer to any question naming a goal
+    meets it, so for a criterion joining several cases ("and", "including", or two-sided like
+    "decline the risky, allow the safe") the easiest case certifies the whole goal. Examples in
+    that topic: `c-spot-secret`, `c-judge-secret-request`, `c-trace-setting-value`. Rejected:
+    splitting each case into its own goal under a `capability:` slug (multiplies goals, odd
+    guard-side goals in the progress view, more review load). Starting proposal, to be settled
+    in design: a goal may name its cases in goals.md; a rubric question says which cases it
+    exercises, per goal; an attempt records them; the goal is met when each case has an unaided
+    pass; survey reports undefined, malformed or unexercised cases. A goal with no cases and a
+    rubric with no `cases:` line behave exactly as today. Folded in from the same curation, as
+    rules for the skills: every activity outside the orientation is checkable (item 9); every
+    banked question names a goal; giveaways within a scenario are allowed if they come after
+    the question they give away; one scenario may carry questions across capabilities;
+    `curation/SKILL.md`'s two statements about key-file study banks are reconciled;
+    `next-item.mjs` keeps line structure (a multi-line blockquote currently runs together).
 
 ## Actions on the learning-topics repository (outside this branch)
 
