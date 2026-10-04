@@ -14,6 +14,7 @@ import { join } from 'node:path';
 import { applySlots, ORIGINS, isRequired, DEFAULT_GROUP } from './slots.mjs';
 import { met, describeAttempts } from './bars.mjs';
 import { readStatus, foldStatus } from './status.mjs';
+import { readFolderBanks } from '../../../quiz/tools/lib/bank.mjs';
 
 // --- what a log line looks like ----------------------------------------------
 // One JSON object per line in evidence/attempts.jsonl, appended and never rewritten.
@@ -490,6 +491,22 @@ export function idProblems(dir, status = statusOf(dir)) {
       for (const d of readdirSync(tasks, { withFileTypes: true }))
         if (d.isDirectory() && !entered.has(d.name))
           found.push(`tasks/${d.name}/ is a bank with no entry in activities.md`);
+  }
+
+  // FOLDER BANKS get a mechanical floor for curation: what readFolderBanks cannot parse, plus
+  // the two checks that need goals.md. A question naming a goal that isn't there can never be
+  // credited, and a multi-goal question whose credit has no `<id>`: statement for one of its
+  // goals leaves the grader nothing to judge that goal by. mcq has no credit text, so it is
+  // exempt from the second. Single-file banks are untouched.
+  const banks = readFolderBanks(dir);
+  found.push(...banks.problems);
+  for (const item of banks.items) {
+    for (const id of item.goals)
+      if (!seen.has(id)) found.push(`${item.label} names goal ${id}, which is not in goals.md`);
+    if (item.goals.length < 2 || item.type === 'mcq') continue;
+    for (const id of item.goals)
+      if (!item.rubric.includes(`\`${id}\`:`))
+        found.push(`${item.label} names goals ${item.goals.join(', ')} but its credit has no statement for ${id}`);
   }
 
   // The content files and the lifecycle queue can diverge, and the mitigation is that the
