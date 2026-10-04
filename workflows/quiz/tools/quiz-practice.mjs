@@ -450,7 +450,7 @@ function main() {
   // 127.0.0.1 rather than every interface: these are your own answers, on your own machine.
   server.listen(port, "127.0.0.1", () => {
     console.log(`${source}: ${items.length} questions`);
-    for (const s of strata) console.log(`  ${s.drawn} from ${s.name.split("/").pop()}`);
+    for (const s of strata) console.log(`  ${s.drawn} from ${(s.bank ?? s.name).split("/").pop()}`);
     console.log(`\n  http://127.0.0.1:${port}\n`);
     console.log(`Answer them there. This waits until you submit.`);
   });

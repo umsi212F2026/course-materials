@@ -31,7 +31,8 @@
 import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { resolve, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { readPoolSources, applyPool } from "./lib/bank.mjs";
+import { readPoolSources, applyPool, recordLabel } from "./lib/bank.mjs";
+import { readLog, readGoals } from "../../learn/tools/lib/topic.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 // The workspace root: the folder holding course-materials, learning-topics and assignments.
@@ -87,25 +88,87 @@ export function topicDir(pool, item, root) {
   return at === -1 || !parts[at + 1] ? null : join(root, "learning-topics", parts[at + 1]);
 }
 
+/** Drop every item that names a goal which is not a course goal; one problem per dropped item.
+ *
+ *  ONLY COURSE GOALS ARE EXAMINED. A learner's own goal is theirs to set and theirs to meet,
+ *  and a quiz that drew on it would grade something the course never asked for. The practice
+ *  quiz applies this, and the instructor's bake is told to (see CONTRACT.md), so the two stay
+ *  the same draw.
+ *
+ *  A QUESTION NAMING ANY GOAL THAT ISN'T COURSE IS DROPPED, not just one naming only such goals:
+ *  a two-goal question graded per goal would otherwise score a goal the quiz must not examine.
+ *  A question naming no goal is kept, and so is one with no topic: an assignment's follow-up
+ *  has nobody's goals to check it against. A goal id the topic does not have reads as not
+ *  course, since nothing says the course set it. */
+export function courseOnly(items) {
+  const origins = new Map();
+  const originOf = (topic, goal) => {
+    if (!origins.has(topic)) {
+      origins.set(topic, new Map(readGoals(topic).goals.map((g) => [g.id, g.origin])));
+    }
+    return origins.get(topic).get(goal);
+  };
+  const kept = [];
+  const problems = [];
+  for (const it of items) {
+    const named = it.goals ?? (it.goal ? [it.goal] : []);
+    const bad = it.topic ? named.find((g) => originOf(it.topic, g) !== "course") : undefined;
+    if (bad === undefined) kept.push(it);
+    else problems.push(`${it.id} dropped: ${bad} is not a course goal`);
+  }
+  return { items: kept, problems };
+}
+
 /** One practice quiz from one session's pool: each stratum contributes what the pool asks for.
  *
  *  This is the instructor's bake with the roster taken out and the seed left random. The strata
  *  come from applyPool, which is the same function the bake uses, so "three about reading a
- *  diagram and one about lanes" is as much a guarantee here as it is in class. */
-export function drawPractice(pool, root, { seed } = {}) {
+ *  diagram and one about lanes" is as much a guarantee here as it is in class.
+ *
+ *  UNSEEN FIRST. Within a stratum the seeded shuffle still happens, then a stable sort by when
+ *  this student last attempted each question puts never-seen first and then the oldest, so the
+ *  shuffle only breaks ties. A student who has seen every question in a stratum is still drawn
+ *  for, least recently seen first: a short stratum must not run dry because it was practised.
+ *  The log is the topic's own (the label a question is recorded under is `recordLabel`), so an
+ *  item with no topic has no history and sorts as unseen. `preferUnseen: false` is today's
+ *  plain random draw. */
+export function drawPractice(pool, root, { seed, preferUnseen = true } = {}) {
   const bank = readPoolSources(pool, root);
   const { strata, problems } = applyPool(bank, pool);
   const next = rng(seed ?? `${Date.now()}:${Math.random()}`);
 
+  // The topic travels with the item for the same reason the goal does: what a practice quiz
+  // leaves behind is an attempt in a topic's log, and the two together are the whole address
+  // of where it goes. The instructor's bake needs neither and does not carry them.
+  const withTopic = strata.map((s) => ({ ...s, items: s.items.map((it) => ({ ...it, topic: topicDir(pool, it, root) })) }));
+  const course = courseOnly(withTopic.flatMap((s) => s.items));
+  const keep = new Set(course.items.map((it) => it.id));
+  // An item sitting in two strata would be reported twice; once says it.
+  problems.push(...new Set(course.problems));
+
+  const lastSeen = new Map();
+  const seenAt = (it) => {
+    if (!it.topic) return "";
+    if (!lastSeen.has(it.topic)) {
+      const latest = new Map();
+      for (const e of readLog(it.topic)) {
+        if (e.label && e.at && e.at > (latest.get(e.label) ?? "")) latest.set(e.label, e.at);
+      }
+      lastSeen.set(it.topic, latest);
+    }
+    return lastSeen.get(it.topic).get(recordLabel(it)) ?? "";
+  };
+
   const items = [];
   const shape = [];
-  for (const s of strata) {
-    const drawn = pick(s.items, Math.min(s.take, s.items.length), next);
-    shape.push({ name: s.name, take: s.take, drawn: drawn.length });
-    // The topic travels with the item for the same reason the goal does: what a practice quiz
-    // leaves behind is an attempt in a topic's log, and the two together are the whole address
-    // of where it goes. The instructor's bake needs neither and does not carry them.
-    items.push(...drawn.map((it) => ({ ...it, topic: topicDir(pool, it, root) })));
+  for (const s of withTopic) {
+    const pickable = s.items.filter((it) => keep.has(it.id));
+    const count = Math.min(s.take, pickable.length);
+    let drawn = pick(pickable, pickable.length, next);
+    if (preferUnseen) drawn = drawn.map((it) => [seenAt(it), it]).sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0)).map(([, it]) => it);
+    drawn = drawn.slice(0, count);
+    shape.push({ name: s.name, take: s.take, drawn: drawn.length, ...(s.bank ? { bank: s.bank } : {}) });
+    items.push(...drawn);
   }
 
   // WHAT WAS ASKED FOR IS THE POOL'S OWN COUNTS, NOT WHAT SURVIVED, and the difference is the

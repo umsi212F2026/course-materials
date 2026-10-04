@@ -515,7 +515,7 @@ export function applyPool(bank, pool) {
       if (available.length < take) {
         problems.push(`pool draws ${take} from ${name}, which has only ${available.length} available`);
       }
-      strata.push({ name, take, items: available });
+      strata.push({ name, take, items: available, bank: owner });
     }
     // EXHAUSTIVE ONLY IN THE SINGLE-SOURCE FORM. With one topic, a bank file the pool never
     // mentions is drift: the pool was written against a topic that has since grown a file. With
