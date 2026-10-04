@@ -148,7 +148,7 @@ test('study on a met goal serves a repeat, as before', () => {
   const q2 = withCases('a-x/s2/q1', { g1: ['hard'] });
   const log = [{ ...passed(['easy', 'hard'], '2026-10-02T00:00:00Z'), label: 'a-x/s2/q1' }, seen('a-x/s1/q1', '2026-10-03T00:00:00Z')];
   const needed = (it) => stillNeeded(it, new Map([['g1', CG]]), new Map([['g1', log]]));
-  const r = pick([q1, q2], log, { goal: 'g1', needed, goalMet: true });
+  const r = pick([q1, q2], log, { goal: 'g1', needed, done: () => true });
   assert.equal(r.item.label, 'a-x/s2/q1');
   assert.equal(r.repeat, true);
 });
@@ -157,8 +157,68 @@ test('--activity with every goal met serves as before; with one needed, only the
   const q1 = withCases('a-x/s1/q1', { g1: ['easy'] });
   const q2 = withCases('a-x/s2/q1', { g1: ['hard'] });
   const log = [seen('a-x/s1/q1', '2026-10-01T00:00:00Z'), seen('a-x/s2/q1', '2026-10-02T00:00:00Z')];
-  assert.equal(pick([q1, q2], log, { activity: 'a-x', needed: () => false }).item.label, 'a-x/s1/q1');
+  assert.equal(pick([q1, q2], log, { activity: 'a-x', needed: () => false, done: () => true }).item.label, 'a-x/s1/q1');
   assert.equal(pick([q1, q2], log, { activity: 'a-x', needed: (it) => it === q2 }).item.label, 'a-x/s2/q1');
+  // Nothing needed but a goal still unmet: a case no banked question carries, so the generator.
+  assert.equal(pick([q1, q2], log, { activity: 'a-x', needed: () => false, done: () => false }), null);
+});
+
+test('stillNeeded: a deferred or retired goal needs nothing', () => {
+  const q = withCases('a-x/s1/q1', { g1: ['easy'] });
+  const goals = new Map([['g1', CG]]);
+  assert.equal(stillNeeded(q, goals, new Map(), new Set(['g1'])), false);
+  assert.equal(stillNeeded(q, goals, new Map(), new Set(['g2'])), true);
+});
+
+// Goal c-g has cases x, y and z; the bank carries x and y, both passed, and nothing carries z.
+function zTopic(status = []) {
+  const dir = makeTopic({
+    goals: CAP_GOAL('c-g', '- **cases:**\n  - `x`: ex\n  - `y`: why\n  - `z`: zed\n'),
+    activities: '### a-x\n- **checks:** c-g\n',
+    status,
+  });
+  const put = (rel, text) => {
+    mkdirSync(dirname(join(dir, rel)), { recursive: true });
+    writeFileSync(join(dir, rel), text);
+  };
+  put('tasks/a-x/s1.md', '### q1\n\nX.\n\n### q2\n\nY.\n');
+  put('rubrics/a-x/s1.md', '### q1\n\n- **goal:** c-g\n- **answer:** X.\n- **cases:** x\n\n### q2\n\n- **goal:** c-g\n- **answer:** Y.\n- **cases:** y\n');
+  const att = (label, cases, at) => JSON.stringify({ at, goal: 'c-g', label, unaided: 'yes', criterion: 'met', cases });
+  put('evidence/attempts.jsonl', [att('a-x/s1/q1', ['x'], '2026-10-01T00:00:00Z'), att('a-x/s1/q2', ['y'], '2026-10-02T00:00:00Z')].join('\n') + '\n');
+  return dir;
+}
+
+test('CLI --activity in study exits 2 while a goal its questions name is unmet', () => {
+  const dir = zTopic();
+  const r = run('next-item.mjs', [dir, '--activity', 'a-x']);
+  assert.equal(r.code, 2, r.stdout);
+  assert.match(r.stderr, /no bank questions for a-x/);
+  assert.equal(run('next-item.mjs', [dir, '--activity', 'a-x', '--review']).code, 0);
+});
+
+test('CLI study on a deferred goal serves a repeat rather than sending to the generator', () => {
+  const dir = zTopic();
+  assert.equal(run('record-status.mjs', [dir, 'deferred', 'c-g', '--where', 'PS3']).code, 0);
+  const r = run('next-item.mjs', [dir, '--goal', 'c-g']);
+  assert.equal(r.code, 0, r.stderr);
+  assert.match(r.stdout, /repeat: yes/);
+  assert.equal(run('next-item.mjs', [dir, '--activity', 'a-x']).code, 0);
+});
+
+test('CLI study on a goal whose cases slot has a problem treats it as unmet', () => {
+  const dir = makeTopic({
+    goals: CAP_GOAL('g-one', '- **cases:**\n  - `easy`: e\n  - `Bad Id`: b\n'),
+    activities: '### a-x\n- **checks:** g-one\n',
+  });
+  const put = (rel, text) => {
+    mkdirSync(dirname(join(dir, rel)), { recursive: true });
+    writeFileSync(join(dir, rel), text);
+  };
+  put('tasks/a-x/s1.md', '### q1\n\nEasy.\n');
+  put('rubrics/a-x/s1.md', '### q1\n\n- **goal:** g-one\n- **answer:** X.\n- **cases:** easy\n');
+  put('evidence/attempts.jsonl', JSON.stringify({ at: '2026-10-01T00:00:00Z', goal: 'g-one', label: 'a-x/s1/q1', unaided: 'yes', criterion: 'met', cases: ['easy'] }) + '\n');
+  // met() alone would call it met and serve a repeat; survey calls it unmet, and so does the picker.
+  assert.equal(run('next-item.mjs', [dir, '--goal', 'g-one']).code, 2);
 });
 
 test('CLI study on a met goal serves a repeat', () => {

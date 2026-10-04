@@ -33,15 +33,18 @@ import { met, casePasses } from './bars.mjs';
 const group = (label) => label.split('/').slice(0, 2).join('/');
 
 // Whether serving this question could still show anything: false when each goal it names is met,
-// or has every case the question lists for it already passed. A question listing no case for a
-// goal with cases (a bank written before the cases were) is needed while that goal is unmet. A
-// goal the topic does not define cannot be shown met, so it keeps the question needed.
-export function stillNeeded(item, goalsById, attemptsByGoal) {
+// set aside (`setAside`: deferred or retired, so nothing is wanted of it here), or has every case
+// the question lists for it already passed. A question listing no case for a goal with cases (a
+// bank written before the cases were) is needed while that goal is unmet. A goal the topic does
+// not define cannot be shown met, so it keeps the question needed; nor can one whose goals.md
+// entry has a problem, which survey holds unmet too.
+export function stillNeeded(item, goalsById, attemptsByGoal, setAside = new Set()) {
   return item.goals.some((id) => {
     const goal = goalsById.get(id);
     if (!goal) return true;
+    if (setAside.has(id)) return false;
     const attempts = attemptsByGoal.get(id) ?? [];
-    if (met(goal, attempts)) return false;
+    if (!goal.problems?.length && met(goal, attempts)) return false;
     const listed = item.cases?.[id] ?? [];
     const passes = casePasses(goal, attempts);
     return !passes || !listed.length || listed.some((c) => !passes[c]?.passed);
@@ -62,7 +65,7 @@ export function rankByCase(goal, attempts, { review = false } = {}) {
   };
 }
 
-export function pick(items, log, { goal, activity, after, review = false, needed = () => true, caseRank = () => 0, goalMet = false } = {}) {
+export function pick(items, log, { goal, activity, after, review = false, needed = () => true, caseRank = () => 0, done = () => false } = {}) {
   const served = new Set(log.map((line) => line.label));
   // In study an item waits behind any earlier unserved, still-needed question in its scenario;
   // `open` maps the scenario to that question.
@@ -78,10 +81,13 @@ export function pick(items, log, { goal, activity, after, review = false, needed
   // STUDY NEVER SERVES A SKIPPED QUESTION: a later one in its scenario may already have given its
   // answer away. So while there is still something to show, one no longer needed is no candidate
   // at all, and a goal whose remaining cases no banked question carries gets null, which sends
-  // the tutor to the generator. NOTHING LEFT TO SHOW IS PRACTICE: a met goal (`goalMet`), or an
-  // activity none of whose questions is needed, is served repeats exactly as before.
+  // the tutor to the generator. The same holds for an activity: while any goal its questions
+  // name is not `done`, only needed questions are candidates, so a case none of them carries gets
+  // null too. NOTHING LEFT TO SHOW IS PRACTICE: when the goal, or every goal the activity's
+  // questions name, is `done` (met, deferred or retired), repeats are served exactly as before.
   const matching = items.filter((it) => (goal ? it.goals.includes(goal) : it.activity === activity));
-  const filter = !review && (goal ? !goalMet : matching.some((it) => needed(it)));
+  const named = goal ? [goal] : [...new Set(matching.flatMap((it) => it.goals))];
+  const filter = !review && named.some((id) => !done(id));
   const wanted = filter ? matching.filter((it) => needed(it)) : matching;
   if (!wanted.length) return null;
   const candidates = wanted.filter((it) => !waiting.has(it));

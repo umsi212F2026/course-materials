@@ -10,7 +10,8 @@
 // so an agent that wants the question can read the output without also reading the answer.
 //
 // EXIT 2 MEANS THE BANK HAS NOTHING FOR THIS, which is not a failure of the call: the activity
-// has no stored questions and the tutor falls back to generating one live. Exit 1 is a misuse
+// has no stored questions, or in study none still needed while something is left to show, and
+// the tutor falls back to generating one live. Exit 1 is a misuse
 // of the command, as in record-status.mjs.
 //
 // A BANK IS SERVED ONLY WHILE ITS ACTIVITY HAS A LIVE ENTRY in activities.md; see below.
@@ -18,7 +19,7 @@
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { readFolderBanks } from '../../quiz/tools/lib/bank.mjs';
-import { readLog, readGoals, liveActivities } from './lib/topic.mjs';
+import { readLog, readGoals, liveActivities, statusOf } from './lib/topic.mjs';
 import { pick, stillNeeded, rankByCase } from './lib/pick.mjs';
 import { met } from './lib/bars.mjs';
 
@@ -78,14 +79,26 @@ for (const r of log) {
   if (!attemptsByGoal.has(r.goal)) attemptsByGoal.set(r.goal, []);
   attemptsByGoal.get(r.goal).push(r);
 }
+// A DEFERRED OR RETIRED GOAL WANTS NOTHING HERE, the topic retired included, so it is set aside:
+// no question is needed for it, and it counts as done. A GOAL WHOSE ENTRY HAS A PROBLEM IS NOT
+// MET, whatever its attempts say, the same as survey: it is frozen until goals.md is fixed.
+const status = statusOf(dir);
+const setAside = new Set(
+  [...goalsById.keys()].filter((id) => status.retired !== null || status.retiredGoals.has(id) || status.deferredGoals.has(id))
+);
+const done = (id) => {
+  const goal = goalsById.get(id);
+  if (!goal) return false;
+  return setAside.has(id) || (!goal.problems.length && met(goal, attemptsByGoal.get(id) ?? []));
+};
 const result = pick(hasEntries ? items.filter((it) => live.has(it.activity)) : items, log, {
   goal: flags.goal,
   activity: flags.activity,
   after: flags.after,
   review: !!flags.review,
-  needed: (it) => stillNeeded(it, goalsById, attemptsByGoal),
+  needed: (it) => stillNeeded(it, goalsById, attemptsByGoal, setAside),
   caseRank: rankByCase(goalsById.get(flags.goal), attemptsByGoal.get(flags.goal) ?? [], { review: !!flags.review }),
-  goalMet: goalsById.has(flags.goal) && met(goalsById.get(flags.goal), attemptsByGoal.get(flags.goal) ?? []),
+  done,
 });
 if (!result) {
   console.error(`no bank questions for ${flags.goal ?? flags.activity}; run the activity's generator live`);

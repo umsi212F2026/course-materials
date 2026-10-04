@@ -123,9 +123,11 @@ export const DEFAULT_GROUP = SLOTS.group.default;
 const CASE_ID = /^[a-z0-9]+(-[a-z0-9]+){0,2}$/;
 
 //
-// PARTIAL ENFORCEMENT, BY RULING: when one case is malformed the valid ones are kept and a problem
+// PARTIAL PARSING, WHOLE FREEZE: when one case is malformed the valid ones are kept and a problem
 // is reported, rather than dropping the lot. Text that yields no case at all is also a problem,
-// never silence: a slot written wrongly must not read as a goal with no cases.
+// never silence: a slot written wrongly must not read as a goal with no cases. Any problem here
+// freezes the goal like any other slot problem: survey holds it unmet, next-item does the same,
+// and record-attempt refuses it, so the kept cases are for display until goals.md is fixed.
 export function parseCases(value) {
   const cases = [];
   const problems = [];
