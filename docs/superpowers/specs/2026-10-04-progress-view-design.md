@@ -11,7 +11,9 @@ data as HTML.
 
 ## The tool
 
-`node workflows/learn/tools/progress.mjs <topic-folder> [--json] [--ascii] [--set <n>]`
+`node workflows/learn/tools/progress.mjs <topic-folder> [--json] [--set <n>]`
+
+The output is plain ASCII, so it renders the same in every terminal, Windows consoles included.
 
 Everything comes from `surveyTopic(dir)` (its `sequence` block and rows); nothing new is stored.
 
@@ -20,16 +22,16 @@ Everything comes from `surveyTopic(dir)` (its `sequence` block and rows); nothin
 An example, for a made-up state of a cloud-hosting topic (the examples below use the same one):
 
 ```
-cloud-hosting  ·  set 2 of 3 is next
+cloud-hosting - set 2 of 3 is next
 
- 1 Orientation   ✓              1/1
- 2 Words         ✓✓◐····→       2/8   <- next
- 3 Capabilities  ✓◐···          1/5
+ 1 Orientation   #              1/1
+ 2 Words         ##~....>       2/8   <- next
+ 3 Capabilities  #~...          1/5
 
  Next set: w-static-host (tried), w-server-host, w-free-tier, w-dns,
  w-domain, w-https, ...  (w-cdn deferred: PS3)
 
- ✓ met  ◐ tried, not yet  · not started  → deferred
+ # met  ~ tried  . not started  > deferred
 ```
 
 - **Header:** the topic folder name, then `set <n> of <total> is next`, or `every set is done`
@@ -38,8 +40,8 @@ cloud-hosting  ·  set 2 of 3 is next
 - **A row per set:** its number; a label; its marks; `<met>/<total>`; `<- next` on the current
   set. The label is the set's single group named in title case (`Words` for `vocabulary`,
   `Capabilities`, `Orientation`), or `Set <n>` when the set mixes groups.
-- **Marks:** `✓` met (however: passed, marked learned, done elsewhere); `◐` attempted and not met;
-  `·` not attempted; `→` deferred. Retired goals are left out of the marks and the count, as
+- **Marks:** `#` met (however: passed, marked learned, done elsewhere); `~` attempted and not met;
+  `.` not attempted; `>` deferred. Retired goals are left out of the marks and the count, as
   they are from survey's fractions. Marks are ordered met, tried, not started, deferred, so a
   row reads like a progress bar.
 - **Next set line:** the current set's goals that are not met: tried ones first, then the rest in
@@ -53,8 +55,8 @@ cloud-hosting  ·  set 2 of 3 is next
 One line, the row for set `n` with its place in the sequence:
 
 ```
-Words  ✓✓✓···→  3/8   (set 2 of 3)
-Capabilities  ✓◐···  1/5   (set 3 of 3; set 2 is still next)
+Words  ###....>  3/8   (set 2 of 3)
+Capabilities  #~...  1/5   (set 3 of 3; set 2 is still next)
 ```
 
 ### Data (`--json`)
@@ -63,10 +65,6 @@ Capabilities  ✓◐···  1/5   (set 3 of 3; set 2 is still next)
 capability, where }] }], next: [...] }`, where `state` is `met`, `tried`, `open` or `deferred`
 and `where` is the deferral's place. This is the shape item 7 will draw.
 
-### ASCII (`--ascii`)
-
-`+` met, `~` tried, `.` not started, `>` deferred, and `<- next` unchanged, for a console that
-does not show the Unicode marks.
 
 ## When the tutor shows it (study)
 
@@ -75,7 +73,6 @@ does not show the Unicode marks.
 - **After each recorded attempt**, the one-set line for the set that goal is in (`--set`).
 - **When an attempt finishes its set** (nothing left in it: every goal met, deferred or
   retired), the full view instead, so the next set is seen opening up.
-- If the student says the marks look wrong, use `--ascii` from then on.
 
 Review and the quiz do not show it.
 
@@ -84,4 +81,4 @@ Review and the quiz do not show it.
 Marks and their order; counts excluding retired; labels (single group, mixed set); `<- next` and
 the header variants (next, every set done, not decided); the next-set line (tried first, a split
 capability as one slug with a fraction, truncation, deferred in parentheses); `--set` for the
-current set and for a later set; `--json` shape; `--ascii`.
+current set and for a later set; `--json` shape; output is ASCII only.
