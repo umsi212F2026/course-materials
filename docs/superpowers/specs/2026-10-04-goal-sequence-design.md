@@ -11,7 +11,9 @@ sequence is what the progress view (queue item 6) will draw as columns.
 
 ## The decision is explicit, in goals.md
 
-Every topic's `goals.md` carries a `## Sequence` section after `## Goals`: a numbered list, one
+Every topic's `goals.md` carries a `## Sequence` section just above `## Goals` (so the end of the
+file is always the end of the Goals section, and an entry appended there is never lost): a
+numbered list, one
 line per set, earliest first. Each item on a line is one of:
 
 - a **group** name (`orientation`, `vocabulary`, `capabilities`, or any other group a goal uses);
@@ -52,8 +54,10 @@ origin header and `migrate-words.mjs` (a queue action on the learning-topics rep
 
 ## Survey
 
-- **Problems:** a Sequence item that matches no group, capability slug or goal id; a goal id
-  listed in two sets; a goal that lands in no set.
+- **Problems:** a Sequence item that matches no group, capability slug or goal id (the three
+  standard groups are always valid, even while empty); a goal id listed in two sets; a goal that
+  lands in no set; a `###` entry written inside the Sequence section, where it is not read as a
+  goal.
 - **JSON** gains `sequence`: `{ decided: boolean, sets: [{ goals: [{ id, state }] }], current }`,
   where `state` is `met`, `deferred`, `retired` or `open`, and `current` is the index of the first
   set with an open goal (null when none is open). The default order fills `sets` when `decided`
@@ -62,14 +66,19 @@ origin header and `migrate-words.mjs` (a queue action on the learning-topics rep
 
 ## Choosing the next goal
 
-`node workflows/learn/tools/next-goal.mjs <topic-folder>` prints one open goal from the current
-set, chosen at random (the tool chooses, because an agent asked to pick at random does not), and
-exits 2 when no goal is open. Met, deferred and retired goals are never chosen.
+`node workflows/learn/tools/next-goal.mjs <topic-folder> [--skip <goal-id> ...]` prints one open
+goal from the current set, chosen at random (the tool chooses, because an agent asked to pick at
+random does not), and exits 2 when no goal is open. Never chosen: met, deferred and retired goals;
+goals with nothing live to study (no live activity serves them, and no bank question names them);
+and goals passed with `--skip`. The current set is the first with a goal still choosable, so a
+set whose remaining goals are all skipped is passed over.
 
 ## Study
 
 Unless the learner names a goal, the tutor runs `next-goal.mjs` and offers that goal's
-activities. **The sequence is a recommendation:** a learner who wants any other goal, from any
+activities. **"Come back to it later" lasts for the sitting:** every goal the learner sets aside
+in this sitting, optional ones such as the orientation included, is passed with `--skip`, so it
+is not offered again until the next session, which starts with no skips. **The sequence is a recommendation:** a learner who wants any other goal, from any
 set, gets it with no comment. When the topic's sequence is not decided yet, the tutor says so
 once and offers to set it (a goal-setting conversation), and otherwise carries on with the
 default order.
