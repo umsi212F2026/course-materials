@@ -26,13 +26,30 @@ been merged or pushed.
   `/Users/presnick/Documents/Documents/code/2026/learning-topics`; copy into a scratch folder to
   try anything that writes.
 
+## Status at a glance
+
+| # | item | status |
+|---|---|---|
+| 1 | Three choices after a not-met ruling | **DONE** |
+| 2 | Goals learned elsewhere | **DONE** |
+| 3 | Unified question banks (all five phases) | **DONE** |
+| 4 | Help always available; a helped attempt counts as helped | **DONE** |
+| 5 | Sequenced sets of goals | **DONE** |
+| 6 | Progress view | **DONE** |
+| 7 | Web side panel for tutor-initiated questions | to do (feasibility test first) |
+| 8 | Personalized problem-set questions | to do (spec B not written) |
+
+Outside this branch, still to do: the actions on the learning-topics repository and on
+course-private, listed below.
+
 ## In order
 
 1. ~~Offer three choices after every not-met ruling (try again, later, mark it learned).~~ Done,
    `6910b51`.
 2. ~~Goals learned elsewhere.~~ Done, `444a61c..a080c5b`. Spec
    `specs/2026-10-02-learned-elsewhere-design.md`.
-3. **Unified question banks.** Spec `specs/2026-10-03-unified-banks-design.md`. Five phases:
+3. ~~**Unified question banks.**~~ Done. Spec `specs/2026-10-03-unified-banks-design.md`. Five
+   phases:
    - ~~Phase 1: bank format, picker, multi-goal judge.~~ Done, `10d6158..93158f9`. Plan
      `plans/2026-10-03-unified-banks-phase-1.md`.
    - ~~Phase 2: goal model (topic origin, capability, `serves: group`).~~ Done,
