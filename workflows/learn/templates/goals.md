@@ -41,7 +41,43 @@
   capability is a new entry with a new id, not a rename.
 
   THE ORIGIN LINE. Only a topic the course ships carries one, as `**origin:** course` on its
-  own line between the title above and `## Sequence
+  own line between the title above and `## Goals`. Leave it out of a topic you built yourself:
+  absent means `learner`. Every goal inherits the topic's origin unless it carries an
+  `- **origin:**` of its own, which is how a goal a student adds to a course topic stays
+  theirs. survey.mjs reports a header value that is neither `course` nor `learner`.
+
+  Words added by workflows/learn/tools/new-word.mjs carry ids too; that script takes the id and never invents
+  one. See workflows/learn/skills/add-topic/SKILL.md.
+-->
+
+## Where this came from
+
+<!-- Which of A / B / C / D, and the answer to the follow-up. -->
+
+## What I already have
+
+<!--
+  The nearest thing already known well, and where it stops.
+  This is a claim, not a verified fact — it's a self-report about one's own knowledge,
+  and the assessment may contradict it.
+-->
+
+## What I'll use it for
+
+<!--
+  The use, and a concrete occasion.
+  If several uses apply, rank them: the top one sets the depth, the rest are cut first
+  when time runs short.
+-->
+
+## Depth
+
+<!--
+  Which of: recognize it / read it / modify something existing / author from scratch /
+  judge someone else's work. One line on why that's enough.
+-->
+
+## Sequence
 
 <!--
   THE ORDER THE GOALS ARE TACKLED IN, decided by goal-setting. One numbered line per set,
@@ -78,42 +114,6 @@
 1. orientation
 2. vocabulary
 3. capabilities
-
-## Goals`. Leave it out of a topic you built yourself:
-  absent means `learner`. Every goal inherits the topic's origin unless it carries an
-  `- **origin:**` of its own, which is how a goal a student adds to a course topic stays
-  theirs. survey.mjs reports a header value that is neither `course` nor `learner`.
-
-  Words added by workflows/learn/tools/new-word.mjs carry ids too; that script takes the id and never invents
-  one. See workflows/learn/skills/add-topic/SKILL.md.
--->
-
-## Where this came from
-
-<!-- Which of A / B / C / D, and the answer to the follow-up. -->
-
-## What I already have
-
-<!--
-  The nearest thing already known well, and where it stops.
-  This is a claim, not a verified fact — it's a self-report about one's own knowledge,
-  and the assessment may contradict it.
--->
-
-## What I'll use it for
-
-<!--
-  The use, and a concrete occasion.
-  If several uses apply, rank them: the top one sets the depth, the rest are cut first
-  when time runs short.
--->
-
-## Depth
-
-<!--
-  Which of: recognize it / read it / modify something existing / author from scratch /
-  judge someone else's work. One line on why that's enough.
--->
 
 ## Goals
 

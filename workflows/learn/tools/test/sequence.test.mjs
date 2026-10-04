@@ -1,7 +1,8 @@
 // goals.md's `## Sequence`: sets of goals in order. Each goal's set is its most specific mention.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { writeFileSync, readFileSync } from 'node:fs';
+import { writeFileSync, readFileSync, mkdtempSync, readdirSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
 import { makeTopic, run, survey, CAP_GOAL } from './helpers.mjs';
 
@@ -146,4 +147,18 @@ test('a group or slug listed in two sets: the first wins, and no problem is repo
   const dir = topic([word('w-a'), CAP_GOAL('c-p1', CAP)], '1. vocabulary, weigh-hosting-plans\n2. vocabulary, weigh-hosting-plans');
   assert.deepEqual(setsOf(dir), [['w-a', 'c-p1'], []]);
   assert.deepEqual(survey(dir).problems.filter((p) => /equence|no set/.test(p)), []);
+});
+
+test('a topic built from the real template has a decided three-set sequence and one Sequence heading', () => {
+  const parent = mkdtempSync(join(tmpdir(), 'learn-template-'));
+  const r = run('new-topic.mjs', ['--dir', parent, 'area']);
+  assert.equal(r.code, 0, r.stderr);
+  const dir = join(parent, readdirSync(parent)[0]);
+  const text = readFileSync(join(dir, 'goals.md'), 'utf8');
+  assert.equal(text.match(/^## Sequence\s*$/gm).length, 1);
+  assert.ok(text.search(/^## Sequence\s*$/m) < text.search(/^## Goals\s*$/m));
+  const s = survey(dir);
+  assert.equal(s.sequence.decided, true);
+  assert.deepEqual(s.sequence.sets.map((x) => x.goals.map((g) => g.id)), [['o-orientation'], [], []]);
+  assert.deepEqual(s.problems.filter((p) => /equence|no set/.test(p)), []);
 });
