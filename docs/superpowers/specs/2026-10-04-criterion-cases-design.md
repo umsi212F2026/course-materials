@@ -88,9 +88,23 @@ learner's own word (`declared`, `elsewhere`) still meets the whole goal, as toda
 - a rubric `cases:` naming a case its goal does not define, or a goal the question does not
   name;
 - a question on a goal with cases that lists no case for it;
-- a banked question naming no goal;
-- a case that no banked question exercises, when some live activity serving the goal is banked
-  (a coverage gap for curation to see).
+- a banked question naming no goal.
+
+Survey does not report coverage: it runs in students' sessions too, where a gap is noise. That
+is curation's.
+
+### Case coverage in curation
+
+Every case of every goal must be exercised by some live activity, and curation's checkers notice
+when one is not:
+
+- **verify** checks, per goal with cases, that each case is exercised by a banked question's
+  `cases:` line or by a live generator that says it carries that case. A case neither covers is
+  a finding, the same as an empty `checks` cell.
+- **bank-check** reports, per bank, which cases of its goals it exercises and which it never
+  does, so a drafted bank that skips the hard case is seen before verify.
+- **critique** checks that a generator's stated cases are ones its question shapes really carry.
+- **generate** and **draft-bank** aim at the same bar: every case gets questions.
 
 ### The progress view
 
@@ -146,7 +160,7 @@ activities stay until each topic's recuration (item 9's worklist).
 Bar: a goal with cases unmet until every case passes; a pass with no `cases` counts toward none;
 own word meets it; the per-case test under `one production pass`; a goal without cases unchanged.
 Cases slot: parsing, id rule, duplicates. Rubric `cases:` both forms, and each survey problem
-above. `record-attempt` accepts declared cases and refuses others. Picker: unpassed case
+above; survey reports no coverage gap. `record-attempt` accepts declared cases and refuses others. Picker: unpassed case
 preferred in study, oldest-passed case in review, scenario order, no goal-less sort. Progress:
 `~` with some cases passed, legend text and `(in progress)` on the next-set line, the bracketed
 fraction, the `--after` line and its
