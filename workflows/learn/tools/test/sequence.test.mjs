@@ -86,3 +86,18 @@ test('--report says not decided yet only when undecided', () => {
   const decided = topic([word('w-a')], '1. vocabulary');
   assert.doesNotMatch(run('survey.mjs', ['--dir', dirname(decided), decided, '--report']).stdout, /sequence:/);
 });
+
+test('a slug that is also a group name: goal id, then slug, then group', () => {
+  const grouped = (id) => `### \`${id}\`\n- **goal:** x\n- **criterion:** done\n- **group:** weigh-plans\n`;
+  const goals = [CAP_GOAL('c-p1', '- **capability:** weigh-plans\n'), grouped('g-1')];
+  const dir = topic(goals, '1. capabilities\n2. weigh-plans');
+  assert.deepEqual(setsOf(dir), [[], ['c-p1', 'g-1']]);
+  const byId = topic(goals, '1. weigh-plans\n2. capabilities, c-p1');
+  assert.deepEqual(setsOf(byId), [['g-1'], ['c-p1']]);
+});
+
+test('default order: other groups in order of first appearance', () => {
+  const grouped = (id, group) => `### \`${id}\`\n- **goal:** x\n- **criterion:** done\n- **group:** ${group}\n`;
+  const dir = topic([grouped('z-1', 'zeta'), grouped('a-1', 'alpha'), grouped('z-2', 'zeta'), word('w-a')]);
+  assert.deepEqual(setsOf(dir), [['w-a'], ['z-1', 'z-2'], ['a-1']]);
+});
