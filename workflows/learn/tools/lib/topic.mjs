@@ -174,6 +174,10 @@ export function readGoals(dir) {
 // NO SECTION IS A DECISION NOT YET MADE, NOT A DEFECT, so it raises no problem and `decided` is
 // false. The order used meanwhile is the three standard groups, then any other in order of first
 // appearance. A topic that has the section must place every goal: there is no catch-all.
+//
+// THE THREE STANDARD GROUPS ARE ALWAYS VALID ITEMS, even with no goal in them yet, because the
+// template's default lists all three before a word or a capability exists. Any other name must
+// still match a group, slug or goal id.
 const SEQUENCE_HEADING = /^##\s+Sequence\s*$/m;
 const DEFAULT_SEQUENCE = ['orientation', 'vocabulary', 'capabilities'];
 
@@ -199,6 +203,7 @@ export function readSequence(dir, goals) {
 
   const names = new Set();
   for (const g of goals) for (const n of [g.id, g.capability, g.group]) if (n) names.add(n);
+  for (const n of DEFAULT_SEQUENCE) names.add(n);
   const ids = new Set(goals.map((g) => g.id));
   const listed = new Map();
   lines.forEach((items, i) => {

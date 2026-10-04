@@ -101,3 +101,12 @@ test('default order: other groups in order of first appearance', () => {
   const dir = topic([grouped('z-1', 'zeta'), grouped('a-1', 'alpha'), grouped('z-2', 'zeta'), word('w-a')]);
   assert.deepEqual(setsOf(dir), [['w-a'], ['z-1', 'z-2'], ['a-1']]);
 });
+
+test('the three standard groups may be listed while empty; any other unknown name is a problem', () => {
+  const fresh = topic([orient('o-orientation')], '1. orientation\n2. vocabulary\n3. capabilities');
+  assert.deepEqual(survey(fresh).problems.filter((p) => /equence|no set/.test(p)), []);
+  const bad = topic([orient('o-orientation')], '1. orientation\n2. vocabulary\n3. capabilities\n4. nonsense');
+  assert.deepEqual(survey(bad).problems.filter((p) => /equence|no set/.test(p)), [
+    'Sequence names nonsense, which is no group, capability or goal',
+  ]);
+});

@@ -83,8 +83,11 @@ ask differently rather than repeating it.
    open, so say where things stand rather than offering anything.
 
    If it also prints `sequence: not decided yet`, the topic has no Sequence section: say so
-   once in the sitting and offer to set one, which is a goal-setting conversation (see _When
-   something upstream has to change_ for how to hand over). If they would rather not, carry on;
+   once in the sitting and offer to set one. Setting it is a goal-setting conversation, and a
+   separate one, so this session ends first (two sessions open on one topic lose each other's
+   writes). Record nothing on the queue: the sequence belongs to no goal, and survey keeps
+   reporting it until the section is written. If they want to do it now, make sure the last
+   attempt is recorded and tell them to start goal-setting. If they would rather not, carry on;
    the tool is already using the default order.
 
    Skip any goal that is deferred; see _Goals taught elsewhere_. Offer the

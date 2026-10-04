@@ -220,7 +220,8 @@
 
   EVERY GOAL MUST LAND IN A SET. There is no catch-all, and a goal named nowhere is a problem
   survey.mjs reports, as it does an item that matches nothing and a goal id listed in two
-  sets. A topic with no Sequence section at all is a decision not yet made, not a problem: it
+  sets. The three standard groups, orientation, vocabulary and capabilities, may stay listed
+  while nothing is in them yet; any other name has to match a group, slug or goal. A topic with no Sequence section at all is a decision not yet made, not a problem: it
   is worked in the order orientation, vocabulary, capabilities, then any other group, until
   goal-setting writes the section.
 -->
