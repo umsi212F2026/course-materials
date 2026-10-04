@@ -11,9 +11,11 @@
 // where the learner said it will be learned. Retired goals are left out of marks and counts, as
 // they are from survey's own fractions.
 //
-// THE CURRENT SET IS THE FIRST WITH A GOAL THAT IS NEITHER MET NOR DEFERRED, the same rule as
-// next-goal.mjs without skips. A set holding only deferred goals is waiting on elsewhere, not
-// next, and a set whose goals are all retired has nothing to be next about.
+// THE CURRENT SET IS THE SURVEY'S OWN, the first with a goal that is neither met nor deferred,
+// converted to 1-based so the two definitions cannot drift apart. next-goal.mjs also passes over
+// goals with nothing live, so it can occasionally name a later set; that is acceptable. A set
+// holding only deferred goals is waiting on elsewhere, not next, and a set whose goals are all
+// retired has nothing to be next about.
 
 const MARKS = { met: '#', tried: '~', open: '.', deferred: '>' };
 const ORDER = ['met', 'tried', 'open', 'deferred'];
@@ -51,7 +53,7 @@ export function buildProgress(s) {
     return { number, label, met: goals.filter((g) => g.state === 'met').length, total: goals.length, goals };
   });
 
-  const idx = sets.findIndex((set) => set.goals.some((g) => g.state === 'tried' || g.state === 'open'));
+  const idx = s.sequence.current ?? -1;
   const current = idx === -1 ? null : idx + 1;
 
   // A SPLIT CAPABILITY IS ONE NAME. Its fraction counts every live part, in any set, the way the

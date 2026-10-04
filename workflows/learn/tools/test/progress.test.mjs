@@ -5,7 +5,7 @@ import { makeTopic, run, CAP_GOAL } from './helpers.mjs';
 
 // A survey-shaped object from compact rows: [id, group, state, attempts, extra]. state is the
 // sequence state (open, met, deferred, retired); sets lists ids.
-function fake(rows, sets, { decided = true, dir = '/x/cloud-hosting' } = {}) {
+function fake(rows, sets, { decided = true, dir = '/x/cloud-hosting', current } = {}) {
   const by = new Map();
   const rowOf = ([id, group, state, attempts = 0, extra = {}]) => ({
     id,
@@ -23,7 +23,8 @@ function fake(rows, sets, { decided = true, dir = '/x/cloud-hosting' } = {}) {
   const groups = [...by].map(([name, goals]) => ({ name, goals }));
   const seqSets = sets.map((ids) => ({ goals: ids.map((id) => ({ id, state: state.get(id) })) }));
   const idx = seqSets.findIndex((s) => s.goals.some((g) => g.state === 'open'));
-  return { dir, groups, sequence: { decided, sets: seqSets, current: idx === -1 ? null : idx } };
+  const found = idx === -1 ? null : idx;
+  return { dir, groups, sequence: { decided, sets: seqSets, current: current === undefined ? found : current } };
 }
 
 const W = (n, state, attempts = 0, extra) => [`w${n}`, 'vocabulary', state, attempts, extra];
@@ -165,4 +166,12 @@ test('CLI: --json keys, --set line, and usage errors exit 1', () => {
   assert.equal(run('progress.mjs', [dir, '--bogus']).code, 1);
   assert.equal(run('progress.mjs', []).code, 1);
   assert.equal(run('progress.mjs', [dir + '-missing']).code, 1);
+});
+
+test('current is the survey\'s own, converted to 1-based, not recomputed', () => {
+  const rows = [W(1, 'open'), W(2, 'open')];
+  const v = buildProgress(fake(rows, [['w1'], ['w2']], { current: 1 }));
+  assert.equal(v.current, 2);
+  assert.deepEqual(v.next.map((n) => n.name), ['w2']);
+  assert.equal(buildProgress(fake(rows, [['w1'], ['w2']], { current: null })).current, null);
 });
