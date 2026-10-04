@@ -13,3 +13,7 @@ workflows/*/*.png
 # what lasts from a practice run is the attempt recorded in the topic's evidence, not the
 # paperwork that produced it.
 tmp/
+
+# Subagent-driven development scratch (ledgers, task briefs, review packages). Per plan, deleted
+# when the plan finishes; the git history is the record.
+.superpowers/

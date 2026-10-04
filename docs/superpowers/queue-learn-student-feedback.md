@@ -36,6 +36,13 @@ plan, implementation). Update this file as items finish or are added.
    that reads a problem-set repo, run by the tutor in study and by the grading container for
    quizzes; an agent checks each question against the student's repo.
 
+## Actions on the learning-topics repository (outside this branch)
+
+- Add the `**origin:** course` header line to every course topic's `goals.md` (under the title,
+  above `## Goals`), and remove the per-goal `origin: course` stamps it makes redundant. Until
+  then the per-goal stamps keep working. Check with `survey.mjs`: each topic's `origin` should
+  read `course` and no problems should appear.
+
 ## Parked ideas
 
 - Evidence for a `taught elsewhere` goal drawn from that problem set's personalized questions.
