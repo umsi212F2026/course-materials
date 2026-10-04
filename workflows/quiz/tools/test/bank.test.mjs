@@ -173,3 +173,45 @@ test("single-file banks read as before, with folder items after them", () => {
   assert.equal(items[0].rubric, "One. Full for one.");
   assert.equal(items[2].label, "a-x/s/q1");
 });
+
+// --- cases on rubric questions ------------------------------------------------------------
+const caseBank = (goal, cases, kind = 'folder') =>
+  source(
+    kind === 'folder'
+      ? {
+          'tasks/a-x/s1.md': '# S\n\n### q1\n\nName it.\n',
+          'rubrics/a-x/s1.md': `# S key\n\n### q1\n\n- **goal:** ${goal}\n- **answer:** Cost.\n${cases === null ? '' : `- **cases:** ${cases}\n`}`,
+        }
+      : {
+          'tasks/words.md': '# W\n\n### q1\n\nName it.\n',
+          'rubrics/words.md': `# W key\n\n### q1\n\n- **goal:** ${goal}\n- **answer:** Cost.\n${cases === null ? '' : `- **cases:** ${cases}\n`}`,
+        }
+  );
+
+test('a single-goal question reads the plain cases form', () => {
+  const { items, problems } = readBank(caseBank('c-a', 'allows-safe, declines-risky'));
+  assert.deepEqual(problems, []);
+  assert.deepEqual(items[0].cases, { 'c-a': ['allows-safe', 'declines-risky'] });
+});
+
+test('a multi-goal question reads the per-goal form', () => {
+  const { items, problems } = readBank(caseBank('c-a, c-b', '`c-a`: x, y; c-b: z'));
+  assert.deepEqual(problems, []);
+  assert.deepEqual(items[0].cases, { 'c-a': ['x', 'y'], 'c-b': ['z'] });
+});
+
+test('a rubric with no cases line gives cases {}, folder and single-file alike', () => {
+  assert.deepEqual(readBank(caseBank('c-a', null)).items[0].cases, {});
+  assert.deepEqual(readBank(caseBank('c-a', null, 'single')).items[0].cases, {});
+  assert.deepEqual(readBank(caseBank('c-a', 'x', 'single')).items[0].cases, { 'c-a': ['x'] });
+});
+
+test('the plain form on a multi-goal question is a problem', () => {
+  const { problems } = readBank(caseBank('c-a, c-b', 'x, y'));
+  assert.ok(problems.some((p) => p.includes('a-x/s1/q1') && p.includes('c-a') && p.includes('c-b') && /per goal/.test(p)), problems.join('\n'));
+});
+
+test('a per-goal entry for a goal the question does not name is a problem', () => {
+  const { problems } = readBank(caseBank('c-a', 'c-a: x; c-z: y'));
+  assert.ok(problems.some((p) => p.includes('a-x/s1/q1') && p.includes('c-z') && /does not name/.test(p)), problems.join('\n'));
+});

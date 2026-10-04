@@ -124,6 +124,34 @@ function splitChoices(body) {
   return { prompt: unwrap(lines.slice(0, first).join('\n')), choices };
 }
 
+// A RUBRIC `cases:` LINE says which of a goal's cases a question exercises, so a pass can be
+// recorded against them. Two forms. `x, y` is for a question naming exactly one goal. `c-a: x, y;
+// c-b: z` is per goal, for a question naming several. Returns { cases: { [goal]: string[] },
+// problems } with `cases` {} when there is no line. It does not know the goal's DEFINED cases,
+// which live in goals.md; idProblems checks those. `where` labels the problems.
+function parseQuestionCases(value, goals, where) {
+  const problems = [];
+  const cases = {};
+  if (!value) return { cases, problems };
+  const ids = (text) => text.split(',').map((c) => c.replace(/`/g, '').trim()).filter(Boolean);
+  if (!value.includes(':')) {
+    if (goals.length === 1) cases[goals[0]] = ids(value);
+    else problems.push(`${where} lists cases without a goal, but names ${goals.length ? `goals ${goals.join(', ')}` : 'no goal'}; write them per goal as \`c-a: x, y; c-b: z\``);
+    return { cases, problems };
+  }
+  for (const part of value.split(';').map((p) => p.trim()).filter(Boolean)) {
+    const m = /^`?([^:`]+?)`?\s*:\s*(.*)$/.exec(part);
+    if (!m) {
+      problems.push(`${where} has a cases entry "${part}" that is not \`<goal>: <case>, <case>\``);
+      continue;
+    }
+    const goal = m[1].trim();
+    if (!goals.includes(goal)) problems.push(`${where} lists cases for ${goal}, which the question does not name`);
+    else cases[goal] = [...(cases[goal] ?? []), ...ids(m[2])];
+  }
+  return { cases, problems };
+}
+
 /** Read every question and rubric in one source. Returns { items, problems } with items keyed in
  *  file order across tasks/, and problems as human-readable strings. It COLLECTS rather than
  *  throwing, for the same reason applySlots does: one malformed entry should not hide the other
@@ -188,6 +216,9 @@ export function readBank(dir, label = '') {
       const recording = {};
       if (r.goal) recording.goal = r.goal;
       if (r.move) recording.move = r.move;
+      const qc = parseQuestionCases(r.cases, r.goal ? [r.goal.replace(/`/g, '').trim()] : [], s.id);
+      problems.push(...qc.problems);
+      recording.cases = qc.cases;
 
       // `rubric` joins the model answer and the credit line, because that is the single string
       // the grader wants. Feedback wants only the first half: telling a student "Full credit for
@@ -314,8 +345,10 @@ export function readFolderBanks(dir, label = '') {
         const prompt = setup ? `${setup}\n\n${body}` : body;
         const type = r.type || 'free';
         const goals = (r.goal ?? '').split(',').map((g) => g.replace(/`/g, '').trim()).filter(Boolean);
+        const qc = parseQuestionCases(r.cases, goals, label3);
+        problems.push(...qc.problems);
         const common = {
-          bank, activity, scenario, id: s.id, label: label3, goals,
+          bank, activity, scenario, id: s.id, label: label3, goals, cases: qc.cases,
           ...(goals.length === 1 ? { goal: goals[0] } : {}),
           ...(r.move ? { move: r.move } : {}),
           tags: tagsForMove(r.move),

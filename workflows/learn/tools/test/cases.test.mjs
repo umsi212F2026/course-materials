@@ -118,3 +118,45 @@ test('a cases slot that yields no case, or has stray text, or is empty, is a pro
   const dir = makeTopic({ goals: CAP_GOAL('c-a', '- **cases:** a, b\n') });
   assert.ok(readGoals(dir).goals[0].problems.some((x) => x.includes('c-a')));
 });
+
+// --- rubric questions and cases, as survey reports them -----------------------------------
+import { mkdirSync, writeFileSync } from 'node:fs';
+import { join, dirname } from 'node:path';
+
+function bankTopic(goals, rubric) {
+  const dir = makeTopic({ goals, activities: '### a-x\n- **checks:** c-a, c-b\n' });
+  const put = (rel, text) => {
+    mkdirSync(dirname(join(dir, rel)), { recursive: true });
+    writeFileSync(join(dir, rel), text);
+  };
+  put('tasks/a-x/s1.md', '### q1\n\nName it.\n');
+  put('rubrics/a-x/s1.md', rubric);
+  return survey(dir).problems;
+}
+const WITH = CAP_GOAL('c-a', block([['one', 'first'], ['two', 'second']])) + '\n' + CAP_GOAL('c-b');
+
+test('a question listing a case its goal does not define is reported', () => {
+  const found = bankTopic(WITH, '### q1\n\n- **goal:** c-a\n- **answer:** X.\n- **cases:** one, nope\n');
+  assert.ok(found.some((p) => p.includes('a-x/s1/q1') && p.includes('nope') && p.includes('c-a')), found.join('\n'));
+  assert.ok(!found.some((p) => p.includes('lists no case')), found.join('\n'));
+});
+
+test('a question on a goal with cases that lists none for it is reported', () => {
+  const found = bankTopic(WITH, '### q1\n\n- **goal:** c-a\n- **answer:** X.\n');
+  assert.ok(found.some((p) => p.includes('a-x/s1/q1') && p.includes('c-a') && /lists no case/.test(p)), found.join('\n'));
+});
+
+test('a folder question naming no goal is reported', () => {
+  const found = bankTopic(WITH, '### q1\n\n- **answer:** X.\n');
+  assert.ok(found.some((p) => p.includes('a-x/s1/q1') && /names no goal/.test(p)), found.join('\n'));
+});
+
+test('a topic with no cases anywhere raises no case problems', () => {
+  const found = bankTopic(CAP_GOAL('c-a') + '\n' + CAP_GOAL('c-b'), '### q1\n\n- **goal:** c-a\n- **answer:** X.\n');
+  assert.ok(!found.some((p) => p.includes('a-x/s1/q1')), found.join('\n'));
+});
+
+test('a question on a goal with cases that lists its cases raises nothing', () => {
+  const found = bankTopic(WITH, '### q1\n\n- **goal:** c-a\n- **answer:** X.\n- **cases:** one, two\n');
+  assert.ok(!found.some((p) => p.includes('a-x/s1/q1')), found.join('\n'));
+});

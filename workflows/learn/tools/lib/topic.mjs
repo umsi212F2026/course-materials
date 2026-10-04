@@ -592,8 +592,20 @@ export function idProblems(dir, status = statusOf(dir)) {
   const banks = readFolderBanks(dir);
   found.push(...banks.problems);
   for (const item of banks.items) {
+    // EVERY BANKED QUESTION NAMES A GOAL: one naming none records nothing and is served last, so it
+    // is a mistake to fix (or a warm-up to turn into an ordinary question on an easy case).
+    if (!item.goals.length) found.push(`${item.label} names no goal`);
     for (const id of item.goals)
       if (!seen.has(id)) found.push(`${item.label} names goal ${id}, which is not in goals.md`);
+    // CASES: each one listed must be one its goal defines, and a question on a goal that has cases
+    // must say which it exercises, or a pass could not be recorded against any of them.
+    for (const id of item.goals) {
+      const defined = seen.get(id)?.cases ?? [];
+      const listed = item.cases[id] ?? [];
+      if (defined.length && !listed.length) found.push(`${item.label} is on ${id}, which has cases, but lists no case for it`);
+      for (const c of listed)
+        if (!defined.some((d) => d.id === c)) found.push(`${item.label} lists case ${c} for ${id}, which ${id} does not define`);
+    }
     if (item.goals.length < 2 || item.type === 'mcq') continue;
     for (const id of item.goals)
       if (!item.credit.includes(`\`${id}\`:`))
