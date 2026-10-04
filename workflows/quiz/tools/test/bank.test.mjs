@@ -114,10 +114,27 @@ test("question ids repeat across scenarios but not within one", () => {
 });
 
 test("a scenario file with no rubric file is a problem naming it", () => {
-  const dir = source({ "tasks/a-x/lonely.md": "### q1\n\nQ.\n" });
+  const dir = source({
+    "tasks/a-x/lonely.md": "### q1\n\nQ.\n",
+    "tasks/a-x/paired.md": "### q1\n\nQ.\n",
+    "rubrics/a-x/paired.md": "### q1\n\n- **answer:** A.\n",
+  });
   const { items, problems } = readFolderBanks(dir);
-  assert.equal(items.length, 0);
+  assert.deepEqual(items.map((i) => i.label), ["a-x/paired/q1"]);
   assert.ok(problems.some((p) => p.includes("lonely.md")));
+});
+
+test("a tasks folder with no rubrics folder at all is a legacy study artifact, skipped", () => {
+  const dir = source({ "tasks/a-old/notes.md": "### q1\n\nQ.\n" });
+  assert.deepEqual(readFolderBanks(dir), { items: [], problems: [] });
+});
+
+test("a free item exposes its raw credit text, without the key or the answer", () => {
+  const dir = source({
+    "tasks/a-x/s.md": "### q1\n\nQ.\n",
+    "rubrics/a-x/s.md": "Key.\n\n### q1\n\n- **answer:** A.\n- **credit:** full for A.\n",
+  });
+  assert.equal(readFolderBanks(dir).items[0].credit, "full for A.");
 });
 
 test("a question with no rubric entry, and a rubric entry with no question, are problems", () => {

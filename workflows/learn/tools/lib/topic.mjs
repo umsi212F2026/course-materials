@@ -496,8 +496,9 @@ export function idProblems(dir, status = statusOf(dir)) {
   // FOLDER BANKS get a mechanical floor for curation: what readFolderBanks cannot parse, plus
   // the two checks that need goals.md. A question naming a goal that isn't there can never be
   // credited, and a multi-goal question whose credit has no `<id>`: statement for one of its
-  // goals leaves the grader nothing to judge that goal by. mcq has no credit text, so it is
-  // exempt from the second. Single-file banks are untouched.
+  // goals leaves the grader nothing to judge that goal by. Only the credit text is searched: a
+  // scenario key or an answer that mentions `<id>`: is not a statement of what earns credit. mcq
+  // has no credit text, so it is exempt from the second. Single-file banks are untouched.
   const banks = readFolderBanks(dir);
   found.push(...banks.problems);
   for (const item of banks.items) {
@@ -505,7 +506,7 @@ export function idProblems(dir, status = statusOf(dir)) {
       if (!seen.has(id)) found.push(`${item.label} names goal ${id}, which is not in goals.md`);
     if (item.goals.length < 2 || item.type === 'mcq') continue;
     for (const id of item.goals)
-      if (!item.rubric.includes(`\`${id}\`:`))
+      if (!item.credit.includes(`\`${id}\`:`))
         found.push(`${item.label} names goals ${item.goals.join(', ')} but its credit has no statement for ${id}`);
   }
 

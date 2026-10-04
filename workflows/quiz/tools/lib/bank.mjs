@@ -28,9 +28,13 @@
 // A FOLDER BANK is tasks/<activity>/<scenario>.md with rubrics/<activity>/<scenario>.md: the top
 // of each file (before its first `###`) is shared by the scenario's questions, the setup in
 // tasks/ and the key in rubrics/, and each `###` is one question. The item's label is
-// <activity>/<scenario>/<question>, and its stratum is the activity. A scenario file with no
-// rubric file is a PROBLEM here, though a single file without one is skipped silently: a folder
-// under tasks/ exists only to hold a bank, whereas a loose tasks/ file may be a study activity.
+// <activity>/<scenario>/<question>, and its stratum is the activity. Once rubrics/<activity>/
+// exists, a scenario file with no rubric file beside it is a PROBLEM, though a single file without
+// one is skipped silently: a folder that has started a key is a bank, whereas a loose tasks/ file
+// may be a study activity. A LEGACY tasks/<activity>/ with no rubrics/<activity>/ at all is skipped
+// too, with no items and no problems: authored topics kept study material in folders like that
+// before folder banks existed, and calling every file in one a broken bank would bury the real
+// problems under dozens of phantom ones.
 
 import { readFileSync, readdirSync, existsSync, statSync } from 'node:fs';
 import { join } from 'node:path';
@@ -237,6 +241,8 @@ export function readFolderBanks(dir, label = '') {
     .filter((n) => statSync(join(tasksDir, n)).isDirectory())
     .sort();
   for (const activity of activities) {
+    // A LEGACY STUDY FOLDER, not a bank: see the header.
+    if (!existsSync(join(rubricsDir, activity))) continue;
     const bank = label ? `${label}/${activity}` : activity;
     const scenarios = readdirSync(join(tasksDir, activity)).filter((n) => n.endsWith('.md')).sort();
     for (const file of scenarios) {
@@ -306,7 +312,9 @@ export function readFolderBanks(dir, label = '') {
           // A multi-goal credit written as an indented list keeps one line per goal (see fields).
           const credit = r.credit ? r.credit.charAt(0).toUpperCase() + r.credit.slice(1) : '';
           const judged = credit ? `${r.answer} ${credit}` : r.answer;
-          items.push({ ...common, rubric: key ? `${key}\n\n${judged}` : judged });
+          // `credit` is the raw credit text alone, for checks that must not be satisfied by the
+          // key or the answer happening to mention a goal (idProblems' per-goal statement check).
+          items.push({ ...common, rubric: key ? `${key}\n\n${judged}` : judged, credit: r.credit ?? '' });
         }
       }
       for (const id of rubrics.keys()) {
