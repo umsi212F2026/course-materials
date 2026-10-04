@@ -12,8 +12,9 @@ plan, implementation). Update this file as items finish or are added.
 3. **Unified question banks.** Spec `specs/2026-10-03-unified-banks-design.md`. Five phases:
    - ~~Phase 1: bank format, picker, multi-goal judge.~~ Done, `10d6158..93158f9`. Plan
      `plans/2026-10-03-unified-banks-phase-1.md`.
-   - Phase 2: goal model (topic origin, capability, `serves: group`). Plan
-     `plans/2026-10-03-unified-banks-phase-2.md`.
+   - ~~Phase 2: goal model (topic origin, capability, `serves: group`).~~ Done,
+     `481a63d..745010b`. Plan `plans/2026-10-03-unified-banks-phase-2.md`. Real course topics
+     don't carry the `**origin:** course` header yet; their per-goal stamps still work.
    - Phase 3: vocabulary as `a-words`, with migration, and retiring the `supply` slot (moved
      from phase 2: words depend on `supply: vocabulary` until `a-words` exists).
    - Phase 4: curation with two instructor stops.
@@ -61,3 +62,21 @@ plan, implementation). Update this file as items finish or are added.
 - No mcq folder test of `expected`, or of `move` being absent.
 - `pick.mjs`: an unparseable `at` gives NaN ordering.
 - `next-item.mjs`: untested paths (equal-`at` ties, exit 1 on misuse).
+
+## Deferred minors from item 3, phase 2
+
+- `readGoals` returns extra `written` and `malformed` fields used only by `idProblems`.
+- Survey `--report`: no test of a part's two-space indent; a capability slug used in two groups
+  gets two partial headings; a long line in `survey.mjs` (the `tick` computation).
+- `serves: group`: the matcher is strict on case and spacing (`Group x` falls through to the
+  unknown-id problem, so it is still reported).
+- The spec says parts stay in the default group; nothing enforces it, and slots.md says
+  "usually".
+- slots.md: `capability` sits loosely under "data or reference", and that table row is wider
+  than its neighbours.
+- Untested: a header after `## Goals` is ignored; one- and five-word slugs rejected;
+  `serves: group capabilities` (the default group) expands; a backticked group item expands.
+
+## Housekeeping
+
+- `.superpowers/` (subagent scratch) is not in `.gitignore`. Nothing from it has been committed.
