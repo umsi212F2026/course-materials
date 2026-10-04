@@ -107,11 +107,12 @@ argument.
    no `a-words` entry yet, a move set live checks it. A legacy stamp carrying
    `origin: generated` is not live and counts for nothing.
 
-   **If a goal other than a word has no live entry at all, there is nothing to check it with.** Usually the
-   entry that it passed was dropped afterwards, by a tutor who found something wrong with it;
-   occasionally the goal never had one, because it was met by the learner declaring it rather
-   than by an adjudicated pass. Say so and go on to the next record. Don't improvise a
-   replacement: an invented task gets judged against a criterion it wasn't written for.
+   **If a goal other than a word has no live entry at all, there is nothing to check it
+   with.** Usually the entry that it passed was dropped afterwards, by a tutor who found
+   something wrong with it; occasionally the goal never had one, because it was met by the
+   learner declaring it rather than by an adjudicated pass. Say so and go on to the next record.
+   Don't improvise a replacement: an invented task gets judged against a criterion it wasn't
+   written for.
 
    Nothing else in this sequence applies — there was no attempt, so there is nothing to
    adjudicate and nothing to record, and the date stays where it is so the goal is still due
@@ -123,23 +124,8 @@ argument.
 
    That's what `learn` spawns curation on, and what curation clears when it has built one.
 
-   **Then choose the task.**
-
-   **An ordinary goal**: the task is the entry itself. Prefer `kind: generator`, which produces a
-   fresh instance. A `bank` is fine if it has items whose labels aren't in `served`. A
-   `single instance` already in `served` is the weakest form there is — if it's all there is,
-   use it.
-
-   **A word**: the task is its `a-words` question, from the bank below. When nothing is banked
-   for it, set one move live from
-   [`../goal-setting/references/vocabulary-moves.md`](../goal-setting/references/vocabulary-moves.md),
-   labelled `<MOVE>: <instance>`. Pick one whose label isn't near the front of `served`.
-   **Prefer APPLY.** It draws on work
-   that didn't exist when the word was first met, so it can't be answered from memory of
-   answering before. That's exactly the property a review wants and the other moves don't
-   have.
-
-   **Before either, try the bank.** Ask for a question that credits the goal that is due:
+   **Then choose the task. For any goal, try the bank first.** Ask for a question that credits
+   the goal that is due:
 
    ```
    node workflows/learn/tools/next-item.mjs <topic-folder> --goal <goal-id>
@@ -147,10 +133,23 @@ argument.
 
    Show the learner only what follows `--- learner sees ---`. It prefers a question they have
    never been served, then the one served longest ago, so you need not filter by `served`. Run
-   it with `--key` to read the grading text, and keep that from them. **Exit code 2 means no
-   bank question names this goal**, and then the generator runs live, as above: for a word,
-   one move. A question may
-   credit other goals as well; that is fine, and step 3 says how it is ruled.
+   it with `--key` to read the grading text, and keep that from them. A question may credit
+   other goals as well; that is fine, and step 3 says how it is ruled.
+
+   **Exit code 2 means no bank question names this goal**, and then the task comes from the
+   goal's activity, run live:
+
+   **An ordinary goal**: the task is the entry itself. Prefer `kind: generator`, which produces a
+   fresh instance. A bank the picker doesn't serve, such as a numbered range in a book, is fine
+   if it has items whose labels aren't in `served`. A `single instance` already in `served` is
+   the weakest form there is; if it's all there is, use it.
+
+   **A word**: set one move live from
+   [`../goal-setting/references/vocabulary-moves.md`](../goal-setting/references/vocabulary-moves.md),
+   labelled `<MOVE>: <instance>`. Pick one whose label isn't near the front of `served`.
+   **Prefer APPLY.** It draws on work that didn't exist when the word was first met, so it can't
+   be answered from memory of answering before. That's exactly the property a review wants and
+   the other moves don't have.
 
    Either way, **don't say what the criterion is.** Just give them the task.
 

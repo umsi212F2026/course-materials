@@ -18,17 +18,16 @@ the activity isn't obvious from the entry.
 `node workflows/learn/tools/next-item.mjs <topic-folder> --goal <word-id>` and serve it as a
 bank question, below. **Exit 2 means nothing is banked for that word, so you pick a move from
 `../../goal-setting/references/vocabulary-moves.md` and instantiate it.** There are no
-candidates to offer and no choice to put to the learner. Take one the word hasn't had recently
-(run
+candidates to offer and no choice to put to the learner. Take one the word hasn't had
+recently. This returns the labels this goal has already been given, most recent first:
 
 ```
 node workflows/learn/tools/served.mjs <topic-folder> <goal-id>
 ```
 
-which returns the labels this goal has already been given, most recent first), label it
-`<MOVE>: <instance>`, and set exactly what that move asks for and no more. Rewording DEFINE into something friendlier, or letting a
-CATCH item come with a hint about where the error is, changes what the pass would mean, so
-don't do that.
+Label the move `<MOVE>: <instance>`, and set exactly what it asks for and no more. Rewording
+DEFINE into something friendlier, or letting a CATCH item come with a hint about where the
+error is, changes what the pass would mean, so don't do that.
 
 **A bank, where the activity has one.** If `tasks/<activity-id>/` exists in the topic folder, the
 questions are written and you serve one rather than inventing it:

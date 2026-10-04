@@ -48,8 +48,9 @@ Quote the word — most are phrases. **You choose the id**; see _Naming a word_ 
 prints the entry it added; read it back.
 
 The script is what makes it a word: it writes the three slots, `criterion: vocabulary`,
-`bar: one production pass` and `group: vocabulary`, and it is the only writer for that shape. There is no type called _word_ anywhere in the system, which is why
-there is nothing to keep in step with it.
+`bar: one production pass` and `group: vocabulary`, and it is the only writer for that shape.
+There is no type called _word_ anywhere in the system, which is why there is nothing to keep in
+step with it.
 
 Appending a word entry is not a revision of that topic's goals — a few lines, no folder, no
 commitment.

@@ -34,7 +34,8 @@ non-empty, its `checks` cell is non-empty, and its `notes` cell is empty. There 
 exceptions: every row is a goal with a criterion, including the orientation one.
 
 **Coverage has a row per goal the orchestrator listed in the Goals table**: every goal but the
-words. A word is served by the `a-words` entry, is not there, has no row, and is not a gap. Don't add rows and don't remove them; that table's membership is the orchestrator's.
+words. A word is served by the `a-words` entry, is not there, has no row, and is not a gap.
+Don't add rows and don't remove them; that table's membership is the orchestrator's.
 
 1. Read the existing activity entries carrying `status: dropped`. They say what has already
    failed and why, and they're the only feedback this phase ever receives. Proposing a

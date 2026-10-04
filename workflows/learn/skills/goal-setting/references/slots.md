@@ -9,7 +9,7 @@ ordinary capability, a vocabulary word, an orientation — and the slots below a
 system asks of any of them.
 
 **Every slot defaults.** An ordinary capability carries no slot values at all. A word carries
-the three that differ from the default; an orientation carries five. There are no named types:
+the three that differ from the default; an orientation carries six. There are no named types:
 nothing in the system says "this is a word", only that this goal's `criterion` is `vocabulary`
 and its group is one the `a-words` activity serves.
 `capability` is the one slot with no default: it is simply absent on a goal that isn't a part.
@@ -90,7 +90,8 @@ it needs, and no more.
 
 An activity's generator may read whatever the entry carries beyond its slots: a word's _what it
 names_, _nearest confusable_ and _synonyms_ are inputs to the `a-words` generator, meaningful
-only to it. That is the mirror of the label: data flowing _into_ an implementation rather than out of one.
+only to it. That is the mirror of the label: data flowing _into_ an implementation rather than
+out of one.
 
 Likewise `taught elsewhere`, a line saying where a goal is also taught (`PS2; session 5`). It
 is payload read only by the tutor, which uses it to offer the learner the choice of learning the

@@ -118,9 +118,9 @@ with a new id, not a rename.
 
 **One list, one entry per goal, whatever kind of goal it is.** An ordinary capability carries a
 statement and a criterion and nothing else. What a word or an orientation carries beyond that
-is a handful of **slots** — where its activities come from, who rules on an attempt, what makes
-the claim true — every one of which defaults, so writing a default down is the beginning of a
-second definition site.
+is a handful of **slots** (where the statement of _met_ comes from, who rules on an attempt,
+what makes the claim true), every one of which defaults, so writing a default down is the
+beginning of a second definition site.
 
 [`references/slots.md`](references/slots.md) is the reference. Read it before writing a slot
 you haven't written before; a value nothing implements is refused when a tool next reads the
@@ -128,7 +128,7 @@ file, by name.
 
 **You will hardly ever write one.** The two shapes that need them have writers of their own:
 
-- **a word** — `workflows/learn/tools/new-word.mjs` fills its four slots. Call it rather than
+- **a word**: `workflows/learn/tools/new-word.mjs` fills its three slots. Call it rather than
   typing the entry.
 - **the orientation** — shipped filled in by the template, in every topic. Not yours to edit.
 
@@ -248,7 +248,7 @@ from the library, it's already decided — take it.
 can't be, and it doesn't have to be. It's append-only, and adding to it later is completely
 normal.
 
-**Add each one with the script**, which is what fills the four slots that make it a word:
+**Add each one with the script**, which is what fills the three slots that make it a word:
 
 ```
 node workflows/learn/tools/new-word.mjs <area-slug> "<the word>" <id>
