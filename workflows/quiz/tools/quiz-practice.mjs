@@ -123,9 +123,9 @@ function page(items, source) {
 <main>
  <h1>Practice quiz</h1>
  <p class=src>${esc(source)}</p>
- <p class=cold>Answer these cold, with nothing else open. Nothing here will help you, on
-  purpose: an answer you talked your way to does not tell you what you know. Your agent sees
-  what you wrote only after you submit.</p>
+ <p class=cold>Answer these cold if you can. You may ask your agent anything along the way;
+  it will help, and that answer will be recorded as helped, since an answer you talked your way
+  to does not show what you know alone. Your agent sees what you wrote only after you submit.</p>
  <form id=f>${body}
   <button type=submit>Submit</button>
  </form>

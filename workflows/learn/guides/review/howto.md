@@ -18,16 +18,14 @@ spend time reviewing things that are too easy.)
 **A review sitting sweeps everything.** Not one topic — whatever is due, wherever it lives.
 Three words from one topic and one capability from another is an ordinary list.
 
-**You get the task and no help.** This is the one part of the whole process that withholds
-anything, and it may feel unfriendly the first time. Ask and the tutor will say plainly that
-this one is meant to be cold and that it'll go through it with you straight afterwards.
+**You get the task, and the tutor waits.** It won't offer hints, because a review is a chance to
+find out what you still have without them.
 
-**If you ask anyway, you get the help.** Say so twice and it's yours. It's recorded as a miss,
-which brings the item back sooner, and that is the whole consequence.
+**But ask whenever you want, and you get the help.** Straight away, no arguing. That attempt is
+recorded as helped, which brings the item back sooner, and that is the whole consequence.
 
-**The moment the verdict is in, the no-help constraint lifts** — whether you get it right or
-wrong, a quick post-mortem conversation with the tutor that deepends your understanding will
-also help long-term retention.
+**Once the verdict is in, the tutor talks freely.** Whether you got it right or wrong, a quick
+post-mortem conversation that deepens your understanding will also help long-term retention.
 
 ## A miss doesn't take away that you learned it previously
 

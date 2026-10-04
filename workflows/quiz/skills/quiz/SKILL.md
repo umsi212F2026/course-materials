@@ -28,15 +28,16 @@ nothing here is softened, so the answer means something.
 
 ## The one rule that everything else serves
 
-**You do not help, at any point before the answers are submitted.** Not a hint, not a
-definition, not a "think about what happens to the old commit". Not even confirming that an
-answer sounds right.
+**You volunteer nothing while the page is open, and you answer whatever they ask.** Not a hint
+or a reassurance unasked. But if they ask about the material, or about a question on the page,
+answer it fully and at once: refusing a learner who wants to talk is the record coming before
+the learner.
 
-The page is the only arrangement where a student answers with nobody holding the rubric, and it
-stops being that the moment you talk about the material while it is open. **If they ask you
-something while the quiz is up, say you cannot answer until they submit and that everything is
-fair game afterwards.** That is not a rule you are enforcing on them; it is what makes their
-score worth reading.
+The page is what makes this work. A student answers there with nobody holding the rubric, so an
+answer they worked out alone is plainly theirs, and one they talked through with you is plainly
+helped; they know which, and so does the transcript. **A helped answer is not a broken quiz; it
+is recorded as helped** (step 5 sends it as `unaided: no`), and the report says how many there
+were.
 
 **Do not open the quiz page yourself, with a browser tool or anything else.** You will have a
 browser available and the URL in front of you, and it is the one thing in reach that destroys
@@ -127,9 +128,9 @@ that URL rather than the one below, which is only the usual one:
 > Your practice quiz is at **http://127.0.0.1:5300**. `<n>` questions, drawn the same way the
 > real one was, from the same pool.
 >
-> Answer them cold, with nothing else open, and nothing from me: I cannot see what you write
-> until you submit, and that is the point. **Come back here and tell me when you have pressed
-> Submit.**
+> Answer them cold if you can: I cannot see what you write until you submit. If you want to ask
+> me something along the way, ask; I will help, and that answer will count as helped. **Come
+> back here and tell me when you have pressed Submit.**
 
 **If the command printed a `SHORT:` line, its sentence goes into that block, ahead of the
 rest**, with what the `PROBLEMS` lines above it name as missing:
@@ -285,7 +286,9 @@ the learner closes the laptop still leaves the record.
 you say before this collapses into `Worked for 31s` and the learner never sees it.
 
 One message, and nothing after it in the same turn. The score, then the items in the order they
-were asked, then the last two sentences exactly as they stand here:
+were asked, then the last two sentences exactly as they stand here. **If any answer was helped**
+(sent as `unaided: no` in step 5), say so after the score, for example "3 out of 4, one of them
+with help", and mark that item "(with help)" in its heading.
 
 > **3 out of 4** on the session 5 practice quiz.
 >

@@ -1164,8 +1164,8 @@
         <bpmn:incoming>qf6</bpmn:incoming>
         <bpmn:outgoing>qf7</bpmn:outgoing>
       </bpmn:scriptTask>
-      <bpmn:userTask id="Q_answer" name="Answer them cold, with nothing else open">
-        <bpmn:documentation>The same separation the real quiz has. No hint, no definition, and no confirming that an answer sounds right, until it is submitted.</bpmn:documentation>
+      <bpmn:userTask id="Q_answer" name="Answer them, asking for help if wanted">
+        <bpmn:documentation>Cold if they can. The agent volunteers nothing while the page is open, but answers whatever they ask; an answer they talked through is graded as unaided: no and counted as helped in the report.</bpmn:documentation>
         <bpmn:incoming>qf7</bpmn:incoming>
         <bpmn:outgoing>qf8</bpmn:outgoing>
       </bpmn:userTask>
@@ -1292,7 +1292,8 @@
         <bpmn:incoming>r0</bpmn:incoming>
         <bpmn:outgoing>Flow_0ybsgz2</bpmn:outgoing>
       </bpmn:exclusiveGateway>
-      <bpmn:userTask id="R_attempt" name="Attempt it cold, with no help offered">
+      <bpmn:userTask id="R_attempt" name="Attempt it, with help only if asked">
+        <bpmn:documentation>The agent volunteers nothing, and helps at once whenever asked. A helped attempt is ruled unaided: no and counts as a lapse, so the goal comes back sooner.</bpmn:documentation>
         <bpmn:incoming>Flow_0zf28qi</bpmn:incoming>
         <bpmn:outgoing>r4</bpmn:outgoing>
       </bpmn:userTask>

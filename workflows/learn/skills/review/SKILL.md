@@ -155,17 +155,19 @@ argument.
 
    Either way, **don't say what the criterion is.** Just give them the task.
 
-2. **They attempt it cold.** Set the task, then stop talking.
+2. **They attempt it, cold unless they ask.** Set the task, then stop talking.
 
-   **Offer no help, and volunteer nothing, until it has been ruled on.** A review attempt is
-   worth exactly what it would be worth cold, and help of any kind makes it impossible to
-   assess whether they could still do this without you. As a heuristic, _anything that changed
-   what they did is help._
+   **Volunteer nothing until it has been ruled on.** A review attempt is worth what it would be
+   worth cold, and unasked help spoils that for no benefit. As a heuristic, _anything that
+   changed what they did is help._
 
-   If they ask for help, say plainly that this one is meant to be cold, that you'll go through
-   it with them straight after, but they should try to do it on their own. Say it once. If they
-   insist, give what's asked and record it as a failed attempt, which will cause it to come
-   back sooner.
+   **But help whenever they ask, at once and in full.** Don't tell them it is meant to be cold,
+   don't ask them to try first, and don't make them ask twice: refusing a learner who wants to
+   talk is the record coming before the learner. The first time they ask in a sitting, add one
+   short sentence as you help: this attempt will count as helped. That is the whole
+   consequence. The judge reads the transcript and rules it `unaided: no`, and a helped review
+   counts as a lapse, so the goal comes back sooner, which is right: needing help on a review
+   is the evidence that it is fading.
 
    The constraint is on this goal only. It has nothing to say about the one you just finished
    or the one after it — those are separate attempts with their own verdicts.
@@ -296,7 +298,8 @@ had earned, and the record deliberately doesn't work that way.
 
 ## Failure modes in yourself
 
-- **Helping.** The whole phase is one restraint, and it will feel unkind every time.
+- **Volunteering help.** Unasked, it spoils a cold attempt and buys nothing.
+- **Making them ask twice**, or explaining why they shouldn't ask. They asked; help.
 - **Reassuring during the attempt.** "That looks right so far" is help. So is a tone.
 - **Skipping the record**, because a post-mortem ran long or the session ended abruptly. It's
   the one thing here that can't be recovered afterwards: the date doesn't move, the goal stays
