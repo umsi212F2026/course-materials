@@ -50,7 +50,8 @@ been merged or pushed.
      pool keys work at topic, activity and scenario level; practice prefers unseen questions;
      multi-goal questions are graded and recorded per goal. What the instructor's private
      tools must change is under "Actions on course-private" below.
-4. **Help is always available; help just means the attempt doesn't count.** A student reported
+4. ~~**Help is always available; help just means the attempt doesn't count.**~~ Done,
+   `5c6d08e`. A helped review still counts as a lapse (instructor's choice). A student reported
    the agent refusing to engage because it wanted an independent test. Study already gives help
    when asked; the refusals come from review (`review/SKILL.md`, "Offer no help ... until it has
    been ruled on"; it says the attempt is meant to be cold and helps only if they insist) and from
