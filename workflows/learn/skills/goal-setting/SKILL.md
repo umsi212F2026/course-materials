@@ -320,10 +320,12 @@ and don't count towards it.
 
 ### The order they're tackled in
 
-The `## Sequence` section after `## Goals`: numbered sets, earliest first, each line a list of
-groups, capability slugs or goal ids. Study works through it in order, choosing at random
-within a set. How an item resolves to a goal, and what counts as a problem, is explained in
-the template's comment; read it there rather than here.
+The `## Sequence` section just above `## Goals`: numbered sets, earliest first, each line a list
+of groups, capability slugs or goal ids. New entries go under `## Goals`, and the Sequence
+section sits above it, so the end of the file is always the end of Goals. Study works through
+it in order, choosing at random within a set. How an item resolves to a goal, and what counts
+as a problem, is explained in the comment of `workflows/learn/templates/goals.md`; read it
+there rather than here.
 
 **Moves**
 
@@ -390,3 +392,4 @@ can read and act on.
 
 - [`new-word.mjs`](workflows/learn/tools/new-word.mjs) — tool
 - [`record-status.mjs`](workflows/learn/tools/record-status.mjs) — tool
+- [`goals.md`](workflows/learn/templates/goals.md) - template

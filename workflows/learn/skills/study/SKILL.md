@@ -73,8 +73,14 @@ ask differently rather than repeating it.
 1. **They choose.** Unless they have named a goal, find the next one from the topic's sequence:
 
    ```
-   node workflows/learn/tools/next-goal.mjs <topic-folder>
+   node workflows/learn/tools/next-goal.mjs <topic-folder> [--skip <goal-id> ...]
    ```
+
+   **Keep a skip list for this sitting.** Every goal the learner sets aside in this sitting
+   ("Come back to it later", below), optional ones such as the orientation included, goes into
+   it, and every `next-goal.mjs` call passes each as `--skip <goal-id>`. A new session starts
+   with an empty list; nothing is recorded. The tool also never returns a goal with nothing
+   live to study, so you will not be handed one you cannot run.
 
    It prints `goal: <id>` and `set: <n> of <total>`, chosen at random from the first set that
    still has an open goal; you do not choose among them yourself. Offer that goal's activities
@@ -82,8 +88,9 @@ ask differently rather than repeating it.
    set, gets it with no comment. Exit 2 (`nothing open in <topic>` on stderr) means no goal is
    open, so say where things stand rather than offering anything.
 
-   If it also prints `sequence: not decided yet`, the topic has no Sequence section: say so
-   once in the sitting and offer to set one. Setting it is a goal-setting conversation, and a
+   If the report you read at the start of the session shows `sequence: not decided yet` (or
+   `next-goal.mjs` prints it), the topic has no Sequence section: say so once in the sitting,
+   whether or not the learner then names a goal themselves, and offer to set one. Setting it is a goal-setting conversation, and a
    separate one, so this session ends first (two sessions open on one topic lose each other's
    writes). Record nothing on the queue: the sequence belongs to no goal, and survey keeps
    reporting it until the section is written. If they want to do it now, make sure the last
@@ -175,7 +182,8 @@ ask differently rather than repeating it.
       vocabulary move. Where the activity has no bank, offer another live activity for the same
       goal.
    2. **Come back to it later.** Something else, or stop. Nothing more to record; the miss is
-      already in the log.
+      already in the log. Add the goal to this sitting's skip list, so `next-goal.mjs` does not
+      offer it again until the next session.
    3. **Mark it as learned.** See _When the learner marks it learned_, below.
 
    Judges are deliberately tough, and a learner who has had the feedback is the best placed to

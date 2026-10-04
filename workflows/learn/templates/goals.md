@@ -41,7 +41,45 @@
   capability is a new entry with a new id, not a rename.
 
   THE ORIGIN LINE. Only a topic the course ships carries one, as `**origin:** course` on its
-  own line between the title above and `## Goals`. Leave it out of a topic you built yourself:
+  own line between the title above and `## Sequence
+
+<!--
+  THE ORDER THE GOALS ARE TACKLED IN, decided by goal-setting. One numbered line per set,
+  earliest first, and no preferred order inside a set: the tutor chooses among a set's open
+  goals at random. Study offers from the first set that still has an open goal, and a learner
+  who wants a goal from a later set just says so.
+
+  THIS SECTION SITS ABOVE `## Goals` ON PURPOSE. The end of the file is then always the end of
+  Goals, so a goal appended there (new-word.mjs does) is never lost inside this section. Write
+  new entries under `## Goals`; a `###` entry written here is not read as a goal, and survey.mjs
+  says so.
+
+  AN ITEM IS A GROUP (`vocabulary`), A CAPABILITY SLUG (`weigh-hosting-plans`, naming all of
+  that capability's parts) OR A GOAL ID (`c-weigh-sleep`), separated by commas, backticks
+  allowed:
+
+      2. vocabulary, c-weigh-sleep
+
+  THE MOST SPECIFIC MENTION WINS. A goal goes in the set that lists its id; failing that, the
+  set that lists its capability slug; failing that, the first set that lists its group. So a
+  capability named by id can sit with the words, and a word named by id can come last. A word
+  added mid-topic lands wherever its group is listed, with no edit here. A slug or a group
+  listed in two sets counts in the first, and nothing is reported; a goal id in two sets is.
+
+  EVERY GOAL MUST LAND IN A SET. There is no catch-all, and a goal named nowhere is a problem
+  survey.mjs reports, as it does an item that matches nothing and a goal id listed in two
+  sets. The three standard groups, orientation, vocabulary and capabilities, may stay listed
+  while nothing is in them yet; any other name has to match a group, slug or goal. A topic
+  with no Sequence section at all is a decision not yet made, not a problem: it is worked in
+  the order orientation, vocabulary, capabilities, then any other group, until goal-setting
+  writes the section.
+-->
+
+1. orientation
+2. vocabulary
+3. capabilities
+
+## Goals`. Leave it out of a topic you built yourself:
   absent means `learner`. Every goal inherits the topic's origin unless it carries an
   `- **origin:**` of its own, which is how a goal a student adds to a course topic stays
   theirs. survey.mjs reports a header value that is neither `course` nor `learner`.
@@ -198,34 +236,3 @@
 - **recurrence:** never
 - **is_required:** no
 - **group:** orientation
-
-## Sequence
-
-<!--
-  THE ORDER THE GOALS ARE TACKLED IN, decided by goal-setting. One numbered line per set,
-  earliest first, and no preferred order inside a set: the tutor chooses among a set's open
-  goals at random. Study offers from the first set that still has an open goal, and a learner
-  who wants a goal from a later set just says so.
-
-  AN ITEM IS A GROUP (`vocabulary`), A CAPABILITY SLUG (`weigh-hosting-plans`, naming all of
-  that capability's parts) OR A GOAL ID (`c-weigh-sleep`), separated by commas, backticks
-  allowed:
-
-      2. vocabulary, c-weigh-sleep
-
-  THE MOST SPECIFIC MENTION WINS. A goal goes in the set that lists its id; failing that, the
-  set that lists its capability slug; failing that, the first set that lists its group. So a
-  capability named by id can sit with the words, and a word named by id can come last. A word
-  added mid-topic lands wherever its group is listed, with no edit here.
-
-  EVERY GOAL MUST LAND IN A SET. There is no catch-all, and a goal named nowhere is a problem
-  survey.mjs reports, as it does an item that matches nothing and a goal id listed in two
-  sets. The three standard groups, orientation, vocabulary and capabilities, may stay listed
-  while nothing is in them yet; any other name has to match a group, slug or goal. A topic with no Sequence section at all is a decision not yet made, not a problem: it
-  is worked in the order orientation, vocabulary, capabilities, then any other group, until
-  goal-setting writes the section.
--->
-
-1. orientation
-2. vocabulary
-3. capabilities

@@ -163,7 +163,7 @@ export function readGoals(dir) {
 }
 
 // --- the sequence ------------------------------------------------------------
-// `## Sequence`, after `## Goals`: a numbered list, one line per set, earliest first. An item is
+// `## Sequence`, just above `## Goals`: a numbered list, one line per set, earliest first. An item is
 // a group, a capability slug or a goal id, written as the goals write them.
 //
 // A GOAL'S SET IS ITS MOST SPECIFIC MENTION: its id, else its capability slug, else its group. A
@@ -174,6 +174,9 @@ export function readGoals(dir) {
 // NO SECTION IS A DECISION NOT YET MADE, NOT A DEFECT, so it raises no problem and `decided` is
 // false. The order used meanwhile is the three standard groups, then any other in order of first
 // appearance. A topic that has the section must place every goal: there is no catch-all.
+//
+// A GROUP OR SLUG LISTED IN TWO SETS: THE FIRST WINS (findIndex below), and no problem is
+// reported. Only a goal id listed twice is, since that one is plainly a mistake.
 //
 // THE THREE STANDARD GROUPS ARE ALWAYS VALID ITEMS, even with no goal in them yet, because the
 // template's default lists all three before a word or a capability exists. Any other name must
@@ -196,7 +199,12 @@ export function readSequence(dir, goals) {
 
   const problems = [];
   const lines = [];
-  for (const line of section(text, SEQUENCE_HEADING).split('\n')) {
+  const body = section(text, SEQUENCE_HEADING);
+  // AN ENTRY INSIDE THIS SECTION IS NOT A GOAL: readGoals reads only `## Goals`. Say so rather
+  // than let it vanish.
+  for (const e of entries(body))
+    problems.push(`${e.id} is written inside the Sequence section, where it is not read as a goal; move it under ## Goals`);
+  for (const line of body.split('\n')) {
     const m = line.match(/^\s*\d+\.\s+(.*)$/);
     if (m) lines.push(listField(m[1]));
   }

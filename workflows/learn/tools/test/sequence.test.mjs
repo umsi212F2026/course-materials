@@ -110,3 +110,40 @@ test('the three standard groups may be listed while empty; any other unknown nam
     'Sequence names nonsense, which is no group, capability or goal',
   ]);
 });
+
+// The Sequence section may sit above Goals, as the template now has it, and nothing changes.
+function topicAbove(goals, sequence) {
+  const dir = makeTopic({ goals: goals.join('\n') });
+  const file = join(dir, 'goals.md');
+  const text = readFileSync(file, 'utf8');
+  const at = text.indexOf('## Goals');
+  writeFileSync(file, `${text.slice(0, at)}## Sequence\n\n${sequence}\n\n${text.slice(at)}`);
+  return dir;
+}
+
+test('Sequence above Goals resolves the same, and a new word still lands at the end of the file', () => {
+  const goals = [word('w-a'), CAP_GOAL('c-a')];
+  const seq = '1. vocabulary\n2. capabilities';
+  assert.deepEqual(setsOf(topicAbove(goals, seq)), setsOf(topic(goals, seq)));
+  const dir = topicAbove(goals, seq);
+  const r = run('new-word.mjs', ['--dir', dirname(dir), 'topic', 'a new word', 'w-new']);
+  assert.equal(r.code, 0, r.stderr);
+  const after = readFileSync(join(dir, 'goals.md'), 'utf8');
+  assert.ok(after.indexOf('## Sequence') < after.indexOf('## Goals'));
+  assert.ok(after.trimEnd().split('\n').some((l) => l.includes('w-new')));
+  assert.ok(after.indexOf('w-new') > after.indexOf('c-a'));
+  assert.deepEqual(setsOf(dir), [['w-a', 'w-new'], ['c-a']]);
+});
+
+test('an entry written inside the Sequence section is reported, above Goals or below', () => {
+  const msg = 'w-lost is written inside the Sequence section, where it is not read as a goal; move it under ## Goals';
+  const seq = '1. vocabulary\n2. capabilities\n\n' + word('w-lost');
+  assert.ok(survey(topicAbove([word('w-a'), CAP_GOAL('c-a')], seq)).problems.includes(msg));
+  assert.ok(survey(topic([word('w-a'), CAP_GOAL('c-a')], seq)).problems.includes(msg));
+});
+
+test('a group or slug listed in two sets: the first wins, and no problem is reported', () => {
+  const dir = topic([word('w-a'), CAP_GOAL('c-p1', CAP)], '1. vocabulary, weigh-hosting-plans\n2. vocabulary, weigh-hosting-plans');
+  assert.deepEqual(setsOf(dir), [['w-a', 'c-p1'], []]);
+  assert.deepEqual(survey(dir).problems.filter((p) => /equence|no set/.test(p)), []);
+});
