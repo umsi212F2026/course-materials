@@ -1,13 +1,17 @@
 // Print the next bank question to serve, chosen by lib/pick.mjs.
 //
-//   node workflows/learn/tools/next-item.mjs <topic> --goal <id>     [--after <label>] [--key]
-//   node workflows/learn/tools/next-item.mjs <topic> --activity <id> [--after <label>] [--key]
+//   node workflows/learn/tools/next-item.mjs <topic> --goal <id>     [--after <label>] [--review] [--key]
+//   node workflows/learn/tools/next-item.mjs <topic> --activity <id> [--after <label>] [--review] [--key]
+//
+// --REVIEW IS FOR A REVIEW SITTING: the question on the case passed longest ago, and no scenario
+// order, since every question has been met. Without it the picker is studying; see lib/pick.mjs.
 //
 // THE LEARNER'S VIEW AND THE KEY ARE SEPARATE SECTIONS, and the key is printed only on --key,
 // so an agent that wants the question can read the output without also reading the answer.
 //
 // EXIT 2 MEANS THE BANK HAS NOTHING FOR THIS, which is not a failure of the call: the activity
-// has no stored questions and the tutor falls back to generating one live. Exit 1 is a misuse
+// has no stored questions, or in study none still needed while something is left to show, and
+// the tutor falls back to generating one live. Exit 1 is a misuse
 // of the command, as in record-status.mjs.
 //
 // A BANK IS SERVED ONLY WHILE ITS ACTIVITY HAS A LIVE ENTRY in activities.md; see below.
@@ -15,11 +19,12 @@
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { readFolderBanks } from '../../quiz/tools/lib/bank.mjs';
-import { readLog, liveActivities } from './lib/topic.mjs';
-import { pick } from './lib/pick.mjs';
+import { readLog, readGoals, liveActivities, statusOf } from './lib/topic.mjs';
+import { pick, stillNeeded, rankByCase } from './lib/pick.mjs';
+import { met } from './lib/bars.mjs';
 
 const USAGE = `usage:
-  node workflows/learn/tools/next-item.mjs <topic> (--goal <id> | --activity <id>) [--after <label>] [--key]`;
+  node workflows/learn/tools/next-item.mjs <topic> (--goal <id> | --activity <id>) [--after <label>] [--review] [--key]`;
 
 const die = (msg) => {
   console.error(msg);
@@ -38,8 +43,8 @@ for (let i = 0; i < argv.length; i++) {
     continue;
   }
   const name = argv[i].slice(2);
-  if (name === 'key') {
-    flags.key = true;
+  if (name === 'key' || name === 'review') {
+    flags[name] = true;
     continue;
   }
   if (!VALUE_FLAGS.includes(name)) die(`--${name} is not a flag.\n\n${USAGE}`);
@@ -65,18 +70,54 @@ if (problems.length) console.error(`warning: ${problems.length} bank problem(s):
 // there is nothing to be live or orphaned against, and banks are served as before.
 const hasEntries = existsSync(join(dir, 'activities.md'));
 const live = new Set(liveActivities(dir).map((e) => e.id));
-const result = pick(hasEntries ? items.filter((it) => live.has(it.activity)) : items, readLog(dir), { goal: flags.goal, activity: flags.activity, after: flags.after });
+// WHAT IS STILL TO SHOW comes from the goals and the log, the same reading `met` gives survey and
+// progress, so the picker and the progress view never disagree about which cases are passed.
+const log = readLog(dir);
+const goalsById = new Map(readGoals(dir).goals.map((g) => [g.id, g]));
+const attemptsByGoal = new Map();
+for (const r of log) {
+  if (!attemptsByGoal.has(r.goal)) attemptsByGoal.set(r.goal, []);
+  attemptsByGoal.get(r.goal).push(r);
+}
+// A DEFERRED OR RETIRED GOAL WANTS NOTHING HERE, the topic retired included, so it is set aside:
+// no question is needed for it, and it counts as done. A GOAL WHOSE ENTRY HAS A PROBLEM IS NOT
+// MET, whatever its attempts say, the same as survey: it is frozen until goals.md is fixed.
+const status = statusOf(dir);
+const setAside = new Set(
+  [...goalsById.keys()].filter((id) => status.retired !== null || status.retiredGoals.has(id) || status.deferredGoals.has(id))
+);
+const done = (id) => {
+  const goal = goalsById.get(id);
+  if (!goal) return false;
+  return setAside.has(id) || (!goal.problems.length && met(goal, attemptsByGoal.get(id) ?? []));
+};
+const result = pick(hasEntries ? items.filter((it) => live.has(it.activity)) : items, log, {
+  goal: flags.goal,
+  activity: flags.activity,
+  after: flags.after,
+  review: !!flags.review,
+  needed: (it) => stillNeeded(it, goalsById, attemptsByGoal, setAside),
+  caseRank: rankByCase(goalsById.get(flags.goal), attemptsByGoal.get(flags.goal) ?? [], { review: !!flags.review }),
+  done,
+});
 if (!result) {
   console.error(`no bank questions for ${flags.goal ?? flags.activity}; run the activity's generator live`);
   process.exit(2);
 }
 
-const { item, repeat, lastServed } = result;
+const { item, repeat, lastServed, keepsOrder } = result;
 const lines = [
   `label: ${item.label}`,
   `goals: ${item.goals.join(', ')}`,
   `tags: ${item.tags?.length ? item.tags.join(', ') : 'none'}`,
+  // ONE LINE PER GOAL THE QUESTION GIVES CASES FOR, so the tutor passes them to record-attempt --cases.
+  ...Object.entries(item.cases ?? {})
+    .filter(([, c]) => c.length)
+    .map(([g, c]) => `cases: ${g}: ${c.join(', ')}`),
   `repeat: ${repeat ? `yes (last served ${lastServed.slice(0, 10)})` : 'no'}`,
+  // SERVED IN PLACE OF THIS GOAL'S QUESTION, which waits behind it; see lib/pick.mjs. It may name
+  // another goal, and the tutor records an attempt per goal it names, as for any question.
+  ...(keepsOrder ? [`served first: keeps ${keepsOrder} in order`] : []),
   '--- learner sees ---',
   item.prompt,
 ];

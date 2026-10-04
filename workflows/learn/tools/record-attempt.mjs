@@ -13,6 +13,9 @@
 //   --source study|review|quiz|scan  defaults to study. `quiz` is a practice quiz, whose passes
 //                                re-date a goal without moving it along the intervals. `scan` is
 //                                for the daily transcript scan, which is designed but not built
+//   --cases a,b                  which of the goal's cases the question exercised. Required on a ruled
+//                                attempt (--axes) for a goal that has cases, unless its criterion is
+//                                unchecked; refused for one that has none
 //   --note "..."                 optional, e.g. why they stopped
 //
 // ONE CODE PATH FOR EVERY GOAL. A capability, a word and an orientation all arrive here the
@@ -57,6 +60,7 @@ const USAGE = `usage:
   --axes '{"unaided":"yes|no|unclear","criterion":"met|not met|unclear|unchecked"}'
   --outcome abandoned | declared | elsewhere
   --tags ${Object.keys(TAGS).join(',')}
+  --cases <case>,<case>   which of the goal's cases the question exercised
   --source study | review | quiz | scan   (default study)
   --note "..."`;
 
@@ -73,7 +77,7 @@ const die = (msg) => {
 //
 // The same for an extra positional. The call this file taught for months had a fourth one, and
 // it went into the void — which is worse than being refused, because nothing said so.
-const FLAGS = ['axes', 'outcome', 'tags', 'source', 'note'];
+const FLAGS = ['axes', 'outcome', 'tags', 'cases', 'source', 'note'];
 
 const argv = process.argv.slice(2);
 const positional = [];
@@ -151,12 +155,44 @@ if (unknownTags.length) {
   );
 }
 
+// --- the cases ---------------------------------------------------------------
+// A GOAL WITH CASES NEEDS EACH DEMONSTRATED, and bars.mjs counts an attempt with no `cases` field
+// toward every case (so older passes still count). Left unchecked here, a ruled attempt that
+// forgot --cases would quietly meet them all, so a ruling on such a goal must say which. An
+// --outcome (declared, elsewhere, abandoned) is the learner's word or a non-attempt and needs none.
+const cases = (flags.cases ?? '')
+  .split(',')
+  .map((c) => c.trim())
+  .filter(Boolean);
+const defined = (goal.cases ?? []).map((c) => c.id);
+if (cases.length && !defined.length) die(`${goalId} has no cases, so --cases does not apply.`);
+const unknownCases = cases.filter((c) => !defined.includes(c));
+if (unknownCases.length) {
+  die(`unknown case${unknownCases.length > 1 ? 's' : ''} for ${goalId}: ${unknownCases.join(', ')}\ncases are: ${defined.join(', ')}`);
+}
+// AN UNCHECKED ATTEMPT IS THE EXCEPTION: nobody ruled, so it counts toward nothing, and a question
+// exercising none of the goal's cases (a bank written before them) is recorded so with no --cases.
+// It is stored with `cases: []` rather than none, so bars.mjs cannot take it for a grandfathered
+// attempt counting toward every case.
+let unchecked = false;
+if (flags.axes) {
+  try {
+    unchecked = JSON.parse(flags.axes).criterion === 'unchecked';
+  } catch {
+    // Reported below, where the axes are read.
+  }
+}
+if (flags.axes && defined.length && !cases.length && !unchecked) {
+  die(`${goalId} has cases, so a ruled attempt needs --cases naming those the question exercised.\ncases are: ${defined.join(', ')}`);
+}
+
 // --- build the record --------------------------------------------------------
 const record = {
   at: new Date().toISOString(),
   goal: goalId,
   label,
   ...(tags.length ? { tags } : {}),
+  ...(cases.length || (unchecked && defined.length) ? { cases } : {}),
   source,
 };
 

@@ -10,12 +10,23 @@ Don't take the first type that fits. Two candidates for the same goal should usu
 different types, or the choice you're offering the tutor isn't a choice.
 
 Every attempt is made the same way, with help available if the learner asks. Whether one turned
-out to be unaided is an outcome, not a setting — so there's no practice/test distinction here,
-only whether the activity is one an unaided attempt could _meet_ a goal with.
+out to be unaided is an outcome, not a setting, so there's no practice/test distinction here.
+**Every activity but the orientation is a source of questions**, each naming a goal, so an
+unaided pass on any of them can meet one. Under _Deepen_ and _Attempt_ the types are shapes of
+question: the material is the setup, and an exercise of many items (sort these, judge each) is
+a scenario with one question per item, so repeats count and the learner stops once the goal is
+met.
+
+**Reading, watching and worked examples are help, not activities**, except in the orientation.
+Outside it they go in a question activity's `worked example`, the first level of help, which
+may cite a reading or a video.
 
 ---
 
 ## Orient
+
+The orientation's types: one activity per topic, giving the shape of the thing before any part
+of it is in play.
 
 **Read or watch an explanation.** The conventional one, and the right first move more often
 than its reputation suggests. _Learner does:_ reads or watches with a stated obligation — a
@@ -31,14 +42,17 @@ visit.
 **Watch it done, narrated.** The tutor performs the real task and says what it's weighing at
 each decision — including the false starts. _Learner does:_ interrupts. _Tutor role:_
 explainer. _Good for:_ the moment before a first attempt; this is what a worked example can't
-show, because a finished example has the deliberation edited out.
+show, because a finished example has the deliberation edited out. Outside the orientation it is
+a `worked example` instruction, worked live as help, not an activity.
 
 ## Deepen
 
 **Gloss the unfamiliar.** The learner writes a one-line definition in their own words; the
-tutor replies with a discriminating near-miss — "you said X; does it still count if…". _Good
-for:_ running continuously alongside anything else. _Watch out:_ the learner writes first,
-always. Reversed, it becomes the tutor explaining and the learner agreeing.
+tutor replies with a discriminating near-miss: "you said X; does it still count if…". This is a
+tutor's move, not an activity: it runs alongside the orientation and alongside any help on a
+question, and its obligation is what keeps a reading in a `worked example` from being passive.
+_Watch out:_ the learner writes first, always. Reversed, it becomes the tutor explaining and
+the learner agreeing.
 
 **Contrast with non-examples.** A correct case beside a near-miss: which is which, and what
 gave it away. _Good for:_ concepts the learner can recognize but not define. Non-examples do
@@ -62,9 +76,9 @@ model visible to its owner, which nothing else on this list does as well. _Needs
 prediction recorded before the reveal. Unrecorded, it silently becomes "yes, that's what I
 thought."
 
-**Self-explain a worked example.** Study a solved instance and say why each step is there and
-what would break without it. _Good for:_ learners with no production experience yet — cheaper
-than attempting and more informative than reading.
+**Self-explain a worked example.** Given a solved instance as the setup, say why a step is there
+and what would break without it, one step per question. _Good for:_ learners with no production
+experience yet, being cheaper than attempting and more informative than reading.
 
 **Find the assumption.** What does this take for granted? What would have to be true for it to
 work? _Good for:_ material that reads as obvious, where the learner's problem is that nothing
@@ -73,10 +87,11 @@ seems worth noticing.
 ## Attempt
 
 <!--
-  Which of these can meet a goal depends on how much of the work the activity does
-  for the learner. Producing from scratch can; completing a partial instance can't, however
-  unaided the attempt, because the partial did half of it. Judging and repairing sit in
-  between and depend on the criterion.
+  Which goal these can meet depends on how much of the work the activity does for the
+  learner. Producing from scratch can meet a production criterion; completing a partial
+  instance can't, however unaided the attempt, because the partial did half of it, so it is
+  help on a production question rather than an activity. Judging and repairing sit in between
+  and depend on the criterion.
 -->
 
 **Judge an instance.** Is this right? What's wrong with it? _Good for:_ the supervision use,
@@ -92,15 +107,18 @@ and you can't tell which without asking.
 than saying what's wrong, easier than starting from nothing.
 
 **Complete a partial instance.** Most of it is given; the learner fills the gaps. _Good for:_
-scaffolded production, and it's the level that fades most naturally — give less each time.
+scaffolded production, and it's the level that fades most naturally: give less each time. _Watch
+out:_ it meets no production criterion, so unless the goal is itself about completing, it is
+help offered after the `worked example`, not an activity of its own.
 
 **Produce from scratch.** The real thing, no support. _Good for:_ the _do it yourself_ use, and
 the only type that fully exercises a production criterion.
 
 **Apply it to their own case.** Use it on something the learner actually has — their own
 project, their own data, the artifact that sent them here. _Good for:_ motivation and transfer
-at once. _Watch out:_ their case may not exercise the criterion; check it does before treating
-this as a check activity.
+at once. _Watch out:_ their case may not exercise the criterion; check it does before naming the
+goal in `checks`. It works from the learner's own material, so it stays live and is never
+banked.
 
 **Teach it back.** Explain it to the tutor playing a specified novice, or to a real person.
 _Good for:_ the _explain to others_ use, and it exposes gaps that recognition tasks hide.

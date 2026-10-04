@@ -110,6 +110,54 @@ export const SLOTS = {
 
 export const DEFAULT_GROUP = SLOTS.group.default;
 
+// --- cases ---------------------------------------------------------------------
+// OPTIONAL, AND NOT A SLOT: it has no default, no closed set and nothing dispatches on it, so it
+// is read here beside the slots rather than in SLOTS. It names the parts of a goal's criterion
+// that must each be shown (spec: criterion-cases). A goal without it has `cases: []` and behaves
+// as it always did.
+//
+// goals.md writes one indented sub-bullet per case, and bulletFields in topic.mjs folds them
+// into ONE STRING: "- `a-id`: what it is - `b-id`: what that is". So this splits on a dash
+// followed by a backticked id and a colon. Case text therefore may not itself contain that
+// pattern, which nobody writes.
+const CASE_ID = /^[a-z0-9]+(-[a-z0-9]+){0,2}$/;
+
+//
+// PARTIAL PARSING, WHOLE FREEZE: when one case is malformed the valid ones are kept and a problem
+// is reported, rather than dropping the lot. Text that yields no case at all is also a problem,
+// never silence: a slot written wrongly must not read as a goal with no cases. Any problem here
+// freezes the goal like any other slot problem: survey holds it unmet, next-item does the same,
+// and record-attempt refuses it, so the kept cases are for display until goals.md is fixed.
+export function parseCases(value) {
+  const cases = [];
+  const problems = [];
+  if (value === undefined) return { cases, problems };
+  const raw = String(value);
+  const marks = [...raw.matchAll(/(?:^|\s)-\s*`([^`]*)`\s*:/g)];
+  if (!raw.trim()) {
+    problems.push('cases slot is present but empty');
+  } else if (!marks.length) {
+    problems.push('cases slot has text but no "- `id`: description" case');
+  } else if (raw.slice(0, marks[0].index).trim()) {
+    problems.push('cases slot has text before its first "- `id`: description" case');
+  }
+  const seen = new Set();
+  marks.forEach((m, i) => {
+    const id = m[1].trim();
+    const end = i + 1 < marks.length ? marks[i + 1].index : undefined;
+    const text = String(value).slice(m.index + m[0].length, end).trim();
+    if (!CASE_ID.test(id)) {
+      problems.push(`case ${id} is not one to three lower-case words joined by hyphens`);
+    } else if (seen.has(id)) {
+      problems.push(`case ${id} is a duplicate within its goal`);
+    } else {
+      seen.add(id);
+      cases.push({ id, text });
+    }
+  });
+  return { cases, problems };
+}
+
 // --- applying them to one entry ----------------------------------------------
 // Given the bullet fields of one goal entry, return the goal with every slot filled and every
 // closed-set value checked.
@@ -146,14 +194,18 @@ export function applySlots(id, fields) {
   const payload = {};
   for (const [name, value] of Object.entries(fields)) {
     // `supply` is a retired slot: an old goals.md may still carry it, and it must land nowhere.
-    if (name === 'goal' || name === 'supply' || Object.hasOwn(SLOTS, name)) continue;
+    if (name === 'goal' || name === 'supply' || name === 'cases' || Object.hasOwn(SLOTS, name)) continue;
     payload[name] = value;
   }
+
+  const { cases, problems: caseProblems } = parseCases(fields.cases);
+  for (const p of caseProblems) problems.push(`${id}: ${p}`);
 
   return {
     id,
     text: fields.goal ?? '',
     ...slots,
+    cases,
     // Resolved here so an adjudicator is handed the sentence rather than the pointer.
     criterionText: CRITERION_REFS[slots.criterion]?.text ?? slots.criterion,
     criterionRef: CRITERION_REFS[slots.criterion] ? slots.criterion : null,

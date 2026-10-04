@@ -79,6 +79,24 @@ error spotted, their own work.
 A reception pass is still worth setting and still worth recording. It just doesn't finish the
 word.
 
+## What a word's bank holds
+
+**One DISTINGUISH question for each entry on the word's _nearest confusable_ line, then one or
+two CATCH questions. Nothing else is banked.** DEFINE and INTERPRET are reception moves and can
+never meet `one production pass`, so a banked one is a question the word can never be finished
+on; APPLY needs the learner's own work, which a bank cannot hold. So a word's bank size follows
+from its confusables, and adding a real near miss to `goals.md` is how a word gets more
+questions. A word with no confusable has only its CATCH questions.
+
+**DEFINE and INTERPRET are follow-ups, set live as help.** When a learner misses a banked
+question, the tutor may set a DEFINE or an INTERPRET for that word, live, to rebuild what the
+word names; it is help, recorded `unaided: no`, so it counts toward nothing. Then the tutor
+returns to a production question. Never banked, so review and the quiz never see one.
+
+A course topic released before this rule may still have DEFINE and INTERPRET questions in its
+bank. They do no harm meanwhile (a pass on one doesn't meet the word), and the topic's next
+course-path curation shows them to the instructor, who decides whether they go.
+
 **One task per word, not two.** A topic carries a dozen words and a second required task is
 where a vocabulary list turns into a chore. Requiring production costs nothing there: one CATCH
 is one task, the same as one DEFINE.
@@ -86,7 +104,8 @@ is one task, the same as one DEFINE.
 ## Picking one
 
 Take a move that isn't near the front of the served labels, and prefer one whose input the
-entry actually carries. DISTINGUISH needs a confusable and there isn't always one. It must
+entry actually carries. **Set a production move** when the word is being attempted for its bar;
+DEFINE and INTERPRET are set only as help after a miss (see "What a word's bank holds"). DISTINGUISH needs a confusable and there isn't always one. It must
 also never be aimed at a term from _synonyms_: there is no difference to name, so the move has
 no answer, and a learner who says so is right and fails anyway.
 

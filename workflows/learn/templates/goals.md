@@ -211,10 +211,29 @@
   prints them together under the slug with a fraction. One part alone is reported, since a
   group of one is just a goal.
 
+  CASES, WHEN ONE CRITERION JOINS SEVERAL. A criterion that says "and" or "including", or is
+  two-sided (decline the risky, allow the safe), is met by one pass on its easiest case unless
+  the cases are named. Name them in a `cases` slot right after `criterion`, one sub-bullet each:
+  a backticked id, a colon, one line saying what the case is.
+
+      - **criterion:** given a request, declines one that would expose a secret and goes
+        ahead with one that wouldn't
+      - **cases:**
+        - `declines-risky`: a request that would put a secret in the chat or a file
+        - `allows-safe`: a request involving no secret
+
+  A case id is one to three lower-case words with hyphens, unique within its goal, and
+  permanent once attempts point at it, like a goal id. The criterion stays prose; the cases
+  say which parts of it must each be shown. THE GOAL'S OWN BAR MUST HOLD FOR EACH CASE, so the
+  goal is met once every case has been passed. It is still one goal with one review clock.
+  Reach for cases before a `capability:` split: split only when the parts are genuinely
+  separate skills, each worth reviewing on its own. survey.mjs reports a malformed or
+  duplicate id and a slot left empty.
+
   THE ORIENTATION ENTRY is shipped below, filled in, in every topic. It carries six slots and
   they are not yours to change. Delete it only if `what I already have` says this learner has
   seen the area laid out before; then say so there and let curation write
-  `n/a — already oriented`.
+  `n/a: already oriented`.
 
   HOW MANY CAPABILITIES. Usually one is enough: a second means the use needs a genuinely
   separate ability, not a restatement of the first. Past about three, something has been scoped

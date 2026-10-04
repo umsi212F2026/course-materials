@@ -12,6 +12,9 @@
 //
 //   given the goal's whole attempt history, return a boolean.
 //
+// A goal that names `cases` has the same contract applied once per case, over the attempts that
+// carry that case; see `met` below.
+//
 // A BOOLEAN, not a rung. Five things consume "has this been met" and every one of them uses it
 // as a binary. Nothing declares a scale, so nothing compares across scales.
 
@@ -98,7 +101,44 @@ export function met(goal, attempts) {
 
   const bar = BARS[goal.bar];
   if (!bar) throw new Error(`${goal.id} has bar: ${goal.bar}, which nothing implements.`);
-  return bar(attempts);
+  // A GOAL THAT NAMES CASES HOLDS ITS OWN BAR FOR EACH ONE, over the attempts that carry that
+  // case. Still an existence test per case, so a bar once true stays true. AN ATTEMPT WITH NO
+  // `cases` FIELD COUNTS TOWARD EVERY CASE: a pass recorded before the goal named cases, or by a
+  // tutor with nothing to say about them, is grandfathered rather than discarded.
+  return goal.cases?.length ? goal.cases.every((c) => bar(forCase(attempts, c.id))) : bar(attempts);
+}
+
+const forCase = (attempts, id) => attempts.filter((r) => !r.cases || r.cases.includes(id));
+
+// How many of a goal's cases its bar holds for, for display. Null when the goal names none.
+export function casesDemonstrated(goal, attempts) {
+  if (!goal.cases?.length) return null;
+  const bar = BARS[goal.bar];
+  if (!bar) throw new Error(`${goal.id} has bar: ${goal.bar}, which nothing implements.`);
+  return {
+    passed: goal.cases.filter((c) => bar(forCase(attempts, c.id))).length,
+    total: goal.cases.length,
+  };
+}
+
+// Which of a goal's cases have passed and when each last did, for the picker:
+// `{ [caseId]: { passed, at } }`, `at` in ms and -Infinity when never (or never at a time that
+// parses). Null when the goal names none.
+//
+// A SINGLE ATTEMPT PASSES A CASE WHEN THE BAR HOLDS OVER IT ALONE. Every bar is an existence
+// test, so those are exactly the attempts that make it true, and the latest is when the case was
+// last shown. Same per-case view as `met`, grandfathering included.
+export function casePasses(goal, attempts) {
+  if (!goal.cases?.length) return null;
+  const bar = BARS[goal.bar];
+  if (!bar) throw new Error(`${goal.id} has bar: ${goal.bar}, which nothing implements.`);
+  const out = {};
+  for (const c of goal.cases) {
+    const passes = forCase(attempts, c.id).filter((r) => bar([r]));
+    const times = passes.map((r) => (typeof r.at === 'string' ? Date.parse(r.at) : NaN)).filter((t) => !Number.isNaN(t));
+    out[c.id] = { passed: passes.length > 0, at: Math.max(-Infinity, ...times) };
+  }
+  return out;
 }
 
 // --- what to print about one goal --------------------------------------------

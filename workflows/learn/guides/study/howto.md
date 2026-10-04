@@ -14,12 +14,19 @@ for you. It is only a suggestion, so you can always pick something else, from an
 nobody comments.
 
 **The progress view.** At the start the tutor shows a picture of the topic: one row for each set
-of goals, in order, with a mark for each goal. `#` is met, `~` is tried but not met yet, `.` is
+of goals, in order, with a mark for each goal. `#` is met, `~` is in progress but not met yet, `.` is
 not started, and `>` is one you said you will learn elsewhere. The number at the end of a row is
 how many are met out of how many. An arrow usually points at the set the tutor will suggest from
 next (it skips goals with nothing ready to study, so now and then it suggests from a later set),
 and below the picture it names what is left there. After each attempt you see just that set's
 line, so you can watch the marks change; when you finish a set you see the whole picture again.
+
+**Goals with several cases.** Some goals have to be shown in more than one kind of situation
+(turning down a risky request and going ahead with a safe one, say), and one good answer
+doesn't cover them all. Such a goal stays `~` until you have shown every case, and the progress
+line counts them: `(2/3 cases)`, or `2 of 3 cases demonstrated` after an attempt. The tutor
+won't tell you which case is left. Knowing that would tell you what the next question is
+testing, which is half its answer.
 
 The options come with a note on what's different about each, not just titles. If two sound the
 same to you, say so; the tutor may be able to explain and, if not, it's a real problem that
@@ -27,10 +34,13 @@ should be sent back to the curator or the goal-setting process.
 
 ## Two kinds of thing you'll do
 
-**Studying something** — reading, watching, working through a solved example. With one
-difference from how you'd normally do it: there's a conversation running alongside.
+**Getting oriented**: at the start of a topic, reading or watching something that lays it out.
+With one difference from how you'd normally do it: there's a conversation running alongside.
 
-**Attempting something** — doing a task your goals said you wanted to be able to do.
+**Answering questions**: everything after that. Every question is on one of your goals, so a
+good answer given without help counts toward it. Stuck? Ask. The first help is usually a worked
+example, or something short to read, and you can take it on any question; that attempt just
+doesn't count as unaided.
 
 **Words** turn up throughout and work a little differently — no choice is offered, the tutor
 just sets one of six short tasks. See [the vocabulary guide](../vocabulary/howto.md).

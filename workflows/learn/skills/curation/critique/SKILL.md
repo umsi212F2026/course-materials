@@ -20,8 +20,14 @@ not from this file; there is no menu to judge, no artifact to weigh, and no Cove
 Nothing covering them is a gap and nothing about them is a finding. Judge the Goals table and
 the entries the generator wrote.
 
+**Older entries with no `checks` are listed, not judged.** A reading, a walkthrough or an
+exercise meant as practice before a check comes from before every activity was checkable, and
+curation converts it on the course path. List each by id in your report, apart from the
+findings, and write no finding or annotation about it one by one; a file-level annotation may
+say how many there are.
+
 **Work all four sections; each has its own unit.** §1 is every entry the generator wrote, §2
-every one of those carrying `checks`, §3 the file as a whole, §4 every `blocked` cell.
+every one of those again, for its `checks`, §3 the file as a whole, §4 every `blocked` cell.
 
 **Read only `goals.md` and `activities.md`**, plus anything they point at, and an activity's
 bank folder if it has one, when you need them to judge an entry. You don't have access to the
@@ -44,7 +50,9 @@ With no knowledge of what the author intended:
 - **Could you run this?** `learner does` and `tutor does` have to be concrete enough to act on.
   "Discuss the concepts" is not runnable.
 - **Is it an activity or a resource?** If it could be satisfied by reading and nodding, the
-  learner obligation is missing.
+  learner obligation is missing. Outside the orientation, a reading, a video or a walkthrough is
+  a resource however good its obligation: it belongs in a question activity's `worked example`,
+  and a new entry made of one is a finding.
 - **Does `offer as` name a real difference** from its neighbors? "A good introduction" is not a
   characterization, and a menu whose candidates all sound the same is not a choice.
 - **Could a generator be run from what's written**, without asking the author what they meant?
@@ -54,9 +62,9 @@ With no knowledge of what the author intended:
 
 ## 2. Check the checks
 
-For each activity carrying `checks`, read the criterion it names — resolving a reference like
-`orientation` through `workflows/learn/skills/goal-setting/references/slots.md` — and ask the
-question the author was too close to ask:
+Every activity carries `checks`. For each, read the criterion it names (resolving a reference
+like `orientation` through `workflows/learn/skills/goal-setting/references/slots.md`) and ask
+the question the author was too close to ask:
 
 **Would passing this actually establish that criterion?**
 
@@ -70,6 +78,12 @@ says which of its questions bear on which. Ask it of each goal in turn: would a 
 generator maps to this goal, answered in full, establish this goal's criterion? A mapping that
 claims a goal its questions only brush against certifies that goal too easily; one that leaves
 out a goal its questions plainly test leaves it unmet for no reason.
+
+**Are the cases it states real?** For a goal with cases, the generator says which cases each
+kind of its questions carries. Ask of each claim whether a question of that kind, answered in
+full, really exercises that case. A case claimed but never reached passes untested, which is
+the failure cases exist to stop. A kind of question carrying two cases that a learner could get
+one right and one wrong on is a finding too: one ruling covers both, so it should be two kinds.
 
 **If the activity's bank folder `tasks/<activity-id>/` holds a scenario**, read one and ask
 whether it would test what the generator claims. A generator whose text reads well and whose
@@ -86,18 +100,21 @@ Findings that only exist at the level of the file:
   activity wearing four labels. Candidates for one capability should come from different types
   in [`../references/activity-types.md`](../references/activity-types.md); if they don't, say
   so.
-- **Should an activity carry `checks` that doesn't, or not carry it that does?** An activity
-  clears a goal's bar only if an _unaided_ attempt at it would establish the criterion.
-  Completing a partial instance wouldn't, however unaided — the activity did part of the work.
-  Both errors matter: one leaves a goal unmeetable, the other certifies it too easily.
+- **Does each entry's `checks` hold?** Every activity carries one, and clears a goal's bar
+  only if an _unaided_ attempt at it would establish the criterion. Completing a partial
+  instance wouldn't, however unaided: the activity did part of the work. Such an entry is help
+  on another activity's questions, not an activity, and that is a finding. A goal in `checks`
+  that the questions don't establish certifies it too easily; one they plainly establish but
+  `checks` leaves out leaves it unmet for no reason.
 - **Are the candidates substitutes?** They're supposed to be — the learner does one, and either
   one can meet the goal. If two entries look like they'd have to _both_ be done, that criterion
   bundles two capabilities. Report it; the fix is upstream in `goals.md`, and catching it here
   is far cheaper than after a learner has passed one half and been told they're finished.
 - **Does the depth match?** Compare against the depth in `goals.md`. Authoring tasks for a
   learner who only needs to read are over-scoped; the reverse leaves them short.
-- **Does it match what they already have?** Someone starting cold needs worked examples before
-  problems; someone with related experience is being condescended to by them.
+- **Does it match what they already have?** Someone starting cold needs a strong
+  `worked example` behind the first questions; someone with related experience is being
+  condescended to by one.
 - **Do the goals all share a blind spot?** If every check for a goal leaves the same thing
   untested, its coverage is only apparent.
 
@@ -121,6 +138,8 @@ Annotations help the tutor make use of the file as it is. **First round: finding
 
 **Findings** — for the generator. Keyed to entry or goal id, most consequential first, each
 saying what would fix it.
+
+**Older entries**: each live entry with no `checks`, by id, and nothing more.
 
 **Annotations** — text to be consumed by the tutor, who will never see your findings. Write
 them as final prose, ready to be placed verbatim; the orchestrator positions them but won't

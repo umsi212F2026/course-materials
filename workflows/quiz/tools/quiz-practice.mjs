@@ -327,6 +327,10 @@ function score(dir) {
         topic: it?.topic ?? null,
         move: it?.move ?? null,
         tags: tagsOf(it),
+        // THE CASES THIS QUESTION EXERCISED FOR ITS GOAL, for record-attempt --cases. A goal with
+        // cases will not take a ruled attempt without them. [] means the goal has none, or the
+        // question was written before its goal's cases were, which the quiz skill settles.
+        cases: (i.goal && it?.cases?.[i.goal]) || [],
         type: i.type,
         credit: i.credit,
         missed: i.missed,
@@ -356,7 +360,7 @@ function score(dir) {
               per_goal: named.map((g) => {
                 const p = i.per_goal?.[g] ?? { credit: i.credit, missed: i.missed, axes: i.axes };
                 const axes = kinds[g] === "capability" ? { ...p.axes, criterion: "unchecked" } : p.axes;
-                return { goal: g, credit: p.credit, missed: p.missed, axes };
+                return { goal: g, credit: p.credit, missed: p.missed, axes, cases: it?.cases?.[g] ?? [] };
               }),
             }
           : {}),

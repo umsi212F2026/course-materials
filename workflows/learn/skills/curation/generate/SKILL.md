@@ -1,6 +1,6 @@
 ---
 name: curation-generate
-description: Fill in or revise activities.md — candidate study activities and check tasks derived from the goals and criteria in goals.md. Acts on checker findings if handed any, otherwise fills whatever the Coverage table shows is missing. Called by the curation orchestrator. Runs without the learner present.
+description: Fill in or revise activities.md, candidate activities whose questions check the goals and criteria in goals.md. Acts on checker findings if handed any, otherwise fills whatever the Coverage table shows is missing. Called by the curation orchestrator. Runs without the learner present.
 ---
 
 # Curation — generate
@@ -29,9 +29,9 @@ you're in is settled by whether findings came with the call.
 
 ### First call: fill the gaps
 
-No findings. **The Coverage table drives the work.** A row is complete when its `study` cell is
-non-empty, its `checks` cell is non-empty, and its `notes` cell is empty. There are no
-exceptions: every row is a goal with a criterion, including the orientation one.
+No findings. **The Coverage table drives the work.** A row is complete when its `checks` cell
+is non-empty and its `notes` cell is empty. There are no exceptions: every row is a goal with a
+criterion, including the orientation one.
 
 **Coverage has a row per goal the orchestrator listed in the Goals table**: every goal but the
 words. A word is served by the `a-words` entry, is not there, has no row, and is not a gap.
@@ -68,22 +68,23 @@ Don't add rows and don't remove them; that table's membership is the orchestrato
      Its `checks` entry is whatever the learner does that makes them say they could now attempt
      the real thing; the tutor adjudicates it, in session, which is why it can be cheap. Answer
      no only when _what I already have_ says they've seen the area laid out before; then the
-     cell reads `n/a — already oriented` and they start at a worked example instead. Someone
+     cell reads `n/a: already oriented` and they start at a question instead. Someone
      sent to acquire a shape they already have disengages, and quietly. **If the field doesn't
      settle it, answer yes** — an offered activity the tutor skips costs a sentence, and being
      dropped in cold costs the first session.
 
    - **Any other row**: read its criterion, then instantiate from
-     [`../references/activity-types.md`](../references/activity-types.md) — a type plus a
-     specific artifact plus what this learner does with it.
+     [`../references/activity-types.md`](../references/activity-types.md): a type plus a
+     specific artifact plus what this learner does with it. Every such activity is a source of
+     questions carrying `checks`. A reading, a video or a worked example is never an entry of
+     its own; it is the first level of help, in an activity's `worked example`.
 
 3. Repeat until every row is complete or blocked — see _When a row can't be filled_ for when a
    row may be blocked. A file holding only the template skeleton is the case where every row is
    missing, which is a difference of degree and not of kind.
-4. Regenerate the Coverage table. It's derived from the `serves` and `checks` fields of the
-   live entries (a `group <name>` in `serves` expands to every goal in that group), so anything you
-   added or re-tagged has made it stale. A goal's `checks` cell also counts a live activity whose
-   bank holds a question whose rubric `goal:` names it.
+4. Regenerate the Coverage table. It's derived from the `checks` fields of the live entries,
+   so anything you added or re-tagged has made it stale. A goal's `checks` cell also counts a
+   live activity whose bank holds a question whose rubric `goal:` names it.
 
 ### Second call: work the findings
 
@@ -107,13 +108,17 @@ delete that note.
   else on the second pass. If no replacement can be built, the row is blocked — see _When a row
   can't be filled_.
 
-Regenerate the Coverage table if anything you did changed a `serves` or `checks` field. It is
+Regenerate the Coverage table if anything you did changed a `checks` field. It is
 built the same way as on the first call, banks included.
 
 ### Either call
 
 - **Keep every existing id**, don't renumber, and never regenerate a dropped entry — that field
   exists precisely to stop you.
+- **Leave an older entry with no `checks` as it is** (a reading, a walkthrough, an exercise
+  meant as practice before a check) unless it arrives as a finding. Converting one is the
+  course path's work, with the instructor deciding; never give a reading `checks` to satisfy
+  _Done when_, which counts only the entries you write or are handed.
 - **Leave `a-words` and legacy stamps alone.** The orchestrator writes `a-words`, and its text
   is fixed. An entry carrying `origin: generated` is a placeholder from before `a-words`; nothing
   serves from it, and `migrate-words.mjs` removes it.
@@ -186,7 +191,8 @@ it_, don't propose authoring tasks; a learner who only needs to interpret these 
 need to make one.
 
 Match what they already have. Someone starting cold gains more from studying a worked example
-than from attempting a problem; someone with related experience gains more from the problem.
+than from attempting a problem, so for them the `worked example` an activity offers as its
+first help does the most work; someone with related experience gains more from the problem.
 The _what I already have_ section in `goals.md` tells you which.
 
 [`../references/activity-types.md`](../references/activity-types.md) lists the types grouped by
@@ -202,10 +208,10 @@ nodding, it isn't an activity yet.
 
 ## Check activities in particular
 
-An activity carrying `checks` is adjudicated against the criteria of the goals named there,
-each separately. Read each criterion and ask: _would passing this actually establish it?_ It is
-easy to write an engaging exercise about the subject that tests something adjacent, and neither
-you nor the tutor will notice, because it will simply certify the wrong thing.
+Every activity carries `checks`, and is adjudicated against the criteria of the goals named
+there, each separately. Read each criterion and ask: _would passing this actually establish
+it?_ It is easy to write an engaging exercise about the subject that tests something adjacent,
+and neither you nor the tutor will notice, because it will simply certify the wrong thing.
 
 **Every activity with questions gets a generator**, and it says four things:
 
@@ -213,7 +219,11 @@ you nor the tutor will notice, because it will simply certify the wrong thing.
 - **what is fixed**, so every question tests the same capability;
 - **how hard**;
 - **which goals its questions bear on**, which is `checks`, and how a question maps onto them
-  when there is more than one: which kind of question bears on which goal, or on several.
+  when there is more than one: which kind of question bears on which goal, or on several. For a
+  goal with cases, **which cases each kind of question carries**, so the tutor running it live
+  can record them; between them the generator's questions carry every case. A pass passes every
+  case a question carries, so two cases a learner could get one right and one wrong on are two
+  kinds of question, not one.
 
 There is no `kind` to choose. A goal comes back in review for months after it's first met, so
 fresh questions matter, and a generator is what supplies them. On a student's own topic the
@@ -237,8 +247,9 @@ and a silence costs the learner.
 
 - **Inventing sources.** See above. This is the one that ruins the phase.
 - **Everything at the passive end.** Reading and watching are easy to propose and easy to do.
-  If most candidates have the learner receiving rather than producing, the menu is bad however
-  good each item is.
+  Outside the orientation they are help, cited in a `worked example`, never an entry. If most
+  candidates have the learner receiving rather than producing, the menu is bad however good
+  each item is.
 - **Testing the topic instead of the criterion.**
 - **Fake variety.** Four activities differing only in which chapter they use are one activity
   wearing four labels.
@@ -299,8 +310,9 @@ reaches them, so a defect you noticed and didn't mention is a defect nobody ever
 
 Every Coverage row is complete or blocked — including `orientation` — and:
 
-- Every goal in the Goals table has **at least one activity that isn't a check** — something to
-  do before being checked is possible.
+- Every activity you wrote or were handed **carries `checks`**: anything a learner does can
+  move a goal to met. An older entry without it waits for its conversion (see _Either call_).
+- Every **case** of every goal is carried by some generator's questions.
 - Every `serves` and `checks` id **exists in the Goals table**, or is `all`; a `serves` item may
   also be `group <name>`, naming a group some goal is in.
 - Every activity with questions **has a generator** saying what varies, what is fixed, how

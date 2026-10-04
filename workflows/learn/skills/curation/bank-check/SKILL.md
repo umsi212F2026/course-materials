@@ -1,6 +1,6 @@
 ---
 name: curation-bank-check
-description: Check a course topic's question banks question by question, in a fresh context. Each answer must be true of its scenario, each question answerable from the setup alone without giving its answer away, each goal's credit statement faithful to that goal's criterion, and each mcq unambiguous. Returns findings per label, each marked question, scenario or generator; writes nothing. Called by the curation orchestrator on the course path, after the banks are drafted.
+description: Check a course topic's question banks question by question, in a fresh context. Each answer must be true of its scenario, each question answerable from the setup alone without giving its answer away, each goal's credit statement faithful to that goal's criterion, each mcq unambiguous, and each listed case really exercised and not bundled with one a learner could split from it; it also reports which cases each bank exercises and which it never does. Returns findings per label, each marked question, scenario or generator; writes nothing. Called by the curation orchestrator on the course path, after the banks are drafted.
 ---
 
 # Curation: bank check
@@ -34,8 +34,11 @@ node workflows/learn/tools/survey.mjs --dir <data-dir> <topic-folder>
 
 with `<data-dir>` the folder that holds the topic. Its `problems` are the mechanical floor: a
 scenario with no rubric file, a question with no rubric entry or two, duplicate question ids, an
-mcq answer that is not one of its choices, a goal id that is not in `goals.md`, a multi-goal
-question with no credit statement for one of its goals, a bank folder with no activity entry.
+mcq answer that is not one of its choices, a question naming no goal, a goal id that is not in
+`goals.md`, a multi-goal question with no credit statement for one of its goals, a malformed or
+duplicate case id, a `cases:` line naming a case its goal does not define or a goal the question
+does not name, a question on a goal with cases that lists none for it, a bank folder with no
+activity entry.
 The orchestrator should have cleared these before calling you. Report any that name a bank
 label, verbatim and marked `question` (or `scenario`, for one about a whole file), and then
 check everything else anyway. Don't re-derive what survey checks; spend the reading on what it
@@ -46,12 +49,20 @@ activity's `checks`.** For `a-words`, which has no `checks`, the ids must be wor
 `vocabulary`. Report any that isn't as a `question` finding. A question claiming a goal its
 generator never declared collects evidence the generator was never reviewed for.
 
-## Every question, five checks
+**For `a-words`, also check each word's bank against "What a word's bank holds" in
+vocabulary-moves.md**: one DISTINGUISH question per entry on the word's `nearest confusable`
+line, aimed at that entry, and one or two CATCH questions. Report a DEFINE, INTERPRET or APPLY
+question in a bank drafted under this rule, a confusable with no DISTINGUISH question, and a
+DISTINGUISH aimed at a synonym. In a released topic's older bank, list its DEFINE and INTERPRET
+questions instead, for the instructor to decide at the course path's recuration.
+
+## Every question, six checks
 
 For each `### <question-id>` in each `tasks/<activity-id>/<scenario-id>.md`, read the
 scenario's setup, the question, the scenario's key (the top of its rubric file), the question's
-rubric entry, and the criterion of each goal its `goal:` line names, from `goals.md`, resolving a
-reference criterion through `workflows/learn/skills/goal-setting/references/slots.md`.
+rubric entry, and the criterion of each goal its `goal:` line names, with the goal's cases if
+it has them, from `goals.md`, resolving a reference criterion through
+`workflows/learn/skills/goal-setting/references/slots.md`.
 
 1. **The answer is true of the scenario.** Work the question from the setup yourself **before**
    reading the `answer` line; an answer read first tends to look right. Then compare. A wrong
@@ -66,13 +77,17 @@ reference criterion through `workflows/learn/skills/goal-setting/references/slot
    whether the question bears on each goal it names at all: a goal listed on a question that
    doesn't exercise it collects evidence that means nothing.
 4. **It does not give its answer away**: not in its wording, not by one choice standing out from
-   the rest, and not through a question written before it in the same scenario. Questions are
-   served one at a time, and study serves a scenario's questions in the order they are written,
-   so a later question may reveal an earlier one's answer, but none may reveal a later one's,
-   and none may depend on another's answer to be answered.
+   the rest, and not through a question written before it in the same scenario. Study serves a
+   scenario's questions in file order, skipping one no longer needed, so a later question may
+   reveal an earlier one's answer, but none may reveal a later one's. Nor may a question depend
+   on another's answer to be answered, which a learner who skipped that one never saw.
 5. **An mcq is unambiguous.** Exactly one choice is right, given the setup, and it is the one
    `answer` names (1-based). Each wrong choice is wrong for a reason the setup supplies, not on a
    technicality a careful learner could argue.
+6. **Its cases are real, and not bundled.** For each goal with cases, does the question, answered
+   in full, really exercise every case its `cases:` line lists? A case listed but not reached
+   would be passed untested. And could a learner get one listed case right and another wrong?
+   One ruling covers all of them, so such a question should be split, one per case.
 
 ## Marking each finding
 
@@ -94,6 +109,12 @@ Grouped by activity. Each finding gives its label, its mark, which check it fail
 what is wrong, and what would fix it. The label is the question's,
 `<activity-id>/<scenario-id>/<question-id>`; for a `scenario` finding,
 `<activity-id>/<scenario-id>`; for a `generator` finding, the activity id.
+
+Then, per activity, **the cases its bank exercises and the ones it never does**: for each goal
+in its `checks` that has cases, each case with the number of questions listing it, and every
+case listed by none. A bank that skips the hard case is seen here, before verify finds the gap
+across the whole file. A question with no `cases:` line on such a goal predates the cases and
+counts toward all of them; say how many there are.
 
 Then what you checked and found nothing wrong in: per activity, how many scenarios and questions
 you read. A bank check that returns "no findings" without saying what it read is

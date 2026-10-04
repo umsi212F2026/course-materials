@@ -13,18 +13,97 @@
 // has since been removed, or a free-text catch such as `CATCH: subject/verb agreement`. Only
 // labels that match a candidate count, so those cannot make anything look served.
 //
-// GOAL-LESS LAST. A question whose goals line is empty is practice: it records nothing, so it is
-// only worth serving when no goal-bearing question is on offer. Among themselves, goal-less
-// items follow the same rules as everything else.
+// CASES STILL TO SHOW COME FIRST, when the goal names cases (`caseRank`, lower is preferred). In
+// study that is a question exercising a case not yet passed; in review, the one whose least
+// recently passed case passed longest ago, so successive reviews rotate through the cases. It
+// ranks before the rules above, and without cases every item ranks 0 and they decide alone.
+//
+// SCENARIO ORDER, IN STUDY ONLY. A later question in a scenario may give away an earlier one's
+// answer, so an item waits while an earlier question in its scenario (bank order, every bank
+// item, not just this goal's) has never been served and is still `needed`. One no longer needed
+// is skipped for good, which is why its answer may then be given away. A question carrying
+// another goal's undemonstrated case is still needed, so this goal's later question waits
+// behind it rather than spoil it. Review has seen every question already and keeps no order.
 //
 // TIES go to the same `<activity>/<scenario>` as the question just served (`after`), so a
 // scenario's setup is read once rather than re-read for every question, then to bank order.
 
+import { met, casePasses } from './bars.mjs';
+
 const group = (label) => label.split('/').slice(0, 2).join('/');
 
-export function pick(items, log, { goal, activity, after } = {}) {
-  const candidates = items.filter((it) => (goal ? it.goals.includes(goal) : it.activity === activity));
-  if (!candidates.length) return null;
+// Whether serving this question could still show anything: false when each goal it names is met,
+// set aside (`setAside`: deferred or retired, so nothing is wanted of it here), or has every case
+// the question lists for it already passed. A QUESTION LISTING NO CASE FOR A GOAL WITH CASES (a
+// bank written before the cases were) is needed for it only until served: its attempt credits
+// just the cases the tutor names, often none (`cases: []`), so serving it again could show nothing
+// new, and study would loop on it rather than reach the generator. A goal the topic does not
+// define cannot be shown met, so it keeps the question needed. A goal whose goals.md entry has a
+// problem is never treated as met here, as in survey, though its listed cases may have passed.
+export function stillNeeded(item, goalsById, attemptsByGoal, setAside = new Set()) {
+  return item.goals.some((id) => {
+    const goal = goalsById.get(id);
+    if (!goal) return true;
+    if (setAside.has(id)) return false;
+    const attempts = attemptsByGoal.get(id) ?? [];
+    if (!goal.problems?.length && met(goal, attempts)) return false;
+    const listed = item.cases?.[id] ?? [];
+    const passes = casePasses(goal, attempts);
+    if (!passes) return true;
+    if (!listed.length) return !attempts.some((r) => r.label === item.label);
+    return listed.some((c) => !passes[c]?.passed);
+  });
+}
+
+// The `caseRank` for one goal: in study 0 for a question exercising a case not yet passed, else
+// 1; in review the latest pass of its least recently passed case. A question listing no case for
+// the goal is ranked as if it might exercise any of them, since which it does is only named by
+// the tutor once it is served (and study serves it once; see stillNeeded). A goal without cases
+// ranks all 0.
+export function rankByCase(goal, attempts, { review = false } = {}) {
+  const passes = goal ? casePasses(goal, attempts) : null;
+  if (!passes) return () => 0;
+  return (item) => {
+    const listed = item.cases?.[goal.id]?.length ? item.cases[goal.id] : Object.keys(passes);
+    const known = listed.filter((c) => passes[c]);
+    if (review) return Math.min(...known.map((c) => passes[c].at));
+    return known.some((c) => !passes[c].passed) ? 0 : 1;
+  };
+}
+
+export function pick(items, log, { goal, activity, after, review = false, needed = () => true, caseRank = () => 0, done = () => false } = {}) {
+  const served = new Set(log.map((line) => line.label));
+  // In study an item waits behind any earlier unserved, still-needed question in its scenario;
+  // `open` maps the scenario to that question.
+  const open = new Map();
+  const waiting = new Set();
+  if (!review) {
+    for (const it of items) {
+      const g = group(it.label);
+      if (open.has(g)) waiting.add(it);
+      else if (!served.has(it.label) && needed(it)) open.set(g, it);
+    }
+  }
+  // STUDY NEVER SERVES A SKIPPED QUESTION: a later one in its scenario may already have given its
+  // answer away. So while there is still something to show, one no longer needed is no candidate
+  // at all, and a goal whose remaining cases no banked question carries gets null, which sends
+  // the tutor to the generator. The same holds for an activity: while any goal its questions
+  // name is not `done`, only needed questions are candidates, so a case none of them carries gets
+  // null too. NOTHING LEFT TO SHOW IS PRACTICE: when the goal, or every goal the activity's
+  // questions name, is `done` (met, deferred or retired), repeats are served exactly as before.
+  const matching = items.filter((it) => (goal ? it.goals.includes(goal) : it.activity === activity));
+  const named = goal ? [goal] : [...new Set(matching.flatMap((it) => it.goals))];
+  const filter = !review && named.some((id) => !done(id));
+  const wanted = filter ? matching.filter((it) => needed(it)) : matching;
+  if (!wanted.length) return null;
+  const candidates = wanted.filter((it) => !waiting.has(it));
+  // EVERY CANDIDATE WAITING IS NOT AN EMPTY BANK. The question holding up the earliest of them is
+  // served instead, as any item is, though it may name another goal: that keeps the scenario in
+  // order and unblocks this goal's question, where giving up would send the tutor to a generator.
+  if (!candidates.length) {
+    const g = group(wanted[0].label);
+    return { item: open.get(g), repeat: false, lastServed: null, keepsOrder: g };
+  }
 
   const latest = new Map();
   for (const line of log) {
@@ -36,9 +115,9 @@ export function pick(items, log, { goal, activity, after } = {}) {
 
   const afterGroup = after ? group(after) : null;
   const ranked = candidates
-    .map((item, order) => ({ item, order, at: latest.get(item.label) ?? null }))
+    .map((item, order) => ({ item, order, rank: caseRank(item), at: latest.get(item.label) ?? null }))
     .sort((a, b) => {
-      if ((a.item.goals.length === 0) !== (b.item.goals.length === 0)) return a.item.goals.length === 0 ? 1 : -1;
+      if (a.rank !== b.rank) return a.rank < b.rank ? -1 : 1;
       if ((a.at === null) !== (b.at === null)) return a.at === null ? -1 : 1;
       if (a.at !== null && Date.parse(a.at) !== Date.parse(b.at)) return Date.parse(a.at) - Date.parse(b.at);
       const ag = afterGroup && group(a.item.label) === afterGroup;

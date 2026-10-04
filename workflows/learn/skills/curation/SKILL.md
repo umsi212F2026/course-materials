@@ -114,10 +114,11 @@ course path the instructor is, at the two stops, and nobody else.
    revised.
 
    Run them concurrently. Neither writes, and neither needs the other's results. `verify`
-   handles what has definite answers — artifacts real, ids resolving, fields present, the
-   Coverage table matching. `critique` handles what doesn't — could a tutor run this, would
-   passing this establish the criterion, is the menu sound. Splitting them also stops one agent
-   doing twenty link resolutions and then judging the criteria tired.
+   handles what has definite answers: artifacts real, ids resolving, fields present, the
+   Coverage table matching, every case of a goal exercised. `critique` handles what doesn't:
+   could a tutor run this, would passing this establish the criterion, is the menu sound.
+   Splitting them also stops one agent doing twenty link resolutions and then judging the
+   criteria tired.
 
    **Three things come back, and each is handled differently.**
 
@@ -139,7 +140,9 @@ course path the instructor is, at the two stops, and nobody else.
 3. **Revise, once.** Hand the findings from step 2 back to `curation/generate`; being given
    findings is what tells it to work them rather than to look for gaps. It may push back on one
    rather than acting on it — that's allowed, and its reasons come back to you rather than
-   being buried in the file.
+   being buried in the file. On the course path, the older entries with no `checks` that
+   `verify` listed go with these findings, one finding each (_Converting older files_), so
+   step 4 checks the converted entries before stop 1.
 
 4. **Check again**, same way, on the revised file — telling `critique` this is the second
    round, so annotations come back this time. `verify` skips whatever already carries a recent
@@ -156,7 +159,9 @@ course path the instructor is, at the two stops, and nobody else.
    _Findings, from the second report._ `critique`'s need no action — it writes the tutor-facing
    version of the same defects as annotations, and you've just placed them. For each of
    `verify`'s, write `status: dropped — <the finding>` on that entry. `status` is yours to set;
-   entry substance stays the generator's.
+   entry substance stays the generator's. `verify`'s list of older entries with no `checks` is
+   not findings: drop none of them. On the course path they were converted in step 3, so the
+   list should be empty by now; a plain-path run leaves them as they are.
 
    **Regenerate the Coverage table if you dropped anything.** It's derived from the entries, so
    a drop leaves it claiming a check that no longer exists. A goal left with no live check is a
@@ -218,15 +223,13 @@ The layout every step writes is in `workflows/learn/templates/activities.md` und
 file per scenario in `tasks/<activity-id>/` and its twin in `rubrics/<activity-id>/`, each
 question a `### <question-id>` section, labelled `<activity-id>/<scenario-id>/<question-id>`.
 
-**Only some activities get a bank:** those with `checks` whose generator invents its own
-material. These stay live, with no bank:
+**Any question activity may get a bank**, except these, which stay live with no bank:
 
 - an activity whose generator picks from real items, or from the learner's own work (their own
   app, their own agent, their own chats);
-- an orientation rehearsal;
-- an activity without `checks`.
+- an orientation rehearsal.
 
-The reason is the same for all three. A bank would replace the learner's own material with
+The reason is the same for both. A bank would replace the learner's own material with
 material someone invented, and the picker serves a bank whenever one exists, so the live
 generator would never run again.
 
@@ -261,8 +264,9 @@ generator would never run again.
 2. **Draft the banks.** One `curation/draft-bank` per activity that gets a bank (the same ones
    as stop 1, never the live-only kinds above), in `full` mode, as separate agents running in
    parallel. Each fills its bank to about three questions per goal in the activity's `checks`
-   (for `a-words`, per word), unless the entry says otherwise, and keeps every scenario already
-   there: the kept sample, and anything converted from an older file.
+   (for `a-words`, per word), unless the entry says otherwise, with every case of those goals
+   exercised by some question, and keeps every scenario already there: the kept sample, and
+   anything converted from an older file.
 
 3. **Check the banks.** First the mechanical floor:
 
@@ -271,10 +275,14 @@ generator would never run again.
    ```
 
    Its `problems` cover a scenario with no rubric file, a question with no rubric entry or two,
-   duplicate question ids, mcq answers that aren't a choice, a goal id that isn't in `goals.md`,
-   a multi-goal question whose credit has no statement for one of its goals, and a bank folder
-   with no activity entry. Each has one right answer, so hand an activity's problems back to its
-   drafter (`full` mode again) rather than to the instructor, and re-run until there are none.
+   duplicate question ids, mcq answers that aren't a choice, a question naming no goal, a goal
+   id that isn't in `goals.md`, a multi-goal question whose credit has no statement for one of
+   its goals, a malformed or duplicate case id, a `cases:` line naming a case its goal doesn't
+   define or a goal the question doesn't name, a question on a goal with cases that lists none
+   for it, and a bank folder with no activity entry. Each has one right
+   answer, so hand an activity's problems back to its drafter (`full` mode again) rather than to
+   the instructor, and re-run until there are none. Survey does not say whether every case is
+   exercised; `bank-check` and `verify` do.
 
    Then run `curation/bank-check` **in a fresh context, as a separate agent**, told the topic
    folder and nothing else: not the drafters' reasoning, not this conversation. It checks what
@@ -325,7 +333,24 @@ problems.
   bank of the activity that pointed at it: the task file's shared material becomes the setup at
   the top of a scenario's task file and its cases become `### <question-id>` sections; the key's
   shared lists become that scenario's key, at the top of its rubric file, and the key's cases
-  become per-question rubric entries. Then delete the old pair.
+  become per-question rubric entries, each with a `goal:` line (and a `cases:` line where its
+  goal has cases): every banked question names a goal. Then delete the old pair. An activity
+  that pointed at a study bank usually has no `checks`; it is converted as the next item says,
+  and gains `checks` naming every goal its new rubrics name.
+- **Activities with no `checks`, in the sequence's step 3.** Every activity but the orientation
+  is now a source of questions, and every question names a goal. Hand each older entry without
+  `checks` (the list `verify` returned in step 2) to `curation/generate` as a finding, with the
+  checkers' other findings, to come back as one of these. Step 4 then checks the converted
+  entries like any other, and the instructor sees each one at stop 1, where a fold or a drop
+  is theirs to overturn:
+  - orientation material is kept as the orientation, one activity per topic;
+  - a reading, video or narrated walkthrough is folded into a question activity's
+    `worked example`, which may cite it, or dropped, the instructor deciding one at a time;
+  - an exercise with a right answer (sort, judge, critique) becomes a question activity with
+    `checks`, a scenario with one question per item, sampled and banked like any other;
+  - one built on the learner's own work becomes a live question activity with `checks`.
+
+  A plain-path run converts none of these; they wait for the instructor.
 - **Retired fields.** Both `kind:` and `bank:` are ignored, but a `bank:` line can carry
   substance: where the items live, how they are named, how to pick among them. Move any such
   text into the entry's `generator`, worded as part of it, and then delete the line. Delete a
@@ -340,7 +365,7 @@ Not on a schedule, and not on your own reading of the folder. **Run it when the 
 
 - **A goal was added** — by goal setting, or by `new-word.mjs`. Those arrive `goal-added`.
 - **A tutor ran out of candidates** — enough entries picked up `status: dropped` that a goal
-  has no live check activity, or nothing left to do before one.
+  has no live check activity.
 - **A review sitting found a goal with no live entry to check it with.**
 
 The middle one is why the drop reasons have to be specific: they are the only feedback this
