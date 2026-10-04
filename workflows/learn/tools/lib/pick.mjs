@@ -34,10 +34,12 @@ const group = (label) => label.split('/').slice(0, 2).join('/');
 
 // Whether serving this question could still show anything: false when each goal it names is met,
 // set aside (`setAside`: deferred or retired, so nothing is wanted of it here), or has every case
-// the question lists for it already passed. A question listing no case for a goal with cases (a
-// bank written before the cases were) is needed while that goal is unmet. A goal the topic does
-// not define cannot be shown met, so it keeps the question needed; nor can one whose goals.md
-// entry has a problem, which survey holds unmet too.
+// the question lists for it already passed. A QUESTION LISTING NO CASE FOR A GOAL WITH CASES (a
+// bank written before the cases were) is needed for it only until served: its attempt credits
+// just the cases the tutor names, often none (`cases: []`), so serving it again could show nothing
+// new, and study would loop on it rather than reach the generator. A goal the topic does not
+// define cannot be shown met, so it keeps the question needed. A goal whose goals.md entry has a
+// problem is never treated as met here, as in survey, though its listed cases may have passed.
 export function stillNeeded(item, goalsById, attemptsByGoal, setAside = new Set()) {
   return item.goals.some((id) => {
     const goal = goalsById.get(id);
@@ -47,13 +49,17 @@ export function stillNeeded(item, goalsById, attemptsByGoal, setAside = new Set(
     if (!goal.problems?.length && met(goal, attempts)) return false;
     const listed = item.cases?.[id] ?? [];
     const passes = casePasses(goal, attempts);
-    return !passes || !listed.length || listed.some((c) => !passes[c]?.passed);
+    if (!passes) return true;
+    if (!listed.length) return !attempts.some((r) => r.label === item.label);
+    return listed.some((c) => !passes[c]?.passed);
   });
 }
 
 // The `caseRank` for one goal: in study 0 for a question exercising a case not yet passed, else
 // 1; in review the latest pass of its least recently passed case. A question listing no case for
-// the goal exercises every case, as its attempts are counted. A goal without cases ranks all 0.
+// the goal is ranked as if it might exercise any of them, since which it does is only named by
+// the tutor once it is served (and study serves it once; see stillNeeded). A goal without cases
+// ranks all 0.
 export function rankByCase(goal, attempts, { review = false } = {}) {
   const passes = goal ? casePasses(goal, attempts) : null;
   if (!passes) return () => 0;

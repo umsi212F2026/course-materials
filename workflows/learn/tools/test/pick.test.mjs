@@ -196,6 +196,34 @@ test('CLI --activity in study exits 2 while a goal its questions name is unmet',
   assert.equal(run('next-item.mjs', [dir, '--activity', 'a-x', '--review']).code, 0);
 });
 
+test('stillNeeded: a question listing no case for a goal with cases is needed only until served', () => {
+  const old = item('a-x/s1/q2');
+  const goals = new Map([['g1', CG]]);
+  assert.equal(stillNeeded(old, goals, new Map([['g1', []]])), true);
+  const unchecked = { at: '2026-10-01T00:00:00Z', goal: 'g1', label: 'a-x/s1/q2', unaided: 'yes', criterion: 'unchecked', cases: [] };
+  assert.equal(stillNeeded(old, goals, new Map([['g1', [unchecked]]])), false);
+});
+
+test('CLI study does not loop on a stale question already recorded unchecked', () => {
+  const dir = makeTopic({
+    goals: CAP_GOAL('c-g', '- **cases:**\n  - `x`: ex\n  - `y`: why\n  - `z`: zed\n'),
+    activities: '### a-x\n- **checks:** c-g\n',
+  });
+  const put = (rel, text) => {
+    mkdirSync(dirname(join(dir, rel)), { recursive: true });
+    writeFileSync(join(dir, rel), text);
+  };
+  put('tasks/a-x/s1.md', '### q1\n\nXY.\n\n### q2\n\nStale.\n');
+  put('rubrics/a-x/s1.md', '### q1\n\n- **goal:** c-g\n- **answer:** X.\n- **cases:** x, y\n\n### q2\n\n- **goal:** c-g\n- **answer:** S.\n');
+  const lines = [
+    { at: '2026-10-01T00:00:00Z', goal: 'c-g', label: 'a-x/s1/q1', unaided: 'yes', criterion: 'met', cases: ['x', 'y'] },
+    { at: '2026-10-02T00:00:00Z', goal: 'c-g', label: 'a-x/s1/q2', unaided: 'yes', criterion: 'unchecked', cases: [] },
+  ];
+  put('evidence/attempts.jsonl', lines.map((r) => JSON.stringify(r)).join('\n') + '\n');
+  assert.equal(run('next-item.mjs', [dir, '--goal', 'c-g']).code, 2);
+  assert.equal(run('next-item.mjs', [dir, '--activity', 'a-x']).code, 2);
+});
+
 test('CLI study on a deferred goal serves a repeat rather than sending to the generator', () => {
   const dir = zTopic();
   assert.equal(run('record-status.mjs', [dir, 'deferred', 'c-g', '--where', 'PS3']).code, 0);
