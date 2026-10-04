@@ -6,6 +6,13 @@
 // at all: that is workflows/quiz/skills/quiz/grade/SKILL.md, followed by an agent, and keeping
 // it out of code is what lets one skill serve both.
 //
+// WHAT THE BATCH RUNNER CAN RELY ON. On a question naming one goal or none, a verdict merges
+// byte-identically to how it always has, key order included. Every `buildQueue` item carries
+// `goals` (`[goal]`, `[]`, or several), passed through to the grade skill as it is; only a
+// question naming several goals gets `per_goal` back, and `mergeGrades` requires it there.
+// Anything that turns a credit into points must read `value` first, since `partial` has no
+// entry in CREDIT_VALUE.
+//
 // NOTHING HERE READS A FILE OR A NETWORK. Each front end brings its own already-parsed draw
 // and submissions, which is what makes all of this testable without a database or a cluster.
 

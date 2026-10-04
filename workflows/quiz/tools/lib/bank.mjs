@@ -20,6 +20,13 @@
 // { id, type, prompt } plus `rubric` on a free item, or `choices` and `answer` on an mcq.
 // Nothing downstream changes.
 //
+// WHAT THE PRIVATE TOOLS CAN RELY ON. A pool written against single-file banks draws exactly
+// what it always drew, and a single-file item keeps its exact shape, bare `id` included. That
+// holds until the pool's topics are migrated to folder banks (migrate-words.mjs), and the pool
+// is rewritten in the same change, so a re-bake after that draws differently. A folder item's
+// `id` is qualified and contains `/`, so the quiz app must treat an item id as an opaque string.
+// Every stratum carries `bank`, the bank its items come from.
+//
 // ANSWERS ARE 1-BASED IN THE FILE and 0-based in the output. The rubric file is written for a
 // person reading it next to the numbered list in tasks/, and the draw contract already uses an
 // index. Converting here is the only place that has to know.

@@ -92,14 +92,15 @@ export function topicDir(pool, item, root) {
  *
  *  ONLY COURSE GOALS ARE EXAMINED. A learner's own goal is theirs to set and theirs to meet,
  *  and a quiz that drew on it would grade something the course never asked for. The practice
- *  quiz applies this, and the instructor's bake is told to (see CONTRACT.md), so the two stay
- *  the same draw.
+ *  quiz applies this, and the instructor's bake must call it too, so the two stay the same
+ *  draw.
  *
  *  A QUESTION NAMING ANY GOAL THAT ISN'T COURSE IS DROPPED, not just one naming only such goals:
  *  a two-goal question graded per goal would otherwise score a goal the quiz must not examine.
  *  A question naming no goal is kept, and so is one with no topic: an assignment's follow-up
  *  has nobody's goals to check it against. A goal id the topic does not have reads as not
- *  course, since nothing says the course set it. */
+ *  course, since nothing says the course set it; so a topic with no goals.md (a test fixture
+ *  built from bank files alone, say) draws nothing that names a goal. */
 export function courseOnly(items) {
   const origins = new Map();
   const originOf = (topic, goal) => {

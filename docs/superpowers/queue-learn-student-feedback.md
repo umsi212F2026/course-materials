@@ -23,8 +23,7 @@ plan, implementation). Update this file as items finish or are added.
      `plans/2026-10-03-unified-banks-phase-5.md`. Folder ids are qualified on the quiz path;
      pool keys work at topic, activity and scenario level; practice prefers unseen questions;
      multi-goal questions are graded and recorded per goal. What the instructor's private
-     tools must change is in `workflows/quiz/tools/CONTRACT.md` (quiz-bake calls `courseOnly`;
-     quiz-comments reads `value` for `partial`; quiz-regrade accepts `per_goal`).
+     tools must change is under "Actions on course-private" below.
 4. **Help is always available; help just means the attempt doesn't count.** Covers review and the
    practice quiz too: the tutor answers while a quiz page is open and records those answers as not
    independent.
@@ -98,7 +97,8 @@ plan, implementation). Update this file as items finish or are added.
 
 The shared quiz libraries changed in phase 5. Single-goal questions from single-file banks work
 as before; these changes are needed before folder-bank questions, and especially multi-goal ones,
-reach a real quiz. Details for each are in `workflows/quiz/tools/CONTRACT.md`.
+reach a real quiz. The mechanisms are explained in the header comments of
+`workflows/quiz/tools/lib/bank.mjs`, `lib/grade.mjs` and `quiz-draw.mjs`.
 
 - **quiz-regrade** (needed for any folder-bank question): `resolveRubrics` (around lines 61-75)
   must find a folder question's rubric at `rubrics/<activity>/<scenario>.md` and its task at

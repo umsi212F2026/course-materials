@@ -84,7 +84,7 @@ was decided, why, and what it costs if it was wrong. Delete this file once revie
    drop-in for an old `items` key.
 4. **Course goals only** (`courseOnly`): a question naming a goal that isn't `course` (or isn't in
    goals.md) is dropped and reported. The practice quiz applies it; `quiz-bake` must be taught to
-   call it (see `workflows/quiz/tools/CONTRACT.md`). A topic with no goals.md now draws nothing
+   call it (see the queue's course-private actions). A topic with no goals.md now draws nothing
    that has a goal.
 5. **Per-goal verdicts.** A question naming several goals is graded per goal; its value is the
    mean; its credit is the shared one when all goals agree, else `partial`. A multi-goal verdict
@@ -99,6 +99,6 @@ was decided, why, and what it costs if it was wrong. Delete this file once revie
    (read `value`), `quiz-regrade` and `quiz-review` (find folder rubrics; accept per-goal
    verdicts), `quiz-bank-check` (check `goals`), `quiz-bake` (call `courseOnly`), and four tests
    in `course-private/tests/quiz-draw.test.mjs` (the fixture needs a course goals.md).
-   `CONTRACT.md` lists each. Nothing in course-private was changed.
+   The queue's "Actions on course-private" lists each. Nothing in course-private was changed.
 8. **Deferred:** a topic-level key also spreads over activities marked dropped, because
    `bank.mjs` doesn't read activities.md.
