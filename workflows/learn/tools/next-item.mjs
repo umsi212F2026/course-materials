@@ -87,7 +87,7 @@ if (!result) {
   process.exit(2);
 }
 
-const { item, repeat, lastServed } = result;
+const { item, repeat, lastServed, keepsOrder } = result;
 const lines = [
   `label: ${item.label}`,
   `goals: ${item.goals.join(', ')}`,
@@ -97,6 +97,9 @@ const lines = [
     .filter(([, c]) => c.length)
     .map(([g, c]) => `cases: ${g}: ${c.join(', ')}`),
   `repeat: ${repeat ? `yes (last served ${lastServed.slice(0, 10)})` : 'no'}`,
+  // SERVED IN PLACE OF THIS GOAL'S QUESTION, which waits behind it; see lib/pick.mjs. It may name
+  // another goal, and the tutor records an attempt per goal it names, as for any question.
+  ...(keepsOrder ? [`served first: keeps ${keepsOrder} in order`] : []),
   '--- learner sees ---',
   item.prompt,
 ];

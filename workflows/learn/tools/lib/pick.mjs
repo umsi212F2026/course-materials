@@ -64,18 +64,27 @@ export function rankByCase(goal, attempts, { review = false } = {}) {
 
 export function pick(items, log, { goal, activity, after, review = false, needed = () => true, caseRank = () => 0 } = {}) {
   const served = new Set(log.map((line) => line.label));
-  // In study an item waits behind any earlier unserved, still-needed question in its scenario.
+  // In study an item waits behind any earlier unserved, still-needed question in its scenario;
+  // `open` maps the scenario to that question.
+  const open = new Map();
   const waiting = new Set();
   if (!review) {
-    const open = new Set();
     for (const it of items) {
       const g = group(it.label);
       if (open.has(g)) waiting.add(it);
-      else if (!served.has(it.label) && needed(it)) open.add(g);
+      else if (!served.has(it.label) && needed(it)) open.set(g, it);
     }
   }
-  const candidates = items.filter((it) => !waiting.has(it) && (goal ? it.goals.includes(goal) : it.activity === activity));
-  if (!candidates.length) return null;
+  const wanted = items.filter((it) => (goal ? it.goals.includes(goal) : it.activity === activity));
+  if (!wanted.length) return null;
+  const candidates = wanted.filter((it) => !waiting.has(it));
+  // EVERY CANDIDATE WAITING IS NOT AN EMPTY BANK. The question holding up the earliest of them is
+  // served instead, as any item is, though it may name another goal: that keeps the scenario in
+  // order and unblocks this goal's question, where giving up would send the tutor to a generator.
+  if (!candidates.length) {
+    const g = group(wanted[0].label);
+    return { item: open.get(g), repeat: false, lastServed: null, keepsOrder: g };
+  }
 
   const latest = new Map();
   for (const line of log) {

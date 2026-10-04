@@ -126,9 +126,33 @@ test('study: an earlier question no longer needed is skipped', () => {
 test('study: a question carrying another goal\'s undemonstrated case blocks this goal\'s later one', () => {
   const b = withCases('a-x/s1/q1', { g2: ['other'] }, ['g2']);
   const a = withCases('a-x/s1/q2', {}, ['g1']);
-  assert.equal(pick([b, a], [], { goal: 'g1' }), null);
+  // Every candidate waiting: the question holding up the earliest one is served instead.
+  const r = pick([b, a], [], { goal: 'g1' });
+  assert.equal(r.item.label, 'a-x/s1/q1');
+  assert.equal(r.keepsOrder, 'a-x/s1');
+  assert.equal(r.repeat, false);
+  assert.equal(pick([b, a], [], { goal: 'g3' }), null);
   assert.equal(pick([b, a], [], { goal: 'g1', needed: (it) => it !== b }).item.label, 'a-x/s1/q2');
   assert.equal(pick([b, a], [seen('a-x/s1/q1', '2026-10-01T00:00:00Z')], { goal: 'g1' }).item.label, 'a-x/s1/q2');
+});
+
+test('CLI serves another goal\'s blocking question first, saying so', () => {
+  const dir = makeTopic({
+    goals: CAP_GOAL('g-one') + '\n' + CAP_GOAL('g-two', '- **cases:**\n  - `easy`: the plain one\n  - `hard`: the tricky one\n'),
+    activities: '### a-x\n- **checks:** g-one, g-two\n',
+  });
+  const put = (rel, text) => {
+    mkdirSync(dirname(join(dir, rel)), { recursive: true });
+    writeFileSync(join(dir, rel), text);
+  };
+  put('tasks/a-x/s1.md', '### q1\n\nFirst.\n\n### q2\n\nSecond.\n');
+  put('rubrics/a-x/s1.md', '### q1\n\n- **goal:** g-two\n- **answer:** X.\n- **cases:** hard\n\n### q2\n\n- **goal:** g-one\n- **answer:** Y.\n');
+  const r = run('next-item.mjs', [dir, '--goal', 'g-one']);
+  assert.equal(r.code, 0, r.stderr);
+  assert.match(r.stdout, /label: a-x\/s1\/q1\ngoals: g-two\n/);
+  assert.match(r.stdout, /cases: g-two: hard/);
+  assert.match(r.stdout, /served first: keeps a-x\/s1 in order/);
+  assert.doesNotMatch(run('next-item.mjs', [dir, '--goal', 'g-two']).stdout, /served first/);
 });
 
 test('CLI study serves the unpassed case; --review rotates to the case passed longest ago', () => {
