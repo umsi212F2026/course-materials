@@ -154,8 +154,10 @@ in the setup or the question. What the learner brings is the capability the goal
 knowledge of this scenario that only the key holds.
 
 **Nothing gives its answer away**: not the question's wording, not a choice that is obviously
-the odd one out, and not another question in the same scenario. Questions are served one at a
-time and in any order, so none may lean on another's answer or reveal it.
+the odd one out, and not a question written before it in the same scenario. Questions are served
+one at a time, and study serves a scenario's questions in the order they are written, so a later
+question may reveal an earlier one's answer, but none may reveal a later one's, and none may
+depend on another's answer to be answered.
 
 **The answer is true of the scenario.** Work it out from the setup as the learner would before
 writing the `answer` line, rather than writing the scenario to fit an answer you had in mind.

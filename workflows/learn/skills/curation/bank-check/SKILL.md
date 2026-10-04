@@ -66,8 +66,10 @@ reference criterion through `workflows/learn/skills/goal-setting/references/slot
    whether the question bears on each goal it names at all: a goal listed on a question that
    doesn't exercise it collects evidence that means nothing.
 4. **It does not give its answer away**: not in its wording, not by one choice standing out from
-   the rest, and not through another question in the same scenario. Questions are served one at
-   a time and in any order, so none may reveal or lean on another's answer.
+   the rest, and not through a question written before it in the same scenario. Questions are
+   served one at a time, and study serves a scenario's questions in the order they are written,
+   so a later question may reveal an earlier one's answer, but none may reveal a later one's,
+   and none may depend on another's answer to be answered.
 5. **An mcq is unambiguous.** Exactly one choice is right, given the setup, and it is the one
    `answer` names (1-based). Each wrong choice is wrong for a reason the setup supplies, not on a
    technicality a careful learner could argue.
