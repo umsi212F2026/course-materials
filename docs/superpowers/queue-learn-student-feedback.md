@@ -67,9 +67,10 @@ been merged or pushed.
    live are never picked), survey problems for an item that matches nothing, a goal in two
    sets, a goal in none, and an entry stranded inside the section. Migration is under "Actions
    on the learning-topics repository".
-6. ~~**Progress view.**~~ Done, the tool in `238a646` and its fix in `fc13d01`; study shows it
-   (the full view at the open and when a set finishes, one set's line after each attempt) and
-   the study guide explains it. Item 7 will draw `--json`, which will need goal text, structured
+6. ~~**Progress view.**~~ Done, `238a646`, `fc13d01`, `731193b` and `63abc27`. ASCII, one line per
+   set (the instructor's choice). Study shows the full view at the open, and after anything it
+   records runs `progress.mjs <topic> --after <goal-id>`, which prints that goal's set line or
+   the full view when the set just finished. The study guide explains it. Item 7 will draw `--json`, which will need goal text, structured
    capability data (slug, met, total) and goals.md order for an HTML panel, since today
    `next[].name` is a formatted string and goals are sorted by state. Original brief:
    Metacognitive information for the student: the sequence of sets from item 5 drawn as columns,
