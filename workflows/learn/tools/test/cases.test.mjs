@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { makeTopic, survey, CAP_GOAL } from './helpers.mjs';
 import { parseCases } from './../lib/slots.mjs';
 import { readGoals } from './../lib/topic.mjs';
-import { met, casesDemonstrated } from './../lib/bars.mjs';
+import { met, casesDemonstrated, casePasses } from './../lib/bars.mjs';
 
 const THREE =
   '- `declines-risky`: a request that would put a secret in the chat  - `allows-safe`: a request involving no secret - `allows-dashboard`: an instruction to use the host settings ';
@@ -104,6 +104,19 @@ test('casesDemonstrated counts the cases passed, null without cases', () => {
 test('casesDemonstrated counts a grandfathered attempt toward every case; cases: [] toward none', () => {
   assert.deepEqual(casesDemonstrated(G(), [pass(null)]), { passed: 2, total: 2 });
   assert.deepEqual(casesDemonstrated(G(), [pass([])]), { passed: 0, total: 2 });
+});
+
+test('casePasses gives each case whether it passed and its latest pass time; null without cases', () => {
+  const at = (cases, t) => pass(cases, { at: t });
+  const r = casePasses(G(), [at(['a'], '2026-10-01T00:00:00Z'), at(null, '2026-10-02T00:00:00Z'), at(['a'], '2026-10-03T00:00:00Z')]);
+  assert.deepEqual(r, {
+    a: { passed: true, at: Date.parse('2026-10-03T00:00:00Z') },
+    b: { passed: true, at: Date.parse('2026-10-02T00:00:00Z') },
+  });
+  const none = { passed: false, at: -Infinity };
+  assert.deepEqual(casePasses(G(), [{ unaided: 'no', criterion: 'met', cases: ['a'], at: '2026-10-01T00:00:00Z' }]), { a: none, b: none });
+  assert.deepEqual(casePasses(G(), [pass(['a'], { at: 'soon' })]).a, { passed: true, at: -Infinity });
+  assert.equal(casePasses({ id: 'c-y', bar: 'one unaided pass', cases: [] }, []), null);
 });
 
 test('a cases slot that yields no case, or has stray text, or is empty, is a problem', () => {

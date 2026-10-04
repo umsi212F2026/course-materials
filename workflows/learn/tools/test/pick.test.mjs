@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
-import { pick } from '../lib/pick.mjs';
+import { pick, stillNeeded } from '../lib/pick.mjs';
 import { makeTopic, run, survey, CAP_GOAL } from './helpers.mjs';
 
 const item = (label, goals = ['g1']) => {
@@ -74,11 +74,92 @@ test('no candidates gives null', () => {
   assert.equal(pick([A1], [], { goal: 'nope' }), null);
 });
 
-test('a goal-less item ranks after every goal-bearing one under --activity', () => {
-  const practice = item('a-x/s1/q0', []);
-  const r = pick([practice, A1], [], { activity: 'a-x' });
-  assert.equal(r.item.label, 'a-x/s1/q1');
-  assert.equal(pick([practice], [], { activity: 'a-x' }).item.label, 'a-x/s1/q0');
+// --- cases ------------------------------------------------------------------------------------
+const CG = { id: 'g1', bar: 'one unaided pass', cases: [{ id: 'easy', text: '' }, { id: 'hard', text: '' }] };
+const withCases = (label, cases, goals = ['g1']) => ({ ...item(label, goals), cases });
+const passed = (cases, at) => ({ at, goal: 'g1', label: 'x/y/z', unaided: 'yes', criterion: 'met', cases });
+
+test('stillNeeded: unmet goal, unpassed listed case; not needed once its cases or its goal are met', () => {
+  const q = withCases('a-x/s1/q1', { g1: ['easy'] });
+  const goals = new Map([['g1', CG]]);
+  assert.equal(stillNeeded(q, goals, new Map([['g1', []]])), true);
+  assert.equal(stillNeeded(q, goals, new Map([['g1', [passed(['easy'], '2026-10-01T00:00:00Z')]]])), false);
+  // A grandfathered question, listing no case for a goal with cases, is needed while it is unmet.
+  const old = item('a-x/s1/q2');
+  assert.equal(stillNeeded(old, goals, new Map([['g1', [passed(['easy'], '2026-10-01T00:00:00Z')]]])), true);
+  assert.equal(stillNeeded(old, goals, new Map([['g1', [passed(['easy', 'hard'], '2026-10-01T00:00:00Z')]]])), false);
+});
+
+test('study prefers a question exercising a case not yet passed', () => {
+  const easy = withCases('a-x/s1/q1', { g1: ['easy'] });
+  const hard = withCases('a-x/s2/q1', { g1: ['hard'] });
+  const caseRank = (it) => (it.cases.g1.includes('hard') ? 0 : 1);
+  assert.equal(pick([easy, hard], [], { goal: 'g1', caseRank }).item.label, 'a-x/s2/q1');
+});
+
+test('review prefers the case passed longest ago, before unserved', () => {
+  const easy = withCases('a-x/s1/q1', { g1: ['easy'] });
+  const hard = withCases('a-x/s2/q1', { g1: ['hard'] });
+  const last = { easy: Date.parse('2026-10-03T00:00:00Z'), hard: Date.parse('2026-10-01T00:00:00Z') };
+  const caseRank = (it) => Math.min(...it.cases.g1.map((c) => last[c]));
+  const log = [seen('a-x/s2/q1', '2026-10-01T00:00:00Z')];
+  assert.equal(pick([easy, hard], log, { goal: 'g1', review: true, caseRank }).item.label, 'a-x/s2/q1');
+});
+
+test('study: an earlier unserved question still needed blocks a later one in its scenario', () => {
+  const q1 = withCases('a-x/s1/q1', { g1: ['easy'] });
+  const q2 = withCases('a-x/s1/q2', { g1: ['hard'] });
+  const caseRank = (it) => (it.cases.g1.includes('hard') ? 0 : 1);
+  assert.equal(pick([q1, q2], [], { goal: 'g1', caseRank }).item.label, 'a-x/s1/q1');
+  // Review keeps no scenario order.
+  assert.equal(pick([q1, q2], [], { goal: 'g1', caseRank, review: true }).item.label, 'a-x/s1/q2');
+});
+
+test('study: an earlier question no longer needed is skipped', () => {
+  const q1 = withCases('a-x/s1/q1', { g1: ['easy'] });
+  const q2 = withCases('a-x/s1/q2', { g1: ['hard'] });
+  const needed = (it) => it !== q1;
+  const caseRank = (it) => (it.cases.g1.includes('hard') ? 0 : 1);
+  assert.equal(pick([q1, q2], [], { goal: 'g1', needed, caseRank }).item.label, 'a-x/s1/q2');
+});
+
+test('study: a question carrying another goal\'s undemonstrated case blocks this goal\'s later one', () => {
+  const b = withCases('a-x/s1/q1', { g2: ['other'] }, ['g2']);
+  const a = withCases('a-x/s1/q2', {}, ['g1']);
+  assert.equal(pick([b, a], [], { goal: 'g1' }), null);
+  assert.equal(pick([b, a], [], { goal: 'g1', needed: (it) => it !== b }).item.label, 'a-x/s1/q2');
+  assert.equal(pick([b, a], [seen('a-x/s1/q1', '2026-10-01T00:00:00Z')], { goal: 'g1' }).item.label, 'a-x/s1/q2');
+});
+
+test('CLI study serves the unpassed case; --review rotates to the case passed longest ago', () => {
+  const dir = makeTopic({
+    goals: CAP_GOAL('g-one', '- **cases:**\n  - `easy`: the plain one\n  - `hard`: the tricky one\n'),
+    activities: '### a-x\n- **checks:** g-one\n',
+  });
+  const put = (rel, text) => {
+    mkdirSync(dirname(join(dir, rel)), { recursive: true });
+    writeFileSync(join(dir, rel), text);
+  };
+  put('tasks/a-x/s1.md', '### q1\n\nEasy.\n');
+  put('rubrics/a-x/s1.md', '### q1\n\n- **goal:** g-one\n- **answer:** X.\n- **cases:** easy\n');
+  put('tasks/a-x/s2.md', '### q1\n\nHard.\n');
+  put('rubrics/a-x/s2.md', '### q1\n\n- **goal:** g-one\n- **answer:** X.\n- **cases:** hard\n');
+  // Passes are recorded under live labels, so the bank's own served dates point the other way and
+  // only the case rules can choose as asserted.
+  const att = (label, cases, at, unaided = 'yes') => JSON.stringify({ at, goal: 'g-one', label, unaided, criterion: 'met', cases });
+  const log = (...lines) => writeFileSync(join(dir, 'evidence', 'attempts.jsonl'), lines.join('\n') + '\n');
+  mkdirSync(join(dir, 'evidence'), { recursive: true });
+  log(att('gen/e1', ['easy'], '2026-10-01T00:00:00Z'));
+  assert.match(run('next-item.mjs', [dir, '--goal', 'g-one']).stdout, /label: a-x\/s2\/q1/);
+  log(
+    att('gen/e1', ['easy'], '2026-10-01T00:00:00Z'),
+    att('gen/h1', ['hard'], '2026-10-02T00:00:00Z'),
+    att('a-x/s2/q1', ['hard'], '2026-10-03T00:00:00Z', 'no'),
+    att('a-x/s1/q1', ['easy'], '2026-10-04T00:00:00Z', 'no'),
+  );
+  const r = run('next-item.mjs', [dir, '--goal', 'g-one', '--review']);
+  assert.equal(r.code, 0, r.stderr);
+  assert.match(r.stdout, /label: a-x\/s1\/q1/);
 });
 
 function bank(dir) {

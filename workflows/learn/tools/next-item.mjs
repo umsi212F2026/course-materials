@@ -1,7 +1,10 @@
 // Print the next bank question to serve, chosen by lib/pick.mjs.
 //
-//   node workflows/learn/tools/next-item.mjs <topic> --goal <id>     [--after <label>] [--key]
-//   node workflows/learn/tools/next-item.mjs <topic> --activity <id> [--after <label>] [--key]
+//   node workflows/learn/tools/next-item.mjs <topic> --goal <id>     [--after <label>] [--review] [--key]
+//   node workflows/learn/tools/next-item.mjs <topic> --activity <id> [--after <label>] [--review] [--key]
+//
+// --REVIEW IS FOR A REVIEW SITTING: the question on the case passed longest ago, and no scenario
+// order, since every question has been met. Without it the picker is studying; see lib/pick.mjs.
 //
 // THE LEARNER'S VIEW AND THE KEY ARE SEPARATE SECTIONS, and the key is printed only on --key,
 // so an agent that wants the question can read the output without also reading the answer.
@@ -15,11 +18,11 @@
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { readFolderBanks } from '../../quiz/tools/lib/bank.mjs';
-import { readLog, liveActivities } from './lib/topic.mjs';
-import { pick } from './lib/pick.mjs';
+import { readLog, readGoals, liveActivities } from './lib/topic.mjs';
+import { pick, stillNeeded, rankByCase } from './lib/pick.mjs';
 
 const USAGE = `usage:
-  node workflows/learn/tools/next-item.mjs <topic> (--goal <id> | --activity <id>) [--after <label>] [--key]`;
+  node workflows/learn/tools/next-item.mjs <topic> (--goal <id> | --activity <id>) [--after <label>] [--review] [--key]`;
 
 const die = (msg) => {
   console.error(msg);
@@ -38,8 +41,8 @@ for (let i = 0; i < argv.length; i++) {
     continue;
   }
   const name = argv[i].slice(2);
-  if (name === 'key') {
-    flags.key = true;
+  if (name === 'key' || name === 'review') {
+    flags[name] = true;
     continue;
   }
   if (!VALUE_FLAGS.includes(name)) die(`--${name} is not a flag.\n\n${USAGE}`);
@@ -65,7 +68,20 @@ if (problems.length) console.error(`warning: ${problems.length} bank problem(s):
 // there is nothing to be live or orphaned against, and banks are served as before.
 const hasEntries = existsSync(join(dir, 'activities.md'));
 const live = new Set(liveActivities(dir).map((e) => e.id));
-const result = pick(hasEntries ? items.filter((it) => live.has(it.activity)) : items, readLog(dir), { goal: flags.goal, activity: flags.activity, after: flags.after });
+// WHAT IS STILL TO SHOW comes from the goals and the log, the same reading `met` gives survey and
+// progress, so the picker and the progress view never disagree about which cases are passed.
+const log = readLog(dir);
+const goalsById = new Map(readGoals(dir).goals.map((g) => [g.id, g]));
+const attemptsByGoal = new Map();
+for (const r of log) attemptsByGoal.set(r.goal, [...(attemptsByGoal.get(r.goal) ?? []), r]);
+const result = pick(hasEntries ? items.filter((it) => live.has(it.activity)) : items, log, {
+  goal: flags.goal,
+  activity: flags.activity,
+  after: flags.after,
+  review: !!flags.review,
+  needed: (it) => stillNeeded(it, goalsById, attemptsByGoal),
+  caseRank: rankByCase(goalsById.get(flags.goal), attemptsByGoal.get(flags.goal) ?? [], { review: !!flags.review }),
+});
 if (!result) {
   console.error(`no bank questions for ${flags.goal ?? flags.activity}; run the activity's generator live`);
   process.exit(2);

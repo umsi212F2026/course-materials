@@ -128,9 +128,8 @@ export function courseOnly(items) {
  *
  *  UNSEEN FIRST. Within a stratum the seeded shuffle still happens, then a stable sort by when
  *  this student last attempted each question puts never-seen first and then the oldest, so the
- *  shuffle only breaks ties. A question naming no goal comes after every goal-bearing one. A
- *  student who has seen every question in a stratum is still drawn for, least recently seen
- *  first: a short stratum must not run dry because it was practised.
+ *  shuffle only breaks ties. A student who has seen every question in a stratum is still drawn
+ *  for, least recently seen first: a short stratum must not run dry because it was practised.
  *  The log is the topic's own (the label a question is recorded under is `recordLabel`), so an
  *  item with no topic has no history and sorts as unseen. `preferUnseen: false` is today's
  *  plain random draw. */
@@ -164,10 +163,6 @@ export function drawPractice(pool, root, { seed, preferUnseen = true } = {}) {
     }
     return lastSeen.get(it.topic).get(recordLabel(it)) ?? -Infinity;
   };
-  // GOAL-LESS LAST, as in pick.mjs: a question naming no goal records nothing, so it is served
-  // only when no goal-bearing question is left in the stratum.
-  const goalless = (it) => ((it.goals ?? (it.goal ? [it.goal] : [])).length === 0 ? 1 : 0);
-
   const items = [];
   const shape = [];
   for (const s of withTopic) {
@@ -177,9 +172,9 @@ export function drawPractice(pool, root, { seed, preferUnseen = true } = {}) {
     let drawn = pick(pickable, preferUnseen ? pickable.length : count, next);
     if (preferUnseen) {
       drawn = drawn
-        .map((it) => [goalless(it), seenAt(it), it])
-        .sort((a, b) => a[0] - b[0] || (a[1] < b[1] ? -1 : a[1] > b[1] ? 1 : 0))
-        .map(([, , it]) => it);
+        .map((it) => [seenAt(it), it])
+        .sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0))
+        .map(([, it]) => it);
     }
     drawn = drawn.slice(0, count);
     shape.push({ name: s.name, take: s.take, drawn: drawn.length, ...(s.bank ? { bank: s.bank } : {}) });

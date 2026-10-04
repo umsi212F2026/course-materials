@@ -13,17 +13,68 @@
 // has since been removed, or a free-text catch such as `CATCH: subject/verb agreement`. Only
 // labels that match a candidate count, so those cannot make anything look served.
 //
-// GOAL-LESS LAST. A question whose goals line is empty is practice: it records nothing, so it is
-// only worth serving when no goal-bearing question is on offer. Among themselves, goal-less
-// items follow the same rules as everything else.
+// CASES STILL TO SHOW COME FIRST, when the goal names cases (`caseRank`, lower is preferred). In
+// study that is a question exercising a case not yet passed; in review, the one whose least
+// recently passed case passed longest ago, so successive reviews rotate through the cases. It
+// ranks before the rules above, and without cases every item ranks 0 and they decide alone.
+//
+// SCENARIO ORDER, IN STUDY ONLY. A later question in a scenario may give away an earlier one's
+// answer, so an item waits while an earlier question in its scenario (bank order, every bank
+// item, not just this goal's) has never been served and is still `needed`. One no longer needed
+// is skipped for good, which is why its answer may then be given away. A question carrying
+// another goal's undemonstrated case is still needed, so this goal's later question waits
+// behind it rather than spoil it. Review has seen every question already and keeps no order.
 //
 // TIES go to the same `<activity>/<scenario>` as the question just served (`after`), so a
 // scenario's setup is read once rather than re-read for every question, then to bank order.
 
+import { met, casePasses } from './bars.mjs';
+
 const group = (label) => label.split('/').slice(0, 2).join('/');
 
-export function pick(items, log, { goal, activity, after } = {}) {
-  const candidates = items.filter((it) => (goal ? it.goals.includes(goal) : it.activity === activity));
+// Whether serving this question could still show anything: false when each goal it names is met,
+// or has every case the question lists for it already passed. A question listing no case for a
+// goal with cases (a bank written before the cases were) is needed while that goal is unmet. A
+// goal the topic does not define cannot be shown met, so it keeps the question needed.
+export function stillNeeded(item, goalsById, attemptsByGoal) {
+  return item.goals.some((id) => {
+    const goal = goalsById.get(id);
+    if (!goal) return true;
+    const attempts = attemptsByGoal.get(id) ?? [];
+    if (met(goal, attempts)) return false;
+    const listed = item.cases?.[id] ?? [];
+    const passes = casePasses(goal, attempts);
+    return !passes || !listed.length || listed.some((c) => !passes[c]?.passed);
+  });
+}
+
+// The `caseRank` for one goal: in study 0 for a question exercising a case not yet passed, else
+// 1; in review the latest pass of its least recently passed case. A question listing no case for
+// the goal exercises every case, as its attempts are counted. A goal without cases ranks all 0.
+export function rankByCase(goal, attempts, { review = false } = {}) {
+  const passes = goal ? casePasses(goal, attempts) : null;
+  if (!passes) return () => 0;
+  return (item) => {
+    const listed = item.cases?.[goal.id]?.length ? item.cases[goal.id] : Object.keys(passes);
+    const known = listed.filter((c) => passes[c]);
+    if (review) return Math.min(...known.map((c) => passes[c].at));
+    return known.some((c) => !passes[c].passed) ? 0 : 1;
+  };
+}
+
+export function pick(items, log, { goal, activity, after, review = false, needed = () => true, caseRank = () => 0 } = {}) {
+  const served = new Set(log.map((line) => line.label));
+  // In study an item waits behind any earlier unserved, still-needed question in its scenario.
+  const waiting = new Set();
+  if (!review) {
+    const open = new Set();
+    for (const it of items) {
+      const g = group(it.label);
+      if (open.has(g)) waiting.add(it);
+      else if (!served.has(it.label) && needed(it)) open.add(g);
+    }
+  }
+  const candidates = items.filter((it) => !waiting.has(it) && (goal ? it.goals.includes(goal) : it.activity === activity));
   if (!candidates.length) return null;
 
   const latest = new Map();
@@ -36,9 +87,9 @@ export function pick(items, log, { goal, activity, after } = {}) {
 
   const afterGroup = after ? group(after) : null;
   const ranked = candidates
-    .map((item, order) => ({ item, order, at: latest.get(item.label) ?? null }))
+    .map((item, order) => ({ item, order, rank: caseRank(item), at: latest.get(item.label) ?? null }))
     .sort((a, b) => {
-      if ((a.item.goals.length === 0) !== (b.item.goals.length === 0)) return a.item.goals.length === 0 ? 1 : -1;
+      if (a.rank !== b.rank) return a.rank < b.rank ? -1 : 1;
       if ((a.at === null) !== (b.at === null)) return a.at === null ? -1 : 1;
       if (a.at !== null && Date.parse(a.at) !== Date.parse(b.at)) return Date.parse(a.at) - Date.parse(b.at);
       const ag = afterGroup && group(a.item.label) === afterGroup;

@@ -121,6 +121,26 @@ export function casesDemonstrated(goal, attempts) {
   };
 }
 
+// Which of a goal's cases have passed and when each last did, for the picker:
+// `{ [caseId]: { passed, at } }`, `at` in ms and -Infinity when never (or never at a time that
+// parses). Null when the goal names none.
+//
+// A SINGLE ATTEMPT PASSES A CASE WHEN THE BAR HOLDS OVER IT ALONE. Every bar is an existence
+// test, so those are exactly the attempts that make it true, and the latest is when the case was
+// last shown. Same per-case view as `met`, grandfathering included.
+export function casePasses(goal, attempts) {
+  if (!goal.cases?.length) return null;
+  const bar = BARS[goal.bar];
+  if (!bar) throw new Error(`${goal.id} has bar: ${goal.bar}, which nothing implements.`);
+  const out = {};
+  for (const c of goal.cases) {
+    const passes = forCase(attempts, c.id).filter((r) => bar([r]));
+    const times = passes.map((r) => (typeof r.at === 'string' ? Date.parse(r.at) : NaN)).filter((t) => !Number.isNaN(t));
+    out[c.id] = { passed: passes.length > 0, at: Math.max(-Infinity, ...times) };
+  }
+  return out;
+}
+
 // --- what to print about one goal --------------------------------------------
 // NOTHING BRANCHES ON THIS. The four rungs are gone; what survives is a display, and a display
 // has to be generic across any bar because the rungs weren't — a word passed unaided at DEFINE

@@ -112,9 +112,3 @@ test("attempt times are compared as instants, not as strings", () => {
   }
 });
 
-test("a question with no goal ranks after a goal-bearing one, even a seen one", () => {
-  const root = fixture({ goalOf: { q2: "g1" }, log: [seen("a-x/s1/q2", "2026-09-01T00:00:00Z")] });
-  for (const seed of ["a", "b", "c", "d"]) {
-    assert.deepEqual(drawPractice(pool(1), root, { seed }).items.map((i) => i.label), ["a-x/s1/q2"]);
-  }
-});
