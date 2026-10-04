@@ -268,6 +268,13 @@ with the learner.
                   course topic at curation's next course-path run, on a student's own topic
                   when its learner next curates it.
 
+                  THE ORIENTATION'S ENTRY CARRIES `checks: o-orientation`. It sets no
+                  questions, so it has no bank, no rubric and no generator: the tutor rules
+                  the orientation's `did it once` bar from the learner saying they could now
+                  attempt the real thing. Its `worked example` and `doesn't show` may read
+                  `n/a`. An older orientation entry with no `checks` converts by gaining that
+                  line, and nothing else about it changes.
+
   worked example  what to show at the first level of help: a solved instance, or an
                   instruction to work one live and narrate the decisions. It may cite a
                   reading or a video, named as precisely as an `artifact` is; that is where

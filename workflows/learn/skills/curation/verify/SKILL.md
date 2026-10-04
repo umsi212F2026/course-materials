@@ -159,7 +159,9 @@ Three parts.
 it, keyed to an entry or goal id.
 
 **Older entries**: each live entry with no `checks`, by id, and nothing more. These are not
-findings and nothing is dropped for them.
+findings and nothing is dropped for them. An orientation entry among them (one whose `serves`
+or `supports` makes it the topic's orientation) is marked as such: its conversion is only
+adding `checks: o-orientation`, not a fold-or-drop decision for the instructor.
 
 **Verification results** — per artifact: confirmed, unconfirmable with what you couldn't check,
 or wrong. The orchestrator writes these into the file as soon as you return, which is what puts
