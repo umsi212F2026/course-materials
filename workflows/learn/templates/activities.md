@@ -338,3 +338,6 @@ with the learner.
 - **tutor does:**
 - **done when:**
 - **offer as:**
+- **checks:**
+- **worked example:**
+- **doesn't show:**
