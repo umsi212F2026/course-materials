@@ -60,6 +60,11 @@ gap. Don't add rows and don't remove them; that table's membership is the orches
      swiss cheese. Read the word entries in `goals.md` when choosing. It is cheap: one artifact
      covers every word in the topic.
 
+     **If the course lists sources it has found worth starting from**, in
+     [`docs/learning-sources.md`](docs/learning-sources.md), read that list before searching
+     and look there first. A lesson from it that runs past the topic's depth can still be the
+     reading, with the learner told which sections to skip.
+
      Its `checks` entry is whatever the learner does that makes them say they could now attempt
      the real thing; the tutor adjudicates it, in session, which is why it can be cheap. Answer
      no only when _what I already have_ says they've seen the area laid out before; then the
