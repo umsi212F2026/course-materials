@@ -78,7 +78,7 @@ export const CRITERION_REFS = {
 };
 
 // SYSTEM-WIDE AND CLOSED, not per activity. `bar` reads these, so a private vocabulary between
-// one activity and one bar would be the pairing this design refuses — see slots.md.
+// one activity and one bar would be the pairing this design refuses; see slots.md.
 export const TAGS = {
   production:
     'the learner brought something — a distinction, an error spotted, their own work, ' +
@@ -119,7 +119,7 @@ export const DEFAULT_GROUP = SLOTS.group.default;
 // take the other nineteen topics down with the bad one. workflows/learn/tools/record-attempt.mjs is the thing
 // that must not proceed, and it checks `problems` before it writes.
 //
-// Anything that isn't a slot is PAYLOAD — it belongs to whichever activity reads it, and nothing
+// Anything that isn't a slot is PAYLOAD: it belongs to whichever activity reads it, and nothing
 // else looks at it. That is the mirror of the opaque label: data flowing into an
 // implementation rather than out of one.
 export function applySlots(id, fields) {
