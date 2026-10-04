@@ -38,13 +38,15 @@ been merged or pushed.
 | 6 | Progress view | **DONE** |
 | 7 | Web side panel for tutor-initiated questions | deferred (feasibility test first) |
 | 8 | Personalized problem-set questions | deferred (spec B not written) |
+| 9 | Every activity checkable; recuration of each topic | to do (design first) |
 
-Outside this branch, done 2026-10-04 and not yet pushed: the six course topics are migrated on
-learning-topics branch `unified-migration` (worktree `.worktrees/learning-topics-unified-migration`),
-and course-private's quiz tools are adapted on branch `quiz-folder-banks` (worktree
-`.worktrees/course-private-quiz-folder-banks`; 120 tests pass). The pools for sessions 5, 7 and
-9 are updated on this branch. Still to do: release, and the three new topics in their own
-worktrees (cloud-hosting, deploy-config, database-hosting), which get the same migration then.
+Outside this branch, done 2026-10-04 and merged locally but not pushed: this branch into
+course-materials `main`; the six course topics, migrated on learning-topics branch
+`unified-migration`, into learning-topics `main` (release check passes for all six); and
+course-private's quiz tools, branch `quiz-folder-banks`, into course-private `main`. All three are
+pushed together, once the three new topics in their own worktrees (cloud-hosting,
+deploy-config, database-hosting) are migrated and finished. Work continuing on this branch is
+merged into main again before that push.
 
 ## In order
 
@@ -124,6 +126,63 @@ worktrees (cloud-hosting, deploy-config, database-hosting), which get the same m
      (as problem-set follow-ups are today) and never enters study or review.
    - Builds on item 3's bank format and picker; the private-side steps would be described as an
      interface for course-private to implement.
+9. **Every activity checkable; recuration of each topic.** Raised 2026-10-04 while the
+   config-and-secrets topic was being re-evaluated. Since item 4, any question can be attempted
+   with help (recorded `unaided: no`, which never meets a goal), so a separate place to practise
+   before a check is redundant. The instructor's decision: drop the rule. The model:
+   - an activity is the orientation, or a source of questions, banked or set live;
+   - every question has a rubric (a live one's is its generator's criterion), and its `goal:`
+     line names what an unaided pass can establish, possibly nothing (a warm-up);
+   - readings, videos and worked examples stop being activities and become the first level of
+     help on a question;
+   - an exercise made of many items (sort, judge, critique) becomes a scenario with one question
+     per item, wherever that fits, so repeats count and a student stops once the goal is met.
+
+   **Generic changes (design first, then plan).** `curation/generate` "Done when" drops "every
+   goal has at least one activity that isn't a check"; the activities template's Coverage table
+   loses its `study` column and its "empty `study` cell is a gap"; the template's BANKS
+   paragraph and `curation/SKILL.md` stop banking only activities with `checks`; `curation/verify`,
+   `curation/critique` (check notes on every question activity),
+   `curation/references/activity-types.md` (reading and worked-example types), `study/SKILL.md`
+   (around line 299, "an activity carrying no `checks`" becomes a question whose rubric names no
+   goal), `study/references/running-an-activity.md` and `learn.bpmn` follow. Open: whether the
+   activity-level `checks` field stays or is derived from its rubrics' `goal:` lines; where a
+   worked example lives (question, scenario or generator); whether help links to a reading.
+
+   **Recuration of each topic.** Each topic gets a recuration step under the new model,
+   preferably before the midterm; the instructor may hold some until next semester. Readings and
+   walkthroughs (group 2 below) are reviewed with the instructor one at a time: fold into a
+   question's help, or deprecate. Orientation is kept to one activity per topic. The worklist
+   for the six released topics, from a scan of live entries with no `checks` (40 of 76, not
+   counting `a-words`):
+
+   - **Orientation material, keep one per topic:** commits-and-history `a-place-the-eight-words`;
+     react-apps `a-tour-starter-app-words` (40 to 50 min), `a-read-why-frameworks-exist`;
+     software-construction `a-read-superpowers-readme`, `a-trace-superpowers-diagram` (30 to 40
+     min); web-backends `a-read-codecademy-backend` (40 to 50 min).
+   - **Readings and narrated walkthroughs, review one at a time:** coding-agents
+     `a-read-codex-model-guide`, `a-read-codex-chat-habits`, `a-watch-estimate-narrated`;
+     commits-and-history `a-narrated-commit-restore`; react-apps `a-read-tatham-bug-reports`,
+     `a-narrated-planted-bug`, `a-read-devtools-on-starter`; software-construction
+     `a-read-name-the-break`, `a-narrated-hollow-test`, `a-read-playwright-actions`,
+     `a-narrated-automate-request`; software-design `a-read-brainstorming-skill`,
+     `a-read-spec-kit-post`; web-backends `a-watch-list-app-requests`,
+     `a-read-mdn-dynamic-request`, `a-read-prisma-migrations`, `a-narrated-table-review`.
+   - **Exercises with a right answer, convert to checkable scenarios:** coding-agents
+     `a-contrast-model-pairs`, `a-explain-superpowers-handoffs`, `a-critique-flawed-estimates`;
+     react-apps `a-sort-bug-requests`, `a-judge-check-reports`; software-construction
+     `a-sort-tested-answers`, `a-sort-manual-requests`; software-design
+     `a-critique-agent-excerpt`, `a-judge-spec-kit-criteria`, `a-outwit-literal-builder`,
+     `a-sort-choice-reasons`, `a-same-options-two-situations`; web-backends
+     `a-judge-action-traces`, `a-hunt-planted-forgetting`, `a-judge-persistence-plans`,
+     `a-sort-missing-claims`, and `a-list-own-app-memory` (the student's own app, so a live
+     question activity).
+
+   Why it matters: each capability goal carries two or three of these at 15 to 45 minutes each,
+   none of which can move it to met (web-backends `c-trace-action` alone has about 90 minutes).
+   This is likely part of why students have not finished topics in reasonable time. The three new
+   topics get the same treatment in their part 2 re-evaluation; config-and-secrets is already
+   being curated this way, with the deviation noted in its Check notes until the skills change.
 
 ## Actions on the learning-topics repository (outside this branch)
 
