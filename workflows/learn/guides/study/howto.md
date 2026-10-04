@@ -21,6 +21,13 @@ next (it skips goals with nothing ready to study, so now and then it suggests fr
 and below the picture it names what is left there. After each attempt you see just that set's
 line, so you can watch the marks change; when you finish a set you see the whole picture again.
 
+**Goals with several cases.** Some goals have to be shown in more than one kind of situation
+(turning down a risky request and going ahead with a safe one, say), and one good answer
+doesn't cover them all. Such a goal stays `~` until you have shown every case, and the progress
+line counts them: `(2/3 cases)`, or `2 of 3 cases demonstrated` after an attempt. The tutor
+won't tell you which case is left. Knowing that would tell you what the next question is
+testing, which is half its answer.
+
 The options come with a note on what's different about each, not just titles. If two sound the
 same to you, say so; the tutor may be able to explain and, if not, it's a real problem that
 should be sent back to the curator or the goal-setting process.

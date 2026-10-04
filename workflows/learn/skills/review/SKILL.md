@@ -128,11 +128,15 @@ argument.
    the goal that is due:
 
    ```
-   node workflows/learn/tools/next-item.mjs <topic-folder> --goal <goal-id>
+   node workflows/learn/tools/next-item.mjs <topic-folder> --goal <goal-id> --review
    ```
 
-   Show the learner only what follows `--- learner sees ---`. It prefers a question they have
-   never been served, then the one served longest ago, so you need not filter by `served`. Run
+   **Always with `--review`.** Without it the picker is studying: it keeps scenario order, and
+   may serve a question on another goal first to keep it, which a review has no use for. Show the learner only
+   what follows `--- learner sees ---`. It prefers a question they have never been served, then
+   the one served longest ago, so you need not filter by `served`. For a goal with cases it
+   prefers first a question on the case passed longest ago, so successive reviews rotate through
+   them; keep its `cases:` lines for step 4. Run
    it with `--key` to read the grading text, and keep that from them. A question may credit
    other goals as well; that is fine, and step 3 says how it is ruled.
 
@@ -195,7 +199,9 @@ argument.
    ahead of the record, whether it names one goal or several. Only a live generator's question
    goes without one. One goal goes as `goal` and `criterion`; several go as `goals`, a list of
    `{"goal": …, "criterion": …}` with each criterion resolved. A question that names goals with
-   different `adjudicator` slots goes to `study/judge` for all of them. Every goal the judge
+   different `adjudicator` slots goes to `study/judge` for all of them. A goal the picker printed
+   a `cases:` line for also gets `cases`, each case the question exercises as
+   `{"id": …, "text": …}`, exactly as study sends it. Every goal the judge
    rules on is an attempt and step 4 records each. A goal that was due is recorded as a review.
    Another named goal is recorded as a review only if it was missed; one that passed counts as
    evidence without moving it along its intervals, and so does one the judge could not decide.
@@ -225,6 +231,9 @@ argument.
    That's what keeps it from being served back in three months, and there's nowhere else it gets
    recorded. `--tags` is what the activity returned: the picker's `tags:` line unless it says
    `none`, or `production` or `reception` for a vocabulary move set live, and nothing otherwise.
+   **A goal with cases also takes `--cases`**, the picker's `cases: <goal>: x, y` line for that
+   goal as `--cases x,y`, or for a question set live the cases its generator says it carries.
+   `record-attempt.mjs` refuses a ruled attempt on such a goal without it.
 
    **A question ruled against several goals is one call per goal**, each with its own `--axes`
    and all with the same label and `--tags`. Which of them carry `--source review`:

@@ -162,6 +162,11 @@ ask differently rather than repeating it.
    returns one ruling per goal, as a JSON array. A question that names goals with different
    `adjudicator` slots goes to `study/judge` for all of them.
 
+   **A goal the picker printed a `cases:` line for** also gets `cases`, beside its `criterion`:
+   each case the question exercises, as `{"id": …, "text": …}` with the text from `goals.md`.
+   The judge's one ruling on the goal covers all of them, so it needs to know which they are,
+   or it reads the cases this question was never meant to reach as gaps.
+
    **A question whose `goals:` line is empty is practice.** Run it and discuss it, but record
    nothing.
 
@@ -199,12 +204,21 @@ ask differently rather than repeating it.
    **A question ruled against several goals is one `record-attempt.mjs` call per goal**, each
    with that ruling's `--axes`, and all with the question's label and its `--tags`.
 
+   **A goal with cases needs `--cases` on every ruled attempt**, naming the cases the question
+   exercised; see _The record_.
+
    **Then show where that leaves them.** After every `record-attempt.mjs` call, and after
    recording a deferral or a retirement, run
    `node workflows/learn/tools/progress.mjs <topic-folder> --after <goal-id>` and paste what it
    prints. It prints the one line for the goal's set, or the full view when that finished the
    set, so the next set is seen opening up; the tool works out which. Review and the quiz do
-   not show it.
+   not show it. A goal with some of its cases passed shows `~`, which the legend reads `in
+   progress`, and the tool adds a line such as `c-judge-secret-request: 2 of 3 cases
+   demonstrated`.
+
+   **Never tell the learner which cases remain.** The progress tool gives counts only, and so
+   do you: naming the case still to show names the hard part of the criterion, and the next
+   question would then test whether they were listening rather than whether they can do it.
 
    Nothing else needs recording about the activity. The log holds what was attempted and how it
    went, and that is what the next tutor reads as where you left off.
@@ -254,6 +268,7 @@ was, run
 ```
 node workflows/learn/tools/record-attempt.mjs <topic-folder> <goal-id> <label> --axes '<json>'
 node workflows/learn/tools/record-attempt.mjs <topic-folder> <goal-id> <label> --tags production --axes '<json>'
+node workflows/learn/tools/record-attempt.mjs <topic-folder> <goal-id> <label> --cases allows-safe --axes '<json>'
 node workflows/learn/tools/record-attempt.mjs <topic-folder> <goal-id> <label> --outcome abandoned
 ```
 
@@ -273,6 +288,15 @@ the same one back, and there is nowhere else it gets written down.
 CATCH set live is `--tags production`; a DEFINE is `--tags reception`. **For a bank question,
 pass the `tags:` line the picker printed**, unless it says `none`, in which case omit the flag.
 Any other activity run live returns no tags, so omit the flag there too.
+
+**`--cases` says which of the goal's cases the question exercised**, and a goal whose entry has a
+`cases` slot needs it on every call with `--axes`; `record-attempt.mjs` refuses the call without
+it, and refuses a case the goal does not declare or `--cases` on a goal with none. **For a bank
+question, pass the `cases: <goal>: x, y` line the picker printed for that goal**, as
+`--cases x,y`. For a question set live, the generator says which cases each question shape
+carries; state the ones this question exercised. An `--outcome` call (`declared`, `elsewhere`,
+`abandoned`) needs none. One ruling covers every case the question lists: a pass passes them
+all, a miss passes none.
 
 **The two axes go in raw**, as the adjudicator returned them:
 
@@ -296,11 +320,12 @@ couldn't tell — that's `unclear`. Two cases, and both are ordinary:
 - **You know you gave help.** Record `{"unaided":"no","criterion":"unchecked"}` and call
   nobody. There was nothing for an adjudicator to settle, and review already counts this as a
   lapse.
-- **The activity couldn't have settled anything** — a curated entry carrying no `checks`, so a
-  pass at it wouldn't establish the criterion however unaided. This never applies to `a-words`,
-  or to any generator whose questions name their goals: those finish the goals they name. Record
-  `{"unaided":"yes","criterion":"unchecked"}`. It moves no date and establishes nothing, which
-  is exactly right.
+- **The attempt couldn't have settled anything**, however unaided: it was cut short before the
+  part the criterion examines, say. Record `{"unaided":"yes","criterion":"unchecked"}`. It moves
+  no date and establishes nothing, which is exactly right.
+
+Both are ruled attempts in `record-attempt.mjs`'s eyes, so a goal with cases still needs
+`--cases` on them.
 
 So **whether to invoke an adjudicator is your judgement, not a rule.** Invoke one when the
 attempt might establish something. `unchecked` is the honest record of the times it wouldn't.

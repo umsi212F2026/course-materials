@@ -89,6 +89,17 @@ rubric is the caller's key, not the learner's answer: the transcript is still wh
 Missing `goals` entries are missing inputs, so say so and rule nothing, as above. The single
 `goal` and `criterion` form without a rubric is what a live generator sends.
 
+**A goal may name cases**, parts of its criterion that must each be shown, and a question
+exercises some of them. Then that goal arrives with `cases`: the ones this question exercises,
+each as its id and the line saying what it is (`{"goal": …, "criterion": …, "cases":
+[{"id": "allows-safe", "text": "a request involving no secret"}]}`). **One ruling covers them
+all**: rule the goal on this question as you would any other, and `criterion: met` passes every
+case listed, `not met` passes none. The criterion's other cases are not this question's to
+reach, so they are never grounds for `unclear` or for `never_reached`. If the learner got one
+listed case right and another wrong, the ruling is `not met`, and that the question bundles
+cases it can split is a concern about what was attempted. There is no per-case field in what
+you return.
+
 **If one is missing, say so and rule nothing.** Not the criterion you'd have guessed, not the
 move the label looks like. A verdict built on an inferred input is worse than no verdict,
 because it is recorded exactly like a real one.

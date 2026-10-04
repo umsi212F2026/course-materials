@@ -160,6 +160,40 @@ with the artifact still beside them._ Weak evidence deliberately. It is adjudica
 recorded like anything else rather than assumed, which is the whole difference between this and
 the self-certifying rung it replaced.
 
+### `cases`: data, beside `criterion`
+
+Optional, and not one of the eight: it qualifies the criterion rather than answering a question
+of its own. Written right after `criterion`, one sub-bullet per case, a backticked id and one
+line saying what the case is:
+
+```
+- **cases:**
+  - `declines-risky`: a request that would put a secret in the chat or a file
+  - `allows-safe`: a request involving no secret
+```
+
+A case id matches `^[a-z0-9]+(-[a-z0-9]+){0,2}$`, one to three lower-case words with hyphens,
+and is unique within its goal. **It is permanent once attempts point at it**, like a goal id.
+`workflows/learn/tools/lib/slots.mjs` parses the slot; survey reports a malformed or duplicate
+id, and a slot that is present but yields no case. A goal without the slot behaves as if cases
+did not exist.
+
+**The goal's own bar must hold for each case**, computed over the attempts that carry that case.
+No new bar name, and each per-case test is still an existence test, so a bar once true stays
+true. Two rules keep that honest:
+
+- **An attempt with no `cases` field counts toward every case.** A pass recorded before the goal
+  named cases stays a pass, so naming cases later never unmeets a goal. To stop that becoming a
+  loophole, `record-attempt.mjs` refuses a ruled attempt on a goal with cases unless `--cases`
+  says which ones it exercised.
+- **The learner's own word (`declared`, `elsewhere`) meets the whole goal**, as it does any bar.
+
+**Cases or a `capability:` split.** Name cases when one criterion joins several things with
+"and" or "including", or is two-sided: decline the risky, allow the safe. Each is shown
+separately, but it stays one goal with one review clock, and review rotates through its cases.
+Split into parts under a `capability:` slug only when the parts are genuinely separate skills,
+each worth its own goal and its own review clock.
+
 ### `supply`: retired
 
 A goal used to say where its activities came from: `curated`, the live `activities.md` entries,

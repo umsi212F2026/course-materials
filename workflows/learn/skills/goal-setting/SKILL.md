@@ -312,6 +312,14 @@ and don't count towards it.
   slug (two to four lower-case words, hyphens, no prefix). They stay separate goals, met and
   reviewed one by one, and survey prints them together under the slug. Don't split to make a
   goal look bigger: one part alone is reported as a mistake.
+- **NAME THE CASES**: _when a criterion joins cases with "and" or "including", or is two-sided
+  (decline the risky, allow the safe)._ One pass on the easiest case would otherwise meet the
+  whole goal, and the hard case the criterion was written for never gets shown. Write a
+  `- **cases:**` slot after the criterion, one sub-bullet per case, `` `id`: what this case is ``
+  (one to three lower-case words, hyphens), and the goal is met only once every case has been
+  passed. Prefer this to SPLIT INTO PARTS: it stays one goal with one review clock. Split only
+  when the parts are genuinely separate skills. Drafting the cases is yours; the learner
+  decides which stay. [`references/slots.md`](references/slots.md) has the rules.
 - **MARK WHAT IS TAUGHT ELSEWHERE**: _when they say a goal is covered in class or in a problem
   set._ Write `- **taught elsewhere:** <where>` on that entry, in their words for where. It is
   not a slot and no tool reads it; the tutor does, and offers them the choice of learning it
