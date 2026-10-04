@@ -5,7 +5,8 @@
 // ASCII ONLY. The marks and the arrow are plain characters so the view lines up in every
 // terminal, a Windows console included, and survives being pasted anywhere.
 //
-// FOUR MARKS, ORDERED LIKE A PROGRESS BAR. met, tried, not started, deferred. `tried` is a goal
+// FOUR MARKS, ORDERED LIKE A PROGRESS BAR. met, in progress, not started, deferred. The internal
+// state `tried` (shown `~`, worded "in progress") is a goal
 // with attempts and not met: the survey has no state for it, so it is worked out here from the
 // row's attempt count. A deferred goal that was also tried reads as deferred, because deferred is
 // where the learner said it will be learned. Retired goals are left out of marks and counts, as
@@ -19,7 +20,7 @@
 
 const MARKS = { met: '#', tried: '~', open: '.', deferred: '>' };
 const ORDER = ['met', 'tried', 'open', 'deferred'];
-const LEGEND = ' # met  ~ tried  . not started  > deferred';
+const LEGEND = ' # met  ~ in progress  . not started  > deferred';
 const WIDTH = 96;
 const NAMES_SHOWN = 6;
 
@@ -54,6 +55,7 @@ export function buildProgress(s) {
           mark: MARKS[state],
           capability: row.capability ?? null,
           where: row.deferred ?? null,
+          ...(row.cases ? { cases: row.cases } : {}),
         };
       })
       .sort((a, b) => ORDER.indexOf(a.state) - ORDER.indexOf(b.state));
@@ -93,6 +95,10 @@ export function buildProgress(s) {
         const at = next.find((n) => n.name === name);
         if (at) at.tried ||= g.state === 'tried';
         else next.push({ name, tried: g.state === 'tried' });
+      } else if (g.cases && g.cases.passed > 0) {
+        // PART WAY THROUGH ITS CASES: the fraction already says it is in progress, so it carries
+        // no `(in progress)` of its own, but it still sorts with the tried goals.
+        next.push({ name: `${g.id} (${g.cases.passed}/${g.cases.total} cases)`, tried: true, cases: g.cases });
       } else next.push({ name: g.id, tried: g.state === 'tried' });
     }
     next.sort((a, b) => b.tried - a.tried);
@@ -131,7 +137,7 @@ function nextLine(v) {
   shown.forEach((n, i) => {
     const comma = i < shown.length - 1 || more ? ',' : '';
     units.push({ text: n.name, sep: ' ' });
-    if (n.tried) units.push({ text: `(tried)${comma}`, sep: ' ' });
+    if (n.tried && !n.cases) units.push({ text: `(in progress)${comma}`, sep: ' ' });
     else units[units.length - 1].text += comma;
   });
   if (more) units.push({ text: '...', sep: ' ' });
@@ -166,4 +172,12 @@ export function renderSet(v, n) {
       ? ''
       : `; set ${v.current} is ${v.current < n ? 'still ' : ''}next`;
   return `${x.label}  ${marksOf(x)}  ${x.met}/${x.total}   (set ${n} of ${v.sets.length}${still})`;
+}
+
+// The cases line `--after` prints under the set line: a goal with cases not yet all shown, or
+// null. A met goal, or one with no cases, has nothing to say.
+export function casesLine(v, id) {
+  const g = v.sets.flatMap((x) => x.goals).find((x) => x.id === id);
+  if (!g || !g.cases || g.state === 'met') return null;
+  return `  ${g.id}: ${g.cases.passed} of ${g.cases.total} cases demonstrated`;
 }

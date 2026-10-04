@@ -16,7 +16,7 @@
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { surveyTopic } from './lib/topic.mjs';
-import { buildProgress, renderFull, renderSet } from './lib/progress.mjs';
+import { buildProgress, renderFull, renderSet, casesLine } from './lib/progress.mjs';
 
 const USAGE = `usage:
   node workflows/learn/tools/progress.mjs <topic-folder> [--json] [--set <n>] [--after <goal-id>]`;
@@ -59,7 +59,12 @@ if (after !== undefined) {
   // The survey's sets still list retired goals, which the view omits, so place the goal there.
   const at = survey.sequence.sets.findIndex((set) => set.goals.some((g) => g.id === after));
   if (at === -1) die(`${after} is not a goal in the sequence of ${dir}.`);
-  console.log(view.sets[at].finished ? renderFull(view) : renderSet(view, at + 1));
+  if (view.sets[at].finished) console.log(renderFull(view));
+  else {
+    console.log(renderSet(view, at + 1));
+    const line = casesLine(view, after);
+    if (line) console.log(line);
+  }
 } else if (json) console.log(JSON.stringify(view, null, 2));
 else if (setArg !== undefined) {
   const n = Number(setArg);

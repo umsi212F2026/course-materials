@@ -12,7 +12,7 @@
 import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { applySlots, ORIGINS, isRequired, DEFAULT_GROUP } from './slots.mjs';
-import { met, describeAttempts } from './bars.mjs';
+import { met, casesDemonstrated, describeAttempts } from './bars.mjs';
 import { readStatus, foldStatus } from './status.mjs';
 import { readFolderBanks } from '../../../quiz/tools/lib/bank.mjs';
 
@@ -475,6 +475,9 @@ export function surveyTopic(dir) {
       resumed: status.resumedGoals.has(goal.id),
       attempts: attempts.length,
       last: describeAttempts(attempts),
+      // HOW MANY OF ITS CASES HAVE PASSED, only on a goal that names cases, so the progress view
+      // can say a goal is part way there rather than only that it is not met.
+      ...(goal.cases?.length ? { cases: casesDemonstrated(goal, attempts) } : {}),
     };
   });
 

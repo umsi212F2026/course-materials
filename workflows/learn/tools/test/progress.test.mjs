@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { buildProgress, renderFull, renderSet } from '../lib/progress.mjs';
-import { mkdtempSync, readdirSync } from 'node:fs';
+import { mkdtempSync, readdirSync, mkdirSync, appendFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { makeTopic, run, CAP_GOAL } from './helpers.mjs';
@@ -112,7 +112,7 @@ test('next-set line: tried first, capability collapsed with a fraction, deferred
     { name: 'z', tried: false },
   ]);
   assert.deepEqual(v.deferred, [{ id: 'd', where: 'PS3' }]);
-  assert.match(renderFull(v), / Next set: weigh-hosting-plans 1\/3 \(tried\), z {2}\(d deferred: PS3\)\n/);
+  assert.match(renderFull(v), / Next set: weigh-hosting-plans 1\/3 \(in progress\), z {2}\(d deferred: PS3\)\n/);
 });
 
 test('next-set line: six names then ..., wrapped with a one-space indent, absent when all done', () => {
@@ -121,7 +121,7 @@ test('next-set line: six names then ..., wrapped with a one-space indent, absent
   assert.equal(v.next.length, 8);
   assert.equal(v.next[0].name, 'w8');
   const text = renderFull(v);
-  assert.match(text, / Next set: w8 \(tried\), w1, w2, w3, w4, w5, \.\.\.\n/);
+  assert.match(text, / Next set: w8 \(in progress\), w1, w2, w3, w4, w5, \.\.\.\n/);
   const long = buildProgress(fake(rows, [rows.map((r) => r[0])], { dir: '/x/t' }));
   long.deferred = Array.from({ length: 5 }, (_, i) => ({ id: `long-goal-id-${i}`, where: 'a later course' }));
   const lines = renderFull(long).split('\n');
@@ -175,7 +175,7 @@ test('CLI: draws the view and is not decided without a Sequence section', () => 
   assert.equal(r.code, 0, r.stderr);
   assert.match(r.stdout, /^topic - sequence not decided yet - set 1 of 1 is next\n/);
   assert.match(r.stdout, /<- next/);
-  assert.match(r.stdout, / # met {2}~ tried {2}\. not started {2}> deferred\n$/);
+  assert.match(r.stdout, / # met {2}~ in progress {2}\. not started {2}> deferred\n$/);
 });
 
 test('CLI: --json keys, --set line, and usage errors exit 1', () => {
@@ -250,4 +250,39 @@ test('CLI --after: an unknown goal, a missing id, and a combination are usage er
   assert.equal(run('progress.mjs', [dir, '--after']).code, 1);
   assert.equal(run('progress.mjs', [dir, '--after', 'o-a', '--set', '1']).code, 1);
   assert.equal(run('progress.mjs', [dir, '--after', 'o-a', '--json']).code, 1);
+});
+
+const CASE_GOALS = `${CAP_GOAL('o-a', ORIENT + '- **cases:**\n  - `x`: ex\n  - `y`: why\n  - `z`: zed\n')}\n${CAP_GOAL('o-b', ORIENT)}`;
+const caseTopic = () => makeTopic({ goals: CASE_GOALS, activities: '### a-x\n- **serves:** all\n' });
+
+test('cases: a partly demonstrated goal reads <id> (p/t cases) on the next line, sorted with tried goals', () => {
+  const rows = [['a', 'orientation', 'open', 0], ['b', 'orientation', 'open', 2, { cases: { passed: 2, total: 3 } }]];
+  const v = buildProgress(fake(rows, [['a', 'b']]));
+  assert.equal(v.sets[0].goals[0].mark, '~');
+  assert.deepEqual(v.sets[0].goals[0].cases, { passed: 2, total: 3 });
+  assert.match(renderFull(v), / Next set: b \(2\/3 cases\), a\n/);
+  assert.ok(!renderFull(v).includes('(in progress)'));
+});
+
+test('CLI --after: a goal with cases not yet met prints a cases line; --json carries cases', () => {
+  const dir = caseTopic();
+  run('record-attempt.mjs', [dir, 'o-a', 'a-x/1', '--axes', PASS, '--cases', 'x,y']);
+  const r = run('progress.mjs', [dir, '--after', 'o-a']);
+  assert.equal(r.code, 0, r.stderr);
+  assert.equal(r.stdout, 'Orientation  ~.  0/2   (set 1 of 1)\n  o-a: 2 of 3 cases demonstrated\n');
+  const j = JSON.parse(run('progress.mjs', [dir, '--json']).stdout);
+  assert.deepEqual(j.sets[0].goals[0].cases, { passed: 2, total: 3 });
+  assert.match(run('progress.mjs', [dir]).stdout, / Next set: o-a \(2\/3 cases\), o-b/);
+});
+
+test('CLI --after: a goal with cases whose only pass carries no cases is met, with no cases line', () => {
+  const dir = caseTopic();
+  run('record-attempt.mjs', [dir, 'o-a', 'a-x/1', '--axes', PASS, '--cases', 'x,y,z']);
+  const all = run('progress.mjs', [dir, '--after', 'o-a']);
+  assert.equal(all.stdout, 'Orientation  #.  1/2   (set 1 of 1)\n');
+  const dir2 = caseTopic();
+  mkdirSync(join(dir2, 'evidence'), { recursive: true });
+  appendFileSync(join(dir2, 'evidence', 'attempts.jsonl'), JSON.stringify({ goal: 'o-a', unaided: 'yes', criterion: 'met', at: '2026-01-01T00:00:00Z' }) + '\n');
+  const old = run('progress.mjs', [dir2, '--after', 'o-a']);
+  assert.equal(old.stdout, 'Orientation  #.  1/2   (set 1 of 1)\n');
 });
