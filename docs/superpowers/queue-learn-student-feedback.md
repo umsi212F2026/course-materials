@@ -1,8 +1,8 @@
 # Queue: learn workflow changes from student feedback
 
-Branch `learn-student-feedback`. Each item is its own design cycle (design, spec where needed,
-plan, implementation). Update this file as items finish or are added. Nothing on this branch has
-been merged or pushed.
+Work is on `main` (branch `learn-student-feedback` was merged and deleted). Each item is its own
+design cycle (design, spec where needed, plan, implementation). Update this file as items finish
+or are added. Released and pushed 2026-10-04; items 9, 10 and 12 remain.
 
 ## How work proceeds here
 
@@ -43,13 +43,10 @@ been merged or pushed.
 | 11 | Criteria with named cases, each to be shown | **DONE** (spec `specs/2026-10-04-criterion-cases-design.md`, plan `plans/2026-10-04-criterion-cases.md`) |
 | 12 | Course topics in study order (`**study by:**`) | reading side **DONE**; derive from lesson Prep after the release |
 
-Outside this branch, done 2026-10-04 and merged locally but not pushed: this branch into
-course-materials `main`; the six course topics, migrated on learning-topics branch
-`unified-migration`, into learning-topics `main` (release check passes for all six); and
-course-private's quiz tools, branch `quiz-folder-banks`, into course-private `main`. All three are
-pushed together, once the three new topics in their own worktrees (cloud-hosting,
-deploy-config, database-hosting) are migrated and finished. Work continuing on this branch is
-merged into main again before that push.
+Released 2026-10-04: this work in course-materials `main`; the six course topics, migrated on
+learning-topics branch `unified-migration`, in learning-topics `main`; and course-private's quiz
+tools, branch `quiz-folder-banks`, in course-private `main`. All three are merged and pushed.
+Items 7 and 8 stay deferred.
 
 ## In order
 
