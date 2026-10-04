@@ -14,7 +14,8 @@
 //                                re-date a goal without moving it along the intervals. `scan` is
 //                                for the daily transcript scan, which is designed but not built
 //   --cases a,b                  which of the goal's cases the question exercised. Required on a ruled
-//                                attempt (--axes) for a goal that has cases; refused for one that has none
+//                                attempt (--axes) for a goal that has cases, unless its criterion is
+//                                unchecked; refused for one that has none
 //   --note "..."                 optional, e.g. why they stopped
 //
 // ONE CODE PATH FOR EVERY GOAL. A capability, a word and an orientation all arrive here the
@@ -169,7 +170,19 @@ const unknownCases = cases.filter((c) => !defined.includes(c));
 if (unknownCases.length) {
   die(`unknown case${unknownCases.length > 1 ? 's' : ''} for ${goalId}: ${unknownCases.join(', ')}\ncases are: ${defined.join(', ')}`);
 }
-if (flags.axes && defined.length && !cases.length) {
+// AN UNCHECKED ATTEMPT IS THE EXCEPTION: nobody ruled, so it counts toward nothing, and a question
+// exercising none of the goal's cases (a bank written before them) is recorded so with no --cases.
+// It is stored with `cases: []` rather than none, so bars.mjs cannot take it for a grandfathered
+// attempt counting toward every case.
+let unchecked = false;
+if (flags.axes) {
+  try {
+    unchecked = JSON.parse(flags.axes).criterion === 'unchecked';
+  } catch {
+    // Reported below, where the axes are read.
+  }
+}
+if (flags.axes && defined.length && !cases.length && !unchecked) {
   die(`${goalId} has cases, so a ruled attempt needs --cases naming those the question exercised.\ncases are: ${defined.join(', ')}`);
 }
 
@@ -179,7 +192,7 @@ const record = {
   goal: goalId,
   label,
   ...(tags.length ? { tags } : {}),
-  ...(cases.length ? { cases } : {}),
+  ...(cases.length || (unchecked && defined.length) ? { cases } : {}),
   source,
 };
 

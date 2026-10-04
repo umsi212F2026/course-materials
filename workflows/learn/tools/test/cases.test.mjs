@@ -210,6 +210,13 @@ test('a ruled attempt on a goal with cases needs --cases', () => {
   assert.match(r.stderr, /one, two/);
 });
 
+test('an unchecked attempt on a goal with cases needs no --cases, and counts toward no case', () => {
+  const dir = withCases();
+  const r = run('record-attempt.mjs', [dir, 'c-a', 'l', '--axes', '{"unaided":"yes","criterion":"unchecked"}']);
+  assert.equal(r.code, 0, r.stderr);
+  assert.deepEqual(lastAttempt(dir).cases, []);
+});
+
 test('an --outcome needs no --cases, and a goal without cases records as before', () => {
   const dir = withCases();
   assert.equal(run('record-attempt.mjs', [dir, 'c-a', 'l', '--outcome', 'declared']).code, 0);
