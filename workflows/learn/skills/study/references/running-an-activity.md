@@ -48,8 +48,8 @@ the label, the `tags:` line and any `cases:` lines: they go to `record-attempt.m
 each goal's cases as its `--cases`. A goal with cases that has no `cases:` line is named by a
 question written before its cases were, which counts as exercising them all: pass every case
 the goal declares. The `--key` text also goes to the judge as the question's
-rubric, whatever the number of goals. A `goals:` line that is empty marks practice: run it,
-record nothing.
+rubric, whatever the number of goals. Every banked question names a goal, so an empty
+`goals:` line is a fault survey reports: run it, record nothing.
 
 **Within a scenario, questions come in order**, and the picker skips one that is no longer
 needed, because every goal it names is met or has already passed the cases it lists. While the

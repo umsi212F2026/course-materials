@@ -52,8 +52,21 @@ with the learner.
   them, and workflows/learn/tools/migrate-words.mjs removes them. Never write one; leave an old
   one alone until that tool runs.
 
+  AN ACTIVITY IS THE ORIENTATION, OR A SOURCE OF QUESTIONS, banked or set live. Every question
+  has a rubric (a live one's is its generator's criterion) and names at least one goal, so every
+  activity carries `checks` and anything a learner does can move a goal to met. Any question can
+  be attempted with help, so nothing needs a separate place to practise first. Outside the
+  orientation, a reading, a video or a worked example is not an activity: it is help on a
+  question, the first level of it, in that activity's `worked example`.
+
   Every entry says what the LEARNER DOES. A resource is not an activity: "read chapter 3"
-  is not an entry, "read chapter 3 writing a one-line gloss for each unfamiliar term" is.
+  is not an entry, "read chapter 3 writing a one-line gloss for each unfamiliar term" is, and
+  then only as the orientation.
+
+  ONE SCENARIO MAY SPAN GOALS. An exercise of many items (sort these, judge each, critique this)
+  is a scenario with one question per item, so repeats count and the learner stops once the goal
+  is met; and where the method is the same, one scenario may carry questions on several goals,
+  in different capabilities.
 
   CANDIDATES, deliberately more than will be used — you can't tell whether an artifact will
   orient someone until they try it. Don't rank them; characterize them, so the tutor can
@@ -124,15 +137,15 @@ with the learner.
   ONE ROW PER GOAL IN THE TABLE ABOVE, in the same order. `a-words` doesn't appear here and
   neither do the words it serves; nothing is ever missing for those.
 
-  study   live activities whose `serves` includes this goal and which are not checks
   checks  live activities whose `checks` names this goal, or whose bank holds a question
           whose rubric `goal:` names it
   notes   authored by curation/critique, placed by the orchestrator. Usually empty. For deficiencies an empty cell can't
           express — most often that every check for this goal shares the same
           `doesn't show`, so the coverage is only apparent.
 
-  Dropped activities don't appear. An empty `study` or `checks` cell is a gap, and that's
-  the whole point of the table.
+  Dropped activities don't appear. An empty `checks` cell is a gap, and that's the whole
+  point of the table. A goal with cases has a second kind of gap the table can't show, a case
+  no question exercises; curation/verify looks for that one.
 
   A cell may instead read `blocked — <why>`, meaning curation tried and couldn't: no
   verifiable artifact exists, or the criterion can't be examined by anything constructible.
@@ -146,29 +159,26 @@ with the learner.
 
   If `goals.md` says the learner is already oriented, its entry there will have been deleted
   and this row won't exist. If the entry is there but `what I already have` settles it, write
-  `n/a — already oriented` in `study` and leave it. That's a complete row too.
+  `n/a: already oriented` in `checks` and leave it. That's a complete row too.
 -->
 
-| goal                    | study | checks | notes |
-| ----------------------- | ----- | ------ | ----- |
-| `o-orientation`         |       |        |       |
-| `c-read-unseen-diagram` |       |        |       |
+| goal                    | checks | notes |
+| ----------------------- | ------ | ----- |
+| `o-orientation`         |        |       |
+| `c-read-unseen-diagram` |        |       |
 
 ---
 
 ## Activities
 
 <!--
-  One heading per activity, one bullet per field — not a table row. Several values run to
-  a sentence or more, which table cells can't hold, and check activities carry three fields
-  the others don't, which a table would render as columns of empty cells indistinguishable
-  from unfilled ones. The Goals block above is a table for the opposite reasons: short
-  values, same shape every row.
+  One heading per activity, one bullet per field, not a table row. Several values run to a
+  sentence or more, which table cells can't hold. The Goals block above is a table for the
+  opposite reason: short values, same shape every row.
 
-  FIELDS. Every activity has `serves` through `offer as`, and one that sets questions has a
-  `generator`. `status` appears only once the activity is dead, and `origin` only on a legacy
-  stamp, which nothing writes now. The block after those applies only to activities that can
-  finish a goal: the ones carrying `checks`.
+  FIELDS. Every activity has `serves` through `offer as`, and the block at the end, `checks`
+  through `doesn't show`; one that sets questions has a `generator`. `status` appears only once
+  the activity is dead, and `origin` only on a legacy stamp, which nothing writes now.
 
   serves        goal ids from the table above, or `all`: which goals this helps with. An item
                 may also be `group <name>`, which stands for every goal in that group, those
@@ -180,9 +190,8 @@ with the learner.
 
                 There is no separate "check" value. Every attempt is made the same way, with
                 the tutor helping on request; whether an attempt turns out to have been
-                unaided is an outcome, not a setting. What decides whether an activity can
-                *finish* a goal is the `checks` field below — some activities can't, however
-                unaided the attempt, because the activity itself does part of the work.
+                unaided is an outcome, not a setting. What an unaided pass can *finish* is
+                the `checks` field below.
   artifact      what it is and where, and roughly how long it takes
   verified      the date curation/verify confirmed this artifact is real and
                 is what the entry says it is. `NOT VERIFIED — <what couldn't be confirmed>`
@@ -197,9 +206,9 @@ with the learner.
                 leaves the judging to the adjudicator), or none (the learner works
                 alone and you wait)
   tutor does    during, and afterwards
-  done when     for orient and deepen: the learner can attempt the real thing with the
-                artifact still beside them. For an activity carrying `checks`: its criterion
-                met with no help.
+  done when     the criterion of a goal in `checks` met with no help. For the orientation,
+                that is the learner able to attempt the real thing with the artifact still
+                beside them.
   offer as      what makes this one different from its neighbors — fastest, most thorough,
                 assumes more background, hands-on rather than expository. This is what you
                 say when presenting a choice, so make it a real distinction.
@@ -213,11 +222,12 @@ with the learner.
                 otherwise edit one. Each check pass rewrites them.
 
   generator     the instruction for producing a fresh question: what varies, what is held
-                fixed, how hard, and which of the goals in `checks` a question bears on.
-                Every activity that sets questions has one, whether or not it carries
-                `checks`. Precise enough to run, or to draft a bank from, without asking the
-                curator anything. Where there is no bank the tutor runs it live, so every
-                attempt is a new question.
+                fixed, how hard, and which of the goals in `checks` a question bears on. For
+                a goal with cases, it also says which cases each shape of question carries,
+                so the tutor can record them, and between its shapes every case is carried.
+                Every activity that sets questions has one. Precise enough to run, or to
+                draft a bank from, without asking the curator anything. Where there is no
+                bank the tutor runs it live, so every attempt is a new question.
 
   origin        omit. `generated` marks a legacy stamp from before `a-words`; see the note
                 at the head of this file. Nothing serves from one and nothing new carries it.
@@ -237,23 +247,30 @@ with the learner.
                 receives. Trim a dead entry to its id, a line saying what it was, and this
                 field; the rest is dead weight in the tutor's context.
 
-  ONLY FOR ACTIVITIES THAT CAN FINISH A GOAL
+  WHAT AN ACTIVITY CAN FINISH, on every activity
 
   checks          the goals an unaided attempt at this activity's questions can establish:
                   one id or several, comma-separated, and always a subset of `serves`. An
                   activity can help with several goals while settling fewer. This is the
                   generator's declaration of what its questions bear on; in a bank, each
                   question's rubric `goal:` line narrows it to the ones that question bears
-                  on. The pass condition is each goal's criterion from the table above,
-                  applied as written; don't restate it here or the two will drift.
+                  on, and `checks` includes every goal its rubrics name. A live activity has
+                  no rubrics, so this is its only declaration. The pass condition is each
+                  goal's criterion from the table above, applied as written; don't restate it
+                  here or the two will drift.
 
-                  Omit it when an unaided attempt still wouldn't establish the criterion,
-                  because the activity does part of the work itself: completing a partial
-                  instance doesn't show they could produce one from nothing. Such an
-                  activity is worth having; it just can't finish anything.
+                  Never omit it (`a-words` aside: its questions name their words, and it
+                  serves them through their group). Something whose unaided attempt still
+                  wouldn't establish a criterion, because it does part of the work itself
+                  (completing a partial instance doesn't show they could produce one from
+                  nothing), is not an activity: it is help on some activity's questions. An
+                  older entry with no `checks` is converted at curation's next course-path
+                  run.
 
   worked example  what to show at the first level of help: a solved instance, or an
-                  instruction to work one live and narrate the decisions
+                  instruction to work one live and narrate the decisions. It may cite a
+                  reading or a video, named as precisely as an `artifact` is; that is where
+                  readings and walkthroughs live now that they are not activities.
   doesn't show    what a pass here still leaves open, stated as a claim the checker can
                   contest. Both kinds belong: part of the criterion this activity doesn't
                   exercise, and what the criterion can't settle even when fully met: "only
@@ -266,10 +283,10 @@ with the learner.
   tasks folder alone is an older study artifact, and is not read as a bank); the folders are the
   whole declaration, and the entry says nothing about them. Course topics have them, drafted
   from the generator and reviewed by the instructor at curation; a student's own topic runs its
-  generators live. Even on a course topic, only an activity with `checks` whose generator
-  invents its own material is banked: one that picks from real items or the learner's own work,
-  an orientation rehearsal, and one without `checks` stay live, since the picker serves a bank
-  whenever one exists. One file per scenario, with a twin under rubrics/:
+  generators live. On a course topic any question activity may be banked, except one whose
+  generator picks from real items or the learner's own work, and an orientation rehearsal: those
+  stay live, since the picker serves a bank whenever one exists. One file per scenario, with a
+  twin under rubrics/:
 
       tasks/<activity-id>/<scenario-id>.md     the setup, then one `### <question-id>` per question
       rubrics/<activity-id>/<scenario-id>.md   the key, then one `### <question-id>` per question
@@ -282,9 +299,16 @@ with the learner.
   banks, unseen questions first; workflows/learn/tools/survey.mjs reports a malformed bank, and
   a bank folder with no entry here.
 
+  WRITE A SCENARIO IN STUDY ORDER. Study serves its questions in file order, skipping one no
+  longer needed, so a later question may give away an earlier one's answer, never the reverse.
+
   Each rubric question section carries:
 
-      goal:        ids from `checks`, comma-separated
+      goal:        ids from `checks`, comma-separated; at least one, always
+      cases:       for each goal named that has cases, the ones this question exercises:
+                   `x, y` when it names one goal, `c-a: x, y; c-b: z` per goal otherwise. A
+                   pass passes every case listed and a miss none, so cases a learner could
+                   get one right and one wrong on belong in separate questions
       answer:      what a complete answer says
       credit:      what full and half credit mean. A question naming two or more goals lists
                    one statement per goal, each starting `<goal-id>`: with the id in backticks

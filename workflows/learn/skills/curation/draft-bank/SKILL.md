@@ -12,10 +12,10 @@ description: Draft one activity's question bank on a course topic, from its gene
 else**: not `activities.md`, not `goals.md`, not another activity's bank. That is what lets one
 drafter per activity run in parallel without treading on each other.
 
-**Only an activity with `checks` whose generator invents its own material gets a bank.** If you
+**Any question activity may get a bank, unless its generator works from real material.** If you
 are handed one whose generator picks from real items or from the learner's own work (their own
-app, their own agent, their own chats), an orientation rehearsal, or an activity without
-`checks`, write nothing and say so in your reply. A bank would replace the learner's own
+app, their own agent, their own chats), or an orientation rehearsal, write nothing and say so in
+your reply. A bank would replace the learner's own
 material with invented material, and the picker serves a bank whenever one exists, so the live
 generator would never run again.
 
@@ -24,11 +24,11 @@ them from the working directory: whatever invoked you established them already.
 
 **What you read.** The activity's entry in `activities.md`: its `generator`, `checks` and
 `serves`, and anything else in it that says how many questions or how they are run. The
-criterion of each goal in `checks`, from `goals.md`, resolving a reference criterion through
-`workflows/learn/skills/goal-setting/references/slots.md`. The files already in your two
-folders. For `a-words`, the word's entry in `goals.md` (`what it names`, `nearest confusable`,
-`synonyms`) and `workflows/learn/skills/goal-setting/references/vocabulary-moves.md`, which is
-its generator.
+criterion of each goal in `checks`, and its `cases` if it has them, from `goals.md`, resolving
+a reference criterion through `workflows/learn/skills/goal-setting/references/slots.md`. The
+files already in your two folders. For `a-words`, the word's entry in `goals.md`
+(`what it names`, `nearest confusable`, `synonyms`) and
+`workflows/learn/skills/goal-setting/references/vocabulary-moves.md`, which is its generator.
 
 **For `a-words`, the goals are the words.** It has no `checks`; where this file says "the goals
 in `checks`", read the words in group `vocabulary`. In `sample` mode that is only the words with
@@ -51,8 +51,10 @@ write it to the same standard as any other.
 
 **`full`: the bank, to its target size.** About three questions per goal in `checks` (per word,
 for `a-words`), unless the entry says otherwise. Count what is already in your folders first, by
-reading each rubric entry's `goal:` line; a question naming two goals counts toward both. Then
-add new scenarios until every goal reaches its count. **Never edit or delete a scenario or
+reading each rubric entry's `goal:` line; a question naming two goals counts toward both. Read
+the `cases:` lines too. Then add new scenarios until every goal reaches its count and every case
+of every goal with cases is exercised by at least one question, the hard case as surely as the
+easy one. **Never edit or delete a scenario or
 question already there**: it is a kept sample, or a question converted from an older file, and the instructor has
 seen it or will. A word in `a-words` has one scenario, its own file, so a word sampled at stop 1
 is filled by adding new questions to the end of its task and rubric files, leaving the ones there as they are.
@@ -121,6 +123,9 @@ The rules behind that example:
 - **Scenario ids are named for their content** (`crumbs`, `tally`, a word's goal id for
   `a-words`), lower case with hyphens, even when the bank has one scenario. The file is
   `<scenario-id>.md` in both folders.
+- **One scenario may carry questions on several goals**, from different capabilities, when the
+  method is the same; every goal still comes from the activity's `checks`. An exercise of many
+  items (sort these, judge each) is one scenario with a question per item.
 - **`main-bank` is the reserved scenario for questions with no shared setup.** Its top part is
   empty, and each question carries whatever situation it needs in its own body. Never give a
   scenario with a setup that name, and never use it to avoid naming one.
@@ -132,8 +137,12 @@ The rules behind that example:
   question.
 - **The rubric fields**, as `- **name:** value` lines:
   - `goal:` the goal ids this question bears on, from the activity's `checks` and nowhere else,
-    comma-separated. A warm-up that cannot establish any goal omits it, and counts toward
-    nothing.
+    comma-separated. **Every question names at least one**; survey reports one that names none.
+    There are no warm-ups: an easy lead-in is an ordinary question on an easy case.
+  - `cases:` for each goal it names that has cases, the ones this question exercises. Naming one
+    goal, `- **cases:** allows-dashboard, allows-safe`; naming several, per goal,
+    `- **cases:** c-a: x, y; c-b: z`. A goal with cases needs its entry here on every question
+    naming it, and survey reports one missing or naming a case its goal does not define.
   - `answer:` what a complete answer says. For an mcq, the 1-based number of the right choice.
   - `credit:` what full and half credit mean. A single-goal question has one statement. **A
     question naming two or more goals lists one statement per goal**, as an indented list, each
@@ -154,8 +163,15 @@ in the setup or the question. What the learner brings is the capability the goal
 knowledge of this scenario that only the key holds.
 
 **Nothing gives its answer away**: not the question's wording, not a choice that is obviously
-the odd one out, and not another question in the same scenario. Questions are served one at a
-time and in any order, so none may lean on another's answer or reveal it.
+the odd one out, and not a later question in the same scenario. Study serves a scenario's
+questions in file order, skipping one no longer needed, so write them in the order they should
+be studied. A later question may give away an earlier one's answer, since the earlier one is
+either answered or no longer needed by then, but never the reverse. And none may depend on an
+earlier one's answer, which a learner who skipped it never saw.
+
+**One ruling covers a question's cases.** A pass passes every case the question lists and a
+miss passes none. Where a learner could get one case right and another wrong, write separate
+questions, one per case.
 
 **The answer is true of the scenario.** Work it out from the setup as the learner would before
 writing the `answer` line, rather than writing the scenario to fit an answer you had in mind.
@@ -183,12 +199,14 @@ until none do. Leave problems elsewhere alone; they are not yours.
 
 ## What you return
 
-- **What you wrote:** each scenario file, and how many questions now bear on each goal in
-  `checks`, counting what was there before.
+- **What you wrote:** each scenario file, how many questions now bear on each goal in
+  `checks`, counting what was there before, and for a goal with cases how many exercise each
+  case.
 - **Where the generator left you guessing**, specifically: which part, and what you chose. The
   orchestrator carries this to the instructor at stop 1, where it is cheap to fix.
-- **A goal you could not reach its count for**, and why. A generator that cannot produce three
-  distinct questions on a goal is a finding about the generator, not a reason to pad.
+- **A goal you could not reach its count for, or a case no question exercises**, and why. A
+  generator that cannot produce three distinct questions on a goal is a finding about the
+  generator, not a reason to pad.
 
 ## Depends on
 

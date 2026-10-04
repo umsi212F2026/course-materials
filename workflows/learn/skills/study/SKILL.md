@@ -167,7 +167,8 @@ ask differently rather than repeating it.
    The judge's one ruling on the goal covers all of them, so it needs to know which they are,
    or it reads the cases this question was never meant to reach as gaps.
 
-   **A question whose `goals:` line is empty is practice.** Run it and discuss it, but record
+   **Every banked question names a goal**, and survey reports one that doesn't. If the picker
+   ever prints an empty `goals:` line, the question is a fault: run it and discuss it, but record
    nothing.
 
    It won't infer a missing field, and that's right: a verdict built on a guessed criterion is

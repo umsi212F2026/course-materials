@@ -34,10 +34,13 @@ should be sent back to the curator or the goal-setting process.
 
 ## Two kinds of thing you'll do
 
-**Studying something** — reading, watching, working through a solved example. With one
-difference from how you'd normally do it: there's a conversation running alongside.
+**Getting oriented**: at the start of a topic, reading or watching something that lays it out.
+With one difference from how you'd normally do it: there's a conversation running alongside.
 
-**Attempting something** — doing a task your goals said you wanted to be able to do.
+**Answering questions**: everything after that. Every question is on one of your goals, so a
+good answer given without help counts toward it. Stuck? Ask. The first help is usually a worked
+example, or something short to read, and you can take it on any question; that attempt just
+doesn't count as unaided.
 
 **Words** turn up throughout and work a little differently — no choice is offered, the tutor
 just sets one of six short tasks. See [the vocabulary guide](../vocabulary/howto.md).
