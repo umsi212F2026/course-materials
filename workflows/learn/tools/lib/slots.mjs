@@ -1,4 +1,4 @@
-// The nine slots, their defaults, and the closed sets they are refused against.
+// The eight slots, their defaults, and the closed sets they are refused against.
 //
 // One module because this is the definition site. A second copy of "what values does `bar`
 // take" is a second answer to what the system can be asked to do, and the gap between them is
@@ -13,11 +13,6 @@
 // --- the closed sets ---------------------------------------------------------
 // A slot's value set is closed unless it is data. Data slots (`criterion`, `group` and `capability`) take
 // arbitrary text, which is why neither of them dispatches to anything.
-
-export const SUPPLIES = {
-  curated: 'offer among the live activities.md entries whose `checks` names this goal',
-  vocabulary: 'instantiate one of the six moves',
-};
 
 export const ADJUDICATORS = {
   'study/judge': 'a fresh judge, two axes, in a fresh context',
@@ -82,8 +77,8 @@ export const CRITERION_REFS = {
   },
 };
 
-// SYSTEM-WIDE AND CLOSED, not per supply. `bar` reads these, so a private vocabulary between
-// one supply and one bar would be the pairing this design refuses — see slots.md.
+// SYSTEM-WIDE AND CLOSED, not per activity. `bar` reads these, so a private vocabulary between
+// one activity and one bar would be the pairing this design refuses — see slots.md.
 export const TAGS = {
   production:
     'the learner brought something — a distinction, an error spotted, their own work, ' +
@@ -94,20 +89,13 @@ export const TAGS = {
 // --- the slots ---------------------------------------------------------------
 // `values: null` means data: any text, nothing to refuse.
 
-// EVERY SLOT TAKES ONE VALUE, `supply` included. It was briefly a list, so that one goal could
-// draw on two supplies — reverted, because the union breaks the label contract: served.mjs hands
-// a goal's labels back to its supply, and free-form is safe only because the supply that wrote a
-// label is the only thing that reads it. Two supplies on one goal means each is handed labels it
-// did not write and cannot parse, and it would work by accident.
-//
-// A goal that needs something a supply doesn't offer changes this one value, keeping its
-// criterion, its bar and its group — an edit, not a cliff. If it needs a genuinely new source, the
-// extension point is writing a supply implementation, which is why this slot names one rather than
-// enumerating behaviours.
+// EVERY SLOT TAKES ONE VALUE. There was a ninth, `supply`, naming where a goal's activities came
+// from; it is retired, because every goal's activities are now entries in activities.md and
+// vocabulary is an ordinary one (`a-words`). AN OLD goals.md THAT STILL WRITES A `supply:` LINE
+// IS READ WITHOUT COMPLAINT: applySlots drops the field, so it is neither a slot nor payload.
 
 export const SLOTS = {
   criterion: { default: '', values: null, kind: 'data' },
-  supply: { default: 'curated', values: SUPPLIES, kind: 'strategy' },
   adjudicator: { default: 'study/judge', values: ADJUDICATORS, kind: 'strategy' },
   bar: { default: 'one unaided pass', values: BARS, kind: 'strategy' },
   recurrence: { default: 'spaced', values: RECURRENCES, kind: 'flag' },
@@ -131,7 +119,7 @@ export const DEFAULT_GROUP = SLOTS.group.default;
 // take the other nineteen topics down with the bad one. workflows/learn/tools/record-attempt.mjs is the thing
 // that must not proceed, and it checks `problems` before it writes.
 //
-// Anything that isn't a slot is PAYLOAD — it belongs to whichever supply reads it, and nothing
+// Anything that isn't a slot is PAYLOAD — it belongs to whichever activity reads it, and nothing
 // else looks at it. That is the mirror of the opaque label: data flowing into an
 // implementation rather than out of one.
 export function applySlots(id, fields) {
@@ -157,7 +145,8 @@ export function applySlots(id, fields) {
 
   const payload = {};
   for (const [name, value] of Object.entries(fields)) {
-    if (name === 'goal' || Object.hasOwn(SLOTS, name)) continue;
+    // `supply` is a retired slot: an old goals.md may still carry it, and it must land nowhere.
+    if (name === 'goal' || name === 'supply' || Object.hasOwn(SLOTS, name)) continue;
     payload[name] = value;
   }
 
@@ -175,10 +164,6 @@ export function applySlots(id, fields) {
 
 // Whether a goal is one of the ones the topic has to finish. `derivePhase` reads it for both `nothing pending` and `waiting elsewhere`.
 export const isRequired = (goal) => goal.is_required === 'yes';
-
-// Whether curation has to stamp this goal an entry, because its supply produces its own
-// activities and so has nothing in activities.md to point at.
-export const suppliesItsOwn = (goal) => goal.supply !== SLOTS.supply.default;
 
 // Whether the scheduler runs for this goal at all. One consumer: record-attempt.mjs.
 export const recurs = (goal) => goal.recurrence === 'spaced';

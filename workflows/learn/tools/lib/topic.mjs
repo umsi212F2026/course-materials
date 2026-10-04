@@ -11,7 +11,7 @@
 
 import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { applySlots, ORIGINS, isRequired, suppliesItsOwn, DEFAULT_GROUP } from './slots.mjs';
+import { applySlots, ORIGINS, isRequired, DEFAULT_GROUP } from './slots.mjs';
 import { met, describeAttempts } from './bars.mjs';
 import { readStatus, foldStatus } from './status.mjs';
 
@@ -175,9 +175,8 @@ export function readIds(dir) {
 // A dropped entry stays in the file — that field is the only feedback curation ever gets — so
 // "live" means present and not dropped, never merely present.
 //
-// `origin: generated` marks an entry curation stamped for a goal whose supply produces its own
-// activities. verify and critique skip those: there is no artifact to confirm and no menu to
-// judge, and dropping one would take the goal's only entry with it.
+// `origin: generated` marks a LEGACY stamp, written when a goal's supply produced its own
+// activities. The supply is retired and liveActivities skips these.
 
 // A `serves` item `group <name>` is expanded HERE into the ids of every goal in that group, in
 // goals.md order, so `serves` is always a list of goal ids and nothing downstream knows the form
@@ -216,7 +215,12 @@ export function readActivities(dir) {
   }));
 }
 
-export const liveActivities = (dir) => readActivities(dir).filter((e) => !e.dropped);
+// LEGACY STAMPS ARE NOT LIVE. An `origin: generated` entry was written for a goal whose supply
+// produced its own activities; the supply is retired, so a stamp points at nothing the tutor can
+// run. It is skipped everywhere and never reported, which is also why a topic whose only entries
+// for its words are stamps still derives its phase from the entries that are real.
+export const liveActivities = (dir) =>
+  readActivities(dir).filter((e) => !e.dropped && !e.generated);
 
 // --- the lifecycle log -------------------------------------------------------
 // status.jsonl, folded. Its shape and the fold are in status.mjs; this is where the
@@ -471,16 +475,6 @@ export function idProblems(dir, status = statusOf(dir)) {
     for (const name of entry.servesGroups)
       if (!goals.some((g) => g.group === name))
         found.push(`${entry.id} serves group ${name}, which no goal is in`);
-
-    // A stamp is for a goal whose supply produces its own activities. On any other goal it is
-    // a candidate nobody can run: the tutor would go looking for an instruction that the entry
-    // doesn't carry and no supply is going to return.
-    if (entry.generated)
-      for (const id of entry.checks)
-        if (seen.has(id) && !suppliesItsOwn(seen.get(id)))
-          found.push(
-            `${entry.id} is marked origin: generated, but ${id} has no supply that produces its own activities`
-          );
   }
 
   // A tasks/ folder with no entry is a bank nobody offers: no tutor method, no generator, and

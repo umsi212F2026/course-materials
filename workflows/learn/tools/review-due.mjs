@@ -69,9 +69,7 @@ for (const dir of topicFolders()) {
     due.push({
       topic: dir,
       goal: goal.id,
-      // The slots review needs to set up the check. `supply` says where the task comes from;
-      // `adjudicator` says who rules on it.
-      supply: goal.supply,
+      // The slot review needs to set up the check: `adjudicator` says who rules on it.
       adjudicator: goal.adjudicator,
       served: served(dir, goal.id),
       due: schedule.due,

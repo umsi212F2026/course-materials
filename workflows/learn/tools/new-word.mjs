@@ -5,7 +5,7 @@
 // <d> is the directory holding the topic folders — see lib/workdir.mjs.
 //
 // THIS SCRIPT IS THE SHORTHAND FOR "IT'S A WORD", and it is the only one. There are no named
-// goal types — a word is a goal carrying four particular slot values, and this fills them in.
+// goal types — a word is a goal carrying three particular slot values, and this fills them in.
 // The alternative was a type registry, which is a second definition site, which is where the
 // goals and the definition drift apart. So: no name, one writer, and a custom shape is written
 // by filling slots directly and needs no script at all.
@@ -100,8 +100,8 @@ if (readActivities(dir).some((e) => e.id === id)) {
 }
 
 // --- write the entry ---------------------------------------------------------
-// The four slots that make it a word, then the three fields the vocabulary supply reads. Those
-// three are left blank — they're goal-setting's to fill, and a placeholder would read as an
+// The three slots that make it a word, then the fields the a-words activity reads. Those
+// are left blank — they're goal-setting's to fill, and a placeholder would read as an
 // answer.
 //
 // `adjudicator`, `recurrence` and `is_required` are not written, because a word doesn't differ
@@ -112,7 +112,6 @@ const entry = [
   ``,
   `- **goal:** ${word}`,
   `- **criterion:** vocabulary`,
-  `- **supply:** vocabulary`,
   `- **bar:** one production pass`,
   `- **group:** vocabulary`,
   // Only the field every word has. `nearest confusable` and `synonyms` are added by whoever
