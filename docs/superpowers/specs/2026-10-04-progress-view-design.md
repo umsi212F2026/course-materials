@@ -17,6 +17,8 @@ Everything comes from `surveyTopic(dir)` (its `sequence` block and rows); nothin
 
 ### The full view (default)
 
+An example, for a made-up state of a cloud-hosting topic (the examples below use the same one):
+
 ```
 cloud-hosting  ·  set 2 of 3 is next
 
