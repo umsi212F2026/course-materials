@@ -42,6 +42,11 @@ plan, implementation). Update this file as items finish or are added.
   above `## Goals`), and remove the per-goal `origin: course` stamps it makes redundant. Until
   then the per-goal stamps keep working. Check with `survey.mjs`: each topic's `origin` should
   read `course` and no problems should appear.
+- Run `node workflows/learn/tools/migrate-words.mjs <topic-folder>` on each course topic, with
+  `--dry-run` first to read its summary. It moves banked word questions into `a-words`, adds
+  the `a-words` entry, and removes the word stamps and `supply` lines. Then, during that topic's
+  next curation, place each remaining capability question in `items.md` into the activity whose
+  generator would produce it.
 
 ## Parked ideas
 

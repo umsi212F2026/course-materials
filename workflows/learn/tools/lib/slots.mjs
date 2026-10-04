@@ -4,7 +4,7 @@
 // take" is a second answer to what the system can be asked to do, and the gap between them is
 // where an agent writes `recurrence: sometimes` and nothing complains.
 //
-// The prose version, with the three strategy contracts written out, is
+// The prose version, with the three contracts written out, is
 // workflows/learn/skills/goal-setting/references/slots.md. That file and this one say the same thing; this one
 // is what refuses.
 //

@@ -42,7 +42,7 @@ of these is found from there. Only the entry points are listed here.
   and hands off — to a topic, to a review sitting, or to adding something new. Use whenever
   someone sits down to learn and hasn't said exactly what they want to do.
   `workflows/learn/skills/learn/SKILL.md`
-- **study** — Tutor a learner through the activities their goals supply — run them, keep the
+- **study** - Tutor a learner through the activities that serve their goals: run them, keep the
   side conversation going, get attempts adjudicated, and keep the record. Use once
   activities.md exists, for every study session thereafter until the goals are met.
   `workflows/learn/skills/study/SKILL.md`

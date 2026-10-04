@@ -1,6 +1,6 @@
 ---
 name: study
-description: Tutor a learner through the activities their goals supply — run them, keep the side conversation going, get attempts adjudicated, and keep the record. Use once activities.md exists, for every study session thereafter until the goals are met.
+description: Tutor a learner through the activities that serve their goals: run them, keep the side conversation going, get attempts adjudicated, and keep the record. Use once activities.md exists, for every study session thereafter until the goals are met.
 ---
 
 # Study
@@ -43,16 +43,15 @@ attempt and its ruling, which `workflows/learn/tools/survey.mjs` prints.
 that produces evidence for it.** A capability, a vocabulary word and the orientation are all
 goals, they are all entries in `goals.md`, and you reach all of them the same way.
 
-What differs is the **slots** each one carries — where its activities come from, who rules on
-an attempt, what accumulation of rulings makes the claim true. Read them off the entry; don't
+What differs is the **slots** each one carries: who rules on an attempt, and what accumulation
+of rulings makes the claim true. Read them off the entry; don't
 work out what kind of thing you're looking at, because nothing in the system does.
 
 [`../goal-setting/references/slots.md`](../goal-setting/references/slots.md) is the reference:
-the eight slots, the three contracts, and every value in use. Three of them decide what you do:
+the eight slots, the three contracts, and every value in use. Two of them decide what you do:
 
 | slot          | what it changes for you                                                                                                        |
 | ------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| `supply`      | where the activity comes from. `curated` — the live `activities.md` entries. `vocabulary` — one of the six moves. One per goal |
 | `adjudicator` | who rules. `study/judge` — a fresh judge, in a fresh context. `tutor` — you, in session, no extra call                         |
 | `bar`         | what makes the claim true. You never evaluate this; `record-attempt.mjs` does                                                  |
 
@@ -70,17 +69,26 @@ ask differently rather than repeating it.
 
 **Then loop, until they stop:**
 
-1. **They choose.** Skip any goal that is deferred; see _Goals taught elsewhere_. Ask the
-   goal's `supply` for candidates and offer them.
+1. **They choose.** Skip any goal that is deferred; see _Goals taught elsewhere_. Offer the
+   live `activities.md` entries whose `serves` or `checks` names this goal (a `serves` item may
+   be `group <name>`, which names every goal in that group, including ones added later): use
+   each entry's `offer as` to make the choice real rather than a list of titles. Suggest when
+   asked. An entry carrying `origin: generated` is a legacy stamp; offer nothing from it.
 
-   For `supply: curated`, that's the live `activities.md` entries whose `serves` or `checks`
-   names this goal (a `serves` item may be `group <name>`, which names every goal in that group,
-   including ones added later): use each entry's `offer as` to make the choice real rather than
-   a list of titles. Suggest when asked.
+   **A word is studied through `a-words`, and there is no choice to put to them.** Ask for its
+   question:
 
-   For `supply: vocabulary`, there is one candidate and it is the move you set, so there is no
-   choice to put to them. See
-   [`../goal-setting/references/vocabulary-moves.md`](../goal-setting/references/vocabulary-moves.md).
+   ```
+   node workflows/learn/tools/next-item.mjs <topic-folder> --goal <word-id>
+   ```
+
+   It serves a banked question labelled `a-words/<word-id>/<question-id>`, with tags from its
+   move. **Exit 2 means nothing is banked for that word**: set one move live from
+   [`../goal-setting/references/vocabulary-moves.md`](../goal-setting/references/vocabulary-moves.md),
+   picking one the word hasn't had recently from
+   `node workflows/learn/tools/served.mjs <topic-folder> <word-id>`, and label it
+   `<MOVE>: <instance>`. That is also how a word is served in an older topic with no `a-words`
+   entry.
 
    **An activity with a bank is served from it.** If `tasks/<activity-id>/` exists in the topic
    folder, the questions are already written, and running the activity means asking for one with
@@ -90,7 +98,7 @@ ask differently rather than repeating it.
    Coming back here after abandoning something, stay on the same goal and offer what's left of
    it, unless they say otherwise.
 
-   If a curated supply returns nothing live, say so plainly. That goal is stuck until curation
+   If nothing live serves a goal, say so plainly. That goal is stuck until curation
    runs again; see _When something upstream has to change_. Don't improvise a replacement.
 
 2. **Run it.** See [`references/running-an-activity.md`](references/running-an-activity.md) —
@@ -114,7 +122,7 @@ ask differently rather than repeating it.
    `criterion` is the goal's, resolved: its own text, or — where the entry names a reference
    like `vocabulary` — the sentence that reference points at, from
    [`../goal-setting/references/slots.md`](../goal-setting/references/slots.md). Send the
-   sentence, never the name. `label` is what the supply served.
+   sentence, never the name. `label` is what the activity served.
 
    **Every bank question goes to the judge with its rubric**, the `--key` output as a
    `--- rubric ---` block ahead of the record, whether it names one goal or several. Only a live
@@ -176,10 +184,10 @@ is curation's only feedback, so make it specific enough to stop a new proposal b
 the same defect. But don't record an activity as dropped when a learner simply didn't meet the
 criterion; that's the ordinary outcome of a working check.
 
-**Never drop an entry carrying `origin: generated`.** It is stamped by curation for a goal
-whose supply produces its own activities, it is that goal's only entry, and there is nothing in
-it to be wrong. If the _instances_ are bad, that's a fault in the supply, and it goes on the
-queue — see _When something upstream has to change_.
+**Never drop `a-words`.** It serves every word, and its text is fixed, so there is nothing in
+it to be wrong. If a word's _questions_ are bad, that's a fault in the bank or the moves, and it
+goes on the queue: see _When something upstream has to change_. Leave a legacy stamp carrying
+`origin: generated` alone too; nothing serves from it, and `migrate-words.mjs` removes it.
 
 **Don't write a promise down. Keep it, now.** There is nowhere to put one, and that is
 deliberate: every promise a tutor makes turns out to be one of three things.
@@ -211,23 +219,22 @@ node workflows/learn/tools/record-attempt.mjs <topic-folder> <goal-id> <label> -
 node workflows/learn/tools/record-attempt.mjs <topic-folder> <goal-id> <label> --outcome abandoned
 ```
 
-**`<label>` is what the supply served, in the supply's own words.** For a question from a bank
-it is the label `next-item.mjs` printed, exactly: `<activity>/<scenario>/<question>`. For a
-curated activity run live it is the entry id, and the item after a slash. For a
-vocabulary move it is the move and a few words on the instance —
-`CATCH: subject/verb agreement`. Nothing but that supply reads it back, which is what makes
-free-form safe: it is how the supply avoids serving you the same thing twice, and `served.mjs`
-hands it back unmodified.
+**`<label>` is what the activity served, in its own words.** For a question from a bank it is
+the label `next-item.mjs` printed, exactly: `<activity>/<scenario>/<question>`. For an activity
+run live it is the entry id, and the item after a slash. For a vocabulary move set live it is
+the move and a few words on the instance: `CATCH: subject/verb agreement`. Nothing but that
+activity reads it back, which is what makes free-form safe: it is how the activity avoids
+serving you the same thing twice, and `served.mjs` hands it back unmodified.
 
 **If the activity draws on a bank, name the item.** That's what stops a later session serving
 the same one back, and there is nowhere else it gets written down.
 
-**`--tags` is what the supply returned**, from a closed system-wide set: `production`,
+**`--tags` is what the activity returned**, from a closed system-wide set: `production`,
 `reception`. It is the one structured thing about what was served, and it exists because a
 `bar` has to know whether a move was a production one and cannot read the label. A vocabulary
-CATCH is `--tags production`; a DEFINE is `--tags reception`. **For a bank question, pass the
-`tags:` line the picker printed**, unless it says `none`, in which case omit the flag. A
-curated activity run live returns no tags, so omit the flag there too.
+CATCH set live is `--tags production`; a DEFINE is `--tags reception`. **For a bank question,
+pass the `tags:` line the picker printed**, unless it says `none`, in which case omit the flag.
+Any other activity run live returns no tags, so omit the flag there too.
 
 **The two axes go in raw**, as the adjudicator returned them:
 
@@ -395,8 +402,8 @@ right. `curation` is agent-only work that `learn` spawns in the background befor
 session. `goal-setting` waits for the learner and goes on their menu. Getting it wrong doesn't
 lose the item, but it does mean nobody with the right permissions ever sees it.
 
-**`--needs curation`** — every live candidate for a goal has been dropped, or the instances a
-supply produces are bad. Recording it is normally enough. Invoke `curation` yourself only when
+**`--needs curation`**: every live candidate for a goal has been dropped, or the questions an
+activity produces are bad. Recording it is normally enough. Invoke `curation` yourself only when
 it's blocking the session in front of you and they want to carry on now. Either way the reasons
 you wrote when dropping things are what curation reads, which is why they have to be specific.
 
@@ -441,4 +448,5 @@ lose each other's writes, so this one ends first.
 - [`next-item.mjs`](workflows/learn/tools/next-item.mjs) - tool
 - [`record-attempt.mjs`](workflows/learn/tools/record-attempt.mjs) — tool
 - [`record-status.mjs`](workflows/learn/tools/record-status.mjs) — tool
+- [`served.mjs`](workflows/learn/tools/served.mjs) - tool
 - [`survey.mjs`](workflows/learn/tools/survey.mjs) — tool

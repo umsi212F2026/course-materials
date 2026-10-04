@@ -64,8 +64,8 @@ carry one at the same time. Each says which goal, what it's waiting on, and why:
 | `needs: curation`     | curation, then back to study. Yours to run; see below.                   |
 | `needs: goal-setting` | their decision. Goal setting, with what the item's `why` says was wrong. |
 
-**Curation clears its own items.** It writes `curated` for each goal it built or stamped an
-entry for, and `blocked` for each one it can't — so a goal never sits on the queue after
+**Curation clears its own items.** It writes `curated` for each goal it built for, or that
+`a-words` serves, and `blocked` for each one it can't, so a goal never sits on the queue after
 curation has looked at it, and never gets re-invited into a phase that already gave up on it.
 You don't clear anything on its behalf.
 

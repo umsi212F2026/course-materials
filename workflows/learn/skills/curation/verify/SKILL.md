@@ -26,10 +26,11 @@ that a source is what it claims to be needs an agent, and it's the part worth mo
 looking at it. What's withheld from you is the generator's reasoning and the conversation that
 produced the file, not access to what the file cites.
 
-**Skip every entry carrying `origin: generated`.** Those were stamped by the orchestrator for a
-goal whose `supply` slot produces its own activities — there is no artifact to resolve, no
-required fields to check, and no Coverage row to match. An entry with no `artifact` and no
-`kind` is a defect everywhere else and correct there.
+**Skip the `a-words` entry and every entry carrying `origin: generated`.** The orchestrator
+writes `a-words` from fixed text, for the words; a stamp is a legacy placeholder from before
+it, which nothing serves from. Neither has an artifact to resolve, required fields to check, or
+a Coverage row to match. An entry with no `artifact` is a defect everywhere else and correct
+there.
 
 **Write nothing.** You return a report; the orchestrator decides what to do with it and is the
 only thing that touches the file. That's what lets you and the critique pass run at the same
@@ -76,14 +77,14 @@ or bundles two capabilities, is `curation/critique`'s to re-check.
 - Every `serves` id is a goal in the Goals table, or `all`, or `group <name>` naming a group some
   goal is in.
 - Every `checks` id is a goal in the Goals table.
-- Every goal in `goals.md` whose `supply` is `curated` — the default, so most of them — has a
-  row in the Goals table. A goal supplied any other way has no row and never should; see §5.
+- Every goal in `goals.md` that is not a word has a row in the Goals table. A word has no row
+  and never should; see §5.
 - Every goal in the Goals table has a row in Coverage.
 - Every id referenced in Coverage exists as an entry.
 - No two entries share an id, and no entry id is also a goal id.
-- Every goal whose `supply` is something other than `curated` has one live entry carrying
-  `origin: generated`. A missing one is a finding for the orchestrator, not for the generator:
-  stamping them is its job.
+- If `goals.md` has any word, there is a live `a-words` entry carrying
+  `serves: group vocabulary`. A missing one is a finding for the orchestrator, not for the
+  generator: writing it is its job.
 
 ## 3. Required fields
 
@@ -115,8 +116,7 @@ the reference name, not the sentence it points at. That sentence lives in
 `workflows/learn/skills/goal-setting/references/slots.md` and copying it here would be the
 second definition site this design exists to avoid.
 
-**A goal whose `supply` isn't `curated` has no row here and no Coverage row.** Its absence is
-the design, not divergence.
+**A word has no row here and no Coverage row.** Its absence is the design, not divergence.
 
 ---
 

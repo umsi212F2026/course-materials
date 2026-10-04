@@ -232,8 +232,8 @@ reason to open it.**
 
 The label is the one thing you build:
 
-- **`<move>: <item>`** where the row has a `move`, which is the vocabulary supply's own label
-  format. `served.mjs` hands it back the next time this word is studied, so study does not
+- **`<move>: <item>`** where the row has a `move`, which is the label format of a vocabulary
+  move set live. `served.mjs` hands it back the next time this word is studied, so study does not
   repeat the same shape. `DISTINGUISH: q-history-vs-undo`.
 - **`<item>`** alone where there is no move.
 

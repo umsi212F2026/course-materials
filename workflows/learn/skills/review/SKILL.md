@@ -37,19 +37,18 @@ whose date has passed:
 | ------------- | -------------------------------------------------------------------------------------------------- |
 | `topic`       | the folder. Every file the sequence names is in this one, and it changes as you work down the list |
 | `goal`        | the id, to look up in that topic's `goals.md`                                                      |
-| `supply`      | where the task comes from — see step 1                                                             |
 | `adjudicator` | who rules on it — see step 3                                                                       |
-| `served`      | the labels this goal has already been given, most recent first, exactly as the supply wrote them   |
+| `served`      | the labels this goal has already been given, most recent first, exactly as the activity wrote them |
 | `due`         | the date it came due                                                                               |
 
 **ONE PATH, WHATEVER KIND OF GOAL IT IS.** There is no `is_word` in that record and nothing
 here branches on one. A capability, a word and an orientation are all goals with entries in
-`goals.md` and entries in `activities.md`; what differs between them is their slots, and two of
-those come to you in the record above.
+`goals.md` and are served by entries in `activities.md`; what differs between them is their
+slots, and one of those comes to you in the record above.
 
 **`served` carries one instruction: don't serve what's near the front of it.** A label is
-whatever the supply that wrote it chose to write — an activity id, a bank item after a slash, a
-move and a note on the instance. You don't parse it; you hand it back to the supply, which is
+whatever the activity that wrote it chose to write: a bank question's path, an activity id, a
+move and a note on the instance. You don't parse it; you hand it back to the activity, which is
 the only thing that reads it.
 
 **A review session is not per topic.** What's due is whatever the dates say is due, and the
@@ -103,11 +102,12 @@ argument.
 
 1. **Set up the check.** Read the goal's entry in `goals.md` — its criterion, and its slots.
 
-   **First, find a live entry in `activities.md` that `checks` this goal.** Every goal has one;
-   for a goal whose supply produces its own activities, curation stamps a generated entry
-   carrying `origin: generated`.
+   **First, find a live entry in `activities.md` that `checks` this goal.** A word needs none:
+   `a-words` serves it through its group, and where nothing is banked for it, or the topic has
+   no `a-words` entry yet, a move set live checks it. A legacy stamp carrying
+   `origin: generated` is not live and counts for nothing.
 
-   **If there is no live entry at all, there is nothing to check this goal with.** Usually the
+   **If a goal other than a word has no live entry at all, there is nothing to check it with.** Usually the
    entry that it passed was dropped afterwards, by a tutor who found something wrong with it;
    occasionally the goal never had one, because it was met by the learner declaring it rather
    than by an adjudicated pass. Say so and go on to the next record. Don't improvise a
@@ -123,16 +123,18 @@ argument.
 
    That's what `learn` spawns curation on, and what curation clears when it has built one.
 
-   **Then ask the goal's `supply` for the task.**
+   **Then choose the task.**
 
-   `supply: curated` — the task is the entry itself. Prefer `kind: generator`, which produces a
+   **An ordinary goal**: the task is the entry itself. Prefer `kind: generator`, which produces a
    fresh instance. A `bank` is fine if it has items whose labels aren't in `served`. A
    `single instance` already in `served` is the weakest form there is — if it's all there is,
    use it.
 
-   `supply: vocabulary` — the entry is a stamp, and the task is a move from
-   [`../goal-setting/references/vocabulary-moves.md`](../goal-setting/references/vocabulary-moves.md).
-   Pick one whose label isn't near the front of `served`. **Prefer APPLY.** It draws on work
+   **A word**: the task is its `a-words` question, from the bank below. When nothing is banked
+   for it, set one move live from
+   [`../goal-setting/references/vocabulary-moves.md`](../goal-setting/references/vocabulary-moves.md),
+   labelled `<MOVE>: <instance>`. Pick one whose label isn't near the front of `served`.
+   **Prefer APPLY.** It draws on work
    that didn't exist when the word was first met, so it can't be answered from memory of
    answering before. That's exactly the property a review wants and the other moves don't
    have.
@@ -146,7 +148,8 @@ argument.
    Show the learner only what follows `--- learner sees ---`. It prefers a question they have
    never been served, then the one served longest ago, so you need not filter by `served`. Run
    it with `--key` to read the grading text, and keep that from them. **Exit code 2 means no
-   bank question names this goal**, and then the generator runs live, as above. A question may
+   bank question names this goal**, and then the generator runs live, as above: for a word,
+   one move. A question may
    credit other goals as well; that is fine, and step 3 says how it is ruled.
 
    Either way, **don't say what the criterion is.** Just give them the task.
@@ -213,12 +216,12 @@ argument.
    node workflows/learn/tools/record-attempt.mjs <topic-folder> <goal-id> <label> --tags <tags> --axes '<json>' --source review
    ```
 
-   Same call the study phase makes, with `--source review` added. `<label>` is what the supply
-   served, in its own words: for a bank question the `<activity>/<scenario>/<question>` label
-   the picker printed, otherwise the entry id or the move and a note on the instance. That's
-   what keeps it from being served back in three months, and there's nowhere else it gets
-   recorded. `--tags` is what the supply returned: the picker's `tags:` line unless it says
-   `none`, or `production` or `reception` from the vocabulary supply, and nothing otherwise.
+   Same call the study phase makes, with `--source review` added. `<label>` is what the
+   activity served, in its own words: for a bank question the `<activity>/<scenario>/<question>`
+   label the picker printed, otherwise the entry id or the move and a note on the instance.
+   That's what keeps it from being served back in three months, and there's nowhere else it gets
+   recorded. `--tags` is what the activity returned: the picker's `tags:` line unless it says
+   `none`, or `production` or `reception` for a vocabulary move set live, and nothing otherwise.
 
    **A question ruled against several goals is one call per goal**, each with its own `--axes`
    and all with the same label and `--tags`. Which of them carry `--source review`:

@@ -44,7 +44,7 @@ Collapsing them into "did they pass" loses the distinction the record is built o
 | ----------- | -------------------------------------------------------------------------------------------------------------------------------- |
 | `goal`      | the goal id from `goals.md`, whatever kind of goal it is                                                                         |
 | `criterion` | the goal's criterion, RESOLVED — its own text, or the sentence a reference like `vocabulary` points at. Never the reference name |
-| `label`     | what the supply served, in its own words: an activity id, a bank item after a slash, a move and a note on the instance           |
+| `label`     | what the activity served, in its own words: a bank question's path, an activity id, a move and a note on the instance            |
 | `record`    | the whole transcript, or — from the scan — an excerpt with the context either side                                               |
 | `sent by`   | `study`, `review` or `scan`                                                                                                      |
 

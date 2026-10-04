@@ -33,9 +33,8 @@ No findings. **The Coverage table drives the work.** A row is complete when its 
 non-empty, its `checks` cell is non-empty, and its `notes` cell is empty. There are no
 exceptions: every row is a goal with a criterion, including the orientation one.
 
-**Coverage has a row per goal the orchestrator listed in the Goals table** — every goal whose
-`supply` is `curated`. A goal supplied some other way is not there, has no row, and is not a
-gap. Don't add rows and don't remove them; that table's membership is the orchestrator's.
+**Coverage has a row per goal the orchestrator listed in the Goals table**: every goal but the
+words. A word is served by the `a-words` entry, is not there, has no row, and is not a gap. Don't add rows and don't remove them; that table's membership is the orchestrator's.
 
 1. Read the existing activity entries carrying `status: dropped`. They say what has already
    failed and why, and they're the only feedback this phase ever receives. Proposing a
@@ -54,8 +53,8 @@ gap. Don't add rows and don't remove them; that table's membership is the orches
      explanation_ paired with _gloss the unfamiliar_, the pairing that stops the most passive
      type on the list from being passive.
 
-     **Prefer an artifact that lays out the topic and its vocabulary together.** The words have
-     their own supply and their own entries, so nothing here is required to serve them — but a
+     **Prefer an artifact that lays out the topic and its vocabulary together.** The words are
+     served by `a-words`, so nothing here is required to serve them, but a
      first artifact that names them in place is what stands between just-in-time learning and
      swiss cheese. Read the word entries in `goals.md` when choosing. It is cheap: one artifact
      covers every word in the topic.
@@ -102,13 +101,13 @@ Regenerate the Coverage table if anything you did changed a `serves` or `checks`
 
 - **Keep every existing id**, don't renumber, and never regenerate a dropped entry — that field
   exists precisely to stop you.
-- **Leave stamped entries alone.** An entry carrying `origin: generated` was written by the
-  orchestrator for a goal that supplies its own activities. There is nothing in it to improve,
-  and it is that goal's only entry.
+- **Leave `a-words` and legacy stamps alone.** The orchestrator writes `a-words`, and its text
+  is fixed. An entry carrying `origin: generated` is a placeholder from before `a-words`; nothing
+  serves from it, and `migrate-words.mjs` removes it.
 - **Name a new entry `a-` plus two to four words** — `a-annotate-unseen-specimen`. Aim at what
   the learner does in it.
 - **Check it against everything already named in this topic** before you write it: the entry
-  headings in this file, _including dropped ones_ and the stamped ones carrying
+  headings in this file, _including dropped ones_ and any legacy stamps carrying
   `origin: generated`, and every goal in `goals.md`. Nothing checks you as you write — a
   duplicate surfaces later when `survey.mjs` walks the folder, and by then it has attempts
   pointing at it.
@@ -273,9 +272,8 @@ capability, what's wrong, and what would have to change.
 - _Non-blocking_ — you worked around it and wrote what you could. A criterion that bundles two
   capabilities is the usual case: you can serve half of it, and nobody downstream will see that
   half is all they're getting unless you say so here.
-- _A supply that isn't working_ — a goal with a non-default supply produces bad instances, or
-  none. There is no entry to fix and no finding to write, so this reply is the only place it
-  can go.
+- _Vocabulary moves that aren't working_: the moves produce bad instances for a word, or none.
+  There is no entry to fix and no finding to write, so this reply is the only place it can go.
 
 The orchestrator carries these to the learner. They are the only thing in this phase that
 reaches them, so a defect you noticed and didn't mention is a defect nobody ever fixes.

@@ -1,6 +1,6 @@
 ---
 name: curation
-description: Run the curation phase — stamp an entry for every goal that supplies its own activities, generate candidates and check tasks for the rest into activities.md, have them checked by a separate agent, and take one revision round. Use after goal setting has produced goals.md, and again when the tutor has dropped enough candidates that study is short of options.
+description: Run the curation phase: write the a-words entry if the topic has words and lacks one, generate candidates and check tasks for the other goals into activities.md, have them checked by a separate agent, and take one revision round. Use after goal setting has produced goals.md, and again when the tutor has dropped enough candidates that study is short of options.
 ---
 
 # Curation
@@ -31,44 +31,44 @@ wrote, verbatim. And don't edit the substance of any entry; that's the generator
 leaves behind: goal setting hasn't run, this phase has nothing to derive from, and you should
 stop and say so.
 
-## Every goal gets an entry; two kinds of entry
+## Every goal is served by an activity; words share one
 
-**A goal whose `supply` slot is `curated`** — the default — is what this phase is for. Its
-activities are real things a learner does, found and characterized by `curation/generate`, and
-they are what the Goals and Coverage tables are about.
+**Every goal but the words** is what this phase is for. Its activities are real things a
+learner does, found and characterized by `curation/generate`, and they are what the Goals and
+Coverage tables are about.
 
-**A goal whose `supply` is anything else produces its own activities**, and there is nothing
-here to curate: no artifact to verify, no menu to choose among, no criterion to critique. What
-it gets is **one stamped entry**, so that every goal is reachable through the same lookup and
-review never has to ask what kind of goal it is looking at.
-
-One supply per goal, so the two are exclusive: a goal is either this phase's work or it isn't.
+**The words are served by one ordinary activity, `a-words`**, whose generator is fixed and
+which names them through their group, so there is nothing here to curate per word: no artifact
+to verify, no menu to choose among, no criterion to critique. A topic with any word in group
+`vocabulary` and no `a-words` entry gets this one, exactly as written:
 
 ```
-### `a-w-schema`
+### `a-words`
 
-- **origin:** generated
-- **serves:** `w-schema`
-- **checks:** `w-schema`
-- **learner does:** whatever the goal's supply instantiates — see
-  workflows/learn/skills/goal-setting/references/vocabulary-moves.md
-- **offer as:** the only candidate; which move gets set is the supply's, not this entry's
+- **serves:** group vocabulary
+- **generator:** the five moves in `workflows/learn/skills/goal-setting/references/vocabulary-moves.md`, set for one word at a time from its `what it names`, `nearest confusable` and `synonyms`. Each question names that word's goal and carries its move.
+- **learner does:** answers one short question about one word
+- **tutor role:** examiner
+- **tutor does:** sets the question as served, without rewording it or hinting; when the bank has nothing for the word, sets one move live, as vocabulary-moves.md describes
+- **offer as:** not offered as a choice; a word's question is set when that word is studied or due
 ```
 
-The id is `a-` plus the goal id, which cannot collide and is obviously not something anyone
-wrote. `origin: generated` is what tells `verify` and `critique` to skip it, and the tutor
-never to drop it.
+**Writing it is idempotent, so check every pass, first.** Because it serves the group, a word
+added mid-topic is covered the moment it is in `goals.md`, with no edit here. A course topic's
+word questions are banked in `tasks/a-words/`, one file per word; a word with none there has a
+move set live by the tutor.
 
-**Stamping is idempotent, so do it every pass, first.** A goal with a non-default supply and no
-entry gets one; a goal that already has one is left alone. Adding a word mid-topic is one line
-in `goals.md` and no conversation, so this is how the entry catches up.
+**Older files may hold stamped entries** carrying `origin: generated`, one placeholder per word
+from before `a-words`. Leave them alone: study and review ignore them, survey skips them, and
+`node workflows/learn/tools/migrate-words.mjs <topic-folder>` removes them when the topic is
+migrated. Never write a new one.
 
-## Sequence, for the curated goals
+## Sequence
 
 The learner is not involved in this phase and should not be interrupted during it.
 
-0. **Stamp.** One entry for each goal whose `supply` is something other than `curated` and
-   which hasn't got one, as above. Those goals get no Goals row and no Coverage row.
+0. **Words.** If the topic has words and no `a-words` entry, write it, as above. Words get no
+   Goals row and no Coverage row.
 
 1. **Generate.** Run `curation/generate`. It reads the file and fills whatever the Coverage
    table shows is missing — an empty skeleton just means everything is.
@@ -131,9 +131,9 @@ The learner is not involved in this phase and should not be interrupted during i
    gap, not a blocked row — it shows as an empty cell, and the tutor reporting it is what
    brings this phase back.
 
-   **Never drop a stamped entry**, whatever a checker says about it. They are told to skip
-   those; if one comes back with a finding, the finding is about the supply and belongs in your
-   reply rather than in the file.
+   **Never drop the `a-words` entry or a legacy stamp**, whatever a checker says about it.
+   They are told to skip those; if one comes back with a finding, the finding is about the
+   vocabulary moves and belongs in your reply rather than in the file.
 
 6. **Clear the queue, one line per goal.** This is the step that makes the phase terminate, and
    it is not optional.
@@ -144,7 +144,7 @@ The learner is not involved in this phase and should not be interrupted during i
    ```
 
    **Every goal you were invited here for gets exactly one of those.** `curated` for one that
-   now has live entries — including a goal you only stamped in step 0. `blocked` for one you
+   now has live entries, including a word the `a-words` entry serves. `blocked` for one you
    couldn't build anything for, with the reason, which goes to the learner in a goal-setting
    conversation.
 
@@ -181,8 +181,8 @@ Not on a schedule, and not on your own reading of the folder. **Run it when the 
 The middle one is why the drop reasons have to be specific: they are the only feedback this
 phase ever gets, and the queue entry says a goal is short, not what was wrong with what it had.
 
-Adding a word is the cheap case: step 0 stamps its entry, steps 1 to 5 find nothing to do, and
-step 6 clears it.
+Adding a word is the cheap case: `a-words` already serves it, or step 0 writes that entry,
+steps 1 to 5 find nothing to do, and step 6 clears it.
 
 A re-run needs no special handling: step 1 sees a file with gaps and fills them, keeping every
 id and skipping anything marked dropped. Step 2 checks the whole file, not just the additions —
@@ -219,6 +219,7 @@ human_ ended up with no channel while the case an agent could fix alone had one.
 - [`generate`](workflows/learn/skills/curation/generate/SKILL.md) — skill
 - [`verify`](workflows/learn/skills/curation/verify/SKILL.md) — skill
 - [`learn`](workflows/learn/skills/learn/SKILL.md) — skill
+- [`migrate-words.mjs`](workflows/learn/tools/migrate-words.mjs) - tool
 - [`record-status.mjs`](workflows/learn/tools/record-status.mjs) — tool
 - [`survey.mjs`](workflows/learn/tools/survey.mjs) — tool
 - [`vocabulary-moves.md`](workflows/learn/skills/goal-setting/references/vocabulary-moves.md) —

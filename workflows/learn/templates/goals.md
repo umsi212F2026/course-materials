@@ -84,12 +84,12 @@
   orientation are the same kind of thing here and reach every tool through one code path;
   what differs between them is which SLOTS they carry.
 
-  THE NINE SLOTS, what each one asks, and every value in use, are in
+  THE EIGHT SLOTS, what each one asks, and every value in use, are in
   workflows/learn/skills/goal-setting/references/slots.md. Read it before writing a slot you haven't written
   before; a value nothing implements is refused at read time, by name. Every slot takes exactly
   one value.
 
-  EVERY SLOT DEFAULTS, and an ordinary capability carries none of them (the ninth, `capability`,
+  EVERY SLOT DEFAULTS, and an ordinary capability carries none of them (the eighth, `capability`,
   has no default value: it is simply absent unless you write it):
 
       ### `c-read-unseen-diagram`
@@ -103,24 +103,23 @@
   will — but it has to say what's being examined, or whoever checks it later invents the
   object as well as the verdict.
 
-  A WORD carries four slots, and workflows/learn/tools/new-word.mjs writes them for you. Don't type them:
+  A WORD carries three slots, and workflows/learn/tools/new-word.mjs writes them for you. Don't type them:
 
       ### `w-schema`
 
       - **goal:** schema
       - **criterion:** vocabulary
-      - **supply:** vocabulary
       - **bar:** one production pass
       - **group:** vocabulary
       - **what it names:** the promised shape of the thing, not the thing
       - **nearest confusable:** type
       - **synonyms:** DDL
 
-  The last three are not slots — they are INPUTS TO THE VOCABULARY SUPPLY, which reads them
+  The last three are not slots. They are INPUTS TO THE `a-words` GENERATOR, which reads them
   when it instantiates a move. DEFINE checks against *what it names* and rejects a bare
   synonym as an answer; DISTINGUISH needs the confusable and is never aimed at a synonym;
-  INTERPRET may set its sentence using one. Any future supply will want its own fields, and
-  they go the same way: bullets nothing else reads.
+  INTERPRET may set its sentence using one. Any future generator that wants its own fields
+  puts them the same way: bullets nothing else reads.
 
   WHAT IT NAMES is a pointer, not a definition — "the promised shape", not what a schema is.
   Topology, the same latitude the interview has: enough to recognize the word when it turns

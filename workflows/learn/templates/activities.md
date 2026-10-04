@@ -32,11 +32,25 @@ with the learner.
   gets reworded later. If something is genuinely replaced rather than reworded, the
   replacement gets a new id and the old one gets `status: dropped`.
 
-  GENERATED ENTRIES carry `origin: generated`. They are stamped by curation for a goal whose
-  `supply` slot produces its own activities — a vocabulary word's moves come from
-  workflows/learn/skills/goal-setting/references/vocabulary-moves.md, not from here — so there is no artifact
-  to verify, no menu to choose among, and nothing to critique. The verify and critique passes
-  skip them, and nothing drops one: it is that goal's only entry.
+  VOCABULARY IS ONE ACTIVITY, `a-words`, an ordinary entry that serves every word through its
+  group, those added later included. Curation writes it, exactly as below, when the topic has
+  words and no such entry; its generator is
+  workflows/learn/skills/goal-setting/references/vocabulary-moves.md, and a course topic's bank
+  holds one scenario file per word, tasks/a-words/<goal-id>.md:
+
+      ### `a-words`
+
+      - **serves:** group vocabulary
+      - **generator:** the five moves in `workflows/learn/skills/goal-setting/references/vocabulary-moves.md`, set for one word at a time from its `what it names`, `nearest confusable` and `synonyms`. Each question names that word's goal and carries its move.
+      - **learner does:** answers one short question about one word
+      - **tutor role:** examiner
+      - **tutor does:** sets the question as served, without rewording it or hinting; when the bank has nothing for the word, sets one move live, as vocabulary-moves.md describes
+      - **offer as:** not offered as a choice; a word's question is set when that word is studied or due
+
+  LEGACY STAMPS. An older file may hold entries carrying `origin: generated`, placeholders that
+  curation once stamped for each word. They are retired: nothing serves from one, survey skips
+  them, and workflows/learn/tools/migrate-words.mjs removes them. Never write one; leave an old
+  one alone until that tool runs.
 
   Every entry says what the LEARNER DOES. A resource is not an activity: "read chapter 3"
   is not an entry, "read chapter 3 writing a one-line gloss for each unfamiliar term" is.
@@ -74,13 +88,12 @@ with the learner.
 
 <!--
   Copied from goals.md so the tutor doesn't need both files open. ONE ROW PER GOAL CURATION
-  SERVES — every goal whose `supply` slot is the default, `curated`. That is what this phase
-  is for: finding real things for a learner to do.
+  SERVES: every goal except the words. That is what this phase is for: finding real things for
+  a learner to do.
 
-  A goal whose `supply` isn't `curated` is NOT copied here and gets no Coverage row. Its
-  activities come from elsewhere; what it gets here is one generated entry, stamped by
-  curation, carrying `origin: generated`. There is nothing to choose among and no gap a
-  Coverage row could show. One supply per goal, so the two are exclusive.
+  A word is NOT copied here and gets no Coverage row. The `a-words` entry serves it through
+  its group, with a generator that is fixed, so there is nothing to choose among and no gap a
+  Coverage row could show.
 
   The `criterion` column is COPIED, and for a goal whose criterion is a reference rather than
   the learner's own text — `vocabulary`, `orientation` — copy the reference name. The
@@ -108,8 +121,8 @@ with the learner.
   the coverage view that was lost when activities became one flat list, and it's the first
   thing to read when deciding what's missing.
 
-  ONE ROW PER GOAL IN THE TABLE ABOVE, in the same order. Generated entries don't appear here
-  and neither do the goals they serve; nothing is ever missing for those.
+  ONE ROW PER GOAL IN THE TABLE ABOVE, in the same order. `a-words` doesn't appear here and
+  neither do the words it serves; nothing is ever missing for those.
 
   study   live activities whose `serves` includes this goal and which are not checks
   checks  live activities whose `checks` is this goal
@@ -152,7 +165,7 @@ with the learner.
   values, same shape every row.
 
   FIELDS. Every activity has `serves` through `offer as`. `status` appears only once the
-  activity is dead, and `origin` only on an entry curation stamped rather than wrote. The
+  activity is dead, and `origin` only on a legacy stamp, which nothing writes now. The
   block below that applies only to activities that can finish a goal — the ones carrying
   `checks`.
 
@@ -197,9 +210,8 @@ with the learner.
                 curation/generate may delete a note whose cause it has fixed, and must not
                 otherwise edit one. Each check pass rewrites them.
 
-  origin        omit on anything you wrote. `generated` on an entry curation stamped for a
-                goal whose `supply` produces its own activities — see the note at the head of
-                this file. verify and critique skip those, and nothing drops one.
+  origin        omit. `generated` marks a legacy stamp from before `a-words`; see the note
+                at the head of this file. Nothing serves from one and nothing new carries it.
 
   status        omit while the activity is live — that's the default and needs no saying.
                 When it stops being a candidate, `dropped — <why, and who>`: the curator

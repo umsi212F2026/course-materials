@@ -71,7 +71,7 @@ answer they didn't give is not, however obvious it seems. Thin answer, thin entr
 empty section, and say so.
 
 Everything else you may draft freely — _depth_, the capabilities and criteria, and the three
-fields each word entry carries for the vocabulary supply. They choose what stays.
+fields each word entry carries for the `a-words` generator. They choose what stays.
 
 Write as you go. A field filled during the conversation is one they watched happen.
 
@@ -269,7 +269,7 @@ _synonyms_ are lines you add where there is something to put in them, and plenty
 haven't got either; omit the line rather than reaching, since an empty optional field is a
 default written down. All three are facts about the subject rather than about them, so fill
 them
-silently and don't narrate it. They are read by the vocabulary supply and by nothing else.
+silently and don't narrate it. They are read by the `a-words` generator and by nothing else.
 
 **Moves**
 

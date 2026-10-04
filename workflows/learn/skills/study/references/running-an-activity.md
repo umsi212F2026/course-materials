@@ -3,28 +3,30 @@
 Consulted once per activity, during a study session. The session itself — reading in, offering
 candidates, recording, closing — is in `../SKILL.md`.
 
-**Where the instruction comes from is the goal's `supply` slot**, and that is the only thing
-that differs between one goal and another here. Everything below applies to all of them, except
+**Where the instruction comes from is the activity**: its entry, its bank where it has one, or
+for a word with nothing banked, a move set live. Everything below applies to all of them, except
 where it says otherwise.
 
 ## Run it as written
 
-**`supply: curated`** — the instruction is the `activities.md` entry the learner chose: its
+**An ordinary entry**: the instruction is the `activities.md` entry the learner chose: its
 `learner does`, `tutor role` and `tutor does`. Follow them rather than improvising a lesson you
 like better. If it carries a `check note` from curation, that's there because something about
 the activity isn't obvious from the entry.
 
-**`supply: vocabulary`** — the entry is a stamp carrying `origin: generated`, and the real
-instruction is a move from `../../goal-setting/references/vocabulary-moves.md`. **You pick the
-move and instantiate it.** There are no candidates to offer and no choice to put to the
-learner. Take one the word hasn't had recently — run
+**A word, through `a-words`**: ask for the word's question with
+`node workflows/learn/tools/next-item.mjs <topic-folder> --goal <word-id>` and serve it as a
+bank question, below. **Exit 2 means nothing is banked for that word, so you pick a move from
+`../../goal-setting/references/vocabulary-moves.md` and instantiate it.** There are no
+candidates to offer and no choice to put to the learner. Take one the word hasn't had recently
+(run
 
 ```
 node workflows/learn/tools/served.mjs <topic-folder> <goal-id>
 ```
 
-which returns the labels this goal has already been given, most recent first — and set exactly
-what that move asks for and no more. Rewording DEFINE into something friendlier, or letting a
+which returns the labels this goal has already been given, most recent first), label it
+`<MOVE>: <instance>`, and set exactly what that move asks for and no more. Rewording DEFINE into something friendlier, or letting a
 CATCH item come with a hint about where the error is, changes what the pass would mean, so
 don't do that.
 
@@ -180,9 +182,9 @@ analysis than that to drop the activity.
    establishes nothing, which is what happened. Always, whoever decided and whatever the
    reason.
 2. **Only if the activity is at fault, write `status: dropped — <why, and who decided>`** on
-   its entry in `activities.md`. Never on an entry carrying `origin: generated`: it is that
-   goal's only entry and there is nothing in it to be wrong. A bad _instance_ is a fault in the
-   supply, and goes on the queue:
+   its entry in `activities.md`. Never on `a-words`, or on a legacy stamp carrying
+   `origin: generated`: there is nothing in either to be wrong. A bad word question is a fault
+   in the bank or the moves, and goes on the queue:
    `record-status.mjs <topic-folder> blocked <goal-id> --needs curation --why "<what the instances get wrong>"`.
 3. Return to the session loop, which offers what's left.
 

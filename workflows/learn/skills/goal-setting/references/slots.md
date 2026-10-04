@@ -1,4 +1,4 @@
-# Goal slots: the nine questions, and the three contracts
+# Goal slots: the eight questions, and the three contracts
 
 This file carries the rules and the contracts, and no argument — the reasoning behind them is
 recorded outside this repository.
@@ -9,16 +9,16 @@ ordinary capability, a vocabulary word, an orientation — and the slots below a
 system asks of any of them.
 
 **Every slot defaults.** An ordinary capability carries no slot values at all. A word carries
-the four that differ from the default; an orientation carries five. There are no named types:
-nothing in the system says "this is a word", only that this goal's `supply` is `vocabulary`.
+the three that differ from the default; an orientation carries five. There are no named types:
+nothing in the system says "this is a word", only that this goal's `criterion` is `vocabulary`
+and its group is one the `a-words` activity serves.
 `capability` is the one slot with no default: it is simply absent on a goal that isn't a part.
 
-## The nine slots
+## The eight slots
 
 | slot          | question                                           | consumer                                         | default                  |
 | ------------- | -------------------------------------------------- | ------------------------------------------------ | ------------------------ |
 | `criterion`   | where does the statement of _met_ come from?       | the adjudicator                                  | _(the entry's own text)_ |
-| `supply`      | where do activities for this come from?            | the tutor, picking what to run                   | `curated`                |
 | `adjudicator` | who rules on one attempt?                          | the tutor, after an attempt                      | `study/judge`            |
 | `bar`         | what accumulation of rulings makes the claim true? | `met()`, in `workflows/learn/tools/lib/bars.mjs` | `one unaided pass`       |
 | `recurrence`  | does it come back once met?                        | the scheduler                                    | `spaced`                 |
@@ -27,15 +27,15 @@ nothing in the system says "this is a word", only that this goal's `supply` is `
 | `group`       | what is it reported alongside?                     | the report                                       | `capabilities`           |
 | `capability`  | which larger capability is this one part of?       | the report                                       | _(none)_                 |
 
-Offering is not a slot — it falls out of `supply`. If activities come from a shared generator,
-offering them individually is already wrong.
+Offering is not a slot: it falls out of the activity. Questions from a shared generator, such
+as `a-words`, are set rather than offered, since offering them individually is already wrong.
+Where a goal's activities come from was once a ninth slot, `supply`; it is retired, below.
 
 The three shapes in use:
 
 |               | ordinary capability  | vocabulary word       | orientation   |
 | ------------- | -------------------- | --------------------- | ------------- |
 | `criterion`   | _(learner-authored)_ | `vocabulary`          | `orientation` |
-| `supply`      | `curated`            | `vocabulary`          | `curated`     |
 | `adjudicator` | `study/judge`        | `study/judge`         | `tutor`       |
 | `bar`         | `one unaided pass`   | `one production pass` | `did it once` |
 | `recurrence`  | `spaced`             | `spaced`              | `never`       |
@@ -52,7 +52,7 @@ the pattern; read the row.
 | kind                  | slots                          | what a value is                                                                                                  |
 | --------------------- | ------------------------------ | ---------------------------------------------------------------------------------------------------------------- |
 | **data or reference** | `criterion`, `group`, `capability` | literal text, or a pointer to shared text. Nothing invokes it; something reads it and hands it to an adjudicator |
-| **strategy**          | `supply`, `adjudicator`, `bar` | always an implementation, always invoked                                                                         |
+| **strategy**          | `adjudicator`, `bar`           | always an implementation, always invoked                                                                         |
 | **flag**              | `recurrence`, `is_required`, `origin` | read as data by one consumer                                                                                     |
 
 `recurrence` is a flag rather than a strategy because it only says whether the scheduler runs.
@@ -61,24 +61,26 @@ The intervals are system-wide, in `workflows/learn/tools/lib/schedule.mjs`, not 
 **Flag and keyword sets are closed, and `workflows/learn/tools/lib/slots.mjs` refuses what
 isn't in them, by name.** An open-ended slot is where an agent invents `recurrence: sometimes`.
 
-## The three strategy contracts
+## The three contracts
 
 Written before the implementations, and binding on every implementation that follows. A
-contract written after the first implementation is a description of that implementation.
+contract written after the first implementation is a description of that implementation. The
+first was the `supply` slot's; with that slot retired it is what every activity meets when it
+is run, whether from its bank or live.
 
-### `supply`
+### An activity
 
 > **Given the goal and the labels already served, return an instruction, a label, and tags.**
 
-|                 | for                      | shape                                    |
-| --------------- | ------------------------ | ---------------------------------------- |
-| **instruction** | the tutor                | free-form. What to set the learner       |
-| **label**       | supply's own future self | free-form, **opaque to everything else** |
-| **tags**        | `bar`, and the report    | structured, from the closed set below    |
+|                 | for                        | shape                                    |
+| --------------- | -------------------------- | ---------------------------------------- |
+| **instruction** | the tutor                  | free-form. What to set the learner       |
+| **label**       | the activity's future self | free-form, **opaque to everything else** |
+| **tags**        | `bar`, and the report      | structured, from the closed set below    |
 
-The label is recorded in the log and handed back to this supply next time as the record of what
-has already been served. **It is a private channel between a supply and its future self.**
-Nothing else parses it, which is what makes free-form safe: the worst case is "repeats
+The label is recorded in the log and handed back to this activity next time as the record of
+what has already been served. **It is a private channel between an activity and its future
+self.** Nothing else parses it, which is what makes free-form safe: the worst case is "repeats
 sometimes", never a wrong claim about learning. `workflows/learn/tools/served.mjs` returns the
 labels, unmodified.
 
@@ -86,22 +88,21 @@ labels, unmodified.
 and cannot read an opaque label. So the one slot that needs structure gets exactly as much as
 it needs, and no more.
 
-A supply may read whatever the entry carries beyond its slots — a word's _what it names_, _when
-it bites_ and _nearest confusable_ are inputs to the vocabulary supply, meaningful only to it.
-That is the mirror of the label: data flowing _into_ an implementation rather than out of one.
+An activity's generator may read whatever the entry carries beyond its slots: a word's _what it
+names_, _nearest confusable_ and _synonyms_ are inputs to the `a-words` generator, meaningful
+only to it. That is the mirror of the label: data flowing _into_ an implementation rather than out of one.
 
 Likewise `taught elsewhere`, a line saying where a goal is also taught (`PS2; session 5`). It
 is payload read only by the tutor, which uses it to offer the learner the choice of learning the
 goal there. No tool validates or reads it, and it changes nothing about the goal's bar.
 
-A supply returns a **list** of candidates where it has several. One is a legitimate list.
-
-**One supply per goal**, and that is the label contract making itself felt: a label is safe as
-free-form only because the supply that wrote it is the only thing that reads it back. Two
-supplies on one goal means each is handed labels it did not write and cannot parse. A goal that
-needs something its supply doesn't offer changes this one value and keeps its criterion, its
-bar and its group — and if it needs a genuinely new source, the extension point is writing a
-supply implementation.
+Several activities may serve one goal, and the tutor offers among them. A label is safe as
+free-form because each activity reads back only the labels it wrote: a banked question's label
+is its path, `<activity-id>/<scenario-id>/<question-id>`, which the picker in
+`workflows/learn/tools/next-item.mjs` matches against its own questions and nothing else, and a
+vocabulary move set live writes `<MOVE>: <instance>`, which only the moves read. A label an
+activity did not write is ignored, never parsed. A goal that needs a genuinely new source of
+evidence gets a new activity, not a new slot.
 
 ### `adjudicator`
 
@@ -129,7 +130,7 @@ Five things consume "has this been met", and every one of them uses it as a bina
 returns one. No bar declares a scale and nothing compares across scales.
 
 **A bar is always a program, never a skill.** It cannot need judgement, because judgement
-already happened upstream — in the adjudicator, which ruled, or in the supply, which tagged.
+already happened upstream: in the adjudicator, which ruled, or in the activity, which tagged.
 **It reads only structured fields**: timestamps, the two axes, `tags`, `outcome`, `source`.
 Never the criterion text, never the instruction, never the opaque label.
 
@@ -158,30 +159,35 @@ with the artifact still beside them._ Weak evidence deliberately. It is adjudica
 recorded like anything else rather than assumed, which is the whole difference between this and
 the self-certifying rung it replaced.
 
-### `supply` — strategy
+### `supply`: retired
 
-| value                 | means                                                                       | defined where                                |
-| --------------------- | --------------------------------------------------------------------------- | -------------------------------------------- |
-| `curated` _(default)_ | offer among the live `activities.md` entries whose `checks` names this goal | this file, below                             |
-| `vocabulary`          | instantiate one of the six moves                                            | [`vocabulary-moves.md`](vocabulary-moves.md) |
+A goal used to say where its activities came from: `curated`, the live `activities.md` entries,
+or `vocabulary`, the moves, with a placeholder entry stamped `origin: generated` so that a word
+could be looked up like anything else. Vocabulary is now an ordinary activity, `a-words`, whose
+entry serves `group vocabulary`, so every goal is served the same way and the slot has nothing
+left to choose. **A `supply:` line in an older `goals.md` is ignored, not reported**, and a
+stamped entry is skipped; `workflows/learn/tools/migrate-words.mjs` removes both from a topic.
 
-**`curated`, in full.** Read the live entries in `activities.md` — present, and not carrying
-`status: dropped`. Those whose `checks` names this goal can finish it; those whose `serves`
-names it, or names `all`, can be run against it but cannot finish it. Offer among them using
-each entry's `offer as`, and let the learner choose; that is the whole of the judgement here.
+**How every goal is served, in full.** Read the live entries in `activities.md`: present, not
+carrying `status: dropped`, and not a legacy stamp. Those whose `checks` names this goal can
+finish it; those whose `serves` names it, its group, or `all` can be run against it but cannot
+finish it. Offer among them using each entry's `offer as`, and let the learner choose; that is
+the whole of the judgement here.
 
-- **instruction** — the chosen entry's `learner does`, `tutor role` and `tutor does`, run as
-  written. If it draws on a bank, an item not already in the served list.
-- **label** — the entry id, or `<entry-id>/<item>` when it drew on a bank. That is a private
-  channel like any other label; it happens to be readable, which is convenient and not relied
-  on.
-- **tags** — none. A tag every curated check carried would say nothing, and nothing reads one
-  here: this supply's goals use `bar: one unaided pass`, which reads the axes. Tags exist for
-  the one collision that needs them, and adding more would make them decoration.
+- **instruction**: the chosen entry's `learner does`, `tutor role` and `tutor does`, run as
+  written. If it has a bank, the question `next-item.mjs` serves.
+- **label**: the question's path when it came from a bank, otherwise the entry id. That is a
+  private channel like any other label; it happens to be readable, which is convenient.
+- **tags**: the question's, where its `move` gives it one, and otherwise none. A tag every
+  curated check carried would say nothing, and nothing reads one there: those goals use
+  `bar: one unaided pass`, which reads the axes. Tags exist for the one collision that needs
+  them, and adding more would make them decoration.
 
-If nothing live remains, this supply returns nothing, and that is a real answer: the goal is
-stuck until curation runs again. Don't improvise a replacement — an invented task gets judged
-against a criterion it wasn't written for.
+If nothing live serves the goal, there is nothing to offer, and that is a real answer: the goal
+is stuck until curation runs again. Don't improvise a replacement: an invented task gets judged
+against a criterion it wasn't written for. A word is the exception, because its generator is
+fixed: with nothing banked for it, or no `a-words` entry yet, set one move live from
+[`vocabulary-moves.md`](vocabulary-moves.md).
 
 ### `adjudicator` — strategy
 
@@ -290,7 +296,7 @@ more spaces. Survey reports a malformed slug, and a capability with only one par
 
 ## Tags
 
-**A system-wide closed set**, not per-supply, because `bar` reads them:
+**A system-wide closed set**, not per-activity, because `bar` reads them:
 
 | tag          | means                                                                                                                   |
 | ------------ | ----------------------------------------------------------------------------------------------------------------------- |
@@ -298,7 +304,7 @@ more spaces. Survey reports a malformed slug, and a capability with only one par
 | `reception`  | the learner recognised or recalled something they were given                                                            |
 
 Adding a tag means adding it here, in `workflows/learn/tools/lib/slots.mjs`, and in whatever
-reads it. A private vocabulary between one supply and one bar is exactly the pairing this
+reads it. A private vocabulary between one activity and one bar is exactly the pairing this
 design refuses.
 
 ## Not overridable, whatever the slots say
@@ -322,12 +328,13 @@ breaks the label contract, above, and the cliff the test was written against bel
 types: with flat slots such a goal changes one value and keeps everything else, which is an
 edit. More often the pressure means the word has stopped being a word — _use schema correctly
 in a real design doc_ is a capability with its own criterion, and making it a separate goal
-costs nothing.
+costs nothing. Retiring `supply` later dissolved the question: a goal is now served by every
+activity that names it.
 
 ## Shorthand
 
 **Scripts supply the shorthand, not type names.** `workflows/learn/tools/new-word.mjs` fills
-the four word slots; the same pattern gives orientation a script if it ever earns one. A custom
+the three word slots; the same pattern gives orientation a script if it ever earns one. A custom
 shape is written by filling slots directly and needs no name.
 
 **One writer per shape.** Goal setting calls the script rather than typing the rows itself. A

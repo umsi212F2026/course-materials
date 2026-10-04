@@ -14,10 +14,9 @@ whatever invoked you established it already.
 
 Nothing here has a definite right answer.
 
-**Goals that supply their own activities are out of scope**, and so are the entries stamped for
-them — anything carrying `origin: generated`. A vocabulary word's activities come from a fixed
-menu of moves, not from this file; there is no menu to judge, no artifact to weigh, and no
-Coverage row. Nothing covering them is a gap and nothing about them is a finding. Judge the
+**The words are out of scope**, and so is the `a-words` entry that serves them, along with any
+legacy stamp carrying `origin: generated`. A word's questions come from a fixed menu of moves,
+not from this file; there is no menu to judge, no artifact to weigh, and no Coverage row. Nothing covering them is a gap and nothing about them is a finding. Judge the
 Goals table and the entries the generator wrote.
 
 **Work all four sections; each has its own unit.** §1 is every entry the generator wrote, §2
