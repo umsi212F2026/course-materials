@@ -76,11 +76,17 @@ default order.
 
 ## Goal-setting
 
-A new move, **ORDER THE SETS**: once the goals are settled, propose a sequence (vocabulary before
-the capabilities that use those words; parts that build on each other in order) and write the
-Sequence section, confirmed with the learner (the instructor, for a course topic). It runs in
-every goal-setting conversation, including one that only adds goals, so a topic without the
-section gets one.
+A new move, **ORDER THE SETS**, scaled to what the topic already has:
+
+- **No Sequence section yet:** once the goals are settled, propose a sequence (vocabulary before
+  the capabilities that use those words; parts that build on each other in order) and write the
+  section, confirmed with the learner (the instructor, for a course topic). This runs in any
+  goal-setting conversation on such a topic, including one that only adds goals.
+- **A section exists and the conversation added goals:** check only where the new goals land. A
+  new word falls into its group's set with no edit; raise a placement only if it looks wrong (a
+  basic capability others build on, say).
+- **A section exists and nothing new needs placing:** skip the move, unless the learner asks to
+  reorder.
 
 ## Not changed
 
