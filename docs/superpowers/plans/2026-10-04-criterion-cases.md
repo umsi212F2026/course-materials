@@ -30,15 +30,15 @@ case. Picker, survey and progress read the same fields. The rest is skill and te
 ## Review Focus
 
 1. A goal with cases whose only passes carry no `cases` (recorded before cases were written):
-   unmet, and the progress view says `0 of N cases demonstrated`, not met.
+   grandfathered, so met, and the progress view shows it `#` with no case line.
 2. A question naming two goals, only one of which has cases, with the single-goal `cases:` form:
    refused as ambiguous by bank.mjs, not silently applied to the wrong goal.
 3. Live-generated questions: `record-attempt --cases` with no bank question behind it works the
    same as banked ones.
 4. A goal whose `cases` slot is present but empty or malformed: reported, and the goal treated
    as having no cases (so the topic still works).
-5. The scenario-order rule never leaves a goal with nothing to serve: if every eligible question
-   is blocked behind an earlier unserved one, the earliest unserved one is served.
+5. A scenario spanning two goals: a question carrying goal B's undemonstrated case is not
+   skipped while studying goal A, so goal A's later question waits behind it.
 
 ---
 
@@ -76,10 +76,11 @@ The goals.md form (spec "Cases on a goal") reaches applySlots as one joined stri
 - Consumes: `goal.cases` from Task 1.
 - Produces: `met(goal, attempts)` unchanged in signature; `casesDemonstrated(goal, attempts) ->
   { passed: number, total: number } | null` (null for a goal with no cases), where a case is
-  passed when the goal's bar holds over `attempts.filter((r) => r.cases?.includes(id))`.
+  passed when the goal's bar holds over `attempts.filter((r) => !r.cases || r.cases.includes(id))`.
+  AN ATTEMPT WITH NO `cases` COUNTS TOWARD EVERY CASE (grandfathered, spec "Recording").
 
 - [ ] **Step 1: Failing tests:** a goal with cases `a, b` is unmet with a pass on `a` only, met
-  with passes on both; a pass carrying no `cases` counts toward none; a `declared` or `elsewhere`
+  with passes on both; a pass carrying no `cases` counts toward every case; a `declared` or `elsewhere`
   outcome meets it; under `one production pass` a pass on a case without the `production` tag
   does not count for that case; a goal with no cases is unchanged; `casesDemonstrated` returns
   `{passed: 1, total: 2}` and `null`.
@@ -122,12 +123,14 @@ The goals.md form (spec "Cases on a goal") reaches applySlots as one joined stri
 - Consumes: `item.cases` (Task 3), `goal.cases` (Task 1).
 - Produces: next-item prints `cases: <goal>: x, y` lines after `tags:` when the item has any.
   `record-attempt.mjs ... --cases x,y` writes `cases: ["x","y"]`; it exits non-zero naming the
-  goal's cases when one is undeclared, or when the goal has none. quiz-practice records each
-  goal's cases from the item.
+  goal's cases when one is undeclared, when the goal has none, or when the goal has cases and a
+  ruled attempt (`--axes`) arrives without `--cases`. An `--outcome` (declared, elsewhere and the
+  rest) needs no `--cases`. quiz-practice records each goal's cases from the item.
 - `unwrap` keeps a newline before a line starting `>`, so a blockquote keeps its lines.
 
 - [ ] **Step 1: Failing tests:** next-item prints cases; record-attempt stores, refuses an
-  unknown case, refuses `--cases` on a goal without cases; a practice-quiz record of a question
+  unknown case, refuses `--cases` on a goal without cases, refuses a ruled attempt without
+  `--cases` on a goal with cases, accepts `--outcome declared` without it; a practice-quiz record of a question
   with cases carries them; a two-line blockquote question keeps both `>` lines.
 - [ ] **Step 2: Run, expect fail. Step 3: Implement. Step 4: Run, expect pass.**
 - [ ] **Step 5: Commit** "Attempts record the cases a question exercised".
@@ -139,18 +142,25 @@ The goals.md form (spec "Cases on a goal") reaches applySlots as one joined stri
 - Test: `workflows/learn/tools/test/pick.test.mjs`
 
 **Interfaces:**
-- Produces: `pick(items, log, { goal, activity, after, review = false, attempts = [], cases = [] })`.
-  `attempts` is the goal's attempt history, `cases` its declared case ids. next-item gains
-  `--review` and passes the goal's attempts and cases when `--goal` is given.
-- Order, for `--goal` with cases: study prefers an item exercising a case with no pass; review
-  prefers the item whose case has the oldest latest pass (a case never passed counts oldest).
-  These rank before the existing unserved and oldest-served rules. Without cases, today's order.
-- Scenario order, study only: an item is ineligible while an earlier question in its scenario
-  (bank order) has no line in the log; if that leaves nothing, serve the earliest unserved item.
-- The goal-less sort is deleted.
+- Produces, in `lib/pick.mjs`:
+  - `stillNeeded(item, goalsById, attemptsByGoal) -> boolean`: false when, for each goal the
+    item names, the goal is met (`met` from bars.mjs) or every case the item lists for it is
+    already passed (Task 2's per-case test). An item naming no case for a goal with cases
+    (grandfathered banks) is needed while that goal is unmet.
+  - `pick(items, log, { goal, activity, after, review = false, needed = () => true, caseRank = () => 0 })`.
+    `caseRank(item)` is lower for preferred items: in study 0 when the item exercises a case of
+    `goal` not yet passed, else 1; in review the latest pass time of its least recently passed
+    case (never passed is `-Infinity`). It ranks before the existing unserved and oldest-served
+    rules; without cases every item ranks 0 and today's order holds.
+  - Scenario order, study only: an item is ineligible while an earlier question in its scenario
+    (bank order) has no line in the log and is `needed`. Questions no longer needed are skipped.
+  - The goal-less sort is deleted.
+- next-item gains `--review`, builds `needed` and `caseRank` from `readGoals` and the topic's
+  log (`attemptsFor`), and passes them.
 
-- [ ] **Step 1: Failing tests** for each rule above, including the fallback in Review Focus 5,
-  and an existing-behaviour test for a goal without cases.
+- [ ] **Step 1: Failing tests** for each rule above: unpassed case preferred in study; oldest
+  case in review; an earlier unserved needed question blocks a later one; an earlier question no
+  longer needed is skipped; Review Focus 5; a goal without cases keeps today's order.
 - [ ] **Step 2: Run, expect fail. Step 3: Implement. Step 4: Run, expect pass.**
 - [ ] **Step 5: Commit** "The picker serves cases still to demonstrate".
 

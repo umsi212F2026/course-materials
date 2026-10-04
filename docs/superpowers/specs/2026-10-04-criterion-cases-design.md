@@ -67,7 +67,12 @@ learner's own word (`declared`, `elsewhere`) still meets the whole goal, as toda
 - `next-item.mjs` prints a question's cases per goal, beside its goals.
 - `record-attempt.mjs --cases x,y` stores `cases: [...]` on the attempt line. It refuses a case
   the goal does not declare, and refuses `--cases` on a goal with none.
-- An attempt on a goal with cases that carries no `cases` counts toward no case.
+- **Older passes are grandfathered: an attempt with no `cases` field counts toward every case.**
+  A goal met before its cases were written stays met, so a bar once true stays true even when
+  goals.md changes. To keep that from becoming a loophole, `record-attempt.mjs` refuses a ruled
+  attempt on a goal with cases unless `--cases` is given (own-word outcomes, `declared` and
+  `elsewhere`, need none: they meet the whole goal). So an attempt without `cases` is always
+  one recorded before the goal had cases.
 - The practice quiz passes each question's cases into the attempts it records. Quiz scoring,
   drawing and the private grader are unchanged: a quiz scores questions.
 
@@ -77,9 +82,12 @@ learner's own word (`declared`, `elsewhere`) still meets the whole goal, as toda
 - **Review:** prefer a question on the case passed longest ago, so successive reviews rotate
   through the cases. The goal keeps one review clock; any unaided pass lengthens the interval and
   a miss shortens it, as today.
-- **Scenario order in study:** never serve a question while an earlier question in the same
-  scenario is unserved. Scenarios are written in study order, so a later question may give away
-  an earlier one's answer.
+- **Scenario order in study:** within a scenario, serve in file order, skipping any question no
+  longer needed. A question is no longer needed when each goal it names is met, or has every
+  case the question lists for it already passed. Study never serves a skipped question, so a
+  later question may give away a skipped one's answer. A question still needed (for instance one
+  carrying another goal's undemonstrated case) is never skipped, so its answer is never given
+  away before it is served. Scenarios are written in study order.
 - The sort that put goal-less questions last is removed.
 
 ### Survey problems
@@ -157,11 +165,13 @@ activities stay until each topic's recuration (item 9's worklist).
 
 ## Tests
 
-Bar: a goal with cases unmet until every case passes; a pass with no `cases` counts toward none;
+Bar: a goal with cases unmet until every case passes; a pass with no `cases` counts toward every
+case (grandfathered); record-attempt refuses a ruled attempt without `--cases` on such a goal;
 own word meets it; the per-case test under `one production pass`; a goal without cases unchanged.
 Cases slot: parsing, id rule, duplicates. Rubric `cases:` both forms, and each survey problem
 above; survey reports no coverage gap. `record-attempt` accepts declared cases and refuses others. Picker: unpassed case
-preferred in study, oldest-passed case in review, scenario order, no goal-less sort. Progress:
+preferred in study, oldest-passed case in review, scenario order with questions no longer
+needed skipped (including one that spans goals), no goal-less sort. Progress:
 `~` with some cases passed, legend text and `(in progress)` on the next-set line, the bracketed
 fraction, the `--after` line and its
 absence once met, `--json` `cases`. `next-item` keeps blockquote lines. The six real topics
