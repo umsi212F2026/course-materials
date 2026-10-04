@@ -328,7 +328,8 @@ function score(dir) {
         move: it?.move ?? null,
         tags: tagsOf(it),
         // THE CASES THIS QUESTION EXERCISED FOR ITS GOAL, for record-attempt --cases. A goal with
-        // cases will not take a ruled attempt without them; [] means the goal has none.
+        // cases will not take a ruled attempt without them. [] means the goal has none, or the
+        // question was written before its goal's cases were, which the quiz skill settles.
         cases: (i.goal && it?.cases?.[i.goal]) || [],
         type: i.type,
         credit: i.credit,

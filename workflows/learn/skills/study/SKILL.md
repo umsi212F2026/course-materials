@@ -164,8 +164,9 @@ ask differently rather than repeating it.
 
    **A goal the picker printed a `cases:` line for** also gets `cases`, beside its `criterion`:
    each case the question exercises, as `{"id": …, "text": …}` with the text from `goals.md`.
-   The judge's one ruling on the goal covers all of them, so it needs to know which they are,
-   or it reads the cases this question was never meant to reach as gaps.
+   A question set live sends the same, for the cases its generator says it carries. The judge's
+   one ruling on the goal covers all of them, so it needs to know which they are, or it reads
+   the cases this question was never meant to reach as gaps.
 
    **Every banked question names a goal**, and survey reports one that doesn't. If the picker
    ever prints an empty `goals:` line, the question is a fault: run it and discuss it, but record
@@ -295,8 +296,11 @@ Any other activity run live returns no tags, so omit the flag there too.
 it, and refuses a case the goal does not declare or `--cases` on a goal with none. **For a bank
 question, pass the `cases: <goal>: x, y` line the picker printed for that goal**, as
 `--cases x,y`. A bank question that names a goal with cases but prints no `cases:` line for it
-was written before the cases were, and counts as exercising all of them, so pass every case the
-goal declares. For a question set live, the generator says which cases each question shape
+was written before the cases were. Judge from the case texts in `goals.md` which of them it
+actually exercises, and name only those, to the judge as `cases` and here as `--cases`. If it
+exercises none, nothing can be ruled for that goal: call no judge for it and record
+`{"unaided":"yes","criterion":"unchecked"}` (`"no"` if you helped) with no `--cases`, which
+counts toward nothing. Survey already reports the stale bank. For a question set live, the generator says which cases each question shape
 carries; state the ones this question exercised. An `--outcome` call (`declared`, `elsewhere`,
 `abandoned`) needs none. One ruling covers every case the question lists: a pass passes them
 all, a miss passes none.

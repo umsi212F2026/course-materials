@@ -45,9 +45,10 @@ too: everything from `--- key ---` on is the grading text, for the judge and nev
 learner, and any `--- tutor note ---` is for you. A learner who carries on gets
 `--after <last label>`, which keeps them in the same scenario where there is more of it. Keep
 the label, the `tags:` line and any `cases:` lines: they go to `record-attempt.mjs` as they are,
-each goal's cases as its `--cases`. A goal with cases that has no `cases:` line is named by a
-question written before its cases were, which counts as exercising them all: pass every case
-the goal declares. The `--key` text also goes to the judge as the question's
+each goal's cases as its `--cases`, and to the judge as `cases`. A goal with cases that has no
+`cases:` line is named by a question written before its cases were: name only the cases it
+actually exercises, judged against their texts in `goals.md`. If it exercises none, record
+`criterion: unchecked` for that goal with no judge call; see the study skill. The `--key` text also goes to the judge as the question's
 rubric, whatever the number of goals. Every banked question names a goal, so an empty
 `goals:` line is a fault survey reports: run it, record nothing.
 
@@ -62,13 +63,16 @@ one attempt per goal it names.
 **What the picker prefers.** With `--goal`, in study, a question on a case of that goal not yet
 passed; in review, with `--review`, the case passed longest ago, so successive reviews rotate
 through them. With `--activity`, study serves only questions still needed, so one carrying an
-unpassed case or an unmet goal, until none is left and repeats begin. You don't steer any of
+unpassed case or an unmet goal. When none is left but a goal they name is still unmet, it exits
+2 and the generator takes over; repeats begin only once every goal they name is met (or
+deferred, or retired). You don't steer any of
 this, and you don't tell the learner which cases are left.
 
-**Exit code 2 means nothing is banked for that activity**, and so does there being no
+**Exit code 2 means nothing banked is left for that activity**, and so does there being no
 `tasks/<activity-id>/` folder. Then run the entry's generator live, as above. Where the goal has
 cases, the generator says which cases each of its question shapes carries; note the ones the
-question you set exercises, since they go to `record-attempt.mjs` as `--cases`.
+question you set exercises, since they go to the judge as `cases` (`{"id": …, "text": …}`, text
+from `goals.md`) and to `record-attempt.mjs` as `--cases`.
 
 **Never quietly run something else.** If you think a different activity would serve them
 better, say so and offer it — the entries are candidates and the learner may choose among them.

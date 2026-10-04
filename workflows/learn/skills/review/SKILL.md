@@ -201,7 +201,8 @@ argument.
    `{"goal": …, "criterion": …}` with each criterion resolved. A question that names goals with
    different `adjudicator` slots goes to `study/judge` for all of them. A goal the picker printed
    a `cases:` line for also gets `cases`, each case the question exercises as
-   `{"id": …, "text": …}`, exactly as study sends it. Every goal the judge
+   `{"id": …, "text": …}`, exactly as study sends it; a question set live sends the cases its
+   generator says it carries, the same way. Every goal the judge
    rules on is an attempt and step 4 records each. A goal that was due is recorded as a review.
    Another named goal is recorded as a review only if it was missed; one that passed counts as
    evidence without moving it along its intervals, and so does one the judge could not decide.
@@ -233,8 +234,10 @@ argument.
    `none`, or `production` or `reception` for a vocabulary move set live, and nothing otherwise.
    **A goal with cases also takes `--cases`**, the picker's `cases: <goal>: x, y` line for that
    goal as `--cases x,y`, or for a question set live the cases its generator says it carries.
-   A bank question printing no `cases:` line for such a goal predates its cases and counts as
-   exercising all of them, so pass every case the goal declares.
+   A bank question printing no `cases:` line for such a goal predates its cases: name only the
+   cases it actually exercises, judged against their texts in `goals.md`, to the judge and here.
+   If it exercises none, call no judge for that goal and record
+   `{"unaided":"yes","criterion":"unchecked"}` with no `--cases`, which counts toward nothing.
    `record-attempt.mjs` refuses a ruled attempt on such a goal without it.
 
    **A question ruled against several goals is one call per goal**, each with its own `--axes`
