@@ -67,7 +67,9 @@ been merged or pushed.
    live are never picked), survey problems for an item that matches nothing, a goal in two
    sets, a goal in none, and an entry stranded inside the section. Migration is under "Actions
    on the learning-topics repository".
-6. **Progress view.** Metacognitive information for the student: the sequence of sets from item 5
+6. ~~**Progress view.**~~ Done, the tool in `238a646` and its fix in `fc13d01`; study shows it
+   (the full view at the open and when a set finishes, one set's line after each attempt) and
+   the study guide explains it. Item 7 will draw `--json`. Original brief: Metacognitive information for the student: the sequence of sets from item 5
    drawn as columns, with checkmarks and other marks for attempts and completions (and, from
    item 2, deferred and done-elsewhere), shown at the start of a session and again after each
    task. The instructor wants hierarchy (capabilities grouping their parts) so a topic doesn't
