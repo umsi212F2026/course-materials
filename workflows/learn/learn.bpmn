@@ -437,8 +437,22 @@
           <bpmn:targetRef>DOR_acts</bpmn:targetRef>
         </bpmn:dataOutputAssociation>
         <bpmn:laneSet id="LS_curate">
-          <bpmn:lane id="L_cur_h" name="HUMAN operator" />
+          <bpmn:lane id="L_cur_h" name="HUMAN operator">
+            <bpmn:flowNodeRef>C_review_merge</bpmn:flowNodeRef>
+            <bpmn:flowNodeRef>C_gen_review</bpmn:flowNodeRef>
+            <bpmn:flowNodeRef>C_settled</bpmn:flowNodeRef>
+            <bpmn:flowNodeRef>C_keep</bpmn:flowNodeRef>
+            <bpmn:flowNodeRef>C_fault</bpmn:flowNodeRef>
+          </bpmn:lane>
           <bpmn:lane id="L_cur_a" name="AI AGENT">
+            <bpmn:flowNodeRef>C_course</bpmn:flowNodeRef>
+            <bpmn:flowNodeRef>C_sample_merge</bpmn:flowNodeRef>
+            <bpmn:flowNodeRef>C_sample</bpmn:flowNodeRef>
+            <bpmn:flowNodeRef>C_revise</bpmn:flowNodeRef>
+            <bpmn:flowNodeRef>C_draft_merge</bpmn:flowNodeRef>
+            <bpmn:flowNodeRef>C_draft</bpmn:flowNodeRef>
+            <bpmn:flowNodeRef>C_problems</bpmn:flowNodeRef>
+            <bpmn:flowNodeRef>C_bank_check</bpmn:flowNodeRef>
             <bpmn:flowNodeRef>C_verify</bpmn:flowNodeRef>
             <bpmn:flowNodeRef>C_critique</bpmn:flowNodeRef>
             <bpmn:flowNodeRef>C_merge</bpmn:flowNodeRef>
@@ -456,6 +470,8 @@
           </bpmn:lane>
           <bpmn:lane id="L_cur_p" name="PROGRAM">
             <bpmn:flowNodeRef>C_clear</bpmn:flowNodeRef>
+            <bpmn:flowNodeRef>C_survey</bpmn:flowNodeRef>
+            <bpmn:flowNodeRef>C_land_merge</bpmn:flowNodeRef>
           </bpmn:lane>
         </bpmn:laneSet>
         <bpmn:startEvent id="C_start" name="goals.md has capabilities">
@@ -559,9 +575,94 @@
             <bpmn:targetRef>DOR_c_acts3</bpmn:targetRef>
           </bpmn:dataOutputAssociation>
         </bpmn:serviceTask>
+        <bpmn:exclusiveGateway id="C_course" name="course topic, run by&#10;the instructor?" default="c_plain">
+          <bpmn:documentation>workflows/learn/skills/curation/SKILL.md, Who runs it decides the path. The plain path is the default: what runs in the background, spawned by learn, and on any topic whose origin is not course, where the tutor runs generators live and there is nothing to draft. The course path runs only when both hold, and nobody saying the run is the instructor's means it is not: a background run in a student's clone that stopped for review would wait forever, and one that drafted unreviewed would ship questions nobody read.</bpmn:documentation>
+          <bpmn:incoming>c12</bpmn:incoming>
+          <bpmn:outgoing>c_plain</bpmn:outgoing>
+          <bpmn:outgoing>c_bank</bpmn:outgoing>
+        </bpmn:exclusiveGateway>
+        <bpmn:exclusiveGateway id="C_sample_merge">
+          <bpmn:incoming>c_bank</bpmn:incoming>
+          <bpmn:incoming>c_b6</bpmn:incoming>
+          <bpmn:outgoing>c_b1</bpmn:outgoing>
+        </bpmn:exclusiveGateway>
+        <bpmn:serviceTask id="C_sample" name="Draft one sample per generator&#10;curation/draft-bank">
+          <bpmn:documentation>workflows/learn/skills/curation/draft-bank/SKILL.md, in sample mode, one agent per live activity with a generator, run concurrently (workflows/learn/skills/curation/SKILL.md, the course path, stop 1). Each writes one scenario, its questions and its rubric into its own activity's bank folders, tasks/&lt;activity-id&gt;/ and rubrics/&lt;activity-id&gt;/, committed on a branch of the topic's repository that is not pushed until stop 2 is done. A kept sample is the bank's first scenario. a-words takes part only for a word with no file in tasks/a-words/, and not at all until migrate-words.mjs has run on the topic.</bpmn:documentation>
+          <bpmn:incoming>c_b1</bpmn:incoming>
+          <bpmn:outgoing>c_b2</bpmn:outgoing>
+        </bpmn:serviceTask>
+        <bpmn:exclusiveGateway id="C_review_merge">
+          <bpmn:incoming>c_b2</bpmn:incoming>
+          <bpmn:incoming>c_b15</bpmn:incoming>
+          <bpmn:outgoing>c_b3</bpmn:outgoing>
+        </bpmn:exclusiveGateway>
+        <bpmn:userTask id="C_gen_review" name="Review each generator beside its sample&#10;curation, stop 1">
+          <bpmn:documentation>workflows/learn/skills/curation/SKILL.md, the course path, stop 1. The agent presents each generator's text beside its sample, by path, and the instructor reacts in the session. Writes nothing itself; a sample the instructor cuts is deleted from both bank folders by the agent. A generator's text reads well long after it has stopped producing good questions, and a fault found here costs one sample where at stop 2 it costs a bank.</bpmn:documentation>
+          <bpmn:incoming>c_b3</bpmn:incoming>
+          <bpmn:outgoing>c_b4</bpmn:outgoing>
+        </bpmn:userTask>
+        <bpmn:exclusiveGateway id="C_settled" name="generators&#10;settled?" default="c_b7">
+          <bpmn:documentation>workflows/learn/skills/curation/SKILL.md, the course path, stop 1. The instructor's call. A revised generator gets a fresh sample, and the instructor sees it before anything moves on.</bpmn:documentation>
+          <bpmn:incoming>c_b4</bpmn:incoming>
+          <bpmn:outgoing>c_b5</bpmn:outgoing>
+          <bpmn:outgoing>c_b7</bpmn:outgoing>
+        </bpmn:exclusiveGateway>
+        <bpmn:serviceTask id="C_revise" name="Revise the generator&#10;curation/generate">
+          <bpmn:documentation>workflows/learn/skills/curation/generate/SKILL.md, handed the instructor's feedback as findings (workflows/learn/skills/curation/SKILL.md, the course path, stop 1). The substance of an entry is still the generator's, even when the instructor is the one asking. Writes activities.md. Feedback on the a-words generator, which is fixed text, is about the vocabulary moves and goes in the reply instead.</bpmn:documentation>
+          <bpmn:incoming>c_b5</bpmn:incoming>
+          <bpmn:outgoing>c_b6</bpmn:outgoing>
+        </bpmn:serviceTask>
+        <bpmn:exclusiveGateway id="C_draft_merge">
+          <bpmn:incoming>c_b7</bpmn:incoming>
+          <bpmn:incoming>c_b11</bpmn:incoming>
+          <bpmn:outgoing>c_b8</bpmn:outgoing>
+        </bpmn:exclusiveGateway>
+        <bpmn:serviceTask id="C_draft" name="Draft the banks&#10;curation/draft-bank">
+          <bpmn:documentation>workflows/learn/skills/curation/draft-bank/SKILL.md, in full mode, one agent per activity running in parallel (workflows/learn/skills/curation/SKILL.md, the course path, step 2). Each fills its own activity's bank folders, tasks/&lt;activity-id&gt;/ and rubrics/&lt;activity-id&gt;/, one file per scenario with its twin, to about three questions per goal in the activity's checks, keeping every scenario already there. Committed on the unpushed branch: nothing is pushed until stop 2 is done, because the topic's repository is public. After a generator fault, only that activity's scenarios are redrafted.</bpmn:documentation>
+          <bpmn:incoming>c_b8</bpmn:incoming>
+          <bpmn:outgoing>c_b9</bpmn:outgoing>
+          <bpmn:dataOutputAssociation id="a_draft_tasks">
+            <bpmn:targetRef>DOR_c_tasks2</bpmn:targetRef>
+          </bpmn:dataOutputAssociation>
+          <bpmn:dataOutputAssociation id="a_draft_rubrics">
+            <bpmn:targetRef>DOR_c_rubrics</bpmn:targetRef>
+          </bpmn:dataOutputAssociation>
+        </bpmn:serviceTask>
+        <bpmn:scriptTask id="C_survey" name="Check the bank mechanics&#10;survey.mjs">
+          <bpmn:documentation>workflows/learn/tools/survey.mjs --dir &lt;data-dir&gt; &lt;topic-folder&gt; (workflows/learn/skills/curation/SKILL.md, the course path, step 3). Its problems are the mechanical floor: a scenario with no rubric file, a question with no rubric entry or two, duplicate question ids, an mcq answer that is not a choice, a goal id not in goals.md, a multi-goal question missing a credit statement, a bank folder with no activity entry. Writes nothing.</bpmn:documentation>
+          <bpmn:incoming>c_b9</bpmn:incoming>
+          <bpmn:outgoing>c_b10</bpmn:outgoing>
+        </bpmn:scriptTask>
+        <bpmn:exclusiveGateway id="C_problems" name="survey&#10;problems?" default="c_b12">
+          <bpmn:documentation>workflows/learn/skills/curation/SKILL.md, the course path, step 3. Each problem has one right answer, so it goes back to the activity's drafter rather than to the instructor.</bpmn:documentation>
+          <bpmn:incoming>c_b10</bpmn:incoming>
+          <bpmn:outgoing>c_b11</bpmn:outgoing>
+          <bpmn:outgoing>c_b12</bpmn:outgoing>
+        </bpmn:exclusiveGateway>
+        <bpmn:serviceTask id="C_bank_check" name="Check the banks, in a fresh context&#10;curation/bank-check">
+          <bpmn:documentation>workflows/learn/skills/curation/bank-check/SKILL.md, as a separate agent told the topic folder and nothing else (workflows/learn/skills/curation/SKILL.md, the course path, step 3). It reads the bank folders, tasks/ and rubrics/, question by question, for what survey cannot check, and writes nothing: its findings come back for stop 2, each with its label, and a finding about the generator rather than the bank is marked generator.</bpmn:documentation>
+          <bpmn:incoming>c_b12</bpmn:incoming>
+          <bpmn:outgoing>c_b13</bpmn:outgoing>
+        </bpmn:serviceTask>
+        <bpmn:userTask id="C_keep" name="Keep or cut scenarios and questions&#10;curation, stop 2">
+          <bpmn:documentation>workflows/learn/skills/curation/SKILL.md, the course path, stop 2. The bank check's findings are presented grouped by activity, each with its label. The instructor keeps or cuts; the agent makes the cuts, deleting a question's section from both its task file and its rubric file, or a scenario's two files, in the bank folders on the unpushed branch. Once this stop is done the branch may be pushed.</bpmn:documentation>
+          <bpmn:incoming>c_b13</bpmn:incoming>
+          <bpmn:outgoing>c_b14</bpmn:outgoing>
+        </bpmn:userTask>
+        <bpmn:exclusiveGateway id="C_fault" name="a generator&#10;at fault?" default="c_b16">
+          <bpmn:documentation>workflows/learn/skills/curation/SKILL.md, the course path, stop 2. That generator goes back to stop 1. Once it is settled only its activity's scenarios are redrafted, after cutting the ones it got wrong, and only they are checked again; the other banks wait where they are.</bpmn:documentation>
+          <bpmn:incoming>c_b14</bpmn:incoming>
+          <bpmn:outgoing>c_b15</bpmn:outgoing>
+          <bpmn:outgoing>c_b16</bpmn:outgoing>
+        </bpmn:exclusiveGateway>
+        <bpmn:exclusiveGateway id="C_land_merge">
+          <bpmn:incoming>c_plain</bpmn:incoming>
+          <bpmn:incoming>c_b16</bpmn:incoming>
+          <bpmn:outgoing>c_land</bpmn:outgoing>
+        </bpmn:exclusiveGateway>
         <bpmn:scriptTask id="C_clear" name="Clear the queue: curated, or blocked&#10;record-status.mjs">
           <bpmn:documentation>workflows/learn/skills/curation/SKILL.md, step 6, through workflows/learn/tools/record-status.mjs. Every goal this phase was invited for gets exactly one line: `curated` for one that now has live entries, including a word, which the `a-words` entry written in step 0 serves, and `blocked … needs: goal-setting` for one nothing could be built for, with what would have to change. There is no third outcome. A goal left on the queue is a goal learn invites this phase back for, silently, forever, with nobody present to fix what is actually wrong with it; that dead end is what the status log was built to close.</bpmn:documentation>
-          <bpmn:incoming>c12</bpmn:incoming>
+          <bpmn:incoming>c_land</bpmn:incoming>
           <bpmn:outgoing>c16</bpmn:outgoing>
           <bpmn:property id="Property_c_clear" name="__targetRef_placeholder" />
           <bpmn:dataInputAssociation id="a_clear_goals">
@@ -595,7 +696,34 @@
         <bpmn:sequenceFlow id="c9" sourceRef="C_record" targetRef="C_pass" />
         <bpmn:sequenceFlow id="c10" name="no" sourceRef="C_pass" targetRef="C_merge" />
         <bpmn:sequenceFlow id="c11" name="yes" sourceRef="C_pass" targetRef="C_annotate" />
-        <bpmn:sequenceFlow id="c12" sourceRef="C_annotate" targetRef="C_clear" />
+        <bpmn:sequenceFlow id="c12" sourceRef="C_annotate" targetRef="C_course" />
+        <bpmn:sequenceFlow id="c_plain" name="no" sourceRef="C_course" targetRef="C_land_merge" />
+        <bpmn:sequenceFlow id="c_bank" name="yes" sourceRef="C_course" targetRef="C_sample_merge">
+          <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">the topic's origin is course, read from the origin line in goals.md, and the instructor invoked curation in this session, said the run is theirs and is there to review. If nobody said so, it is not theirs</bpmn:conditionExpression>
+        </bpmn:sequenceFlow>
+        <bpmn:sequenceFlow id="c_b1" sourceRef="C_sample_merge" targetRef="C_sample" />
+        <bpmn:sequenceFlow id="c_b2" sourceRef="C_sample" targetRef="C_review_merge" />
+        <bpmn:sequenceFlow id="c_b3" sourceRef="C_review_merge" targetRef="C_gen_review" />
+        <bpmn:sequenceFlow id="c_b4" sourceRef="C_gen_review" targetRef="C_settled" />
+        <bpmn:sequenceFlow id="c_b5" name="no" sourceRef="C_settled" targetRef="C_revise">
+          <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">the instructor's reaction to a sample asks for a change to its generator</bpmn:conditionExpression>
+        </bpmn:sequenceFlow>
+        <bpmn:sequenceFlow id="c_b6" sourceRef="C_revise" targetRef="C_sample_merge" />
+        <bpmn:sequenceFlow id="c_b7" name="yes" sourceRef="C_settled" targetRef="C_draft_merge" />
+        <bpmn:sequenceFlow id="c_b8" sourceRef="C_draft_merge" targetRef="C_draft" />
+        <bpmn:sequenceFlow id="c_b9" sourceRef="C_draft" targetRef="C_survey" />
+        <bpmn:sequenceFlow id="c_b10" sourceRef="C_survey" targetRef="C_problems" />
+        <bpmn:sequenceFlow id="c_b11" name="yes" sourceRef="C_problems" targetRef="C_draft_merge">
+          <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">survey reports problems in a bank: handed back to that activity's drafter, in full mode, until there are none</bpmn:conditionExpression>
+        </bpmn:sequenceFlow>
+        <bpmn:sequenceFlow id="c_b12" name="no" sourceRef="C_problems" targetRef="C_bank_check" />
+        <bpmn:sequenceFlow id="c_b13" sourceRef="C_bank_check" targetRef="C_keep" />
+        <bpmn:sequenceFlow id="c_b14" sourceRef="C_keep" targetRef="C_fault" />
+        <bpmn:sequenceFlow id="c_b15" name="yes" sourceRef="C_fault" targetRef="C_review_merge">
+          <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">a finding is marked generator, or the instructor reads one that way</bpmn:conditionExpression>
+        </bpmn:sequenceFlow>
+        <bpmn:sequenceFlow id="c_b16" name="no" sourceRef="C_fault" targetRef="C_land_merge" />
+        <bpmn:sequenceFlow id="c_land" sourceRef="C_land_merge" targetRef="C_clear" />
         <bpmn:sequenceFlow id="c16" sourceRef="C_clear" targetRef="C_blocked" />
         <bpmn:sequenceFlow id="c13" name="no" sourceRef="C_blocked" targetRef="C_end_ready" />
         <bpmn:sequenceFlow id="c14" name="yes" sourceRef="C_blocked" targetRef="C_end_blocked" />
@@ -610,6 +738,9 @@
         <bpmn:dataObjectReference id="DOR_c_status" name="status.jsonl" dataObjectRef="DO_status" />
         <bpmn:dataObjectReference id="DOR_c_tasks" name="tasks/" dataObjectRef="DO_tasks" />
         <bpmn:dataObject id="DO_tasks" />
+        <bpmn:dataObjectReference id="DOR_c_tasks2" name="tasks/" dataObjectRef="DO_tasks" />
+        <bpmn:dataObjectReference id="DOR_c_rubrics" name="rubrics/" dataObjectRef="DO_c_rubrics" />
+        <bpmn:dataObject id="DO_c_rubrics" />
       </bpmn:subProcess>
       <bpmn:subProcess id="Sub_learn" name="Learn">
         <bpmn:documentation>workflows/learn/skills/study/SKILL.md — guide: workflows/learn/guides/study/howto.md</bpmn:documentation>
@@ -2517,13 +2648,13 @@
   <bpmndi:BPMNDiagram id="D_curate">
     <bpmndi:BPMNPlane id="Pl_curate" bpmnElement="Sub_curate">
       <bpmndi:BPMNShape id="L_cur_p_di" bpmnElement="L_cur_p" isHorizontal="true" color:background-color="#eef5f4" color:border-color="#7a918d">
-        <dc:Bounds x="160" y="570" width="1730" height="90" />
+        <dc:Bounds x="160" y="570" width="3980" height="130" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="L_cur_a_di" bpmnElement="L_cur_a" isHorizontal="true" color:background-color="#fdf7ee" color:border-color="#9c8d76">
-        <dc:Bounds x="160" y="170" width="1730" height="400" />
+        <dc:Bounds x="160" y="170" width="3980" height="400" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="L_cur_h_di" bpmnElement="L_cur_h" isHorizontal="true" color:background-color="#fdf3f7" color:border-color="#9c8490">
-        <dc:Bounds x="160" y="80" width="1730" height="90" />
+        <dc:Bounds x="160" y="20" width="3980" height="150" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="C_start_di" bpmnElement="C_start">
         <dc:Bounds x="200" y="332" width="36" height="36" />
@@ -2565,24 +2696,24 @@
         <dc:Bounds x="1500" y="310" width="170" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="C_clear_di" bpmnElement="C_clear">
-        <dc:Bounds x="1400" y="575" width="220" height="80" />
+        <dc:Bounds x="3730" y="575" width="220" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="C_blocked_di" bpmnElement="C_blocked" isMarkerVisible="true">
-        <dc:Bounds x="1710" y="325" width="50" height="50" />
+        <dc:Bounds x="3980" y="325" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1681" y="315" width="38" height="27" />
+          <dc:Bounds x="3951" y="315" width="38" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="C_end_ready_di" bpmnElement="C_end_ready">
-        <dc:Bounds x="1772" y="246" width="36" height="36" />
+        <dc:Bounds x="4042" y="246" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1761" y="226" width="59" height="14" />
+          <dc:Bounds x="4031" y="226" width="59" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="C_end_blocked_di" bpmnElement="C_end_blocked">
-        <dc:Bounds x="1772" y="426" width="36" height="36" />
+        <dc:Bounds x="4042" y="426" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1716" y="468" width="72" height="40" />
+          <dc:Bounds x="3986" y="468" width="72" height="40" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="DOR_c_goals1_di" bpmnElement="DOR_c_goals1" color:background-color="#eaf2fb">
@@ -2628,15 +2759,15 @@
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="DOR_c_goals4_di" bpmnElement="DOR_c_goals4" color:background-color="#eaf2fb">
-        <dc:Bounds x="1490" y="470" width="36" height="50" />
+        <dc:Bounds x="3820" y="470" width="36" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1486" y="524" width="45" height="14" />
+          <dc:Bounds x="3816" y="524" width="45" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="DOR_c_status_di" bpmnElement="DOR_c_status" color:background-color="#f0eef7">
-        <dc:Bounds x="1550" y="470" width="36" height="50" />
+        <dc:Bounds x="3880" y="470" width="36" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1536" y="524" width="64" height="14" />
+          <dc:Bounds x="3866" y="524" width="64" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="DOR_c_tasks_di" bpmnElement="DOR_c_tasks" color:background-color="#f2f0e6">
@@ -2697,12 +2828,12 @@
         <di:waypoint x="1456" y="495" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="a_clear_goals_di" bpmnElement="a_clear_goals">
-        <di:waypoint x="1508" y="520" />
-        <di:waypoint x="1508" y="575" />
+        <di:waypoint x="3838" y="520" />
+        <di:waypoint x="3838" y="575" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="a_clear_status_di" bpmnElement="a_clear_status">
-        <di:waypoint x="1568" y="575" />
-        <di:waypoint x="1568" y="520" />
+        <di:waypoint x="3898" y="575" />
+        <di:waypoint x="3898" y="520" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="c1_di" bpmnElement="c1">
         <di:waypoint x="236" y="350" />
@@ -2765,30 +2896,222 @@
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="c12_di" bpmnElement="c12">
-        <di:waypoint x="1615" y="390" />
-        <di:waypoint x="1615" y="575" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="c16_di" bpmnElement="c16">
-        <di:waypoint x="1620" y="615" />
-        <di:waypoint x="1690" y="615" />
-        <di:waypoint x="1690" y="350" />
+        <di:waypoint x="1670" y="350" />
         <di:waypoint x="1710" y="350" />
       </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="c16_di" bpmnElement="c16">
+        <di:waypoint x="3950" y="615" />
+        <di:waypoint x="3960" y="615" />
+        <di:waypoint x="3960" y="350" />
+        <di:waypoint x="3980" y="350" />
+      </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="c13_di" bpmnElement="c13">
-        <di:waypoint x="1735" y="325" />
-        <di:waypoint x="1735" y="264" />
-        <di:waypoint x="1772" y="264" />
+        <di:waypoint x="4005" y="325" />
+        <di:waypoint x="4005" y="264" />
+        <di:waypoint x="4042" y="264" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1745" y="283" width="13" height="14" />
+          <dc:Bounds x="4015" y="283" width="13" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="c14_di" bpmnElement="c14">
-        <di:waypoint x="1735" y="375" />
-        <di:waypoint x="1735" y="444" />
-        <di:waypoint x="1772" y="444" />
+        <di:waypoint x="4005" y="375" />
+        <di:waypoint x="4005" y="444" />
+        <di:waypoint x="4042" y="444" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1743" y="381" width="18" height="14" />
+          <dc:Bounds x="4013" y="381" width="18" height="14" />
         </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="C_course_di" bpmnElement="C_course" isMarkerVisible="true">
+        <dc:Bounds x="1710" y="325" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1683" y="283" width="104" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="C_sample_merge_di" bpmnElement="C_sample_merge" isMarkerVisible="true">
+        <dc:Bounds x="1800" y="325" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="C_sample_di" bpmnElement="C_sample">
+        <dc:Bounds x="1890" y="310" width="170" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="C_review_merge_di" bpmnElement="C_review_merge" isMarkerVisible="true">
+        <dc:Bounds x="2100" y="100" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="C_gen_review_di" bpmnElement="C_gen_review">
+        <dc:Bounds x="2190" y="85" width="190" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="C_settled_di" bpmnElement="C_settled" isMarkerVisible="true">
+        <dc:Bounds x="2420" y="100" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2415" y="66" width="60" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="C_revise_di" bpmnElement="C_revise">
+        <dc:Bounds x="2210" y="422" width="170" height="76" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="C_draft_merge_di" bpmnElement="C_draft_merge" isMarkerVisible="true">
+        <dc:Bounds x="2520" y="325" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="C_draft_di" bpmnElement="C_draft">
+        <dc:Bounds x="2610" y="310" width="170" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="C_survey_di" bpmnElement="C_survey">
+        <dc:Bounds x="2820" y="575" width="170" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="C_problems_di" bpmnElement="C_problems" isMarkerVisible="true">
+        <dc:Bounds x="3030" y="325" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2970" y="290" width="52" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="C_bank_check_di" bpmnElement="C_bank_check">
+        <dc:Bounds x="3130" y="310" width="180" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="C_keep_di" bpmnElement="C_keep">
+        <dc:Bounds x="3350" y="85" width="170" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="C_fault_di" bpmnElement="C_fault" isMarkerVisible="true">
+        <dc:Bounds x="3560" y="100" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3545" y="156" width="60" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="C_land_merge_di" bpmnElement="C_land_merge" isMarkerVisible="true">
+        <dc:Bounds x="3630" y="590" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_c_tasks2_di" bpmnElement="DOR_c_tasks2" color:background-color="#f2f0e6">
+        <dc:Bounds x="2630" y="450" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2633" y="504" width="32" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_c_rubrics_di" bpmnElement="DOR_c_rubrics" color:background-color="#fbeee6">
+        <dc:Bounds x="2720" y="450" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2716" y="504" width="44" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="a_draft_tasks_di" bpmnElement="a_draft_tasks">
+        <di:waypoint x="2648" y="390" />
+        <di:waypoint x="2648" y="450" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="a_draft_rubrics_di" bpmnElement="a_draft_rubrics">
+        <di:waypoint x="2738" y="390" />
+        <di:waypoint x="2738" y="450" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="c_plain_di" bpmnElement="c_plain">
+        <di:waypoint x="1735" y="375" />
+        <di:waypoint x="1735" y="685" />
+        <di:waypoint x="3655" y="685" />
+        <di:waypoint x="3655" y="640" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1742" y="385" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="c_bank_di" bpmnElement="c_bank">
+        <di:waypoint x="1760" y="350" />
+        <di:waypoint x="1800" y="350" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1768" y="333" width="18" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="c_b1_di" bpmnElement="c_b1">
+        <di:waypoint x="1850" y="350" />
+        <di:waypoint x="1890" y="350" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="c_b2_di" bpmnElement="c_b2">
+        <di:waypoint x="1975" y="310" />
+        <di:waypoint x="1975" y="125" />
+        <di:waypoint x="2100" y="125" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="c_b3_di" bpmnElement="c_b3">
+        <di:waypoint x="2150" y="125" />
+        <di:waypoint x="2190" y="125" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="c_b4_di" bpmnElement="c_b4">
+        <di:waypoint x="2380" y="125" />
+        <di:waypoint x="2420" y="125" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="c_b5_di" bpmnElement="c_b5">
+        <di:waypoint x="2445" y="150" />
+        <di:waypoint x="2445" y="460" />
+        <di:waypoint x="2380" y="460" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2450" y="160" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="c_b6_di" bpmnElement="c_b6">
+        <di:waypoint x="2210" y="460" />
+        <di:waypoint x="1825" y="460" />
+        <di:waypoint x="1825" y="375" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="c_b7_di" bpmnElement="c_b7">
+        <di:waypoint x="2470" y="125" />
+        <di:waypoint x="2495" y="125" />
+        <di:waypoint x="2495" y="350" />
+        <di:waypoint x="2520" y="350" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2474" y="106" width="18" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="c_b8_di" bpmnElement="c_b8">
+        <di:waypoint x="2570" y="350" />
+        <di:waypoint x="2610" y="350" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="c_b9_di" bpmnElement="c_b9">
+        <di:waypoint x="2780" y="350" />
+        <di:waypoint x="2905" y="350" />
+        <di:waypoint x="2905" y="575" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="c_b10_di" bpmnElement="c_b10">
+        <di:waypoint x="2990" y="615" />
+        <di:waypoint x="3055" y="615" />
+        <di:waypoint x="3055" y="375" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="c_b11_di" bpmnElement="c_b11">
+        <di:waypoint x="3055" y="325" />
+        <di:waypoint x="3055" y="250" />
+        <di:waypoint x="2545" y="250" />
+        <di:waypoint x="2545" y="325" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3062" y="285" width="18" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="c_b12_di" bpmnElement="c_b12">
+        <di:waypoint x="3080" y="350" />
+        <di:waypoint x="3130" y="350" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3093" y="333" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="c_b13_di" bpmnElement="c_b13">
+        <di:waypoint x="3310" y="350" />
+        <di:waypoint x="3435" y="350" />
+        <di:waypoint x="3435" y="165" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="c_b14_di" bpmnElement="c_b14">
+        <di:waypoint x="3520" y="125" />
+        <di:waypoint x="3560" y="125" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="c_b15_di" bpmnElement="c_b15">
+        <di:waypoint x="3585" y="100" />
+        <di:waypoint x="3585" y="38" />
+        <di:waypoint x="2125" y="38" />
+        <di:waypoint x="2125" y="100" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3590" y="70" width="18" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="c_b16_di" bpmnElement="c_b16">
+        <di:waypoint x="3610" y="125" />
+        <di:waypoint x="3655" y="125" />
+        <di:waypoint x="3655" y="590" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3620" y="108" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="c_land_di" bpmnElement="c_land">
+        <di:waypoint x="3680" y="615" />
+        <di:waypoint x="3730" y="615" />
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
