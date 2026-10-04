@@ -60,8 +60,8 @@ been merged or pushed.
    quiz too, and simply records the attempt as not independent (`unaided: no`). For work done in
    a web page the student knows whether they got help, so there is little room for
    self-deception. Bounded change (skill text); design in chat, then implement.
-5. ~~**Sequenced sets of goals.**~~ Done, `9332b07`, `f7beb10` and the commit that taught
-   goal-setting and study the sequence. Spec `specs/2026-10-04-goal-sequence-design.md`. A
+5. ~~**Sequenced sets of goals.**~~ Done, `9332b07`, `f7beb10`, `2f20d5b` and `6b023e3` (which
+   taught goal-setting and study the sequence), and `3e8b2e6` (the final fix wave). Spec `specs/2026-10-04-goal-sequence-design.md`. A
    `## Sequence` section in goals.md, `next-goal.mjs` for study, survey problems for an item
    that matches nothing, a goal in two sets and a goal in none. Migration is under "Actions on
    the learning-topics repository".
