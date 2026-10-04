@@ -13,8 +13,9 @@ been merged or pushed.
   test cycle, run with fresh implementer and reviewer subagents; a whole-phase review at the end
   on the most capable model, then one fix wave and one re-review. The working ledger lives in
   `.superpowers/sdd/<plan>/` (gitignored, deleted when the plan finishes).
-- **Rulings.** Decisions made without the instructor go in a committed rulings file
-  (`rulings-unified-banks.md` for item 3) with what each costs if wrong.
+- **Rulings.** Decisions made without the instructor go in a committed rulings file, with what
+  each costs if wrong, deleted once the instructor has reviewed it (item 3's was
+  `rulings-unified-banks.md`, reviewed and deleted; see git history).
 - **Checks.** Tests: `node --test 'workflows/*/tools/test/*.test.mjs'`; add
   `SOURCES_ROOT=/Users/presnick/Documents/Documents/code/2026` so the pool compatibility test
   compares real pools. Skills: `node workflows/develop/tools/check-skills.mjs`. Diagrams:
@@ -40,10 +41,10 @@ been merged or pushed.
    - ~~Phase 3: vocabulary as `a-words`, `supply` retired, `migrate-words.mjs`.~~ Done,
      `4785f33..0761ad8`.
    - ~~Phase 4: curation with two instructor stops.~~ Done, `64a432a..6e380de`.
-   - Rulings made during phases 3 to 5 are in `rulings-unified-banks.md`, for review. Reviewed
-     so far: phase 3 ruling 6 (the instructor chose hyphens after every entry-point name and no
-     dashes in descriptions; done in `eecd4ff`, `d6f1ba1`); phase 5 rulings 3 and 4 accepted.
-     The instructor also asked that `CONTRACT.md` be deleted (DRY); done in `ecc362c`.
+   - The rulings made during phases 3 to 5 have been reviewed by the instructor. Changes that
+     came out of the review: hyphens after every entry-point name and no dashes in descriptions
+     (`eecd4ff`, `d6f1ba1`); `CONTRACT.md` deleted, its lasting facts moved into the libraries'
+     header comments (`ecc362c`).
    - ~~Phase 5: quiz.~~ Done, `34f264c..ecc362c`. Plan
      `plans/2026-10-03-unified-banks-phase-5.md`. Folder ids are qualified on the quiz path;
      pool keys work at topic, activity and scenario level; practice prefers unseen questions;
