@@ -9,27 +9,30 @@
 //
 // NOTHING HERE WRITES. Callers do that.
 
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { applySlots, isRequired, suppliesItsOwn, DEFAULT_GROUP } from './slots.mjs';
+import { applySlots, ORIGINS, isRequired, DEFAULT_GROUP } from './slots.mjs';
 import { met, describeAttempts } from './bars.mjs';
 import { readStatus, foldStatus } from './status.mjs';
+import { readFolderBanks } from '../../../quiz/tools/lib/bank.mjs';
 
 // --- what a log line looks like ----------------------------------------------
 // One JSON object per line in evidence/attempts.jsonl, appended and never rewritten.
 //
 //   at          ISO timestamp
 //   goal        the id from goals.md — a capability, a word, an orientation, all the same here
-//   label       what the supply served, in the supply's own words. OPAQUE: nothing but the
-//               supply that wrote it may parse it, which is what makes free-form safe. For the
-//               curated supply it happens to be the activity id, and a bank item after a slash
-//   tags        from the system-wide closed set in slots.mjs. The one structured thing a supply
-//               returns, and the only part of what it served that `bar` may read
+//   label       what the activity served, in its own words. OPAQUE: nothing but the activity
+//               that wrote it may parse it, which is what makes free-form safe. For a banked
+//               question it is the question's path, which the picker matches; for an activity
+//               run without a bank, the entry id; for a vocabulary move set live, the move
+//   tags        from the system-wide closed set in slots.mjs. The one structured thing an
+//               activity returns, and the only part of what it served that `bar` may read
 //   source      study | review | scan
 //   unaided     yes | no | unclear                        \  the adjudicator's two axes,
 //   criterion   met | not met | unclear | unchecked        /  passed through raw
-//   outcome     abandoned | declared — the caller's own observation, when there was no attempt
-//               to rule on or the learner asserted it themselves. Exclusive with the two axes
+//   outcome     abandoned | declared | elsewhere: the caller's own observation, when there was
+//               no attempt to rule on or the learner asserted it themselves. Exclusive with
+//               the two axes
 //   note        optional free text, e.g. why they stopped
 //
 // THE AXES ARE STORED RAW AND NEVER COLLAPSED ON THE WAY IN. What reads a verdict back out —
@@ -128,11 +131,111 @@ const listField = (value) =>
 
 const GOALS_HEADING = /^##\s+Goals\s*$/m;
 
+// ORIGIN IS SET ONCE FOR THE TOPIC, in a `**origin:** course` line between the title and
+// `## Goals`, and each goal inherits it unless it writes its own. Whether the goal wrote one is
+// read off the raw fields, because applySlots fills the default in and then "absent" and
+// "wrote learner" look the same. An unknown header value reads as `learner`, the safe
+// direction, and idProblems reports it. Comments are stripped first, as entries() does, so a
+// line in the template's guidance comment is not read as the header. A line that starts
+// `**origin:**` but isn't one word is returned as `malformed`, so idProblems can say so
+// instead of the topic silently reading as learner.
+function headerOrigin(text) {
+  const at = text.search(GOALS_HEADING);
+  const head = (at === -1 ? text : text.slice(0, at)).replace(/<!--[\s\S]*?-->/g, '');
+  const m = head.match(/^\*\*origin:\*\*\s*(\S+)\s*$/m);
+  if (m) return { value: m[1], malformed: null };
+  const bad = head.match(/^\*\*origin:\*\*.*$/m);
+  return { value: null, malformed: bad ? bad[0].trim() : null };
+}
+
 export function readGoals(dir) {
   const file = join(dir, 'goals.md');
-  if (!existsSync(file)) return { goals: [] };
+  if (!existsSync(file)) return { goals: [], origin: 'learner' };
   const text = readFileSync(file, 'utf8');
-  return { goals: entries(section(text, GOALS_HEADING)).map((e) => applySlots(e.id, e.fields)) };
+  const { value: written, malformed } = headerOrigin(text);
+  const origin = written && Object.hasOwn(ORIGINS, written) ? written : 'learner';
+  const goals = entries(section(text, GOALS_HEADING)).map((e) => {
+    const goal = applySlots(e.id, e.fields);
+    if (!e.fields.origin) goal.origin = origin;
+    return goal;
+  });
+  return { goals, origin, written, malformed };
+}
+
+// --- the sequence ------------------------------------------------------------
+// `## Sequence`, just above `## Goals`: a numbered list, one line per set, earliest first. An item is
+// a group, a capability slug or a goal id, written as the goals write them.
+//
+// A GOAL'S SET IS ITS MOST SPECIFIC MENTION: its id, else its capability slug, else its group. A
+// word added later therefore lands wherever its group is listed, with no edit here or in
+// goals.md. An item is checked against what it can name, not against which of the three it is,
+// so a group and a slug with one name are one item that matches both.
+//
+// NO SECTION IS A DECISION NOT YET MADE, NOT A DEFECT, so it raises no problem and `decided` is
+// false. The order used meanwhile is the three standard groups, then any other in order of first
+// appearance. A topic that has the section must place every goal: there is no catch-all.
+//
+// ANY ITEM LISTED IN TWO SETS IS REPORTED, whether a goal id, a slug or a group. For a goal id
+// it is a contradiction; for a slug or a group the first mention wins (findIndex below), so
+// the second can never place anything and is dead text, most likely a slip.
+//
+// THE THREE STANDARD GROUPS ARE ALWAYS VALID ITEMS, even with no goal in them yet, because the
+// template's default lists all three before a word or a capability exists. Any other name must
+// still match a group, slug or goal id.
+const SEQUENCE_HEADING = /^##\s+Sequence\s*$/m;
+const DEFAULT_SEQUENCE = ['orientation', 'vocabulary', 'capabilities'];
+
+export function readSequence(dir, goals) {
+  const file = join(dir, 'goals.md');
+  const text = existsSync(file) ? readFileSync(file, 'utf8').replace(/<!--[\s\S]*?-->/g, '') : '';
+
+  if (!SEQUENCE_HEADING.test(text)) {
+    const groups = [...new Set(goals.map((g) => g.group))];
+    const order = [...DEFAULT_SEQUENCE, ...groups.filter((n) => !DEFAULT_SEQUENCE.includes(n))];
+    const all = order.map((name) => ({ name, ids: goals.filter((g) => g.group === name).map((g) => g.id) }));
+    const kept = all.filter((x) => x.ids.length);
+    return { decided: false, sets: kept.map((x) => x.ids), items: kept.map((x) => [x.name]), problems: [] };
+  }
+
+  const problems = [];
+  const lines = [];
+  const body = section(text, SEQUENCE_HEADING);
+  // AN ENTRY INSIDE THIS SECTION IS NOT A GOAL: readGoals reads only `## Goals`. Say so rather
+  // than let it vanish.
+  for (const e of entries(body))
+    problems.push(`${e.id} is written inside the Sequence section, where it is not read as a goal; move it under ## Goals`);
+  for (const line of body.split('\n')) {
+    const m = line.match(/^\s*\d+\.\s+(.*)$/);
+    if (m) lines.push(listField(m[1]));
+  }
+
+  const names = new Set();
+  for (const g of goals) for (const n of [g.id, g.capability, g.group]) if (n) names.add(n);
+  for (const n of DEFAULT_SEQUENCE) names.add(n);
+  const listed = new Map();
+  lines.forEach((items, i) => {
+    for (const item of items) {
+      if (!names.has(item)) problems.push(`Sequence names ${item}, which is no group, capability or goal`);
+      if (!listed.has(item)) listed.set(item, new Set());
+      listed.get(item).add(i);
+    }
+  });
+  for (const [id, at] of listed)
+    if (at.size > 1) problems.push(`Sequence lists ${id} in two sets`);
+
+  const sets = lines.map(() => []);
+  for (const g of goals) {
+    if (!g.id) continue;
+    const first = (name) => (name ? lines.findIndex((items) => items.includes(name)) : -1);
+    let at = first(g.id);
+    if (at === -1) at = first(g.capability);
+    if (at === -1) at = first(g.group);
+    if (at === -1) problems.push(`${g.id} is in no set in the Sequence`);
+    else sets[at].push(g.id);
+  }
+  // `items` is each set's line as written, parallel to `sets`, so a reader can name a set that
+  // has no goal in it yet.
+  return { decided: true, sets, items: lines, problems };
 }
 
 // Every goal in the topic, keyed by id.
@@ -144,22 +247,44 @@ export function readIds(dir) {
 
 // --- activities.md -----------------------------------------------------------
 // Three questions are asked of this file here: which entries are live, which goal each one
-// serves or checks, and which were stamped by curation rather than written by it. Everything
+// serves or checks, and which are legacy stamps rather than entries curation wrote. Everything
 // else about an entry is for a tutor to read, not a program.
 //
 // A dropped entry stays in the file — that field is the only feedback curation ever gets — so
 // "live" means present and not dropped, never merely present.
 //
-// `origin: generated` marks an entry curation stamped for a goal whose supply produces its own
-// activities. verify and critique skip those: there is no artifact to confirm and no menu to
-// judge, and dropping one would take the goal's only entry with it.
+// `origin: generated` marks a LEGACY stamp, written when a goal's supply produced its own
+// activities. The supply is retired and liveActivities skips these.
+
+// A `serves` item `group <name>` is expanded HERE into the ids of every goal in that group, in
+// goals.md order, so `serves` is always a list of goal ids and nothing downstream knows the form
+// exists. Expanding at read time is the point: a word added to the group later is covered with
+// no edit to activities.md. The names written come back as `servesGroups`, which is all
+// idProblems needs to report a group nobody is in. Only `serves` takes it; `checks` does not.
+const GROUP_ITEM = /^group\s+(\S+)$/;
+
+function expandServes(items, goals) {
+  const serves = [];
+  const servesGroups = [];
+  for (const item of items) {
+    const m = item.match(GROUP_ITEM);
+    if (!m) {
+      serves.push(item);
+      continue;
+    }
+    servesGroups.push(m[1]);
+    for (const g of goals) if (g.group === m[1]) serves.push(g.id);
+  }
+  return { serves, servesGroups };
+}
 
 export function readActivities(dir) {
   const file = join(dir, 'activities.md');
   if (!existsSync(file)) return [];
+  const { goals } = readGoals(dir);
   return entries(readFileSync(file, 'utf8')).map(({ id, fields }) => ({
     id,
-    serves: listField(fields.serves),
+    ...expandServes(listField(fields.serves), goals),
     checks: listField(fields.checks),
     origin: fields.origin ?? '',
     generated: /^generated\b/i.test(fields.origin ?? ''),
@@ -168,7 +293,13 @@ export function readActivities(dir) {
   }));
 }
 
-export const liveActivities = (dir) => readActivities(dir).filter((e) => !e.dropped);
+// LEGACY STAMPS ARE NOT LIVE. An `origin: generated` entry was written for a goal whose supply
+// produced its own activities; the supply is retired, so a stamp points at nothing the tutor can
+// run. It is skipped everywhere and never reported as an entry (idProblems still reports a stamp
+// that names a missing goal), which is also why a topic whose only entries
+// for its words are stamps still derives its phase from the entries that are real.
+export const liveActivities = (dir) =>
+  readActivities(dir).filter((e) => !e.dropped && !e.generated);
 
 // --- the lifecycle log -------------------------------------------------------
 // status.jsonl, folded. Its shape and the fold are in status.mjs; this is where the
@@ -197,7 +328,7 @@ export const isGoalRetired = (dir, goalId) => {
 // --- what has been served ----------------------------------------------------
 // The labels this goal has already been given, most recent first, unmodified.
 //
-// A label is a private channel between a supply and its future self: it wrote the string, it
+// A label is a private channel between an activity and its future self: it wrote the string, it
 // is the only thing that reads it, and the worst case if it repeats itself is "repeats
 // sometimes" rather than a wrong claim about learning. So this returns them and does nothing
 // else — no parsing, no grouping, no interpretation.
@@ -220,7 +351,7 @@ export function attemptsFor(dir, goal) {
 // --- the whole picture of one topic ------------------------------------------
 // What survey.mjs reports and review-due.mjs filters. Derived every time, stored nowhere.
 
-// Five phases, and `in review` is deliberately not one of them: a goal enters review the moment
+// Six phases, and `in review` is deliberately not one of them: a goal enters review the moment
 // it is met, while the rest of the topic is still being studied, so a topic is routinely both.
 export function derivePhase({ retired, goals, live, rows }) {
   if (retired) return 'retired';
@@ -239,12 +370,22 @@ export function derivePhase({ retired, goals, live, rows }) {
   // AND NOT THE RETIRED ONES, or a topic could never finish once a goal was given up. Note
   // `is_required: no` does not already cover this: that says the goal never blocked completion,
   // which is a different claim from the learner having stopped wanting it.
-  if (rows.filter((r) => isRequired(r) && !r.retired).every((r) => r.met)) return 'nothing pending';
+  const open = rows.filter((r) => isRequired(r) && !r.retired);
+
+  // WAITING ELSEWHERE: all that is left is what the learner said they will learn somewhere else.
+  // Nothing here can be studied, but the topic is not finished either, so the tutor's job is to
+  // check in. Checked before `nothing pending`, which it would otherwise be mistaken for.
+  if (open.every((r) => r.met || r.deferred) && open.some((r) => r.deferred))
+    return 'waiting elsewhere';
+
+  if (open.every((r) => r.met)) return 'nothing pending';
 
   if (goals.length && !live.length) return 'in curation';
 
   return 'studying';
 }
+
+const CAPABILITY_SLUG = /^[a-z0-9]+(-[a-z0-9]+){1,3}$/;
 
 // Groups exist because goals name them. No declaration, no properties, no report strategy —
 // the name is the label and the report is always count-then-list. Default group first, then
@@ -263,8 +404,21 @@ function groupRows(rows) {
   return order.map((name) => {
     const goals = byName.get(name);
     const active = goals.filter((g) => !g.retired);
+
+    // PARTS OF ONE CAPABILITY, in order of first appearance, by the same rule as the group
+    // fraction: a retired part leaves both halves, a deferred one stays in the total. `goals`
+    // below is untouched, so everything that reads it sees what it always did.
+    const capabilities = [];
+    for (const g of active) {
+      if (!g.capability) continue;
+      let cap = capabilities.find((c) => c.slug === g.capability);
+      if (!cap) capabilities.push((cap = { slug: g.capability, met: 0, total: 0 }));
+      cap.total++;
+      if (g.met) cap.met++;
+    }
     return {
       name,
+      capabilities,
       // A RETIRED GOAL LEAVES BOTH HALVES OF THE FRACTION. `vocabulary 7/12` with one given up
       // is `7/11`, not `7/12` with an unreachable twelfth. A GOAL YOU ABANDONED IS NOT A GOAL
       // YOU FAILED, and a denominator that keeps counting it says otherwise every time the
@@ -272,12 +426,15 @@ function groupRows(rows) {
       // `11/12` where the twelfth never can be is a number that can only ever disappoint.
       met: active.filter((g) => g.met).length,
       total: active.length,
-      // UNMET FIRST, THEN MET, THEN RETIRED. Everything is listed — seeing the finished ones is
-      // half of what a progress report is for — but what is left comes first, where someone
-      // deciding what to do next will look. The retired ones are neither outstanding nor
-      // achievements, so they go last. Original order within each part.
+      // UNMET FIRST, THEN DEFERRED, THEN MET, THEN RETIRED. Everything is listed (seeing the
+      // finished ones is half of what a progress report is for), but what is left comes first,
+      // where someone deciding what to do next will look. A deferred goal is not work for this
+      // sitting but is not done either, so it sits between the two, and it stays in `total`.
+      // The retired ones are neither outstanding nor achievements, so they go last. Original
+      // order within each part.
       goals: [
-        ...active.filter((g) => !g.met),
+        ...active.filter((g) => !g.met && !g.deferred),
+        ...active.filter((g) => g.deferred),
         ...active.filter((g) => g.met),
         ...goals.filter((g) => g.retired),
       ],
@@ -286,7 +443,7 @@ function groupRows(rows) {
 }
 
 export function surveyTopic(dir) {
-  const { goals } = readGoals(dir);
+  const { goals, origin } = readGoals(dir);
   const log = readLog(dir);
   const live = liveActivities(dir);
   const status = statusOf(dir);
@@ -294,10 +451,13 @@ export function surveyTopic(dir) {
 
   const rows = goals.map((goal) => {
     const attempts = log.filter((r) => r.goal === goal.id);
+    const isMet = goal.problems.length ? false : met(goal, attempts);
+    const isRetired = status.retiredGoals.has(goal.id);
     return {
       id: goal.id,
       text: goal.text,
       group: goal.group,
+      capability: goal.capability,
       is_required: goal.is_required,
       // The learner's own words, or null. GOAL-SCOPED ONLY — a retired topic keeps its goals'
       // rows intact, so `retired with everything met` and `retired with nothing attempted` stay
@@ -305,17 +465,37 @@ export function surveyTopic(dir) {
       // consumers deciding whether to offer something.
       retired: status.retiredGoals.get(goal.id) ?? null,
       // ONE CODE PATH, no branch on what kind of goal it is. The dispatch is on its own `bar`.
-      met: goal.problems.length ? false : met(goal, attempts),
+      met: isMet,
+      // WHERE THE LEARNER SAYS THEY WILL LEARN IT, or null. MET AND RETIRED WIN: a goal that has
+      // been passed, or given up, is no longer waiting on anything, whatever the log last said
+      // about a deferral.
+      deferred: isMet || isRetired ? null : (status.deferredGoals.get(goal.id) ?? null),
+      // EVER RESUMED, whatever the goal's state now. The study tutor reads this to tell a goal the
+      // learner already chose to do here from one it has not yet offered the first-encounter menu.
+      resumed: status.resumedGoals.has(goal.id),
       attempts: attempts.length,
       last: describeAttempts(attempts),
     };
   });
 
+  // `current` IS THE FIRST SET WITH AN OPEN GOAL. Retired, deferred and met goals stay listed, so a
+  // reader can draw the whole sequence, but none of them is work for this sitting.
+  const sequence = readSequence(dir, goals);
+  const byId = new Map(rows.map((r) => [r.id, r]));
+  const stateOf = (r) => (r.retired ? 'retired' : r.deferred ? 'deferred' : r.met ? 'met' : 'open');
+  const sets = sequence.sets.map((ids, i) => ({
+    goals: ids.map((id) => ({ id, state: stateOf(byId.get(id)) })),
+    items: sequence.items[i],
+  }));
+  const current = sets.findIndex((s) => s.goals.some((g) => g.state === 'open'));
+
   return {
     dir,
     phase: derivePhase({ retired, goals, live, rows }),
     retired,
+    origin,
     groups: groupRows(rows),
+    sequence: { decided: sequence.decided, sets, current: current === -1 ? null : current },
     lastTouched: log.length ? log[log.length - 1].at.slice(0, 10) : null,
     // What is waiting, and whether the learner is needed for it. `learn` splits on `needs`:
     // `curation` is agent-only and gets spawned in the background, `goal-setting` goes on the
@@ -339,9 +519,14 @@ export function surveyTopic(dir) {
 // nothing implements is a goal nobody can record an attempt against, and record-attempt.mjs
 // refuses it there rather than writing a line about a goal it can't derive anything from.
 export function idProblems(dir, status = statusOf(dir)) {
-  const { goals } = readGoals(dir);
+  const { goals, written, malformed } = readGoals(dir);
   const found = [];
   const seen = new Map();
+
+  if (malformed) found.push(`goals.md has an origin line that isn't one word: "${malformed}"`);
+
+  if (written && !Object.hasOwn(ORIGINS, written))
+    found.push(`goals.md has origin: ${written}, which is not one of: ${Object.keys(ORIGINS).join(', ')}`);
 
   for (const goal of goals) {
     if (!goal.id) {
@@ -356,8 +541,23 @@ export function idProblems(dir, status = statusOf(dir)) {
     if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(goal.id))
       found.push(`goal ${goal.id} isn't an id — lower case, single hyphens between words`);
 
+    if (goal.capability && !CAPABILITY_SLUG.test(goal.capability))
+      found.push(
+        `${goal.id} has capability ${goal.capability}, which isn't a slug (two to four lower-case words with hyphens)`
+      );
+
     found.push(...goal.problems);
   }
+
+  found.push(...readSequence(dir, goals).problems);
+
+  // A capability is made of parts, so one goal alone under a slug is a grouping of nothing.
+  const parts = new Map();
+  for (const goal of goals)
+    if (goal.capability && CAPABILITY_SLUG.test(goal.capability))
+      parts.set(goal.capability, [...(parts.get(goal.capability) ?? []), goal.id]);
+  for (const [slug, ids] of parts)
+    if (ids.length === 1) found.push(`capability ${slug} has only one part (${ids[0]})`);
 
   for (const entry of readActivities(dir)) {
     if (seen.has(entry.id)) found.push(`${entry.id} is both an activity and a goal`);
@@ -365,16 +565,39 @@ export function idProblems(dir, status = statusOf(dir)) {
     for (const id of [...entry.serves, ...entry.checks])
       if (id !== 'all' && !seen.has(id))
         found.push(`${entry.id} names ${id}, which is not in goals.md`);
+    for (const name of entry.servesGroups)
+      if (!goals.some((g) => g.group === name))
+        found.push(`${entry.id} serves group ${name}, which no goal is in`);
+  }
 
-    // A stamp is for a goal whose supply produces its own activities. On any other goal it is
-    // a candidate nobody can run: the tutor would go looking for an instruction that the entry
-    // doesn't carry and no supply is going to return.
-    if (entry.generated)
-      for (const id of entry.checks)
-        if (seen.has(id) && !suppliesItsOwn(seen.get(id)))
-          found.push(
-            `${entry.id} is marked origin: generated, but ${id} has no supply that produces its own activities`
-          );
+  // A tasks/ folder with no entry is a bank nobody offers: no tutor method, no generator, and
+  // next-item.mjs refuses to serve it, so it is dead weight or a misnamed folder. Only
+  // directories count: a plain tasks/*.md is a single-file bank or a study artifact. Checked
+  // only where activities.md exists, since before curation there is nothing to be missing from.
+  if (existsSync(join(dir, 'activities.md'))) {
+    const entered = new Set(readActivities(dir).map((e) => e.id));
+    const tasks = join(dir, 'tasks');
+    if (existsSync(tasks))
+      for (const d of readdirSync(tasks, { withFileTypes: true }))
+        if (d.isDirectory() && !entered.has(d.name))
+          found.push(`tasks/${d.name}/ is a bank with no entry in activities.md`);
+  }
+
+  // FOLDER BANKS get a mechanical floor for curation: what readFolderBanks cannot parse, plus
+  // the two checks that need goals.md. A question naming a goal that isn't there can never be
+  // credited, and a multi-goal question whose credit has no `<id>`: statement for one of its
+  // goals leaves the grader nothing to judge that goal by. Only the credit text is searched: a
+  // scenario key or an answer that mentions `<id>`: is not a statement of what earns credit. mcq
+  // has no credit text, so it is exempt from the second. Single-file banks are untouched.
+  const banks = readFolderBanks(dir);
+  found.push(...banks.problems);
+  for (const item of banks.items) {
+    for (const id of item.goals)
+      if (!seen.has(id)) found.push(`${item.label} names goal ${id}, which is not in goals.md`);
+    if (item.goals.length < 2 || item.type === 'mcq') continue;
+    for (const id of item.goals)
+      if (!item.credit.includes(`\`${id}\`:`))
+        found.push(`${item.label} names goals ${item.goals.join(', ')} but its credit has no statement for ${id}`);
   }
 
   // The content files and the lifecycle queue can diverge, and the mitigation is that the

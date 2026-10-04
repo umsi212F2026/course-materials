@@ -40,6 +40,12 @@
   rename orphans everything recorded against it. An entry that becomes a genuinely different
   capability is a new entry with a new id, not a rename.
 
+  THE ORIGIN LINE. Only a topic the course ships carries one, as `**origin:** course` on its
+  own line between the title above and `## Goals`. Leave it out of a topic you built yourself:
+  absent means `learner`. Every goal inherits the topic's origin unless it carries an
+  `- **origin:**` of its own, which is how a goal a student adds to a course topic stays
+  theirs. survey.mjs reports a header value that is neither `course` nor `learner`.
+
   Words added by workflows/learn/tools/new-word.mjs carry ids too; that script takes the id and never invents
   one. See workflows/learn/skills/add-topic/SKILL.md.
 -->
@@ -71,6 +77,45 @@
   judge someone else's work. One line on why that's enough.
 -->
 
+## Sequence
+
+<!--
+  THE ORDER THE GOALS ARE TACKLED IN, decided by goal-setting. One numbered line per set,
+  earliest first, and no preferred order inside a set: the tutor chooses among a set's open
+  goals at random. Study offers from the first set that still has an open goal, and a learner
+  who wants a goal from a later set just says so.
+
+  THIS SECTION SITS ABOVE `## Goals` ON PURPOSE. The end of the file is then always the end of
+  Goals, so a goal appended there (new-word.mjs does) is never lost inside this section. Write
+  new entries under `## Goals`; a `###` entry written here is not read as a goal, and survey.mjs
+  says so.
+
+  AN ITEM IS A GROUP (`vocabulary`), A CAPABILITY SLUG (`weigh-hosting-plans`, naming all of
+  that capability's parts) OR A GOAL ID (`c-weigh-sleep`), separated by commas, backticks
+  allowed:
+
+      2. vocabulary, c-weigh-sleep
+
+  THE MOST SPECIFIC MENTION WINS. A goal goes in the set that lists its id; failing that, the
+  set that lists its capability slug; failing that, the first set that lists its group. So a
+  capability named by id can sit with the words, and a word named by id can come last. A word
+  added mid-topic lands wherever its group is listed, with no edit here. Any item listed in
+  two sets is reported: a goal can't be in two places, and a second mention of a slug or a
+  group can never place anything, since the first already has.
+
+  EVERY GOAL MUST LAND IN A SET. There is no catch-all, and a goal named nowhere is a problem
+  survey.mjs reports, as it does an item that matches nothing and an item listed in two sets.
+  The three standard groups, orientation, vocabulary and capabilities, may stay listed
+  while nothing is in them yet; any other name has to match a group, slug or goal. A topic
+  with no Sequence section at all is a decision not yet made, not a problem: it is worked in
+  the order orientation, vocabulary, capabilities, then any other group, until goal-setting
+  writes the section.
+-->
+
+1. orientation
+2. vocabulary
+3. capabilities
+
 ## Goals
 
 <!--
@@ -83,7 +128,8 @@
   before; a value nothing implements is refused at read time, by name. Every slot takes exactly
   one value.
 
-  EVERY SLOT DEFAULTS, and an ordinary capability carries none of them:
+  EVERY SLOT DEFAULTS, and an ordinary capability carries none of them (the eighth, `capability`,
+  has no default value: it is simply absent unless you write it):
 
       ### `c-read-unseen-diagram`
 
@@ -96,24 +142,23 @@
   will — but it has to say what's being examined, or whoever checks it later invents the
   object as well as the verdict.
 
-  A WORD carries four slots, and workflows/learn/tools/new-word.mjs writes them for you. Don't type them:
+  A WORD carries three slots, and workflows/learn/tools/new-word.mjs writes them for you. Don't type them:
 
       ### `w-schema`
 
       - **goal:** schema
       - **criterion:** vocabulary
-      - **supply:** vocabulary
       - **bar:** one production pass
       - **group:** vocabulary
       - **what it names:** the promised shape of the thing, not the thing
       - **nearest confusable:** type
       - **synonyms:** DDL
 
-  The last three are not slots — they are INPUTS TO THE VOCABULARY SUPPLY, which reads them
+  The last three are not slots. They are INPUTS TO THE `a-words` GENERATOR, which reads them
   when it instantiates a move. DEFINE checks against *what it names* and rejects a bare
   synonym as an answer; DISTINGUISH needs the confusable and is never aimed at a synonym;
-  INTERPRET may set its sentence using one. Any future supply will want its own fields, and
-  they go the same way: bullets nothing else reads.
+  INTERPRET may set its sentence using one. Any future generator that wants its own fields
+  puts them the same way: bullets nothing else reads.
 
   WHAT IT NAMES is a pointer, not a definition — "the promised shape", not what a schema is.
   Topology, the same latitude the interview has: enough to recognize the word when it turns
@@ -153,14 +198,28 @@
   If meeting the vocabulary bar would leave them unable to do the thing, it isn't a word —
   it's a capability, and it gets an ordinary entry with a criterion someone thought about.
 
-  THE ORIENTATION ENTRY is shipped below, filled in, in every topic. It carries five slots and
+  ANY GOAL may carry `- **taught elsewhere:** PS2; session 5 in-class activity`, naming where
+  else it is taught. The instructor writes it on assigned topics, and goal setting writes it
+  when a learner says something is covered in class. It is not a slot and TOOLS IGNORE IT; only
+  the tutor reads it, to offer the learner the choice of learning the goal there. Omit the line
+  when there is nothing to name.
+
+  A CAPABILITY SPLIT INTO PARTS. When one criterion could only be checked with a very long
+  question, write the capability as several goals, each with its own criterion, and give them
+  the same `- **capability:** read-unseen-diagram` slug: two to four lower-case words, hyphens,
+  no prefix. They stay ordinary goals in their group, met and reviewed one by one; survey
+  prints them together under the slug with a fraction. One part alone is reported, since a
+  group of one is just a goal.
+
+  THE ORIENTATION ENTRY is shipped below, filled in, in every topic. It carries six slots and
   they are not yours to change. Delete it only if `what I already have` says this learner has
   seen the area laid out before; then say so there and let curation write
   `n/a — already oriented`.
 
-  HOW MANY CAPABILITY ENTRIES. Usually one is enough — a second means the use needs a
-  genuinely separate ability, not a restatement of the first. Past about three, something has
-  been scoped wrong.
+  HOW MANY CAPABILITIES. Usually one is enough: a second means the use needs a genuinely
+  separate ability, not a restatement of the first. Past about three, something has been scoped
+  wrong. A capability split into parts that share a `capability:` slug counts once, and a goal
+  with no slug counts as one.
 
   THE ABSENCE OF ANY CAPABILITY ENTRY IS LOAD-BEARING. "This file has no goal in the default
   group" is what the rest of the workflow reads as *goal setting hasn't happened* — it's the

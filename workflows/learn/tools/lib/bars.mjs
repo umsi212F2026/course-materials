@@ -1,7 +1,7 @@
 // What one attempt established, and what an accumulation of attempts makes true.
 //
 // A BAR IS ALWAYS A PROGRAM, NEVER A SKILL. It cannot need judgement, because judgement already
-// happened upstream — in the adjudicator, which ruled, or in the supply, which tagged. So it
+// happened upstream: in the adjudicator, which ruled, or in the activity, which tagged. So it
 // reads only structured fields: the two axes, `tags`, `outcome`, `source`, `at`. Never the
 // criterion text, never the instruction, never the opaque label.
 //
@@ -32,10 +32,12 @@ import { BARS as BAR_NAMES } from './slots.mjs';
 
 export const isPass = (r) => r.unaided === 'yes' && r.criterion === 'met';
 
-// A learner saying they've got it. Counts, and is recorded as their word rather than as a
-// judged pass — visibly weaker, which is the requirement. It is the escape for a goal that
-// won't land.
-export const isDeclared = (r) => r.outcome === 'declared';
+// The learner's own word that the goal is met: either `declared` (they say they've got it) or
+// `elsewhere` (they did it in class or on a problem set). Counts, and is recorded as their word
+// rather than as a judged pass, which is visibly weaker, and is the requirement. It is offered
+// after every not-met ruling, and `elsewhere` joins it so the log keeps the difference between
+// "I say so" and "I did it somewhere else".
+export const isOwnWord = (r) => r.outcome === 'declared' || r.outcome === 'elsewhere';
 
 export const isDefiniteNegative = (r) => r.unaided === 'no' || r.criterion === 'not met';
 
@@ -64,7 +66,7 @@ export const BARS = {
 
   // Production is the whole bar. A reception move can be passed from having just been told the
   // thing, so a goal met only by those has been recited. What makes a move a production one is
-  // the supply's business; all this reads is the tag it returned.
+  // the activity's business; all this reads is the tag it returned.
   'one production pass': (attempts) => attempts.some((r) => isPass(r) && hasTag(r, 'production')),
 
   // Weak evidence, deliberately, and adjudicated rather than assumed. Orientation's question is
@@ -89,10 +91,10 @@ for (const name of Object.keys(BARS)) {
 // mechanism rather than a special case in the shape of one.
 
 export function met(goal, attempts) {
-  // A declaration satisfies any bar, and it is applied here rather than inside each of them:
-  // it is a fact about the learner's own assertion, not about the accumulation of rulings that
-  // a bar is asking after.
-  if (attempts.some(isDeclared)) return true;
+  // The learner's own word (declared or elsewhere) satisfies any bar, and it is applied here
+  // rather than inside each of them: it is a fact about the learner's own assertion, not about
+  // the accumulation of rulings that a bar is asking after.
+  if (attempts.some(isOwnWord)) return true;
 
   const bar = BARS[goal.bar];
   if (!bar) throw new Error(`${goal.id} has bar: ${goal.bar}, which nothing implements.`);
@@ -118,7 +120,10 @@ export function describeRuling(r) {
   const tags = Array.isArray(r.tags) && r.tags.length ? ` (${r.tags.join(', ')})` : '';
 
   // An outcome is exclusive with the axes: there was no attempt to rule on, or the learner
-  // asserted it themselves.
+  // asserted it themselves. `declared` reads as `you said so` and `elsewhere` carries its note,
+  // so the two own-word outcomes stay distinguishable in the survey.
+  if (r.outcome === 'elsewhere') return `done elsewhere${r.note ? ` (${r.note})` : ''}${tags}`;
+  if (r.outcome === 'declared') return `you said so${tags}`;
   if (r.outcome) return `${r.outcome}${tags}`;
 
   const help =

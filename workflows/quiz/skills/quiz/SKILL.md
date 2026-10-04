@@ -28,15 +28,16 @@ nothing here is softened, so the answer means something.
 
 ## The one rule that everything else serves
 
-**You do not help, at any point before the answers are submitted.** Not a hint, not a
-definition, not a "think about what happens to the old commit". Not even confirming that an
-answer sounds right.
+**You volunteer nothing while the page is open, and you answer whatever they ask.** Not a hint
+or a reassurance unasked. But if they ask about the material, or about a question on the page,
+answer it fully and at once: refusing a learner who wants to talk is the record coming before
+the learner.
 
-The page is the only arrangement where a student answers with nobody holding the rubric, and it
-stops being that the moment you talk about the material while it is open. **If they ask you
-something while the quiz is up, say you cannot answer until they submit and that everything is
-fair game afterwards.** That is not a rule you are enforcing on them; it is what makes their
-score worth reading.
+The page is what makes this work. A student answers there with nobody holding the rubric, so an
+answer they worked out alone is plainly theirs, and one they talked through with you is plainly
+helped; they know which, and so does the transcript. **A helped answer is not a broken quiz; it
+is recorded as helped** (step 5 sends it as `unaided: no`), and the report says how many there
+were.
 
 **Do not open the quiz page yourself, with a browser tool or anything else.** You will have a
 browser available and the URL in front of you, and it is the one thing in reach that destroys
@@ -127,9 +128,9 @@ that URL rather than the one below, which is only the usual one:
 > Your practice quiz is at **http://127.0.0.1:5300**. `<n>` questions, drawn the same way the
 > real one was, from the same pool.
 >
-> Answer them cold, with nothing else open, and nothing from me: I cannot see what you write
-> until you submit, and that is the point. **Come back here and tell me when you have pressed
-> Submit.**
+> Answer them cold if you can: I cannot see what you write until you submit. If you want to ask
+> me something along the way, ask; I will help, and that answer will count as helped. **Come
+> back here and tell me when you have pressed Submit.**
 
 **If the command printed a `SHORT:` line, its sentence goes into that block, ahead of the
 rest**, with what the `PROBLEMS` lines above it name as missing:
@@ -175,6 +176,10 @@ goal's own criterion. **Write `kinds.json` beside it, one entry per goal in that
 
 **Never read this off the goal id.** The `c-` prefix is on both examples above.
 
+**The array already names every goal a question examines**, so a question with two goals puts
+both there, and each gets its own entry. They are decided one at a time like any other: one
+question can examine a goal met by writing and another met by doing.
+
 **Every goal in the array gets an entry, including ones with no written answer to rule on.** A
 goal examined only by multiple choice never reaches step 5, so this is the only place anybody
 asks the question about it, and picking the right option out of four is not evidence that
@@ -198,6 +203,18 @@ Append one verdict per answer to `verdicts.jsonl` in that same directory, as JSO
 {"item":"q-history-vs-undo","uniqname":"me","credit":"half","missed":"...","axes":{"unaided":"yes","criterion":"not met"},"flag":false,"flag_reason":"","at":"<now, ISO 8601>"}
 ```
 
+**An entry carrying `goals` examines more than one goal**, and its `goal` and `criterion` are
+null. Send its `goals` in their place, each with `kind` added from `kinds.json` for that goal.
+The grade skill then rules per goal, and the verdict line carries its `per_goal` as it came back
+and no top-level `credit`:
+
+```
+{"item":"learning-topics/git-basics/a-history/s1/q2","uniqname":"me","missed":"...","axes":{"unaided":"yes"},"per_goal":{"w-commit":{"credit":"full","missed":"","axes":{"unaided":"yes","criterion":"met"}},"w-restore":{"credit":"half","missed":"...","axes":{"unaided":"yes","criterion":"not met"}}},"flag":false,"flag_reason":"","at":"<now, ISO 8601>"}
+```
+
+**`per_goal` names exactly the question's goals.** Scoring refuses a verdict that leaves one out
+or adds one, rather than averaging over whatever is there.
+
 **`unaided` is `yes` unless you know otherwise.** They answered on a page with you not
 watching, which is as unaided as anything in this course gets. Send `no` only where the
 transcript shows this particular answer was discussed or looked up before it was submitted.
@@ -214,28 +231,42 @@ run again rather than reporting a score that is short.
 It returns the score and one row per item, and **every argument step 7 needs is on that row**,
 with `kinds.json` already folded into the axes.
 
+**A question that examined several goals scores the average of its per-goal credits.** Full on
+one goal and none on the other is worth 0.5, and full and half is 0.75, so the score can carry a
+fraction that no single mark would give. Its row's `credit` reads `partial` where the goals
+differ, and its `per_goal` lists each goal's own credit, `missed` and axes.
+
 ### 7. Record every item, before you report anything
 
-One call per item whose row has both a `row.goal` and a `row.topic`:
+One call per item whose row has both a `row.goal` and a `row.topic`, and one per goal on a row
+that has both a `per_goal` and a `row.topic`:
 
 ```
 node workflows/learn/tools/record-attempt.mjs <topic> <goal> "<label>" --tags <tags> --axes '<axes>' --source quiz
 ```
 
-Take all five straight off the row from step 6: `row.topic`, `row.goal`, `row.axes` as it
-stands, and `row.tags` where the row has one.
+Take all five straight off the row from step 6: `row.topic`, `row.goal`, `row.label`,
+`row.axes` as it stands, and `row.tags` where the row has one.
+
+**A row with a `per_goal` examined several goals, and its `row.goal` is null.** Make one call
+for each entry in `per_goal`, with that entry's `goal` and `axes` in place of the row's and the
+same `row.topic`, `row.label` and `row.tags` on every one: the tags belong to the question, not
+to one of its goals. Each goal is met or not on its own ruling, which is the whole reason the
+question was graded per goal.
 
 **`row.topic` is an absolute path and goes in exactly as it is**, with nothing to strip, join
 or rebuild: a folder name reassembled into `../learning-topics/<name>` works from one directory
 and fails silently from any other. **Everything this tool takes is on that row, so there is no
 reason to open it.**
 
-The label is the one thing you build:
-
-- **`<move>: <item>`** where the row has a `move`, which is the vocabulary supply's own label
-  format. `served.mjs` hands it back the next time this word is studied, so study does not
-  repeat the same shape. `DISTINGUISH: q-history-vs-undo`.
-- **`<item>`** alone where there is no move.
+**`row.label` goes in as it stands, and it is not always `row.item`.** A question from a folder
+bank has an `item` qualified by the repository and topic it came from, so that it is unique
+across the quiz, and a `label` local to its topic, which is what study records the same
+question under: one question, one history. A single-file question's label is `<move>: <item>`
+where it has a move, which is the label format of a vocabulary move set live (`served.mjs`
+hands it back the next time this word is studied, so study does not repeat the same shape:
+`DISTINGUISH: q-history-vs-undo`), and `<item>` alone where it has none. Do not build it
+yourself.
 
 **Leave `--tags` off entirely where `row.tags` is null.** An invented tag is worse than none:
 `production` is what a word's bar reads, and one applied by guesswork would finish a goal that
@@ -255,7 +286,9 @@ the learner closes the laptop still leaves the record.
 you say before this collapses into `Worked for 31s` and the learner never sees it.
 
 One message, and nothing after it in the same turn. The score, then the items in the order they
-were asked, then the last two sentences exactly as they stand here:
+were asked, then the last two sentences exactly as they stand here. **If any answer was helped**
+(sent as `unaided: no` in step 5), say so after the score, for example "3 out of 4, one of them
+with help", and mark that item "(with help)" in its heading.
 
 > **3 out of 4** on the session 5 practice quiz.
 >
@@ -327,6 +360,13 @@ and a friendlier version is a different mark's worth of feedback. `expected` is 
 answer, introduced as what earns full credit. On full credit neither applies, and the question
 and their answer are the whole entry.
 
+**A row with a `per_goal` says how each goal went, whatever its credit.** A `partial` row is
+"Partial credit". After the row's `missed`, quote the `missed` of each `per_goal` entry below
+full credit, so the student can tell which part of the question they reached. That holds when
+the goals agree too: a row that is half on both goals reads "Half credit" and still quotes each
+goal's `missed`, since each says something different. A row that is full on every goal has
+nothing to quote.
+
 **Say the correction sentence every time, including on a perfect score.** A learner who does
 not know they can argue will not argue, and a student overruling the grader is the one place in
 this course where they are the human in the loop rather than the subject of it.
@@ -369,6 +409,9 @@ then believe them.
 node workflows/learn/tools/record-attempt.mjs <topic> <goal> "<label>, on review" --tags <tags> --axes '{"unaided":"yes","criterion":"met"}' --source quiz
 ```
 
+On a question that examined several goals, make that call once for each goal they are
+correcting, naming that goal, and leave the goals they are not arguing about as they were.
+
 **The first verdict stays in the log beside it.** Nothing is rewritten and nothing is deleted;
 the log is what happened, and what happened is that it was marked one way and then corrected.
 
@@ -398,8 +441,10 @@ clones would be a queue nobody reads.
 
 ## What not to do
 
-**Do not re-serve a question they have just seen.** The draw is random per run, so a second
-practice quiz on the same session will overlap, and that is fine: what is not fine is answering
+**Do not re-serve a question they have just seen.** The draw puts questions they have never
+attempted first, by their own attempt log, and then the ones attempted longest ago, so a second
+practice quiz on the same session overlaps only once a part of the pool runs out, and that is
+fine: what is not fine is answering
 "can I try that one again" by handing back the same item. Offer another run, or the review
 workflow, which serves a different instance of the same goal.
 
@@ -414,6 +459,7 @@ real quiz uses. That equality is the entire product.
 
 - [`quiz/grade`](workflows/quiz/skills/quiz/grade/SKILL.md) - skill
 - [`learn`](workflows/learn/skills/learn/SKILL.md) - skill
+- [`update`](workflows/update/skills/update/SKILL.md) - skill
 - [`quiz-practice.mjs`](workflows/quiz/tools/quiz-practice.mjs) - tool
 - [`quiz-draw.mjs`](workflows/quiz/tools/quiz-draw.mjs) - tool
 - [`survey.mjs`](workflows/learn/tools/survey.mjs) - tool

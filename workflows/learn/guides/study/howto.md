@@ -8,6 +8,19 @@ sessions fit together; this is what happens inside one.
 The tutor says where things stand, you pick something to work on from a few options, you do it,
 it gets recorded, and you pick again — until you stop. You stop whenever you like.
 
+What the tutor suggests next comes from the topic's sequence: sets of goals your goals file
+puts in an order, so that the words come before the things that use them. Within a set it picks
+for you. It is only a suggestion, so you can always pick something else, from any set, and
+nobody comments.
+
+**The progress view.** At the start the tutor shows a picture of the topic: one row for each set
+of goals, in order, with a mark for each goal. `#` is met, `~` is tried but not met yet, `.` is
+not started, and `>` is one you said you will learn elsewhere. The number at the end of a row is
+how many are met out of how many. An arrow usually points at the set the tutor will suggest from
+next (it skips goals with nothing ready to study, so now and then it suggests from a later set),
+and below the picture it names what is left there. After each attempt you see just that set's
+line, so you can watch the marks change; when you finish a set you see the whole picture again.
+
 The options come with a note on what's different about each, not just titles. If two sound the
 same to you, say so; the tutor may be able to explain and, if not, it's a real problem that
 should be sent back to the curator or the goal-setting process.
@@ -48,6 +61,32 @@ nobody explained.
 
 If you do get through a task without help, the tutor quietly sends a transcript to an
 independent agent that checks what you did for correctness. It then logs the attempt.
+
+## When the checker says not yet
+
+The checker is deliberately tough. When it says you haven't met the goal, you'll see its
+feedback and three choices:
+
+1. **Try again now**, on another question from the same activity.
+2. **Come back to it later.**
+3. **Mark it as learned.** Your call, and nobody asks you to justify it. It counts as met, and it
+   comes back in a review a few days later, checked just as strictly. So you aren't skipping the
+   test, just moving it.
+
+## Goals you'll learn in class
+
+Some goals are also taught in class or on a problem set. When the tutor first reaches one, it
+says what the goal is, what would count, and where it is taught, then offers four choices:
+
+1. **Do it here.** Ordinary study.
+2. **Already done elsewhere.** Say where, if you like. It counts as met, and it comes back in a
+   review a few days later, checked just as strictly.
+3. **I'll learn it there later.** Say where. The tutor stops offering it.
+4. **Remove it.** The goal is dropped, in your words.
+
+You can say you'll pick any goal up elsewhere at any time, marked or not. Once everything else
+is met, the tutor asks once about each deferred goal: is it done there? "Yes" counts it as met.
+"Not yet" leaves it as it is. "Let's do it here" brings it back.
 
 ## Notes
 
@@ -112,3 +151,5 @@ word. Changing the goals is its own conversation, so this session will be wound 
 
 **"What would I have to do to be finished with this?"** Always answerable, and worth asking
 early.
+
+**"I've got this. Mark it learned."** Any time, not only after the checker says not yet.

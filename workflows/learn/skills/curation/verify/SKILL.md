@@ -26,10 +26,11 @@ that a source is what it claims to be needs an agent, and it's the part worth mo
 looking at it. What's withheld from you is the generator's reasoning and the conversation that
 produced the file, not access to what the file cites.
 
-**Skip every entry carrying `origin: generated`.** Those were stamped by the orchestrator for a
-goal whose `supply` slot produces its own activities — there is no artifact to resolve, no
-required fields to check, and no Coverage row to match. An entry with no `artifact` and no
-`kind` is a defect everywhere else and correct there.
+**Skip the `a-words` entry and every entry carrying `origin: generated`.** The orchestrator
+writes `a-words` from fixed text, for the words; a stamp is a legacy placeholder from before
+it, which nothing serves from. Neither has an artifact to resolve, required fields to check, or
+a Coverage row to match. An entry with no `artifact` is a defect everywhere else and correct
+there.
 
 **Write nothing.** You return a report; the orchestrator decides what to do with it and is the
 only thing that touches the file. That's what lets you and the critique pass run at the same
@@ -73,30 +74,38 @@ or bundles two capabilities, is `curation/critique`'s to re-check.
 
 ## 2. References resolve
 
-- Every `serves` id is a goal in the Goals table, or `all`.
+- Every `serves` id is a goal in the Goals table, or `all`, or `group <name>` naming a group some
+  goal is in.
 - Every `checks` id is a goal in the Goals table.
-- Every goal in `goals.md` whose `supply` is `curated` — the default, so most of them — has a
-  row in the Goals table. A goal supplied any other way has no row and never should; see §5.
+- Every goal in `goals.md` that is not a word has a row in the Goals table. A word has no row
+  and never should; see §5.
 - Every goal in the Goals table has a row in Coverage.
 - Every id referenced in Coverage exists as an entry.
 - No two entries share an id, and no entry id is also a goal id.
-- Every goal whose `supply` is something other than `curated` has one live entry carrying
-  `origin: generated`. A missing one is a finding for the orchestrator, not for the generator:
-  stamping them is its job.
+- If `goals.md` has any word, there is a live `a-words` entry carrying
+  `serves: group vocabulary`. A missing one is a finding for the orchestrator, not for the
+  generator: writing it is its job.
 
 ## 3. Required fields
 
 Every live entry has `serves`, `supports`, `artifact`, `learner does`, `tutor role`,
 `tutor does`, `done when`, `offer as`.
 
-Every entry carrying `checks` also has `kind`, `worked example`, `doesn't show` — and if `kind`
-is a bank, says how many items and how to pick from it.
+Every entry carrying `checks` also has `worked example` and `doesn't show`, and a `generator`
+if it sets the learner questions.
+
+`kind` and `bank` are retired. An older entry may still carry `kind: bank` or a
+`bank: tasks/...` path; ignore both lines, and report neither as a finding nor as missing
+anything. Whether an activity has a bank is whether `tasks/<activity-id>/` exists, and checking
+that bank is not this pass's job.
 
 A field that's present but empty is missing. Say which.
 
 ## 4. The Coverage table matches
 
-Rebuild it from the `serves` and `checks` fields of the live entries and compare, cell by cell.
+Rebuild it from the `serves` and `checks` fields of the live entries (expanding a `group <name>`
+to every goal in that group) and compare, cell by cell. A goal's `checks` cell also counts a
+live activity whose bank, `tasks/<activity-id>/`, holds a question whose rubric `goal:` names it.
 Dropped entries don't appear; `blocked` cells stay as they are.
 
 It's supposed to be derived, so any difference means it's stale — and a stale Coverage table is
@@ -113,8 +122,7 @@ the reference name, not the sentence it points at. That sentence lives in
 `workflows/learn/skills/goal-setting/references/slots.md` and copying it here would be the
 second definition site this design exists to avoid.
 
-**A goal whose `supply` isn't `curated` has no row here and no Coverage row.** Its absence is
-the design, not divergence.
+**A word has no row here and no Coverage row.** Its absence is the design, not divergence.
 
 ---
 

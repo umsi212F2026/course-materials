@@ -18,22 +18,25 @@
 // --- what a line looks like --------------------------------------------------
 //
 //   at        ISO timestamp
-//   kind      one of the seven below
-//   goal      the id from goals.md, on the four goal-scoped kinds, and optionally on the two
+//   kind      one of the nine below
+//   goal      the id from goals.md, on the six goal-scoped kinds, and optionally on the two
 //             that retire and revive
+//   where     free prose, on `deferred`, where the goal will be learned
 //   needs     curation | goal-setting, on the two that queue work
 //   why       free prose, on `blocked` — what would have to change
 //   reason    free prose, on `retired` — the learner's own words
 //
 //   { kind: created }                                    this folder is a topic
 //   { kind: goal-added,  goal, needs: curation }         a goal exists with nothing built for it
-//   { kind: curated,     goal }                          curation built or stamped its entries
+//   { kind: curated,     goal }                          curation built what serves it
 //   { kind: blocked,     goal, needs, why }              it can't be worked on until X changes
 //   { kind: unblocked,   goal }                          X changed
 //   { kind: retired,     reason }                        the learner gave the topic up
 //   { kind: retired,     goal, reason }                  ... or gave up on that one goal
 //   { kind: revived }                                    they took it back
 //   { kind: revived,     goal }                          ... or took that one goal back
+//   { kind: deferred,    goal, where }                   it will be learned elsewhere (in class)
+//   { kind: resumed,     goal }                          that plan fell through, study it here
 //
 // RETIRING TAKES AN OPTIONAL GOAL, AND THAT IS THE ONLY DIFFERENCE BETWEEN THE TWO SCOPES.
 // With a goal, the event is about that goal; without one, about the whole topic. A learner
@@ -68,6 +71,8 @@ export const KINDS = {
   unblocked: { goal: true, clears: true },
   retired: { goal: 'optional', reason: true },
   revived: { goal: 'optional' },
+  deferred: { goal: true, where: true },
+  resumed: { goal: true },
 };
 
 // `goal-added` always means `needs: curation` — a goal is added in goal setting, so goal setting
@@ -122,7 +127,7 @@ export const statusFileFor = (dir) => {
 //
 // APPENDING IS SAFE FROM ANY WRITER. A review sitting can be inside this topic at the same time
 // as a study session; nothing here rewrites a file, so nothing can lose another process's line.
-export function appendStatus(dir, kindName, { goal, needs, why, reason } = {}) {
+export function appendStatus(dir, kindName, { goal, needs, why, reason, where } = {}) {
   const kind = KINDS[kindName];
   if (!kind) throw new Error(`"${kindName}" is not a kind. One of: ${Object.keys(KINDS).join(', ')}`);
 
@@ -170,6 +175,14 @@ export function appendStatus(dir, kindName, { goal, needs, why, reason } = {}) {
     event.reason = reason;
   }
 
+  // WHERE THE GOAL WILL BE LEARNED IS THE WHOLE POINT OF A DEFERRAL. It is what the learner will
+  // be asked about when the goal comes up again, and a deferral that names no place is one nobody
+  // can tell from a goal that was simply forgotten.
+  if (kindName === 'deferred') {
+    if (!where?.trim()) throw new Error(`deferred has to say where it will be learned.`);
+    event.where = where.trim();
+  }
+
   mkdirSync(dir, { recursive: true });
   appendFileSync(statusFileFor(dir), JSON.stringify(event) + '\n');
   return event;
@@ -196,6 +209,11 @@ export function readStatus(dir) {
 //   created       whether this folder was ever made a topic
 //   retired       the learner's reason, or null. Reviving is an event, not a deletion
 //   retiredGoals  goal id → their reason, for the goals given up one at a time
+//   deferredGoals goal id → where it will be learned, for goals set aside until then. Always
+//                 one goal; `resumed` deletes the entry, and the last event wins. Retiring does
+//                 not clear a deferral, so defer, retire, revive brings the old `where` back
+//   resumedGoals  the set of goal ids that have ever had a `resumed` event. Never removed: it is
+//                 the proof the learner already chose to study the goal here
 //   outstanding   one item per goal that has work waiting, in the order the work arrived
 //   announced     every goal the queue has ever heard of
 //
@@ -224,6 +242,8 @@ export function foldStatus(events) {
   let created = false;
   let retired = null;
   const retiredGoals = new Map();
+  const deferredGoals = new Map();
+  const resumedGoals = new Set();
   const outstanding = new Map();
   const announced = new Set();
 
@@ -242,7 +262,12 @@ export function foldStatus(events) {
     } else if (e.kind === 'revived') {
       if (e.goal) retiredGoals.delete(e.goal);
       else retired = null;
-    } else if (kind.clears) outstanding.delete(e.goal);
+    } else if (e.kind === 'deferred') deferredGoals.set(e.goal, e.where ?? '');
+    else if (e.kind === 'resumed') {
+      deferredGoals.delete(e.goal);
+      resumedGoals.add(e.goal);
+    }
+    else if (kind.clears) outstanding.delete(e.goal);
     else if (kind.needs)
       outstanding.set(e.goal, {
         goal: e.goal,
@@ -252,5 +277,5 @@ export function foldStatus(events) {
       });
   }
 
-  return { created, retired, retiredGoals, announced, outstanding: [...outstanding.values()] };
+  return { created, retired, retiredGoals, deferredGoals, resumedGoals, announced, outstanding: [...outstanding.values()] };
 }

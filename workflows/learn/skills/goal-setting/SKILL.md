@@ -59,6 +59,11 @@ follow, not annotations for them to read.
 Either of you can type into any part of it. If they're editing too, take turns so you don't
 clobber what they wrote.
 
+**When the topic is one the course shipped** (its `goals.md` has an `**origin:** course` line
+under the title), write `- **origin:** learner` on every goal you add. Without it the goal
+inherits `course`, and a goal the student set for themselves becomes one they can be examined
+on. `new-word.mjs` already stamps the words it adds, so don't write the line again for those.
+
 **What you can't do is invent facts about them.** _Where this came from_, _what I already have_
 and _what I'll use it for_ are answers only they have. Typing up what they said is fine —
 transcribe it, paraphrase it, carry a sentence down from the opener. Supplying a plausible
@@ -66,7 +71,7 @@ answer they didn't give is not, however obvious it seems. Thin answer, thin entr
 empty section, and say so.
 
 Everything else you may draft freely — _depth_, the capabilities and criteria, and the three
-fields each word entry carries for the vocabulary supply. They choose what stays.
+fields each word entry carries for the `a-words` generator. They choose what stays.
 
 Write as you go. A field filled during the conversation is one they watched happen.
 
@@ -113,9 +118,9 @@ with a new id, not a rename.
 
 **One list, one entry per goal, whatever kind of goal it is.** An ordinary capability carries a
 statement and a criterion and nothing else. What a word or an orientation carries beyond that
-is a handful of **slots** — where its activities come from, who rules on an attempt, what makes
-the claim true — every one of which defaults, so writing a default down is the beginning of a
-second definition site.
+is a handful of **slots** (where the statement of _met_ comes from, who rules on an attempt,
+what makes the claim true), every one of which defaults, so writing a default down is the
+beginning of a second definition site.
 
 [`references/slots.md`](references/slots.md) is the reference. Read it before writing a slot
 you haven't written before; a value nothing implements is refused when a tool next reads the
@@ -123,7 +128,7 @@ file, by name.
 
 **You will hardly ever write one.** The two shapes that need them have writers of their own:
 
-- **a word** — `workflows/learn/tools/new-word.mjs` fills its four slots. Call it rather than
+- **a word**: `workflows/learn/tools/new-word.mjs` fills its three slots. Call it rather than
   typing the entry.
 - **the orientation** — shipped filled in by the template, in every topic. Not yours to edit.
 
@@ -243,7 +248,7 @@ from the library, it's already decided — take it.
 can't be, and it doesn't have to be. It's append-only, and adding to it later is completely
 normal.
 
-**Add each one with the script**, which is what fills the four slots that make it a word:
+**Add each one with the script**, which is what fills the three slots that make it a word:
 
 ```
 node workflows/learn/tools/new-word.mjs <area-slug> "<the word>" <id>
@@ -264,7 +269,7 @@ _synonyms_ are lines you add where there is something to put in them, and plenty
 haven't got either; omit the line rather than reaching, since an empty optional field is a
 default written down. All three are facts about the subject rather than about them, so fill
 them
-silently and don't narrate it. They are read by the vocabulary supply and by nothing else.
+silently and don't narrate it. They are read by the `a-words` generator and by nothing else.
 
 **Moves**
 
@@ -298,9 +303,45 @@ and don't count towards it.
   would we actually look at?" or "how would we know if you have acquired the capability?"
 - **PROPOSE CANDIDATES** — draft three or four possible criteria. Always more than one, and say
   you expect some to be rejected.
-- **PUSH BACK ON SCOPE** — _when an entry has no line back to the stated use, or there are more
-  than about three of them._ Say which part of the use fails to support it. The move you'll
+- **PUSH BACK ON SCOPE**: _when an entry has no line back to the stated use, or there are more
+  than about three capabilities._ Count a capability once however many parts it has, and an
+  unlabelled goal counts as one. Say which part of the use fails to support it. The move you'll
   most want to skip, and skipping it is how this conversation fails.
+- **SPLIT INTO PARTS**: _when checking a criterion would need one very long question._ Split
+  the capability into part-goals, each with its own criterion, sharing a `- **capability:**`
+  slug (two to four lower-case words, hyphens, no prefix). They stay separate goals, met and
+  reviewed one by one, and survey prints them together under the slug. Don't split to make a
+  goal look bigger: one part alone is reported as a mistake.
+- **MARK WHAT IS TAUGHT ELSEWHERE**: _when they say a goal is covered in class or in a problem
+  set._ Write `- **taught elsewhere:** <where>` on that entry, in their words for where. It is
+  not a slot and no tool reads it; the tutor does, and offers them the choice of learning it
+  there instead the first time it reaches the goal. Keep the goal and its criterion as they
+  are: the mark changes how the goal is reached, not whether it counts.
+
+### The order they're tackled in
+
+The `## Sequence` section just above `## Goals`: numbered sets, earliest first, each line a list
+of groups, capability slugs or goal ids. New entries go under `## Goals`, and the Sequence
+section sits above it, so the end of the file is always the end of Goals. Study works through
+it in order, choosing at random within a set. How an item resolves to a goal, and what counts
+as a problem, is explained in the comment of `workflows/learn/templates/goals.md`; read it
+there rather than here.
+
+**Moves**
+
+- **ORDER THE SETS**: scaled to what the topic already has, so it costs the least it can:
+  - _No Sequence section yet, once the goals are settled._ Propose a sequence and write the
+    section, confirmed with the learner (the instructor, for a course topic). Words before the
+    capabilities that use them; parts that build on each other in order. This runs in any
+    goal-setting conversation on such a topic, including one that only adds goals, since it is
+    how an older topic gets its sequence.
+  - _A section exists and this conversation added goals._ Check only where the new goals land.
+    A new word falls into its group's set with no edit; raise a placement only if it looks
+    wrong, a basic capability that others build on, say.
+  - _A section exists and nothing new needs placing._ Skip the move, unless the learner asks
+    to reorder.
+
+Then run `survey.mjs` and read its problems: a goal in no set is the one to look for.
 
 ### Any field
 
@@ -351,3 +392,4 @@ can read and act on.
 
 - [`new-word.mjs`](workflows/learn/tools/new-word.mjs) — tool
 - [`record-status.mjs`](workflows/learn/tools/record-status.mjs) — tool
+- [`goals.md`](workflows/learn/templates/goals.md) - template

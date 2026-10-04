@@ -29,7 +29,7 @@ asking here means asking twice.
 ## Work out which of three things this is
 
 Read the goals in every `<data-dir>/*/goals.md` before you ask them anything — the word entries
-especially, which are the ones carrying `supply: vocabulary`. Usually a new topic isn't what
+especially, which are the ones in `group: vocabulary`. Usually a new topic isn't what
 they need.
 
 **It already exists** — as a topic, or as a word in one. Nothing to write either way. Say
@@ -47,10 +47,10 @@ node workflows/learn/tools/new-word.mjs --dir <data-dir> where-things-live "loca
 Quote the word — most are phrases. **You choose the id**; see _Naming a word_ below. The script
 prints the entry it added; read it back.
 
-The script is what makes it a word: it writes the four slots — `criterion: vocabulary`,
-`supply: vocabulary`, `bar: one production pass`, `group: vocabulary` — and it is the only
-writer for that shape. There is no type called _word_ anywhere in the system, which is why
-there is nothing to keep in step with it.
+The script is what makes it a word: it writes the three slots, `criterion: vocabulary`,
+`bar: one production pass` and `group: vocabulary`, and it is the only writer for that shape.
+There is no type called _word_ anywhere in the system, which is why there is nothing to keep in
+step with it.
 
 Appending a word entry is not a revision of that topic's goals — a few lines, no folder, no
 commitment.

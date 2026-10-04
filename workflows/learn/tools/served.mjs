@@ -2,16 +2,17 @@
 //
 //   node workflows/learn/tools/served.mjs <topic-folder> <goal-id>
 //
-// Prints one label per line, most recent first, exactly as the supply wrote them.
+// Prints one label per line, most recent first, exactly as the activity wrote them.
 //
-// A LABEL IS A PRIVATE CHANNEL BETWEEN A SUPPLY AND ITS FUTURE SELF. This program returns them
-// unmodified and interprets nothing: the supply that wrote the string is the only thing that
-// reads it, so the worst that a bad label can do is make that supply repeat itself. That is why
-// it may be free-form, and why a bar reads `tags` instead.
+// A LABEL IS A PRIVATE CHANNEL BETWEEN AN ACTIVITY AND ITS FUTURE SELF. This program returns
+// them unmodified and interprets nothing: the activity that wrote the string is the only thing
+// that reads it, so the worst that a bad label can do is make that activity repeat itself. That
+// is why it may be free-form, and why a bar reads `tags` instead.
 //
-// It generalizes past banks, which is the point. The curated supply writes an entry id, and a
-// bank item after a slash. A generator can write what it varied — "subject/verb agreement
-// error" — and avoid the shape next time rather than the exact sentence.
+// It generalizes past banks, which is the point. A banked question's label is its path, and an
+// activity run without a bank writes its entry id. A generator run live can write what it
+// varied ("subject/verb agreement error") and avoid the shape next time rather than the exact
+// sentence, which is how the vocabulary moves pick one a word hasn't had recently.
 //
 // Both study and review ask this, and both act on it the same way: don't serve what's near the
 // front. Study asks before setting an activity; review asks through workflows/learn/tools/review-due.mjs, which

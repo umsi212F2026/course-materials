@@ -1,6 +1,6 @@
 ---
 name: curation
-description: Run the curation phase — stamp an entry for every goal that supplies its own activities, generate candidates and check tasks for the rest into activities.md, have them checked by a separate agent, and take one revision round. Use after goal setting has produced goals.md, and again when the tutor has dropped enough candidates that study is short of options.
+description: Run the curation phase: write the a-words entry if the topic has words and lacks one, generate candidates and check tasks for the other goals into activities.md, have them checked by a separate agent, and take one revision round; on a course topic run by the instructor, also draft each activity's question bank and have them review generators and banks. Use after goal setting has produced goals.md, and again when the tutor has dropped enough candidates that study is short of options.
 ---
 
 # Curation
@@ -8,6 +8,7 @@ description: Run the curation phase — stamp an entry for every goal that suppl
 ## Operates on
 
 `<topic-dir>` — one topic folder, whose `activities.md` you are filling in.
+On the course path its `tasks/` and `rubrics/` folders take the banks too.
 
 You are told this directory. Do not choose it, and do not guess it from the working directory —
 whatever invoked you established it already.
@@ -31,44 +32,75 @@ wrote, verbatim. And don't edit the substance of any entry; that's the generator
 leaves behind: goal setting hasn't run, this phase has nothing to derive from, and you should
 stop and say so.
 
-## Every goal gets an entry; two kinds of entry
+## Every goal is served by an activity; words share one
 
-**A goal whose `supply` slot is `curated`** — the default — is what this phase is for. Its
-activities are real things a learner does, found and characterized by `curation/generate`, and
-they are what the Goals and Coverage tables are about.
+**Every goal but the words** is what this phase is for. Its activities are real things a
+learner does, found and characterized by `curation/generate`, and they are what the Goals and
+Coverage tables are about.
 
-**A goal whose `supply` is anything else produces its own activities**, and there is nothing
-here to curate: no artifact to verify, no menu to choose among, no criterion to critique. What
-it gets is **one stamped entry**, so that every goal is reachable through the same lookup and
-review never has to ask what kind of goal it is looking at.
-
-One supply per goal, so the two are exclusive: a goal is either this phase's work or it isn't.
+**The words are served by one ordinary activity, `a-words`**, whose generator is fixed and
+which names them through their group, so there is nothing here to curate per word: no artifact
+to verify, no menu to choose among, no criterion to critique. A topic with any word in group
+`vocabulary` and no `a-words` entry gets this one, exactly as written:
 
 ```
-### `a-w-schema`
+### `a-words`
 
-- **origin:** generated
-- **serves:** `w-schema`
-- **checks:** `w-schema`
-- **learner does:** whatever the goal's supply instantiates — see
-  workflows/learn/skills/goal-setting/references/vocabulary-moves.md
-- **offer as:** the only candidate; which move gets set is the supply's, not this entry's
+- **serves:** group vocabulary
+- **generator:** the five moves in `workflows/learn/skills/goal-setting/references/vocabulary-moves.md`, set for one word at a time from its `what it names`, `nearest confusable` and `synonyms`. Each question names that word's goal and carries its move.
+- **learner does:** answers one short question about one word
+- **tutor role:** examiner
+- **tutor does:** sets the question as served, without rewording it or hinting; when the bank has nothing for the word, sets one move live, as vocabulary-moves.md describes
+- **offer as:** not offered as a choice; a word's question is set when that word is studied or due
 ```
 
-The id is `a-` plus the goal id, which cannot collide and is obviously not something anyone
-wrote. `origin: generated` is what tells `verify` and `critique` to skip it, and the tutor
-never to drop it.
+**Writing it is idempotent, so check every pass, first.** Because it serves the group, a word
+added mid-topic is covered the moment it is in `goals.md`, with no edit here. A course topic's
+word questions are banked in `tasks/a-words/`, one file per word; a word with none there has a
+move set live by the tutor.
 
-**Stamping is idempotent, so do it every pass, first.** A goal with a non-default supply and no
-entry gets one; a goal that already has one is left alone. Adding a word mid-topic is one line
-in `goals.md` and no conversation, so this is how the entry catches up.
+**Older files may hold stamped entries** carrying `origin: generated`, one placeholder per word
+from before `a-words`. Leave them alone: study and review ignore them, survey skips them, and
+`node workflows/learn/tools/migrate-words.mjs <topic-folder>` removes them when the topic is
+migrated. Never write a new one.
 
-## Sequence, for the curated goals
+## Who runs it decides the path
 
-The learner is not involved in this phase and should not be interrupted during it.
+**The plain path is the default: the steps below, and no banks.** It is what runs in the
+background, spawned by `learn`, and what runs on any topic whose origin is not `course`. Its
+generators are run live by the tutor, a fresh question every time, so there is nothing to draft
+and nobody to wait for.
 
-0. **Stamp.** One entry for each goal whose `supply` is something other than `curated` and
-   which hasn't got one, as above. Those goals get no Goals row and no Coverage row.
+**A plain-path run never edits the generator of an activity that has a bank** (both
+`tasks/<activity-id>/` and `rubrics/<activity-id>/`). That bank was drafted from the generator
+and reviewed against it, and changing one without the other leaves questions nobody chose. If a finding would revise
+such a generator, leave it as it is, and say so in your report: which activity, and what the
+finding was. The next course-path run takes it up.
+
+**The course path adds banks, and two stops for the instructor.** It runs only when both hold:
+the topic is a course topic, and the instructor invoked you in this session and is there to
+review. You are told which by whatever invoked you.
+
+A topic is a course topic when survey reports its `origin` as `course` (read from the
+`**origin:** course` line under the title of `goals.md`), **or** when every goal in `goals.md`
+carries `- **origin:** course`. The second is how existing course topics look: they predate the
+header. On such a run, _Converting older files_ adds the header first, and you run survey again
+before going on, so everything after reads the topic as survey now reports it.
+
+**If nobody said this run is the instructor's, it isn't**: a background run on a course topic
+in a student's clone that stopped to wait for review would wait forever, and one that drafted
+banks unreviewed would ship questions nobody checked.
+
+Course topics are banked because study, review and the quiz all draw on the same questions, and
+the quiz needs ones a person has read. A student's own topic needs none of that.
+
+## Sequence
+
+The learner is not involved in this phase and should not be interrupted during it. On the
+course path the instructor is, at the two stops, and nobody else.
+
+0. **Words.** If the topic has words and no `a-words` entry, write it, as above. Words get no
+   Goals row and no Coverage row.
 
 1. **Generate.** Run `curation/generate`. It reads the file and fills whatever the Coverage
    table shows is missing — an empty skeleton just means everything is.
@@ -113,7 +145,7 @@ The learner is not involved in this phase and should not be interrupted during i
    round, so annotations come back this time. `verify` skips whatever already carries a recent
    marker, which is most of it.
 
-5. **Land the second report. All three streams, and this time findings land too.**
+5. **Place the second report. All three streams, and this time findings are acted on too.**
 
    _Markers_ — into the file, as in step 2.
 
@@ -131,9 +163,13 @@ The learner is not involved in this phase and should not be interrupted during i
    gap, not a blocked row — it shows as an empty cell, and the tutor reporting it is what
    brings this phase back.
 
-   **Never drop a stamped entry**, whatever a checker says about it. They are told to skip
-   those; if one comes back with a finding, the finding is about the supply and belongs in your
-   reply rather than in the file.
+   **Never drop the `a-words` entry or a legacy stamp**, whatever a checker says about it.
+   They are told to skip those; if one comes back with a finding, the finding is about the
+   vocabulary moves and belongs in your reply rather than in the file.
+
+   **On the course path, the banks come next**, before step 6: see _The course path_ below.
+   The generators are settled now, which is what makes them worth drafting from. On the plain
+   path, go straight on.
 
 6. **Clear the queue, one line per goal.** This is the step that makes the phase terminate, and
    it is not optional.
@@ -144,7 +180,7 @@ The learner is not involved in this phase and should not be interrupted during i
    ```
 
    **Every goal you were invited here for gets exactly one of those.** `curated` for one that
-   now has live entries — including a goal you only stamped in step 0. `blocked` for one you
+   now has live entries, including a word the `a-words` entry serves. `blocked` for one you
    couldn't build anything for, with the reason, which goes to the learner in a goal-setting
    conversation.
 
@@ -167,6 +203,135 @@ The learner is not involved in this phase and should not be interrupted during i
    thing, an artifact that's wrong rather than unverifiable. "Could be better" is never
    grounds. If you take a third pass, say why.
 
+## The course path
+
+Between steps 5 and 6, and only when _Who runs it decides the path_ says so. It starts when the
+instructor invokes curation directly, names the topic folder and says the run is theirs. That
+folder is what this run operates on, with its parent as the `<data-dir>` survey takes, and
+neither is inferred from anywhere else.
+
+**Drafts stay on a branch until stop 2 is done.** Commit them on a branch of the topic's
+repository and push nothing until the instructor has finished with the banks. That repository is
+public, and a question nobody has reviewed must not be published by accident.
+
+The layout every step writes is in `workflows/learn/templates/activities.md` under BANKS: one
+file per scenario in `tasks/<activity-id>/` and its twin in `rubrics/<activity-id>/`, each
+question a `### <question-id>` section, labelled `<activity-id>/<scenario-id>/<question-id>`.
+
+**Only some activities get a bank:** those with `checks` whose generator invents its own
+material. These stay live, with no bank:
+
+- an activity whose generator picks from real items, or from the learner's own work (their own
+  app, their own agent, their own chats);
+- an orientation rehearsal;
+- an activity without `checks`.
+
+The reason is the same for all three. A bank would replace the learner's own material with
+material someone invented, and the picker serves a bank whenever one exists, so the live
+generator would never run again.
+
+1. **Stop 1, generators.** For each live activity that gets a bank, run `curation/draft-bank`
+   in `sample` mode: one scenario, its questions and its rubric, into that activity's bank
+   folders. Run them concurrently; each writes only its own activity's folders. Then present
+   each generator's text beside its sample, by path, and let the instructor react in the
+   session.
+
+   **Revise a generator by handing their feedback to `curation/generate` as findings.** The
+   substance of an entry is still the generator's, even when the instructor is the one asking.
+   A revised generator gets a fresh sample, and the instructor sees it before you move on. Its
+   old sample is cut from both folders unless the instructor says to keep it: it was made by
+   text that no longer exists.
+
+   **A kept sample is the bank's first scenario,** so nothing about it is thrown away. One the
+   instructor cuts is deleted from both folders.
+
+   `a-words` takes part only for a word with no file in `tasks/a-words/`. Its generator is
+   fixed text, so feedback on it is about the vocabulary moves, and goes in your reply.
+
+   **Skip `a-words` entirely, here and in step 2, until `migrate-words.mjs` has run on the
+   topic.** You can tell it hasn't when a single-file bank, a `tasks/<name>.md` with its
+   `rubrics/<name>.md`, has a rubric entry whose `goal:` names a word. Drafting would create
+   `tasks/a-words/`, and the migration then refuses to run, for good, leaving those questions
+   stranded where nothing serves them as words.
+
+   Why a sample at all: a generator's text reads well long after it has stopped producing good
+   questions, and one scenario is the cheapest way to see what it actually makes. A fault found
+   here costs one sample; found at stop 2 it costs a bank.
+
+2. **Draft the banks.** One `curation/draft-bank` per activity that gets a bank (the same ones
+   as stop 1, never the live-only kinds above), in `full` mode, as separate agents running in
+   parallel. Each fills its bank to about three questions per goal in the activity's `checks`
+   (for `a-words`, per word), unless the entry says otherwise, and keeps every scenario already
+   there: the kept sample, and anything converted from an older file.
+
+3. **Check the banks.** First the mechanical floor:
+
+   ```
+   node workflows/learn/tools/survey.mjs --dir <data-dir> <topic-folder>
+   ```
+
+   Its `problems` cover a scenario with no rubric file, a question with no rubric entry or two,
+   duplicate question ids, mcq answers that aren't a choice, a goal id that isn't in `goals.md`,
+   a multi-goal question whose credit has no statement for one of its goals, and a bank folder
+   with no activity entry. Each has one right answer, so hand an activity's problems back to its
+   drafter (`full` mode again) rather than to the instructor, and re-run until there are none.
+
+   Then run `curation/bank-check` **in a fresh context, as a separate agent**, told the topic
+   folder and nothing else: not the drafters' reasoning, not this conversation. It checks what
+   survey can't, question by question, and its isolation is the point for the same reason it is
+   in the sequence's step 2.
+
+4. **Stop 2, banks.** Present the bank check's findings to the instructor, grouped by activity,
+   each with its label. They keep or cut scenarios and questions; you make the cuts, deleting a
+   question's section from both its task file and its rubric file, or a scenario's two files.
+
+   **A finding marked `generator` is about the generator, not the bank**, and so is one the
+   instructor reads that way. That generator goes back to stop 1. Once it is settled, only its
+   activity's scenarios are redrafted (`full` mode, after cutting the ones it got wrong), and
+   only they are checked again before coming back here. The other banks wait where they are.
+
+5. **Return to the sequence at its step 6,** _Clear the queue_, which runs as it always does:
+   `curated` for each goal.
+
+   **After stop 2, the instructor decides when the branch is merged and pushed**, not you. Any
+   conversions this run made go on the same branch, so they are published with the banks.
+
+## Converting older files
+
+On a course topic's next course-path run, the older shapes are converted. Goal ids never change,
+so every recorded attempt still points at its goal. Run survey after each, and expect no new
+problems.
+
+- **The origin header, first of all, before step 0.** If `goals.md` has no `**origin:** course`
+  line under its title, add one, and remove each goal's `- **origin:** course` stamp, which the
+  header makes redundant. Leave any `- **origin:** learner`: it marks a goal a student added, and
+  it is what keeps that goal out of the quiz. Then run survey again and confirm it now reports
+  the topic's `origin` as `course`.
+- **Word questions, before step 0, once quiz pools use the new keys (see the queue).** Run
+  `node workflows/learn/tools/migrate-words.mjs <topic-folder> --dry-run`, read its summary,
+  then run it without `--dry-run`. It moves banked word questions into `tasks/a-words/`, writes
+  the `a-words` entry, and removes the legacy stamps and `supply` lines. It refuses on CR line
+  endings, duplicate ids or unpaired ids; fix what it names and run it again. Earlier than the
+  new keys, moving the questions would change what existing quiz sessions draw.
+- **Capability questions left in `tasks/items.md`, before stop 1, behind the same gate.** Place
+  each in the activity whose generator would produce it, as a scenario named for its content
+  (or in that activity's `main-bank`, if it stands alone), moving the question and its rubric
+  entry verbatim and keeping its id as the question id. Delete what moved from both items files,
+  and the files once empty. A question no generator would produce is a gap in the generators:
+  raise it at stop 1. Converting before the stops means the instructor sees these beside the
+  samples, `full` mode counts them toward the target, and the bank check reads them like any
+  other.
+- **Key-file study banks, before stop 1.** A `tasks/X.md` with a `tasks/X-key.md` becomes the
+  bank of the activity that pointed at it: the task file's shared material becomes the setup at
+  the top of a scenario's task file and its cases become `### <question-id>` sections; the key's
+  shared lists become that scenario's key, at the top of its rubric file, and the key's cases
+  become per-question rubric entries. Then delete the old pair.
+- **Retired fields.** Both `kind:` and `bank:` are ignored, but a `bank:` line can carry
+  substance: where the items live, how they are named, how to pick among them. Move any such
+  text into the entry's `generator`, worded as part of it, and then delete the line. Delete a
+  `kind:` line, or a `bank:` line that is only a path, outright: a stale path misleads anyone
+  reading.
+
 ## When to run this phase again
 
 Not on a schedule, and not on your own reading of the folder. **Run it when the queue says so**
@@ -181,8 +346,8 @@ Not on a schedule, and not on your own reading of the folder. **Run it when the 
 The middle one is why the drop reasons have to be specific: they are the only feedback this
 phase ever gets, and the queue entry says a goal is short, not what was wrong with what it had.
 
-Adding a word is the cheap case: step 0 stamps its entry, steps 1 to 5 find nothing to do, and
-step 6 clears it.
+Adding a word is the cheap case: `a-words` already serves it, or step 0 writes that entry,
+steps 1 to 5 find nothing to do, and step 6 clears it.
 
 A re-run needs no special handling: step 1 sees a file with gaps and fills them, keeping every
 id and skipping anything marked dropped. Step 2 checks the whole file, not just the additions —
@@ -215,11 +380,15 @@ human_ ended up with no channel while the case an agent could fix alone had one.
 ## Depends on
 
 - [`add-topic`](workflows/learn/skills/add-topic/SKILL.md) — skill
+- [`bank-check`](workflows/learn/skills/curation/bank-check/SKILL.md) - skill
 - [`critique`](workflows/learn/skills/curation/critique/SKILL.md) — skill
+- [`draft-bank`](workflows/learn/skills/curation/draft-bank/SKILL.md) - skill
 - [`generate`](workflows/learn/skills/curation/generate/SKILL.md) — skill
 - [`verify`](workflows/learn/skills/curation/verify/SKILL.md) — skill
 - [`learn`](workflows/learn/skills/learn/SKILL.md) — skill
+- [`migrate-words.mjs`](workflows/learn/tools/migrate-words.mjs) - tool
 - [`record-status.mjs`](workflows/learn/tools/record-status.mjs) — tool
 - [`survey.mjs`](workflows/learn/tools/survey.mjs) — tool
 - [`vocabulary-moves.md`](workflows/learn/skills/goal-setting/references/vocabulary-moves.md) —
   reference
+- [`activities.md`](workflows/learn/templates/activities.md) - template

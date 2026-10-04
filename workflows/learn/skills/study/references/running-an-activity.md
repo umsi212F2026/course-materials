@@ -3,30 +3,52 @@
 Consulted once per activity, during a study session. The session itself — reading in, offering
 candidates, recording, closing — is in `../SKILL.md`.
 
-**Where the instruction comes from is the goal's `supply` slot**, and that is the only thing
-that differs between one goal and another here. Everything below applies to all of them, except
+**Where the instruction comes from is the activity**: its entry, its bank where it has one, or
+for a word with nothing banked, a move set live. Everything below applies to all of them, except
 where it says otherwise.
 
 ## Run it as written
 
-**`supply: curated`** — the instruction is the `activities.md` entry the learner chose: its
+**An ordinary entry**: the instruction is the `activities.md` entry the learner chose: its
 `learner does`, `tutor role` and `tutor does`. Follow them rather than improvising a lesson you
 like better. If it carries a `check note` from curation, that's there because something about
 the activity isn't obvious from the entry.
 
-**`supply: vocabulary`** — the entry is a stamp carrying `origin: generated`, and the real
-instruction is a move from `../../goal-setting/references/vocabulary-moves.md`. **You pick the
-move and instantiate it.** There are no candidates to offer and no choice to put to the
-learner. Take one the word hasn't had recently — run
+**A word, through `a-words`**: ask for the word's question with
+`node workflows/learn/tools/next-item.mjs <topic-folder> --goal <word-id>` and serve it as a
+bank question, below. **Never ask for it with `--activity a-words`**: that serves an arbitrary
+word, not the one being studied. **Exit 2 means nothing is banked for that word, so you pick a move from
+`../../goal-setting/references/vocabulary-moves.md` and instantiate it.** There are no
+candidates to offer and no choice to put to the learner. Take one the word hasn't had
+recently. This returns the labels this goal has already been given, most recent first:
 
 ```
 node workflows/learn/tools/served.mjs <topic-folder> <goal-id>
 ```
 
-which returns the labels this goal has already been given, most recent first — and set exactly
-what that move asks for and no more. Rewording DEFINE into something friendlier, or letting a
-CATCH item come with a hint about where the error is, changes what the pass would mean, so
-don't do that.
+Label the move `<MOVE>: <instance>`, and set exactly what it asks for and no more. Rewording
+DEFINE into something friendlier, or letting a CATCH item come with a hint about where the
+error is, changes what the pass would mean, so don't do that.
+
+**A bank, where the activity has one.** If `tasks/<activity-id>/` exists in the topic folder, the
+questions are written and you serve one rather than inventing it:
+
+```
+node workflows/learn/tools/next-item.mjs <topic-folder> --activity <activity-id>
+```
+
+It prints a `label:`, the goals the question credits, its `tags:`, and whether it is a repeat,
+then `--- learner sees ---` and the text. **Show the learner only what follows that line, and
+stop at `--- key ---`.** One run with `--key` is enough, since it prints the learner's section
+too: everything from `--- key ---` on is the grading text, for the judge and never for the
+learner, and any `--- tutor note ---` is for you. A learner who carries on gets
+`--after <last label>`, which keeps them in the same scenario where there is more of it. Keep
+the label and the `tags:` line: they go to `record-attempt.mjs` as they are. The `--key` text
+also goes to the judge as the question's rubric, whatever the number of goals. A `goals:` line
+that is empty marks practice: run it, record nothing.
+
+**Exit code 2 means nothing is banked for that activity**, and so does there being no
+`tasks/<activity-id>/` folder. Then run the entry's generator live, as above.
 
 **Never quietly run something else.** If you think a different activity would serve them
 better, say so and offer it — the entries are candidates and the learner may choose among them.
@@ -84,10 +106,9 @@ it's a set attempt, judged like any other, and it takes one production pass to f
 
 That's the honest version of the rule: don't credit it silently, do notice it out loud.
 
-If the activity uses a bank, take an item they haven't had. The same call says which are used
-up — `served.mjs` returns whatever the supply wrote as a label, and the curated supply writes
-`<entry-id>/<item>`. You don't track it separately, and there's nowhere to write it down:
-putting the item in the label you pass to `record-attempt.mjs` _is_ recording it.
+If the activity uses a bank, `next-item.mjs` takes an item they haven't had, and says when it is
+a repeat. You don't track it separately, and there's nowhere to write it down: putting the label
+it printed in the call to `record-attempt.mjs` _is_ recording it.
 
 ## At the end of an attempt
 
@@ -161,9 +182,9 @@ analysis than that to drop the activity.
    establishes nothing, which is what happened. Always, whoever decided and whatever the
    reason.
 2. **Only if the activity is at fault, write `status: dropped — <why, and who decided>`** on
-   its entry in `activities.md`. Never on an entry carrying `origin: generated`: it is that
-   goal's only entry and there is nothing in it to be wrong. A bad _instance_ is a fault in the
-   supply, and goes on the queue:
+   its entry in `activities.md`. Never on `a-words`, or on a legacy stamp carrying
+   `origin: generated`: there is nothing in either to be wrong. A bad word question is a fault
+   in the bank or the moves, and goes on the queue:
    `record-status.mjs <topic-folder> blocked <goal-id> --needs curation --why "<what the instances get wrong>"`.
 3. Return to the session loop, which offers what's left.
 

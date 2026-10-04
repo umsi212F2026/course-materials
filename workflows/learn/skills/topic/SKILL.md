@@ -37,17 +37,18 @@ node workflows/learn/tools/survey.mjs --dir <data-dir> <topic-folder>
 and read the phase off it. `learn` and the progress report run the same program over the same
 folders, which is what keeps three readings of one topic from drifting apart.
 
-It hands you two things: **the phase**, and **what's outstanding**. These five rows are the
+It hands you two things: **the phase**, and **what's outstanding**. These six rows are the
 phases it derives. Where they disagree with the program, the program is right and this has gone
 stale.
 
-|                                              |                                                       |
-| -------------------------------------------- | ----------------------------------------------------- |
-| `goals.md` with no goal in the default group | nothing has started. Goal setting.                    |
-| goals, no live activities                    | curation, then study.                                 |
-| live activities, required goals unmet        | study.                                                |
-| every required goal met                      | nothing pending. If they're here, offer goal setting. |
-| `retired`                                    | nothing, unless they've just said to revive it.       |
+|                                                                     |                                                       |
+| ------------------------------------------------------------------- | ----------------------------------------------------- |
+| `goals.md` with no goal in the default group                        | nothing has started. Goal setting.                    |
+| goals, no live activities                                           | curation, then study.                                 |
+| live activities, required goals unmet                               | study.                                                |
+| every required goal met, retired or deferred; at least one deferred | `waiting elsewhere`. Study, for the check-in.         |
+| every required goal met                                             | nothing pending. If they're here, offer goal setting. |
+| `retired`                                                           | nothing, unless they've just said to revive it.       |
 
 **Required** is a slot on the goal, and it defaults to yes. An orientation carries
 `is_required: no`, so a topic isn't held open by one nobody bothered with. **A retired goal
@@ -63,8 +64,8 @@ carry one at the same time. Each says which goal, what it's waiting on, and why:
 | `needs: curation`     | curation, then back to study. Yours to run; see below.                   |
 | `needs: goal-setting` | their decision. Goal setting, with what the item's `why` says was wrong. |
 
-**Curation clears its own items.** It writes `curated` for each goal it built or stamped an
-entry for, and `blocked` for each one it can't — so a goal never sits on the queue after
+**Curation clears its own items.** It writes `curated` for each goal it built for, or that
+`a-words` serves, and `blocked` for each one it can't, so a goal never sits on the queue after
 curation has looked at it, and never gets re-invited into a phase that already gave up on it.
 You don't clear anything on its behalf.
 

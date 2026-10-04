@@ -437,8 +437,22 @@
           <bpmn:targetRef>DOR_acts</bpmn:targetRef>
         </bpmn:dataOutputAssociation>
         <bpmn:laneSet id="LS_curate">
-          <bpmn:lane id="L_cur_h" name="HUMAN operator" />
+          <bpmn:lane id="L_cur_h" name="HUMAN operator">
+            <bpmn:flowNodeRef>C_review_merge</bpmn:flowNodeRef>
+            <bpmn:flowNodeRef>C_gen_review</bpmn:flowNodeRef>
+            <bpmn:flowNodeRef>C_settled</bpmn:flowNodeRef>
+            <bpmn:flowNodeRef>C_keep</bpmn:flowNodeRef>
+            <bpmn:flowNodeRef>C_fault</bpmn:flowNodeRef>
+          </bpmn:lane>
           <bpmn:lane id="L_cur_a" name="AI AGENT">
+            <bpmn:flowNodeRef>C_course</bpmn:flowNodeRef>
+            <bpmn:flowNodeRef>C_sample_merge</bpmn:flowNodeRef>
+            <bpmn:flowNodeRef>C_sample</bpmn:flowNodeRef>
+            <bpmn:flowNodeRef>C_revise</bpmn:flowNodeRef>
+            <bpmn:flowNodeRef>C_draft_merge</bpmn:flowNodeRef>
+            <bpmn:flowNodeRef>C_draft</bpmn:flowNodeRef>
+            <bpmn:flowNodeRef>C_problems</bpmn:flowNodeRef>
+            <bpmn:flowNodeRef>C_bank_check</bpmn:flowNodeRef>
             <bpmn:flowNodeRef>C_verify</bpmn:flowNodeRef>
             <bpmn:flowNodeRef>C_critique</bpmn:flowNodeRef>
             <bpmn:flowNodeRef>C_merge</bpmn:flowNodeRef>
@@ -456,13 +470,15 @@
           </bpmn:lane>
           <bpmn:lane id="L_cur_p" name="PROGRAM">
             <bpmn:flowNodeRef>C_clear</bpmn:flowNodeRef>
+            <bpmn:flowNodeRef>C_survey</bpmn:flowNodeRef>
+            <bpmn:flowNodeRef>C_land_merge</bpmn:flowNodeRef>
           </bpmn:lane>
         </bpmn:laneSet>
         <bpmn:startEvent id="C_start" name="goals.md has capabilities">
           <bpmn:outgoing>c1</bpmn:outgoing>
         </bpmn:startEvent>
-        <bpmn:serviceTask id="C_stamp" name="Stamp entries for goals that supply their own&#10;curation, step 0">
-          <bpmn:documentation>workflows/learn/skills/curation/SKILL.md, step 0. A goal whose supply slot names anything but `curated` produces its own activities — a vocabulary word's moves come from the six-move menu, not from this file — so there is no artifact to find and no menu to choose among. What it needs is one entry carrying `origin: generated`, so that every goal is reachable through the same lookup and review never has to ask what kind of goal it is looking at. Idempotent, and outside the revision loop: it runs once per curation run, and a goal that already has its entry is left alone.</bpmn:documentation>
+        <bpmn:serviceTask id="C_stamp" name="Write the a-words entry if the topic&#10;has words and lacks one, step 0">
+          <bpmn:documentation>workflows/learn/skills/curation/SKILL.md, step 0. The words are served by one ordinary activity, `a-words`, whose generator is the five moves in vocabulary-moves.md, so there is no artifact to find and no menu to choose among per word. A topic with any goal in group `vocabulary` and no `a-words` entry gets that one entry, exactly as written, so that every goal is reachable through the same lookup and review never has to ask what kind of goal it is looking at. Idempotent, and outside the revision loop: it runs once per curation run, and a topic that already has the entry is left alone.</bpmn:documentation>
           <bpmn:incoming>c1</bpmn:incoming>
           <bpmn:outgoing>c15</bpmn:outgoing>
           <bpmn:property id="Property_stamp_tr" name="__targetRef_placeholder" />
@@ -559,9 +575,94 @@
             <bpmn:targetRef>DOR_c_acts3</bpmn:targetRef>
           </bpmn:dataOutputAssociation>
         </bpmn:serviceTask>
-        <bpmn:scriptTask id="C_clear" name="Clear the queue: curated, or blocked&#10;record-status.mjs">
-          <bpmn:documentation>workflows/learn/skills/curation/SKILL.md, step 6, through workflows/learn/tools/record-status.mjs. Every goal this phase was invited for gets exactly one line: `curated` for one that now has live entries — including a goal only stamped in step 0 — and `blocked … needs: goal-setting` for one nothing could be built for, with what would have to change. There is no third outcome. A goal left on the queue is a goal learn invites this phase back for, silently, forever, with nobody present to fix what is actually wrong with it; that dead end is what the status log was built to close.</bpmn:documentation>
+        <bpmn:exclusiveGateway id="C_course" name="course topic, run by&#10;the instructor?" default="c_plain">
+          <bpmn:documentation>workflows/learn/skills/curation/SKILL.md, Who runs it decides the path. The plain path is the default: what runs in the background, spawned by learn, and on any topic whose origin is not course, where the tutor runs generators live and there is nothing to draft. The course path runs only when both hold, and nobody saying the run is the instructor's means it is not: a background run in a student's clone that stopped for review would wait forever, and one that drafted unreviewed would ship questions nobody read.</bpmn:documentation>
           <bpmn:incoming>c12</bpmn:incoming>
+          <bpmn:outgoing>c_plain</bpmn:outgoing>
+          <bpmn:outgoing>c_bank</bpmn:outgoing>
+        </bpmn:exclusiveGateway>
+        <bpmn:exclusiveGateway id="C_sample_merge">
+          <bpmn:incoming>c_bank</bpmn:incoming>
+          <bpmn:incoming>c_b6</bpmn:incoming>
+          <bpmn:outgoing>c_b1</bpmn:outgoing>
+        </bpmn:exclusiveGateway>
+        <bpmn:serviceTask id="C_sample" name="Draft one sample per generator&#10;curation/draft-bank">
+          <bpmn:documentation>workflows/learn/skills/curation/draft-bank/SKILL.md, in sample mode, one agent per live activity with a generator, run concurrently (workflows/learn/skills/curation/SKILL.md, the course path, stop 1). Each writes one scenario, its questions and its rubric into its own activity's bank folders, tasks/&lt;activity-id&gt;/ and rubrics/&lt;activity-id&gt;/, committed on a branch of the topic's repository that is not pushed until stop 2 is done. A kept sample is the bank's first scenario. a-words takes part only for a word with no file in tasks/a-words/, and not at all until migrate-words.mjs has run on the topic.</bpmn:documentation>
+          <bpmn:incoming>c_b1</bpmn:incoming>
+          <bpmn:outgoing>c_b2</bpmn:outgoing>
+        </bpmn:serviceTask>
+        <bpmn:exclusiveGateway id="C_review_merge">
+          <bpmn:incoming>c_b2</bpmn:incoming>
+          <bpmn:incoming>c_b15</bpmn:incoming>
+          <bpmn:outgoing>c_b3</bpmn:outgoing>
+        </bpmn:exclusiveGateway>
+        <bpmn:userTask id="C_gen_review" name="Review each generator beside its sample&#10;curation, stop 1">
+          <bpmn:documentation>workflows/learn/skills/curation/SKILL.md, the course path, stop 1. The agent presents each generator's text beside its sample, by path, and the instructor reacts in the session. Writes nothing itself; a sample the instructor cuts is deleted from both bank folders by the agent. A generator's text reads well long after it has stopped producing good questions, and a fault found here costs one sample where at stop 2 it costs a bank.</bpmn:documentation>
+          <bpmn:incoming>c_b3</bpmn:incoming>
+          <bpmn:outgoing>c_b4</bpmn:outgoing>
+        </bpmn:userTask>
+        <bpmn:exclusiveGateway id="C_settled" name="generators&#10;settled?" default="c_b7">
+          <bpmn:documentation>workflows/learn/skills/curation/SKILL.md, the course path, stop 1. The instructor's call. A revised generator gets a fresh sample, and the instructor sees it before anything moves on.</bpmn:documentation>
+          <bpmn:incoming>c_b4</bpmn:incoming>
+          <bpmn:outgoing>c_b5</bpmn:outgoing>
+          <bpmn:outgoing>c_b7</bpmn:outgoing>
+        </bpmn:exclusiveGateway>
+        <bpmn:serviceTask id="C_revise" name="Revise the generator&#10;curation/generate">
+          <bpmn:documentation>workflows/learn/skills/curation/generate/SKILL.md, handed the instructor's feedback as findings (workflows/learn/skills/curation/SKILL.md, the course path, stop 1). The substance of an entry is still the generator's, even when the instructor is the one asking. Writes activities.md. Feedback on the a-words generator, which is fixed text, is about the vocabulary moves and goes in the reply instead.</bpmn:documentation>
+          <bpmn:incoming>c_b5</bpmn:incoming>
+          <bpmn:outgoing>c_b6</bpmn:outgoing>
+        </bpmn:serviceTask>
+        <bpmn:exclusiveGateway id="C_draft_merge">
+          <bpmn:incoming>c_b7</bpmn:incoming>
+          <bpmn:incoming>c_b11</bpmn:incoming>
+          <bpmn:outgoing>c_b8</bpmn:outgoing>
+        </bpmn:exclusiveGateway>
+        <bpmn:serviceTask id="C_draft" name="Draft the banks&#10;curation/draft-bank">
+          <bpmn:documentation>workflows/learn/skills/curation/draft-bank/SKILL.md, in full mode, one agent per activity running in parallel (workflows/learn/skills/curation/SKILL.md, the course path, step 2). Each fills its own activity's bank folders, tasks/&lt;activity-id&gt;/ and rubrics/&lt;activity-id&gt;/, one file per scenario with its twin, to about three questions per goal in the activity's checks, keeping every scenario already there. Committed on the unpushed branch: nothing is pushed until stop 2 is done, because the topic's repository is public. After a generator fault, only that activity's scenarios are redrafted.</bpmn:documentation>
+          <bpmn:incoming>c_b8</bpmn:incoming>
+          <bpmn:outgoing>c_b9</bpmn:outgoing>
+          <bpmn:dataOutputAssociation id="a_draft_tasks">
+            <bpmn:targetRef>DOR_c_tasks2</bpmn:targetRef>
+          </bpmn:dataOutputAssociation>
+          <bpmn:dataOutputAssociation id="a_draft_rubrics">
+            <bpmn:targetRef>DOR_c_rubrics</bpmn:targetRef>
+          </bpmn:dataOutputAssociation>
+        </bpmn:serviceTask>
+        <bpmn:scriptTask id="C_survey" name="Check the bank mechanics&#10;survey.mjs">
+          <bpmn:documentation>workflows/learn/tools/survey.mjs --dir &lt;data-dir&gt; &lt;topic-folder&gt; (workflows/learn/skills/curation/SKILL.md, the course path, step 3). Its problems are the mechanical floor: a scenario with no rubric file, a question with no rubric entry or two, duplicate question ids, an mcq answer that is not a choice, a goal id not in goals.md, a multi-goal question missing a credit statement, a bank folder with no activity entry. Writes nothing.</bpmn:documentation>
+          <bpmn:incoming>c_b9</bpmn:incoming>
+          <bpmn:outgoing>c_b10</bpmn:outgoing>
+        </bpmn:scriptTask>
+        <bpmn:exclusiveGateway id="C_problems" name="survey&#10;problems?" default="c_b12">
+          <bpmn:documentation>workflows/learn/skills/curation/SKILL.md, the course path, step 3. Each problem has one right answer, so it goes back to the activity's drafter rather than to the instructor.</bpmn:documentation>
+          <bpmn:incoming>c_b10</bpmn:incoming>
+          <bpmn:outgoing>c_b11</bpmn:outgoing>
+          <bpmn:outgoing>c_b12</bpmn:outgoing>
+        </bpmn:exclusiveGateway>
+        <bpmn:serviceTask id="C_bank_check" name="Check the banks, in a fresh context&#10;curation/bank-check">
+          <bpmn:documentation>workflows/learn/skills/curation/bank-check/SKILL.md, as a separate agent told the topic folder and nothing else (workflows/learn/skills/curation/SKILL.md, the course path, step 3). It reads the bank folders, tasks/ and rubrics/, question by question, for what survey cannot check, and writes nothing: its findings come back for stop 2, each with its label, and a finding about the generator rather than the bank is marked generator.</bpmn:documentation>
+          <bpmn:incoming>c_b12</bpmn:incoming>
+          <bpmn:outgoing>c_b13</bpmn:outgoing>
+        </bpmn:serviceTask>
+        <bpmn:userTask id="C_keep" name="Keep or cut scenarios and questions&#10;curation, stop 2">
+          <bpmn:documentation>workflows/learn/skills/curation/SKILL.md, the course path, stop 2. The bank check's findings are presented grouped by activity, each with its label. The instructor keeps or cuts; the agent makes the cuts, deleting a question's section from both its task file and its rubric file, or a scenario's two files, in the bank folders on the unpushed branch. Once this stop is done the branch may be pushed.</bpmn:documentation>
+          <bpmn:incoming>c_b13</bpmn:incoming>
+          <bpmn:outgoing>c_b14</bpmn:outgoing>
+        </bpmn:userTask>
+        <bpmn:exclusiveGateway id="C_fault" name="a generator&#10;at fault?" default="c_b16">
+          <bpmn:documentation>workflows/learn/skills/curation/SKILL.md, the course path, stop 2. That generator goes back to stop 1. Once it is settled only its activity's scenarios are redrafted, after cutting the ones it got wrong, and only they are checked again; the other banks wait where they are.</bpmn:documentation>
+          <bpmn:incoming>c_b14</bpmn:incoming>
+          <bpmn:outgoing>c_b15</bpmn:outgoing>
+          <bpmn:outgoing>c_b16</bpmn:outgoing>
+        </bpmn:exclusiveGateway>
+        <bpmn:exclusiveGateway id="C_land_merge">
+          <bpmn:incoming>c_plain</bpmn:incoming>
+          <bpmn:incoming>c_b16</bpmn:incoming>
+          <bpmn:outgoing>c_land</bpmn:outgoing>
+        </bpmn:exclusiveGateway>
+        <bpmn:scriptTask id="C_clear" name="Clear the queue: curated, or blocked&#10;record-status.mjs">
+          <bpmn:documentation>workflows/learn/skills/curation/SKILL.md, step 6, through workflows/learn/tools/record-status.mjs. Every goal this phase was invited for gets exactly one line: `curated` for one that now has live entries, including a word, which the `a-words` entry written in step 0 serves, and `blocked … needs: goal-setting` for one nothing could be built for, with what would have to change. There is no third outcome. A goal left on the queue is a goal learn invites this phase back for, silently, forever, with nobody present to fix what is actually wrong with it; that dead end is what the status log was built to close.</bpmn:documentation>
+          <bpmn:incoming>c_land</bpmn:incoming>
           <bpmn:outgoing>c16</bpmn:outgoing>
           <bpmn:property id="Property_c_clear" name="__targetRef_placeholder" />
           <bpmn:dataInputAssociation id="a_clear_goals">
@@ -595,7 +696,34 @@
         <bpmn:sequenceFlow id="c9" sourceRef="C_record" targetRef="C_pass" />
         <bpmn:sequenceFlow id="c10" name="no" sourceRef="C_pass" targetRef="C_merge" />
         <bpmn:sequenceFlow id="c11" name="yes" sourceRef="C_pass" targetRef="C_annotate" />
-        <bpmn:sequenceFlow id="c12" sourceRef="C_annotate" targetRef="C_clear" />
+        <bpmn:sequenceFlow id="c12" sourceRef="C_annotate" targetRef="C_course" />
+        <bpmn:sequenceFlow id="c_plain" name="no" sourceRef="C_course" targetRef="C_land_merge" />
+        <bpmn:sequenceFlow id="c_bank" name="yes" sourceRef="C_course" targetRef="C_sample_merge">
+          <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">the topic's origin is course, read from the origin line in goals.md, and the instructor invoked curation in this session, said the run is theirs and is there to review. If nobody said so, it is not theirs</bpmn:conditionExpression>
+        </bpmn:sequenceFlow>
+        <bpmn:sequenceFlow id="c_b1" sourceRef="C_sample_merge" targetRef="C_sample" />
+        <bpmn:sequenceFlow id="c_b2" sourceRef="C_sample" targetRef="C_review_merge" />
+        <bpmn:sequenceFlow id="c_b3" sourceRef="C_review_merge" targetRef="C_gen_review" />
+        <bpmn:sequenceFlow id="c_b4" sourceRef="C_gen_review" targetRef="C_settled" />
+        <bpmn:sequenceFlow id="c_b5" name="no" sourceRef="C_settled" targetRef="C_revise">
+          <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">the instructor's reaction to a sample asks for a change to its generator</bpmn:conditionExpression>
+        </bpmn:sequenceFlow>
+        <bpmn:sequenceFlow id="c_b6" sourceRef="C_revise" targetRef="C_sample_merge" />
+        <bpmn:sequenceFlow id="c_b7" name="yes" sourceRef="C_settled" targetRef="C_draft_merge" />
+        <bpmn:sequenceFlow id="c_b8" sourceRef="C_draft_merge" targetRef="C_draft" />
+        <bpmn:sequenceFlow id="c_b9" sourceRef="C_draft" targetRef="C_survey" />
+        <bpmn:sequenceFlow id="c_b10" sourceRef="C_survey" targetRef="C_problems" />
+        <bpmn:sequenceFlow id="c_b11" name="yes" sourceRef="C_problems" targetRef="C_draft_merge">
+          <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">survey reports problems in a bank: handed back to that activity's drafter, in full mode, until there are none</bpmn:conditionExpression>
+        </bpmn:sequenceFlow>
+        <bpmn:sequenceFlow id="c_b12" name="no" sourceRef="C_problems" targetRef="C_bank_check" />
+        <bpmn:sequenceFlow id="c_b13" sourceRef="C_bank_check" targetRef="C_keep" />
+        <bpmn:sequenceFlow id="c_b14" sourceRef="C_keep" targetRef="C_fault" />
+        <bpmn:sequenceFlow id="c_b15" name="yes" sourceRef="C_fault" targetRef="C_review_merge">
+          <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">a finding is marked generator, or the instructor reads one that way</bpmn:conditionExpression>
+        </bpmn:sequenceFlow>
+        <bpmn:sequenceFlow id="c_b16" name="no" sourceRef="C_fault" targetRef="C_land_merge" />
+        <bpmn:sequenceFlow id="c_land" sourceRef="C_land_merge" targetRef="C_clear" />
         <bpmn:sequenceFlow id="c16" sourceRef="C_clear" targetRef="C_blocked" />
         <bpmn:sequenceFlow id="c13" name="no" sourceRef="C_blocked" targetRef="C_end_ready" />
         <bpmn:sequenceFlow id="c14" name="yes" sourceRef="C_blocked" targetRef="C_end_blocked" />
@@ -610,6 +738,9 @@
         <bpmn:dataObjectReference id="DOR_c_status" name="status.jsonl" dataObjectRef="DO_status" />
         <bpmn:dataObjectReference id="DOR_c_tasks" name="tasks/" dataObjectRef="DO_tasks" />
         <bpmn:dataObject id="DO_tasks" />
+        <bpmn:dataObjectReference id="DOR_c_tasks2" name="tasks/" dataObjectRef="DO_tasks" />
+        <bpmn:dataObjectReference id="DOR_c_rubrics" name="rubrics/" dataObjectRef="DO_c_rubrics" />
+        <bpmn:dataObject id="DO_c_rubrics" />
       </bpmn:subProcess>
       <bpmn:subProcess id="Sub_learn" name="Learn">
         <bpmn:documentation>workflows/learn/skills/study/SKILL.md — guide: workflows/learn/guides/study/howto.md</bpmn:documentation>
@@ -652,10 +783,17 @@
             <bpmn:flowNodeRef>S_merge3</bpmn:flowNodeRef>
             <bpmn:flowNodeRef>S_gate_on</bpmn:flowNodeRef>
             <bpmn:flowNodeRef>End_S</bpmn:flowNodeRef>
+            <bpmn:flowNodeRef>S_el_first</bpmn:flowNodeRef>
+            <bpmn:flowNodeRef>S_el_offer</bpmn:flowNodeRef>
+            <bpmn:flowNodeRef>S_el_choice</bpmn:flowNodeRef>
           </bpmn:lane>
           <bpmn:lane id="L_learn_p" name="PROGRAM">
             <bpmn:flowNodeRef>S_log</bpmn:flowNodeRef>
             <bpmn:flowNodeRef>S_block</bpmn:flowNodeRef>
+            <bpmn:flowNodeRef>S_el_done</bpmn:flowNodeRef>
+            <bpmn:flowNodeRef>S_el_defer</bpmn:flowNodeRef>
+            <bpmn:flowNodeRef>S_el_retire</bpmn:flowNodeRef>
+            <bpmn:flowNodeRef>S_el_merge</bpmn:flowNodeRef>
           </bpmn:lane>
         </bpmn:laneSet>
         <bpmn:startEvent id="Start_S" name="activities.md has live candidates">
@@ -685,10 +823,62 @@
         <bpmn:exclusiveGateway id="S_merge">
           <bpmn:incoming>s2</bpmn:incoming>
           <bpmn:incoming>s12</bpmn:incoming>
+          <bpmn:incoming>s_el_here</bpmn:incoming>
           <bpmn:outgoing>s3</bpmn:outgoing>
         </bpmn:exclusiveGateway>
-        <bpmn:task id="S_choose" name="Choose among what the supply offers">
+        <bpmn:exclusiveGateway id="S_el_first" name="first time at&#10;a marked goal?" default="s_el_no">
+          <bpmn:documentation>workflows/learn/skills/study/SKILL.md, Goals taught elsewhere. A goal is marked when goals.md gives it a `taught elsewhere` line, which only the tutor reads. First time means all of: it is marked, it has no attempts, it is not currently deferred, status.jsonl has no `resumed` line for it, and the menu has not already been offered for it this sitting. Nothing records "do it here", so that choice comes back through this gateway and leaves by "no".</bpmn:documentation>
           <bpmn:incoming>s3</bpmn:incoming>
+          <bpmn:outgoing>s_el_no</bpmn:outgoing>
+          <bpmn:outgoing>s_el_yes</bpmn:outgoing>
+        </bpmn:exclusiveGateway>
+        <bpmn:task id="S_el_offer" name="Offer the elsewhere menu">
+          <bpmn:documentation>workflows/learn/skills/study/SKILL.md, Goals taught elsewhere. The tutor says what the goal is, what would count and where it is taught, then offers four choices in one short block, and the learner picks; no icon because both take part. (1) Do it here: ordinary study, nothing recorded. (2) Already done elsewhere: node workflows/learn/tools/record-attempt.mjs &lt;topic-folder&gt; &lt;goal-id&gt; elsewhere --outcome elsewhere --note "&lt;where&gt;", the note optional; it counts as met and comes back for review in about three days. (3) I'll learn it there later: node workflows/learn/tools/record-status.mjs &lt;topic-folder&gt; deferred &lt;goal-id&gt; --where "&lt;where&gt;". (4) Remove it: node workflows/learn/tools/record-status.mjs &lt;topic-folder&gt; retired &lt;goal-id&gt; --reason "&lt;their words&gt;". Not drawn here: when the survey phase is `waiting elsewhere`, every other required goal is met, retired or deferred, and the tutor asks once about each deferred goal whether it is done there. Yes records `elsewhere` as in (2); not yet changes nothing; let's do it here records `resumed` with record-status.mjs, and the goal is then offered without this menu.</bpmn:documentation>
+          <bpmn:incoming>s_el_yes</bpmn:incoming>
+          <bpmn:outgoing>s_el_offered</bpmn:outgoing>
+        </bpmn:task>
+        <bpmn:exclusiveGateway id="S_el_choice" name="which did&#10;they choose?" default="s_el_here">
+          <bpmn:incoming>s_el_offered</bpmn:incoming>
+          <bpmn:outgoing>s_el_here</bpmn:outgoing>
+          <bpmn:outgoing>s_el_isdone</bpmn:outgoing>
+          <bpmn:outgoing>s_el_later</bpmn:outgoing>
+          <bpmn:outgoing>s_el_remove</bpmn:outgoing>
+        </bpmn:exclusiveGateway>
+        <bpmn:scriptTask id="S_el_done" name="Record it done elsewhere&#10;record-attempt.mjs">
+          <bpmn:documentation>workflows/learn/tools/record-attempt.mjs with --outcome elsewhere and an optional --note saying where. met() treats `elsewhere` exactly like `declared`, so the goal counts as met and the schedule brings it back for review in about three days, judged as strictly as any other.</bpmn:documentation>
+          <bpmn:incoming>s_el_isdone</bpmn:incoming>
+          <bpmn:outgoing>s_el_r1</bpmn:outgoing>
+          <bpmn:dataOutputAssociation id="a_el_done_log">
+            <bpmn:targetRef>DOR_el_log</bpmn:targetRef>
+          </bpmn:dataOutputAssociation>
+        </bpmn:scriptTask>
+        <bpmn:scriptTask id="S_el_defer" name="Defer it&#10;record-status.mjs">
+          <bpmn:documentation>workflows/learn/tools/record-status.mjs, writing a `deferred` line with --where, which is required so the later check-in has something to ask about. A deferred goal is never offered until a `resumed` line brings it back.</bpmn:documentation>
+          <bpmn:incoming>s_el_later</bpmn:incoming>
+          <bpmn:outgoing>s_el_r2</bpmn:outgoing>
+          <bpmn:dataOutputAssociation id="a_el_defer_status">
+            <bpmn:targetRef>DOR_el_status_d</bpmn:targetRef>
+          </bpmn:dataOutputAssociation>
+        </bpmn:scriptTask>
+        <bpmn:scriptTask id="S_el_retire" name="Retire it&#10;record-status.mjs">
+          <bpmn:documentation>workflows/learn/tools/record-status.mjs, writing a `retired` line with the learner's own words as --reason, exactly as when a goal turns out not to matter.</bpmn:documentation>
+          <bpmn:incoming>s_el_remove</bpmn:incoming>
+          <bpmn:outgoing>s_el_r3</bpmn:outgoing>
+          <bpmn:dataOutputAssociation id="a_el_retire_status">
+            <bpmn:targetRef>DOR_el_status_r</bpmn:targetRef>
+          </bpmn:dataOutputAssociation>
+        </bpmn:scriptTask>
+        <bpmn:exclusiveGateway id="S_el_merge">
+          <bpmn:incoming>s_el_r1</bpmn:incoming>
+          <bpmn:incoming>s_el_r2</bpmn:incoming>
+          <bpmn:incoming>s_el_r3</bpmn:incoming>
+          <bpmn:outgoing>s_el_rejoin</bpmn:outgoing>
+        </bpmn:exclusiveGateway>
+        <bpmn:dataObjectReference id="DOR_el_log" name="attempts.jsonl" dataObjectRef="DO_log" />
+        <bpmn:dataObjectReference id="DOR_el_status_d" name="status.jsonl" dataObjectRef="DO_status" />
+        <bpmn:dataObjectReference id="DOR_el_status_r" name="status.jsonl" dataObjectRef="DO_status" />
+        <bpmn:task id="S_choose" name="Choose among what the entries offer">
+          <bpmn:incoming>s_el_no</bpmn:incoming>
           <bpmn:outgoing>s4</bpmn:outgoing>
         </bpmn:task>
         <bpmn:exclusiveGateway id="S_offerable" name="anything&#10;to run?" default="s16">
@@ -697,7 +887,7 @@
           <bpmn:outgoing>s16</bpmn:outgoing>
         </bpmn:exclusiveGateway>
         <bpmn:scriptTask id="S_block" name="Say what has to change upstream&#10;record-status.mjs">
-          <bpmn:documentation>workflows/learn/tools/record-status.mjs, writing a `blocked` line to this topic's status log. Two things reach it, and the difference is who has to act. `needs: curation` — every live candidate for this goal has been dropped, or the instances its supply produces are bad; an agent fixes that alone and learn spawns it in the background. `needs: goal-setting` — the criterion turns out to be untestable or to bundle two capabilities; that needs the learner, and goes on their menu. A tutor who wrote neither would leave a goal that cannot be worked on and nothing saying why.</bpmn:documentation>
+          <bpmn:documentation>workflows/learn/tools/record-status.mjs, writing a `blocked` line to this topic's status log. Two things reach it, and the difference is who has to act. `needs: curation`: every live candidate for this goal has been dropped, or the questions its generator produces are bad; an agent fixes that alone and learn spawns it in the background. `needs: goal-setting`: the criterion turns out to be untestable or to bundle two capabilities; that needs the learner, and goes on their menu. A tutor who wrote neither would leave a goal that cannot be worked on and nothing saying why.</bpmn:documentation>
           <bpmn:incoming>s16</bpmn:incoming>
           <bpmn:outgoing>s15</bpmn:outgoing>
           <bpmn:property id="Property_s_block" name="__targetRef_placeholder" />
@@ -749,7 +939,7 @@
             </bpmn:dataOutputAssociation>
           </bpmn:serviceTask>
           <bpmn:scriptTask id="RUN_served" name="What has this already been given?&#10;served.mjs">
-            <bpmn:documentation>workflows/learn/tools/served.mjs — the labels this goal has already been given, returned unmodified. A label is whatever the supply that wrote it chose to write, and that supply is the only thing that reads it back: the vocabulary supply writes the move and a note on the instance, the curated supply writes the entry id and a bank item after a slash. Recomputed from the attempt log rather than cached, because a generator's labels grow for as long as the goal keeps coming back in review.</bpmn:documentation>
+            <bpmn:documentation>workflows/learn/tools/served.mjs, the labels this goal has already been given, returned unmodified. A label is whatever the activity that wrote it chose to write, and that activity is the only thing that reads it back: a live vocabulary move writes `&lt;MOVE&gt;: &lt;instance&gt;`, and a banked question writes its path under the bank. Recomputed from the attempt log rather than cached, because a generator's labels grow for as long as the goal keeps coming back in review.</bpmn:documentation>
             <bpmn:property id="Property_served_tr" name="__targetRef_placeholder" />
             <bpmn:dataInputAssociation id="a_served_log">
               <bpmn:sourceRef>DOR_run_log</bpmn:sourceRef>
@@ -777,7 +967,7 @@
           <bpmn:outgoing>s10</bpmn:outgoing>
         </bpmn:exclusiveGateway>
         <bpmn:scriptTask id="S_log" name="Log the attempt&#10;record-attempt.mjs">
-          <bpmn:documentation>workflows/learn/tools/record-attempt.mjs. Every attempt goes through it, missed ones included — nothing can be worked out from a record of only what worked. It checks the goal id against goals.md, stores the two axes raw and collapses nothing, records the label and tags the supply returned, and asks the goal's own bar of the whole log. It sets no date and writes nowhere else: the schedule is a fold over the file it has just appended to, so recording the attempt is what sets the date.</bpmn:documentation>
+          <bpmn:documentation>workflows/learn/tools/record-attempt.mjs. Every attempt goes through it, missed ones included, because nothing can be worked out from a record of only what worked. It checks the goal id against goals.md, stores the two axes raw and collapses nothing, records the label and tags the served question carried, and asks the goal's own bar of the whole log. It sets no date and writes nowhere else: the schedule is a fold over the file it has just appended to, so recording the attempt is what sets the date.</bpmn:documentation>
           <bpmn:incoming>s10</bpmn:incoming>
           <bpmn:outgoing>s14</bpmn:outgoing>
           <bpmn:property id="Property_s_log" name="__targetRef_placeholder" />
@@ -796,9 +986,11 @@
         <bpmn:exclusiveGateway id="S_merge3">
           <bpmn:incoming>s14</bpmn:incoming>
           <bpmn:incoming>s15</bpmn:incoming>
+          <bpmn:incoming>s_el_rejoin</bpmn:incoming>
           <bpmn:outgoing>s11</bpmn:outgoing>
         </bpmn:exclusiveGateway>
         <bpmn:exclusiveGateway id="S_gate_on" name="carry&#10;on?" default="s13">
+          <bpmn:documentation>After a not-met ruling the learner is offered three choices: try again now, come back later, or mark it learned. Marking it learned is one more pass through record-attempt.mjs, with --outcome declared, which satisfies any bar and sends the goal to review like any other.</bpmn:documentation>
           <bpmn:incoming>s11</bpmn:incoming>
           <bpmn:outgoing>s12</bpmn:outgoing>
           <bpmn:outgoing>s13</bpmn:outgoing>
@@ -820,10 +1012,29 @@
         <bpmn:sequenceFlow id="s16" name="no" sourceRef="S_offerable" targetRef="S_block" />
         <bpmn:sequenceFlow id="s1" sourceRef="Start_S" targetRef="S_open" />
         <bpmn:sequenceFlow id="s2" sourceRef="S_open" targetRef="S_merge" />
-        <bpmn:sequenceFlow id="s3" sourceRef="S_merge" targetRef="S_choose" />
+        <bpmn:sequenceFlow id="s3" sourceRef="S_merge" targetRef="S_el_first" />
+        <bpmn:sequenceFlow id="s_el_no" name="no" sourceRef="S_el_first" targetRef="S_choose" />
+        <bpmn:sequenceFlow id="s_el_yes" name="yes" sourceRef="S_el_first" targetRef="S_el_offer">
+          <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">the goal carries taught elsewhere, has no attempts, is not deferred, has no resumed line in status.jsonl, and has not been offered the menu this sitting</bpmn:conditionExpression>
+        </bpmn:sequenceFlow>
+        <bpmn:sequenceFlow id="s_el_offered" sourceRef="S_el_offer" targetRef="S_el_choice" />
+        <bpmn:sequenceFlow id="s_el_here" name="do it here" sourceRef="S_el_choice" targetRef="S_merge" />
+        <bpmn:sequenceFlow id="s_el_isdone" name="already done&#10;elsewhere" sourceRef="S_el_choice" targetRef="S_el_done">
+          <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">they say they have already done it where it is taught</bpmn:conditionExpression>
+        </bpmn:sequenceFlow>
+        <bpmn:sequenceFlow id="s_el_later" name="learn it&#10;there later" sourceRef="S_el_choice" targetRef="S_el_defer">
+          <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">they will learn it there later</bpmn:conditionExpression>
+        </bpmn:sequenceFlow>
+        <bpmn:sequenceFlow id="s_el_remove" name="remove it" sourceRef="S_el_choice" targetRef="S_el_retire">
+          <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">they want the goal removed</bpmn:conditionExpression>
+        </bpmn:sequenceFlow>
+        <bpmn:sequenceFlow id="s_el_r1" sourceRef="S_el_done" targetRef="S_el_merge" />
+        <bpmn:sequenceFlow id="s_el_r2" sourceRef="S_el_defer" targetRef="S_el_merge" />
+        <bpmn:sequenceFlow id="s_el_r3" sourceRef="S_el_retire" targetRef="S_el_merge" />
+        <bpmn:sequenceFlow id="s_el_rejoin" sourceRef="S_el_merge" targetRef="S_merge3" />
         <bpmn:sequenceFlow id="s4" sourceRef="S_choose" targetRef="S_offerable" />
         <bpmn:sequenceFlow id="s5" name="yes" sourceRef="S_offerable" targetRef="S_run">
-          <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">the goal's supply returned something to run. Otherwise that goal is stuck until something upstream changes, and saying so is the only useful thing left to do with it</bpmn:conditionExpression>
+          <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">an activity entry for the goal has something to run. Otherwise that goal is stuck until something upstream changes, and saying so is the only useful thing left to do with it</bpmn:conditionExpression>
         </bpmn:sequenceFlow>
         <bpmn:sequenceFlow id="s6" sourceRef="S_run" targetRef="S_gate_judge" />
         <bpmn:sequenceFlow id="s7" name="yes" sourceRef="S_gate_judge" targetRef="S_judge">
@@ -953,8 +1164,8 @@
         <bpmn:incoming>qf6</bpmn:incoming>
         <bpmn:outgoing>qf7</bpmn:outgoing>
       </bpmn:scriptTask>
-      <bpmn:userTask id="Q_answer" name="Answer them cold, with nothing else open">
-        <bpmn:documentation>The same separation the real quiz has. No hint, no definition, and no confirming that an answer sounds right, until it is submitted.</bpmn:documentation>
+      <bpmn:userTask id="Q_answer" name="Answer them, asking for help if wanted">
+        <bpmn:documentation>Cold if they can. The agent volunteers nothing while the page is open, but answers whatever they ask; an answer they talked through is graded as unaided: no and counted as helped in the report.</bpmn:documentation>
         <bpmn:incoming>qf7</bpmn:incoming>
         <bpmn:outgoing>qf8</bpmn:outgoing>
       </bpmn:userTask>
@@ -1045,7 +1256,7 @@
           <bpmn:targetRef>Property_r_due</bpmn:targetRef>
         </bpmn:dataInputAssociation>
       </bpmn:scriptTask>
-      <bpmn:serviceTask id="R_setup" name="Set the task: whatever the goal&#39;s supply returns">
+      <bpmn:serviceTask id="R_setup" name="Set the task: whatever the chosen entry serves">
         <bpmn:incoming>Flow_0ybsgz2</bpmn:incoming>
         <bpmn:outgoing>Flow_0zf28qi</bpmn:outgoing>
         <bpmn:property id="Property_04229ld" name="__targetRef_placeholder" />
@@ -1081,7 +1292,8 @@
         <bpmn:incoming>r0</bpmn:incoming>
         <bpmn:outgoing>Flow_0ybsgz2</bpmn:outgoing>
       </bpmn:exclusiveGateway>
-      <bpmn:userTask id="R_attempt" name="Attempt it cold, with no help offered">
+      <bpmn:userTask id="R_attempt" name="Attempt it, with help only if asked">
+        <bpmn:documentation>The agent volunteers nothing, and helps at once whenever asked. A helped attempt is ruled unaided: no and counts as a lapse, so the goal comes back sooner.</bpmn:documentation>
         <bpmn:incoming>Flow_0zf28qi</bpmn:incoming>
         <bpmn:outgoing>r4</bpmn:outgoing>
       </bpmn:userTask>
@@ -1160,7 +1372,7 @@
       <bpmn:sequenceFlow id="r12" name="no" sourceRef="R_another" targetRef="End_R" />
       <bpmn:sequenceFlow id="Flow_0zf28qi" sourceRef="R_setup" targetRef="R_checkable" />
       <bpmn:sequenceFlow id="r15" name="yes" sourceRef="R_checkable" targetRef="R_attempt">
-        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">activities.md has a live entry that checks this goal, so the supply has something to serve</bpmn:conditionExpression>
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">activities.md has a live entry that checks this goal, so there is something to serve</bpmn:conditionExpression>
       </bpmn:sequenceFlow>
       <bpmn:sequenceFlow id="r13" name="no" sourceRef="R_checkable" targetRef="R_block" />
       <bpmn:sequenceFlow id="r14" sourceRef="R_block" targetRef="R_merge2" />
@@ -1984,7 +2196,7 @@
   <bpmndi:BPMNDiagram id="D_learn">
     <bpmndi:BPMNPlane id="Pl_learn" bpmnElement="Sub_learn">
       <bpmndi:BPMNShape id="L_learn_p_di" bpmnElement="L_learn_p" isHorizontal="true" color:background-color="#eef5f4" color:border-color="#7a918d">
-        <dc:Bounds x="160" y="610" width="1900" height="250" />
+        <dc:Bounds x="160" y="610" width="1900" height="390" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="L_learn_a_di" bpmnElement="L_learn_a" isHorizontal="true" color:background-color="#fdf7ee" color:border-color="#9c8d76">
         <dc:Bounds x="160" y="240" width="1900" height="370" />
@@ -2176,9 +2388,8 @@
         <di:waypoint x="530" y="380" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="s3_di" bpmnElement="s3">
-        <di:waypoint x="555" y="355" />
-        <di:waypoint x="555" y="225" />
-        <di:waypoint x="620" y="225" />
+        <di:waypoint x="580" y="380" />
+        <di:waypoint x="645" y="380" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="s4_di" bpmnElement="s4">
         <di:waypoint x="730" y="280" />
@@ -2229,12 +2440,12 @@
         <di:waypoint x="1870" y="380" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="s12_di" bpmnElement="s12">
-        <di:waypoint x="1895" y="405" />
-        <di:waypoint x="1895" y="850" />
-        <di:waypoint x="555" y="850" />
-        <di:waypoint x="555" y="405" />
+        <di:waypoint x="1895" y="355" />
+        <di:waypoint x="1895" y="100" />
+        <di:waypoint x="555" y="100" />
+        <di:waypoint x="555" y="355" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1904" y="443" width="18" height="14" />
+          <dc:Bounds x="1902" y="318" width="18" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="s13_di" bpmnElement="s13">
@@ -2243,6 +2454,134 @@
         <bpmndi:BPMNLabel>
           <dc:Bounds x="1933" y="362" width="13" height="14" />
         </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="S_el_first_di" bpmnElement="S_el_first" isMarkerVisible="true">
+        <dc:Bounds x="645" y="355" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="680" y="408" width="80" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_el_offer_di" bpmnElement="S_el_offer">
+        <dc:Bounds x="610" y="540" width="120" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_el_choice_di" bpmnElement="S_el_choice" isMarkerVisible="true">
+        <dc:Bounds x="530" y="545" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="462" y="580" width="66" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_el_done_di" bpmnElement="S_el_done">
+        <dc:Bounds x="230" y="670" width="140" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_el_defer_di" bpmnElement="S_el_defer">
+        <dc:Bounds x="485" y="670" width="140" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_el_retire_di" bpmnElement="S_el_retire">
+        <dc:Bounds x="650" y="670" width="140" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_el_merge_di" bpmnElement="S_el_merge" isMarkerVisible="true">
+        <dc:Bounds x="530" y="875" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_el_log_di" bpmnElement="DOR_el_log" color:background-color="#f6ecf7">
+        <dc:Bounds x="242" y="780" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="226" y="834" width="68" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_el_status_d_di" bpmnElement="DOR_el_status_d" color:background-color="#f0eef7">
+        <dc:Bounds x="490" y="780" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="476" y="834" width="64" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_el_status_r_di" bpmnElement="DOR_el_status_r" color:background-color="#f0eef7">
+        <dc:Bounds x="742" y="780" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="728" y="834" width="64" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="s_el_no_di" bpmnElement="s_el_no">
+        <di:waypoint x="670" y="355" />
+        <di:waypoint x="670" y="280" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="652" y="300" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="s_el_yes_di" bpmnElement="s_el_yes">
+        <di:waypoint x="670" y="405" />
+        <di:waypoint x="670" y="540" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="648" y="470" width="18" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="s_el_offered_di" bpmnElement="s_el_offered">
+        <di:waypoint x="610" y="570" />
+        <di:waypoint x="580" y="570" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="s_el_here_di" bpmnElement="s_el_here">
+        <di:waypoint x="555" y="545" />
+        <di:waypoint x="555" y="405" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="562" y="470" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="s_el_isdone_di" bpmnElement="s_el_isdone">
+        <di:waypoint x="530" y="570" />
+        <di:waypoint x="300" y="570" />
+        <di:waypoint x="300" y="670" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="306" y="595" width="70" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="s_el_later_di" bpmnElement="s_el_later">
+        <di:waypoint x="555" y="595" />
+        <di:waypoint x="555" y="670" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="490" y="630" width="58" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="s_el_remove_di" bpmnElement="s_el_remove">
+        <di:waypoint x="555" y="595" />
+        <di:waypoint x="555" y="630" />
+        <di:waypoint x="720" y="630" />
+        <di:waypoint x="720" y="670" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="640" y="636" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="s_el_r1_di" bpmnElement="s_el_r1">
+        <di:waypoint x="340" y="750" />
+        <di:waypoint x="340" y="900" />
+        <di:waypoint x="530" y="900" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="s_el_r2_di" bpmnElement="s_el_r2">
+        <di:waypoint x="555" y="750" />
+        <di:waypoint x="555" y="875" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="s_el_r3_di" bpmnElement="s_el_r3">
+        <di:waypoint x="700" y="750" />
+        <di:waypoint x="700" y="900" />
+        <di:waypoint x="580" y="900" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="s_el_rejoin_di" bpmnElement="s_el_rejoin">
+        <di:waypoint x="555" y="925" />
+        <di:waypoint x="555" y="960" />
+        <di:waypoint x="1840" y="960" />
+        <di:waypoint x="1840" y="330" />
+        <di:waypoint x="1780" y="330" />
+        <di:waypoint x="1780" y="355" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="a_el_done_log_di" bpmnElement="a_el_done_log">
+        <di:waypoint x="260" y="750" />
+        <di:waypoint x="260" y="780" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="a_el_defer_status_di" bpmnElement="a_el_defer_status">
+        <di:waypoint x="508" y="750" />
+        <di:waypoint x="508" y="780" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="a_el_retire_status_di" bpmnElement="a_el_retire_status">
+        <di:waypoint x="760" y="750" />
+        <di:waypoint x="760" y="780" />
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
@@ -2310,13 +2649,13 @@
   <bpmndi:BPMNDiagram id="D_curate">
     <bpmndi:BPMNPlane id="Pl_curate" bpmnElement="Sub_curate">
       <bpmndi:BPMNShape id="L_cur_p_di" bpmnElement="L_cur_p" isHorizontal="true" color:background-color="#eef5f4" color:border-color="#7a918d">
-        <dc:Bounds x="160" y="570" width="1730" height="90" />
+        <dc:Bounds x="160" y="570" width="3980" height="130" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="L_cur_a_di" bpmnElement="L_cur_a" isHorizontal="true" color:background-color="#fdf7ee" color:border-color="#9c8d76">
-        <dc:Bounds x="160" y="170" width="1730" height="400" />
+        <dc:Bounds x="160" y="170" width="3980" height="400" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="L_cur_h_di" bpmnElement="L_cur_h" isHorizontal="true" color:background-color="#fdf3f7" color:border-color="#9c8490">
-        <dc:Bounds x="160" y="80" width="1730" height="90" />
+        <dc:Bounds x="160" y="20" width="3980" height="150" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="C_start_di" bpmnElement="C_start">
         <dc:Bounds x="200" y="332" width="36" height="36" />
@@ -2358,24 +2697,24 @@
         <dc:Bounds x="1500" y="310" width="170" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="C_clear_di" bpmnElement="C_clear">
-        <dc:Bounds x="1400" y="575" width="220" height="80" />
+        <dc:Bounds x="3730" y="575" width="220" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="C_blocked_di" bpmnElement="C_blocked" isMarkerVisible="true">
-        <dc:Bounds x="1710" y="325" width="50" height="50" />
+        <dc:Bounds x="3980" y="325" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1681" y="315" width="38" height="27" />
+          <dc:Bounds x="3951" y="315" width="38" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="C_end_ready_di" bpmnElement="C_end_ready">
-        <dc:Bounds x="1772" y="246" width="36" height="36" />
+        <dc:Bounds x="4042" y="246" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1761" y="226" width="59" height="14" />
+          <dc:Bounds x="4031" y="226" width="59" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="C_end_blocked_di" bpmnElement="C_end_blocked">
-        <dc:Bounds x="1772" y="426" width="36" height="36" />
+        <dc:Bounds x="4042" y="426" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1716" y="468" width="72" height="40" />
+          <dc:Bounds x="3986" y="468" width="72" height="40" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="DOR_c_goals1_di" bpmnElement="DOR_c_goals1" color:background-color="#eaf2fb">
@@ -2421,15 +2760,15 @@
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="DOR_c_goals4_di" bpmnElement="DOR_c_goals4" color:background-color="#eaf2fb">
-        <dc:Bounds x="1490" y="470" width="36" height="50" />
+        <dc:Bounds x="3820" y="470" width="36" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1486" y="524" width="45" height="14" />
+          <dc:Bounds x="3816" y="524" width="45" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="DOR_c_status_di" bpmnElement="DOR_c_status" color:background-color="#f0eef7">
-        <dc:Bounds x="1550" y="470" width="36" height="50" />
+        <dc:Bounds x="3880" y="470" width="36" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1536" y="524" width="64" height="14" />
+          <dc:Bounds x="3866" y="524" width="64" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="DOR_c_tasks_di" bpmnElement="DOR_c_tasks" color:background-color="#f2f0e6">
@@ -2490,12 +2829,12 @@
         <di:waypoint x="1456" y="495" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="a_clear_goals_di" bpmnElement="a_clear_goals">
-        <di:waypoint x="1508" y="520" />
-        <di:waypoint x="1508" y="575" />
+        <di:waypoint x="3838" y="520" />
+        <di:waypoint x="3838" y="575" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="a_clear_status_di" bpmnElement="a_clear_status">
-        <di:waypoint x="1568" y="575" />
-        <di:waypoint x="1568" y="520" />
+        <di:waypoint x="3898" y="575" />
+        <di:waypoint x="3898" y="520" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="c1_di" bpmnElement="c1">
         <di:waypoint x="236" y="350" />
@@ -2558,30 +2897,222 @@
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="c12_di" bpmnElement="c12">
-        <di:waypoint x="1615" y="390" />
-        <di:waypoint x="1615" y="575" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="c16_di" bpmnElement="c16">
-        <di:waypoint x="1620" y="615" />
-        <di:waypoint x="1690" y="615" />
-        <di:waypoint x="1690" y="350" />
+        <di:waypoint x="1670" y="350" />
         <di:waypoint x="1710" y="350" />
       </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="c16_di" bpmnElement="c16">
+        <di:waypoint x="3950" y="615" />
+        <di:waypoint x="3960" y="615" />
+        <di:waypoint x="3960" y="350" />
+        <di:waypoint x="3980" y="350" />
+      </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="c13_di" bpmnElement="c13">
-        <di:waypoint x="1735" y="325" />
-        <di:waypoint x="1735" y="264" />
-        <di:waypoint x="1772" y="264" />
+        <di:waypoint x="4005" y="325" />
+        <di:waypoint x="4005" y="264" />
+        <di:waypoint x="4042" y="264" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1745" y="283" width="13" height="14" />
+          <dc:Bounds x="4015" y="283" width="13" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="c14_di" bpmnElement="c14">
-        <di:waypoint x="1735" y="375" />
-        <di:waypoint x="1735" y="444" />
-        <di:waypoint x="1772" y="444" />
+        <di:waypoint x="4005" y="375" />
+        <di:waypoint x="4005" y="444" />
+        <di:waypoint x="4042" y="444" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1743" y="381" width="18" height="14" />
+          <dc:Bounds x="4013" y="381" width="18" height="14" />
         </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="C_course_di" bpmnElement="C_course" isMarkerVisible="true">
+        <dc:Bounds x="1710" y="325" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1683" y="283" width="104" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="C_sample_merge_di" bpmnElement="C_sample_merge" isMarkerVisible="true">
+        <dc:Bounds x="1800" y="325" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="C_sample_di" bpmnElement="C_sample">
+        <dc:Bounds x="1890" y="310" width="170" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="C_review_merge_di" bpmnElement="C_review_merge" isMarkerVisible="true">
+        <dc:Bounds x="2100" y="100" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="C_gen_review_di" bpmnElement="C_gen_review">
+        <dc:Bounds x="2190" y="85" width="190" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="C_settled_di" bpmnElement="C_settled" isMarkerVisible="true">
+        <dc:Bounds x="2420" y="100" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2415" y="66" width="60" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="C_revise_di" bpmnElement="C_revise">
+        <dc:Bounds x="2210" y="422" width="170" height="76" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="C_draft_merge_di" bpmnElement="C_draft_merge" isMarkerVisible="true">
+        <dc:Bounds x="2520" y="325" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="C_draft_di" bpmnElement="C_draft">
+        <dc:Bounds x="2610" y="310" width="170" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="C_survey_di" bpmnElement="C_survey">
+        <dc:Bounds x="2820" y="575" width="170" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="C_problems_di" bpmnElement="C_problems" isMarkerVisible="true">
+        <dc:Bounds x="3030" y="325" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2970" y="290" width="52" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="C_bank_check_di" bpmnElement="C_bank_check">
+        <dc:Bounds x="3130" y="310" width="180" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="C_keep_di" bpmnElement="C_keep">
+        <dc:Bounds x="3350" y="85" width="170" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="C_fault_di" bpmnElement="C_fault" isMarkerVisible="true">
+        <dc:Bounds x="3560" y="100" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3545" y="156" width="60" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="C_land_merge_di" bpmnElement="C_land_merge" isMarkerVisible="true">
+        <dc:Bounds x="3630" y="590" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_c_tasks2_di" bpmnElement="DOR_c_tasks2" color:background-color="#f2f0e6">
+        <dc:Bounds x="2630" y="450" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2633" y="504" width="32" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_c_rubrics_di" bpmnElement="DOR_c_rubrics" color:background-color="#fbeee6">
+        <dc:Bounds x="2720" y="450" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2716" y="504" width="44" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="a_draft_tasks_di" bpmnElement="a_draft_tasks">
+        <di:waypoint x="2648" y="390" />
+        <di:waypoint x="2648" y="450" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="a_draft_rubrics_di" bpmnElement="a_draft_rubrics">
+        <di:waypoint x="2738" y="390" />
+        <di:waypoint x="2738" y="450" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="c_plain_di" bpmnElement="c_plain">
+        <di:waypoint x="1735" y="375" />
+        <di:waypoint x="1735" y="685" />
+        <di:waypoint x="3655" y="685" />
+        <di:waypoint x="3655" y="640" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1742" y="385" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="c_bank_di" bpmnElement="c_bank">
+        <di:waypoint x="1760" y="350" />
+        <di:waypoint x="1800" y="350" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1768" y="333" width="18" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="c_b1_di" bpmnElement="c_b1">
+        <di:waypoint x="1850" y="350" />
+        <di:waypoint x="1890" y="350" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="c_b2_di" bpmnElement="c_b2">
+        <di:waypoint x="1975" y="310" />
+        <di:waypoint x="1975" y="125" />
+        <di:waypoint x="2100" y="125" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="c_b3_di" bpmnElement="c_b3">
+        <di:waypoint x="2150" y="125" />
+        <di:waypoint x="2190" y="125" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="c_b4_di" bpmnElement="c_b4">
+        <di:waypoint x="2380" y="125" />
+        <di:waypoint x="2420" y="125" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="c_b5_di" bpmnElement="c_b5">
+        <di:waypoint x="2445" y="150" />
+        <di:waypoint x="2445" y="460" />
+        <di:waypoint x="2380" y="460" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2450" y="160" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="c_b6_di" bpmnElement="c_b6">
+        <di:waypoint x="2210" y="460" />
+        <di:waypoint x="1825" y="460" />
+        <di:waypoint x="1825" y="375" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="c_b7_di" bpmnElement="c_b7">
+        <di:waypoint x="2470" y="125" />
+        <di:waypoint x="2495" y="125" />
+        <di:waypoint x="2495" y="350" />
+        <di:waypoint x="2520" y="350" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2474" y="106" width="18" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="c_b8_di" bpmnElement="c_b8">
+        <di:waypoint x="2570" y="350" />
+        <di:waypoint x="2610" y="350" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="c_b9_di" bpmnElement="c_b9">
+        <di:waypoint x="2780" y="350" />
+        <di:waypoint x="2905" y="350" />
+        <di:waypoint x="2905" y="575" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="c_b10_di" bpmnElement="c_b10">
+        <di:waypoint x="2990" y="615" />
+        <di:waypoint x="3055" y="615" />
+        <di:waypoint x="3055" y="375" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="c_b11_di" bpmnElement="c_b11">
+        <di:waypoint x="3055" y="325" />
+        <di:waypoint x="3055" y="250" />
+        <di:waypoint x="2545" y="250" />
+        <di:waypoint x="2545" y="325" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3062" y="285" width="18" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="c_b12_di" bpmnElement="c_b12">
+        <di:waypoint x="3080" y="350" />
+        <di:waypoint x="3130" y="350" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3093" y="333" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="c_b13_di" bpmnElement="c_b13">
+        <di:waypoint x="3310" y="350" />
+        <di:waypoint x="3435" y="350" />
+        <di:waypoint x="3435" y="165" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="c_b14_di" bpmnElement="c_b14">
+        <di:waypoint x="3520" y="125" />
+        <di:waypoint x="3560" y="125" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="c_b15_di" bpmnElement="c_b15">
+        <di:waypoint x="3585" y="100" />
+        <di:waypoint x="3585" y="38" />
+        <di:waypoint x="2125" y="38" />
+        <di:waypoint x="2125" y="100" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3590" y="70" width="18" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="c_b16_di" bpmnElement="c_b16">
+        <di:waypoint x="3610" y="125" />
+        <di:waypoint x="3655" y="125" />
+        <di:waypoint x="3655" y="590" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3620" y="108" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="c_land_di" bpmnElement="c_land">
+        <di:waypoint x="3680" y="615" />
+        <di:waypoint x="3730" y="615" />
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>

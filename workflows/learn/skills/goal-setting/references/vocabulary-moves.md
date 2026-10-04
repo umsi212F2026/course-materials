@@ -1,8 +1,10 @@
-# The vocabulary supply
+# The vocabulary moves
 
-An implementation of the `supply` slot — see [`slots.md`](slots.md) for the contract and for
-the other six slots. A goal carrying `supply: vocabulary` gets its activities from here rather
-than from `activities.md`.
+The spec of the `a-words` generator. Every topic with words has one activity, `a-words`, whose
+entry in `activities.md` carries `serves: group vocabulary` and points here; see
+[`slots.md`](slots.md) for the contract every activity meets. A course topic's `a-words` has a
+bank, one scenario file per word in `tasks/a-words/<goal-id>.md`, drafted from these moves. A
+word with nothing banked has one move set live, from this file.
 
 Also the definition site for `criterion: vocabulary`, which is one sentence and is never
 restated per word and never negotiated with the learner.
@@ -21,7 +23,7 @@ at runtime.
 > Given the goal and the labels already served, return an instruction, a label, and tags.
 
 **Input.** The goal's own entry in `goals.md` — its `goal` line is the word — plus the three
-fields it carries for this supply and nothing else reads:
+fields it carries for this generator and nothing else reads:
 
 | field                | which move it feeds                                                                       |
 | -------------------- | ----------------------------------------------------------------------------------------- |
@@ -30,7 +32,7 @@ fields it carries for this supply and nothing else reads:
 | _synonyms_           | DEFINE rejects one as an answer, DISTINGUISH is never aimed at one, INTERPRET may use one |
 
 **The last two are absent when there is nothing to put in them**, rather than present and
-empty. A word with no confusable and no other name carries neither line, and the supply reads
+empty. A word with no confusable and no other name carries neither line, and the generator reads
 that as: don't pick DISTINGUISH for this one. Only _what it names_ is written every time,
 because DEFINE has nothing to check against without it.
 
@@ -43,16 +45,18 @@ And the labels already served, from
 
 **Output.**
 
-- **instruction** — one move, instantiated, and no more than it asks for. Rewording DEFINE into
+- **instruction**: one move, instantiated, and no more than it asks for. Rewording DEFINE into
   something friendlier, or letting a CATCH item come with a hint about where the error is,
   changes what a pass would mean.
-- **label** — the move, and a few words on the instance: `CATCH: subject/verb agreement`,
-  `DISTINGUISH: vs. type`. Opaque to everything else. It is how this supply's future self
-  avoids repeating itself, and it can avoid the **shape** rather than only the exact sentence,
-  which is what a generator needs and a bank never did.
-- **tags** — `production` or `reception`, from the `kind` column below. **Load-bearing:** a
-  word carries `bar: one production pass`, and the bar reads the tag. Nothing else tells it
-  whether a move was a production one.
+- **label**: for a move set live, the move and a few words on the instance:
+  `CATCH: subject/verb agreement`, `DISTINGUISH: vs. type`. Opaque to everything else. It is
+  how this generator's future self avoids repeating itself, and it can avoid the **shape**
+  rather than only the exact sentence, which is what a generator needs and a bank never did. A
+  banked question's label is its path, `a-words/<goal-id>/<question-id>`, and its rubric
+  section carries its `move`.
+- **tags**: `production` or `reception`, from the `kind` column below; a banked question gets
+  them from its `move`. **Load-bearing:** a word carries `bar: one production pass`, and the
+  bar reads the tag. Nothing else tells it whether a move was a production one.
 
 ## The five moves
 
@@ -96,14 +100,15 @@ here.
 ## Where a word differs from any other goal, and where it doesn't
 
 **It doesn't, anywhere but its slots.** A word has an entry in `goals.md` like every other
-goal, carrying `criterion: vocabulary`, `supply: vocabulary`, `bar: one production pass` and
-`group: vocabulary` — the four `workflows/learn/tools/new-word.mjs` writes. It has a generated
-entry in `activities.md` like every other goal, so review finds it by looking for a live entry
-that checks it, with no branch on what kind of goal it is. It gets a review date the moment its
+goal, carrying `criterion: vocabulary`, `bar: one production pass` and `group: vocabulary`,
+the three `workflows/learn/tools/new-word.mjs` writes. It is served by a live entry in
+`activities.md` like every other goal, `a-words`, which names it through its group, so study
+and review reach it the way they reach anything else. It gets a review date the moment its
 bar is met, on its own clock, whatever the rest of the topic is doing.
 
 Nothing anywhere else. Where a word stands is derived from the attempt log by
 `workflows/learn/tools/survey.mjs`, like everything else about where a learner stands.
 
-**The five moves are not activity ids and never appear in `activities.md`.** They are what this
-supply writes into a label, which is where a supply's own record of what it served belongs.
+**The five moves are not activity ids and never appear in `activities.md`.** They are what a
+live move writes into its label, and what a banked question carries as its `move`, which is
+where this generator's own record of what it served belongs.

@@ -5,7 +5,7 @@
 // <d> is the directory holding the topic folders — see lib/workdir.mjs.
 //
 // THIS SCRIPT IS THE SHORTHAND FOR "IT'S A WORD", and it is the only one. There are no named
-// goal types — a word is a goal carrying four particular slot values, and this fills them in.
+// goal types: a word is a goal carrying three particular slot values, and this fills them in.
 // The alternative was a type registry, which is a second definition site, which is where the
 // goals and the definition drift apart. So: no name, one writer, and a custom shape is written
 // by filling slots directly and needs no script at all.
@@ -27,7 +27,7 @@
 import { readFileSync, writeFileSync, existsSync, readdirSync, statSync } from 'node:fs';
 import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { readIds, readActivities } from './lib/topic.mjs';
+import { readIds, readGoals, readActivities } from './lib/topic.mjs';
 import { appendStatus } from './lib/status.mjs';
 import { takeDir } from './lib/workdir.mjs';
 
@@ -100,8 +100,8 @@ if (readActivities(dir).some((e) => e.id === id)) {
 }
 
 // --- write the entry ---------------------------------------------------------
-// The four slots that make it a word, then the three fields the vocabulary supply reads. Those
-// three are left blank — they're goal-setting's to fill, and a placeholder would read as an
+// The three slots that make it a word, then the fields the a-words activity reads. Those
+// are left blank: they're goal-setting's to fill, and a placeholder would read as an
 // answer.
 //
 // `adjudicator`, `recurrence` and `is_required` are not written, because a word doesn't differ
@@ -112,7 +112,6 @@ const entry = [
   ``,
   `- **goal:** ${word}`,
   `- **criterion:** vocabulary`,
-  `- **supply:** vocabulary`,
   `- **bar:** one production pass`,
   `- **group:** vocabulary`,
   // Only the field every word has. `nearest confusable` and `synonyms` are added by whoever
@@ -120,6 +119,11 @@ const entry = [
   // field is a default written down, which is the thing the comment above is about.
   `- **what it names:**`,
 ];
+
+// A WORD ADDED TO A COURSE TOPIC IS THE LEARNER'S, not the course's. The topic's header makes
+// every goal without its own origin a course goal, so the word has to say otherwise or it would
+// become examinable.
+if (readGoals(dir).origin === 'course') entry.push(`- **origin:** learner`);
 
 const lines = readFileSync(file, 'utf8').split('\n');
 
@@ -136,8 +140,8 @@ lines.splice(end, 0, '', ...entry);
 writeFileSync(file, lines.join('\n'));
 
 // The entry and the queue line are one act. A word added to goals.md with no `goal-added` event
-// never reaches curation — its stamped entry never gets written, and review would later find a
-// goal with no live entry to check it with. Writing both here is why adding a word can stay a
+// never reaches curation, so a topic with no `a-words` entry yet never gets one written, and the
+// word is left to moves set live. Writing both here is why adding a word can stay a
 // one-line gesture rather than a thing an agent has to remember two halves of.
 appendStatus(dir, 'goal-added', { goal: id });
 

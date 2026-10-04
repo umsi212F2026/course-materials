@@ -29,11 +29,14 @@ import { createServer } from "node:http";
 import { resolve, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { drawPractice, loadPool, listPools } from "./quiz-draw.mjs";
-import { collectAnswers, buildQueue, mergeGrades, CREDIT_VALUE } from "./lib/grade.mjs";
+import { collectAnswers, buildQueue, mergeGrades, itemGoals, CREDIT_VALUE } from "./lib/grade.mjs";
+import { recordLabel } from "./lib/bank.mjs";
 // THE LEARN WORKFLOW'S READER, not a second one. What a practice quiz leaves behind is an
 // attempt in a topic's log, so this tool already lives on the far side of that boundary; a
 // private copy of how goals.md parses would be one more thing to keep in step with it.
 import { readIds } from "../../learn/tools/lib/topic.mjs";
+// THE MOVE TABLE lives in the learn workflow's library, so quiz and study tag a move the same way.
+import { MOVE_TAGS } from "../../learn/tools/lib/moves.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const REPO = resolve(here, "..", "..", "..");
@@ -42,20 +45,6 @@ const readJson = (p) => JSON.parse(readFileSync(p, "utf8"));
 
 const esc = (s) =>
   String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-
-// WHICH MOVES ARE PRODUCTION ONES, from workflows/learn/skills/goal-setting/references/
-// vocabulary-moves.md. A word carries `bar: one production pass`, and the tag is the only thing
-// that tells the bar whether a move was one, so an item answered here counts toward finishing a
-// word exactly as the same move would in study. The table is five rows and has not changed; if
-// it grows, it grows there and here together, and a move missing below records no tag rather
-// than a wrong one.
-const MOVE_TAGS = {
-  DEFINE: "reception",
-  INTERPRET: "reception",
-  DISTINGUISH: "production",
-  CATCH: "production",
-  APPLY: "production",
-};
 
 /** Every goal named by the draw, keyed by id, with the topic it came from.
  *
@@ -70,6 +59,14 @@ function goalsFor(items) {
   }
   return byId;
 }
+
+/** The tag argument a recorded attempt takes, or null for none. A FOLDER QUESTION CARRIES ITS
+ *  OWN `tags`, worked out by the bank reader from its move, and that list is the answer; a
+ *  single-file question has none and is looked up in the move table, as it always was. Either
+ *  way it leaves here as one comma-joined string, which is what `--tags` reads, and an empty list
+ *  is null so the skill leaves `--tags` off rather than passing nothing. */
+const tagsOf = (it) =>
+  it?.tags ? (it.tags.length ? it.tags.join(",") : null) : it?.move ? MOVE_TAGS[it.move] ?? null : null;
 
 /** The page. Every item on one screen, answered cold, submitted once. */
 function page(items, source) {
@@ -126,9 +123,9 @@ function page(items, source) {
 <main>
  <h1>Practice quiz</h1>
  <p class=src>${esc(source)}</p>
- <p class=cold>Answer these cold, with nothing else open. Nothing here will help you, on
-  purpose: an answer you talked your way to does not tell you what you know. Your agent sees
-  what you wrote only after you submit.</p>
+ <p class=cold>Answer these cold if you can. You may ask your agent anything along the way;
+  it will help, and that answer will be recorded as helped, since an answer you talked your way
+  to does not show what you know alone. Your agent sees what you wrote only after you submit.</p>
  <form id=f>${body}
   <button type=submit>Submit</button>
  </form>
@@ -193,20 +190,32 @@ function record(dir, source, items, answers) {
   // no learning-topics in reach: it has no criterion to send and no topic to record against.
   // Here both are at hand, so they go in rather than being looked up twice, once by the grade
   // skill and again by the practice skill.
-  const queue = buildQueue(rows).map((g) => {
+  const queue = buildQueue(rows).map(({ goals: named, ...g }) => {
     const it = byId.get(g.item);
     const goal = it?.goal ? goals.get(it.goal) : null;
     return {
       ...g,
       topic: it?.topic ?? null,
       move: it?.move ?? null,
-      tags: it?.move ? MOVE_TAGS[it.move] ?? null : null,
+      tags: tagsOf(it),
       // THE CRITERION, SO THE SKILL CAN SAY WHAT KIND OF ITEM THIS IS. `kind: capability` turns
       // on whether a written answer could establish the goal, and that is a reading of the
       // criterion rather than a slot to look up: `c-describe-app-bug` is met by writing the
       // request, and `c-commit-recovery-point` is not met by describing the act. The `c-`
       // prefix separates them in neither case.
       criterion: goal?.criterionText ?? null,
+      // A QUESTION THAT NAMES SEVERAL GOALS IS RULED ON PER GOAL, each against its own
+      // criterion, so each goes in with that criterion beside it. A single-goal item leaves
+      // buildQueue's `goals` behind and goes in exactly as it always has.
+      ...(named.length > 1
+        ? {
+            goals: named.map((id) => ({
+              goal: id,
+              criterion: goals.get(id)?.criterionText ?? null,
+              topic: it?.topic ?? null,
+            })),
+          }
+        : {}),
     };
   });
 
@@ -217,14 +226,17 @@ function record(dir, source, items, answers) {
   // capability quietly records as met because somebody picked the right option out of four.
   const examined = [];
   const seenGoal = new Set();
+  // Every goal a question names, not only its first, so kinds.json can answer for all of them.
   for (const it of items) {
-    if (!it.goal || seenGoal.has(it.goal)) continue;
-    seenGoal.add(it.goal);
-    examined.push({
-      goal: it.goal,
-      topic: it.topic ?? null,
-      criterion: goals.get(it.goal)?.criterionText ?? null,
-    });
+    for (const id of itemGoals(it)) {
+      if (seenGoal.has(id)) continue;
+      seenGoal.add(id);
+      examined.push({
+        goal: id,
+        topic: it.topic ?? null,
+        criterion: goals.get(id)?.criterionText ?? null,
+      });
+    }
   }
 
   writeFileSync(
@@ -303,14 +315,18 @@ function score(dir) {
     out_of: me.out_of,
     items: me.items.map((i) => {
       const it = byId.get(i.item);
+      const named = it ? itemGoals(it) : [];
       return {
+        // `item` is the qualified id, unique across the draw; `label` is what the attempt is
+        // recorded under in the topic's log, which for a folder question is topic-local.
         item: i.item,
+        label: it ? recordLabel(it) : i.item,
         goal: i.goal,
         prompt: it?.prompt ?? null,
         answer: said(it),
         topic: it?.topic ?? null,
         move: it?.move ?? null,
-        tags: it?.move ? MOVE_TAGS[it.move] ?? null : null,
+        tags: tagsOf(it),
         type: i.type,
         credit: i.credit,
         missed: i.missed,
@@ -331,6 +347,19 @@ function score(dir) {
             : it?.expected ?? null,
         axes: i.axes,
         flag: i.flag,
+        // ONE ENTRY PER GOAL A MULTI-GOAL QUESTION NAMES, each its own record-attempt call. The
+        // verdict's per-goal ruling where there was one; where there was none (multiple choice,
+        // or nothing written) the one mark is the mark on every goal. The capability call is
+        // made per goal too, since a question can name one goal met by writing and one not.
+        ...(named.length > 1
+          ? {
+              per_goal: named.map((g) => {
+                const p = i.per_goal?.[g] ?? { credit: i.credit, missed: i.missed, axes: i.axes };
+                const axes = kinds[g] === "capability" ? { ...p.axes, criterion: "unchecked" } : p.axes;
+                return { goal: g, credit: p.credit, missed: p.missed, axes };
+              }),
+            }
+          : {}),
       };
     }),
   }, null, 2));
@@ -462,7 +491,9 @@ function main() {
   // 127.0.0.1 rather than every interface: these are your own answers, on your own machine.
   server.listen(port, "127.0.0.1", () => {
     console.log(`${source}: ${items.length} questions`);
-    for (const s of strata) console.log(`  ${s.drawn} from ${s.name.split("/").pop()}`);
+    // The topic folder as well as the bank: every migrated topic has an `a-words`, so the last
+    // segment alone prints the same name once per topic.
+    for (const s of strata) console.log(`  ${s.drawn} from ${(s.bank ?? s.name).split("/").slice(-2).join("/")}`);
     console.log(`\n  http://127.0.0.1:${port}\n`);
     console.log(`Answer them there. This waits until you submit.`);
   });

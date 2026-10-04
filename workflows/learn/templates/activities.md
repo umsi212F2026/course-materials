@@ -32,11 +32,25 @@ with the learner.
   gets reworded later. If something is genuinely replaced rather than reworded, the
   replacement gets a new id and the old one gets `status: dropped`.
 
-  GENERATED ENTRIES carry `origin: generated`. They are stamped by curation for a goal whose
-  `supply` slot produces its own activities — a vocabulary word's moves come from
-  workflows/learn/skills/goal-setting/references/vocabulary-moves.md, not from here — so there is no artifact
-  to verify, no menu to choose among, and nothing to critique. The verify and critique passes
-  skip them, and nothing drops one: it is that goal's only entry.
+  VOCABULARY IS ONE ACTIVITY, `a-words`, an ordinary entry that serves every word through its
+  group, those added later included. Curation writes it, exactly as below, when the topic has
+  words and no such entry; its generator is
+  workflows/learn/skills/goal-setting/references/vocabulary-moves.md, and a course topic's bank
+  holds one scenario file per word, tasks/a-words/<goal-id>.md:
+
+      ### `a-words`
+
+      - **serves:** group vocabulary
+      - **generator:** the five moves in `workflows/learn/skills/goal-setting/references/vocabulary-moves.md`, set for one word at a time from its `what it names`, `nearest confusable` and `synonyms`. Each question names that word's goal and carries its move.
+      - **learner does:** answers one short question about one word
+      - **tutor role:** examiner
+      - **tutor does:** sets the question as served, without rewording it or hinting; when the bank has nothing for the word, sets one move live, as vocabulary-moves.md describes
+      - **offer as:** not offered as a choice; a word's question is set when that word is studied or due
+
+  LEGACY STAMPS. An older file may hold entries carrying `origin: generated`, placeholders that
+  curation once stamped for each word. They are retired: nothing serves from one, survey skips
+  them, and workflows/learn/tools/migrate-words.mjs removes them. Never write one; leave an old
+  one alone until that tool runs.
 
   Every entry says what the LEARNER DOES. A resource is not an activity: "read chapter 3"
   is not an entry, "read chapter 3 writing a one-line gloss for each unfamiliar term" is.
@@ -74,13 +88,12 @@ with the learner.
 
 <!--
   Copied from goals.md so the tutor doesn't need both files open. ONE ROW PER GOAL CURATION
-  SERVES — every goal whose `supply` slot is the default, `curated`. That is what this phase
-  is for: finding real things for a learner to do.
+  SERVES: every goal except the words. That is what this phase is for: finding real things for
+  a learner to do.
 
-  A goal whose `supply` isn't `curated` is NOT copied here and gets no Coverage row. Its
-  activities come from elsewhere; what it gets here is one generated entry, stamped by
-  curation, carrying `origin: generated`. There is nothing to choose among and no gap a
-  Coverage row could show. One supply per goal, so the two are exclusive.
+  A word is NOT copied here and gets no Coverage row. The `a-words` entry serves it through
+  its group, with a generator that is fixed, so there is nothing to choose among and no gap a
+  Coverage row could show.
 
   The `criterion` column is COPIED, and for a goal whose criterion is a reference rather than
   the learner's own text — `vocabulary`, `orientation` — copy the reference name. The
@@ -108,11 +121,12 @@ with the learner.
   the coverage view that was lost when activities became one flat list, and it's the first
   thing to read when deciding what's missing.
 
-  ONE ROW PER GOAL IN THE TABLE ABOVE, in the same order. Generated entries don't appear here
-  and neither do the goals they serve; nothing is ever missing for those.
+  ONE ROW PER GOAL IN THE TABLE ABOVE, in the same order. `a-words` doesn't appear here and
+  neither do the words it serves; nothing is ever missing for those.
 
   study   live activities whose `serves` includes this goal and which are not checks
-  checks  live activities whose `checks` is this goal
+  checks  live activities whose `checks` names this goal, or whose bank holds a question
+          whose rubric `goal:` names it
   notes   authored by curation/critique, placed by the orchestrator. Usually empty. For deficiencies an empty cell can't
           express — most often that every check for this goal shares the same
           `doesn't show`, so the coverage is only apparent.
@@ -146,17 +160,19 @@ with the learner.
 
 <!--
   One heading per activity, one bullet per field — not a table row. Several values run to
-  a sentence or more, which table cells can't hold, and check activities carry five fields
+  a sentence or more, which table cells can't hold, and check activities carry three fields
   the others don't, which a table would render as columns of empty cells indistinguishable
   from unfilled ones. The Goals block above is a table for the opposite reasons: short
   values, same shape every row.
 
-  FIELDS. Every activity has `serves` through `offer as`. `status` appears only once the
-  activity is dead, and `origin` only on an entry curation stamped rather than wrote. The
-  block below that applies only to activities that can finish a goal — the ones carrying
-  `checks`.
+  FIELDS. Every activity has `serves` through `offer as`, and one that sets questions has a
+  `generator`. `status` appears only once the activity is dead, and `origin` only on a legacy
+  stamp, which nothing writes now. The block after those applies only to activities that can
+  finish a goal: the ones carrying `checks`.
 
-  serves        goal ids from the table above, or `all` — which goals this helps with
+  serves        goal ids from the table above, or `all`: which goals this helps with. An item
+                may also be `group <name>`, which stands for every goal in that group, those
+                added later included. A group no goal is in is reported by survey.
   supports      one or more of:
                   orient   first pass; get the shape of the thing
                   deepen   build up a specific part, or connect it to what's known
@@ -177,8 +193,9 @@ with the learner.
   learner does  the obligation, not just the resource — this is the field that makes it an
                 activity rather than a reading list
   tutor role    the stance to take while this runs: explainer, socratic questioner,
-                critique target, critic, role-play partner, or none — the learner works
-                alone and you wait
+                critique target, critic, role-play partner, examiner (sets a question cold and
+                leaves the judging to the adjudicator), or none (the learner works
+                alone and you wait)
   tutor does    during, and afterwards
   done when     for orient and deepen: the learner can attempt the real thing with the
                 artifact still beside them. For an activity carrying `checks`: its criterion
@@ -195,9 +212,15 @@ with the learner.
                 curation/generate may delete a note whose cause it has fixed, and must not
                 otherwise edit one. Each check pass rewrites them.
 
-  origin        omit on anything you wrote. `generated` on an entry curation stamped for a
-                goal whose `supply` produces its own activities — see the note at the head of
-                this file. verify and critique skip those, and nothing drops one.
+  generator     the instruction for producing a fresh question: what varies, what is held
+                fixed, how hard, and which of the goals in `checks` a question bears on.
+                Every activity that sets questions has one, whether or not it carries
+                `checks`. Precise enough to run, or to draft a bank from, without asking the
+                curator anything. Where there is no bank the tutor runs it live, so every
+                attempt is a new question.
+
+  origin        omit. `generated` marks a legacy stamp from before `a-words`; see the note
+                at the head of this file. Nothing serves from one and nothing new carries it.
 
   status        omit while the activity is live — that's the default and needs no saying.
                 When it stops being a candidate, `dropped — <why, and who>`: the curator
@@ -216,55 +239,68 @@ with the learner.
 
   ONLY FOR ACTIVITIES THAT CAN FINISH A GOAL
 
-  checks          the one goal id an unaided attempt at this would settle. Usually a single
-                  id, and always a subset of `serves` — an activity can help with several
-                  goals while only settling one. The pass condition is that goal's criterion
-                  from the table above, applied as written; don't restate it here or the two
-                  will drift.
+  checks          the goals an unaided attempt at this activity's questions can establish:
+                  one id or several, comma-separated, and always a subset of `serves`. An
+                  activity can help with several goals while settling fewer. This is the
+                  generator's declaration of what its questions bear on; in a bank, each
+                  question's rubric `goal:` line narrows it to the ones that question bears
+                  on. The pass condition is each goal's criterion from the table above,
+                  applied as written; don't restate it here or the two will drift.
 
                   Omit it when an unaided attempt still wouldn't establish the criterion,
-                  because the activity does part of the work itself — completing a partial
+                  because the activity does part of the work itself: completing a partial
                   instance doesn't show they could produce one from nothing. Such an
                   activity is worth having; it just can't finish anything.
-
-  kind            generator | bank | single instance
-
-  generator       the instruction for producing a fresh instance: what to vary, what to
-                  hold constant, how hard. Precise enough to run without asking the curator
-                  anything. The default for anything recurring — it never runs out, and
-                  every attempt is a new item.
-
-  bank            a set of ready items: `tasks/<folder>`, a numbered range in a book, a
-                  folder of real specimens. Say how many there are and how the tutor should
-                  pick — usually "any not yet used". The right choice when the items must be
-                  real, or when good ones take care to build and someone already built them.
-                  It can be exhausted, so say what to do when it runs low.
-
-                  SAY HOW AN ITEM IS NAMED, because "any not yet used" only works if used
-                  items can be told apart afterwards. Don't invent a scheme: the item already
-                  has a name. A folder of files is named by filename; a numbered range in a
-                  book by its number, which means something because this entry names the book.
-                  Whatever you say here is what the tutor puts after the slash in the label it
-                  passes to record-attempt.mjs — `<entry-id>/<item>` — and what a later
-                  session reads back from served.mjs to avoid re-serving.
-
-                  A generator needs none of this — every instance is fresh, so there is
-                  nothing to have used up. A single instance is its own entry.
-
-  single instance one item, `tasks/<file>` or a pointer to something real. Fine for a first
-                  attempt, weak thereafter: a goal comes back in review for months, and the
-                  same item on the third visit tests memory of that item rather than the
-                  goal. If a check activity has only one instance, say so in `doesn't show`.
 
   worked example  what to show at the first level of help: a solved instance, or an
                   instruction to work one live and narrate the decisions
   doesn't show    what a pass here still leaves open, stated as a claim the checker can
                   contest. Both kinds belong: part of the criterion this activity doesn't
-                  exercise, and what the criterion can't settle even when fully met — "only
+                  exercise, and what the criterion can't settle even when fully met: "only
                   one instance exists, so this doesn't show they could do it again."
 
                   "Nothing" is a legitimate entry. It's also a strong claim, so expect
                   curation/critique to test it.
+
+  BANKS. An activity has a bank when tasks/<activity-id>/ and rubrics/<activity-id>/ exist (a
+  tasks folder alone is an older study artifact, and is not read as a bank); the folders are the
+  whole declaration, and the entry says nothing about them. Course topics have them, drafted
+  from the generator and reviewed by the instructor at curation; a student's own topic runs its
+  generators live. Even on a course topic, only an activity with `checks` whose generator
+  invents its own material is banked: one that picks from real items or the learner's own work,
+  an orientation rehearsal, and one without `checks` stay live, since the picker serves a bank
+  whenever one exists. One file per scenario, with a twin under rubrics/:
+
+      tasks/<activity-id>/<scenario-id>.md     the setup, then one `### <question-id>` per question
+      rubrics/<activity-id>/<scenario-id>.md   the key, then one `### <question-id>` per question
+
+  A file's top part, before its first `###`, is shared by that scenario's questions; nothing is
+  shared across files. `main-bank` is the reserved scenario name for questions with no shared
+  setup. Scenario files are named for their content (`crumbs.md`), question ids are unique
+  within their scenario, and a question's label everywhere is its path,
+  `<activity-id>/<scenario-id>/<question-id>`. workflows/learn/tools/next-item.mjs serves from
+  banks, unseen questions first; workflows/learn/tools/survey.mjs reports a malformed bank, and
+  a bank folder with no entry here.
+
+  Each rubric question section carries:
+
+      goal:        ids from `checks`, comma-separated
+      answer:      what a complete answer says
+      credit:      what full and half credit mean. A question naming two or more goals lists
+                   one statement per goal, each starting `<goal-id>`: with the id in backticks
+      type:        free (the default) or mcq; an mcq's question ends in a numbered list and
+                   `answer` is the 1-based choice
+      move:        for a word's question, its move
+      tutor note:  optional; follow-ups for this one question, for the tutor only
+
+  What holds for every question stays in the entry here. A note about one scenario goes in its
+  key, and a note about one question in its `tutor note`.
+
+  RETIRED: `kind` and `bank`. An older entry may still carry `kind: generator | bank | single
+  instance` or a `bank:` line; ignore both. When curation converts the entry, any substance in a
+  `bank:` line (where the items live, how they are named, how to pick) moves into `generator`,
+  and a bare path or a `kind:` line is simply deleted. What was a single authored instance is a
+  bank with one scenario, and if that is all a check has, say so in `doesn't show`.
 -->
 
 ### `<activity-id>`

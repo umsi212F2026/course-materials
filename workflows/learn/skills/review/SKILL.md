@@ -1,6 +1,6 @@
 ---
 name: review
-description: Run everything that has come due for review, across all topics — the learner re-attempts each goal's check cold, it gets adjudicated, and a program sets the next interval. Use when anything is due; it works out what that is itself rather than being told. Not the same as study, which works the other side of the line — goals not yet met.
+description: Run everything that has come due for review, across all topics: the learner re-attempts each goal's check cold, it gets adjudicated, and a program sets the next interval. Use when anything is due; it works out what that is itself rather than being told. Not the same as study, which works the other side of the line: goals not yet met.
 ---
 
 # Review
@@ -37,19 +37,18 @@ whose date has passed:
 | ------------- | -------------------------------------------------------------------------------------------------- |
 | `topic`       | the folder. Every file the sequence names is in this one, and it changes as you work down the list |
 | `goal`        | the id, to look up in that topic's `goals.md`                                                      |
-| `supply`      | where the task comes from — see step 1                                                             |
 | `adjudicator` | who rules on it — see step 3                                                                       |
-| `served`      | the labels this goal has already been given, most recent first, exactly as the supply wrote them   |
+| `served`      | the labels this goal has already been given, most recent first, exactly as the activity wrote them |
 | `due`         | the date it came due                                                                               |
 
 **ONE PATH, WHATEVER KIND OF GOAL IT IS.** There is no `is_word` in that record and nothing
 here branches on one. A capability, a word and an orientation are all goals with entries in
-`goals.md` and entries in `activities.md`; what differs between them is their slots, and two of
-those come to you in the record above.
+`goals.md` and are served by entries in `activities.md`; what differs between them is their
+slots, and one of those comes to you in the record above.
 
 **`served` carries one instruction: don't serve what's near the front of it.** A label is
-whatever the supply that wrote it chose to write — an activity id, a bank item after a slash, a
-move and a note on the instance. You don't parse it; you hand it back to the supply, which is
+whatever the activity that wrote it chose to write: a bank question's path, an activity id, a
+move and a note on the instance. You don't parse it; you hand it back to the activity, which is
 the only thing that reads it.
 
 **A review session is not per topic.** What's due is whatever the dates say is due, and the
@@ -103,15 +102,17 @@ argument.
 
 1. **Set up the check.** Read the goal's entry in `goals.md` — its criterion, and its slots.
 
-   **First, find a live entry in `activities.md` that `checks` this goal.** Every goal has one;
-   for a goal whose supply produces its own activities, curation stamps a generated entry
-   carrying `origin: generated`.
+   **First, find a live entry in `activities.md` that `checks` this goal.** A word needs none:
+   `a-words` serves it through its group, and where nothing is banked for it, or the topic has
+   no `a-words` entry yet, a move set live checks it. A legacy stamp carrying
+   `origin: generated` is not live and counts for nothing.
 
-   **If there is no live entry at all, there is nothing to check this goal with.** Usually the
-   entry that it passed was dropped afterwards, by a tutor who found something wrong with it;
-   occasionally the goal never had one, because it was met by the learner declaring it rather
-   than by an adjudicated pass. Say so and go on to the next record. Don't improvise a
-   replacement: an invented task gets judged against a criterion it wasn't written for.
+   **If a goal other than a word has no live entry at all, there is nothing to check it
+   with.** Usually the entry that it passed was dropped afterwards, by a tutor who found
+   something wrong with it; occasionally the goal never had one, because it was met by the
+   learner declaring it rather than by an adjudicated pass. Say so and go on to the next record.
+   Don't improvise a replacement: an invented task gets judged against a criterion it wasn't
+   written for.
 
    Nothing else in this sequence applies — there was no attempt, so there is nothing to
    adjudicate and nothing to record, and the date stays where it is so the goal is still due
@@ -123,33 +124,50 @@ argument.
 
    That's what `learn` spawns curation on, and what curation clears when it has built one.
 
-   **Then ask the goal's `supply` for the task.**
+   **Then choose the task. For any goal, try the bank first.** Ask for a question that credits
+   the goal that is due:
 
-   `supply: curated` — the task is the entry itself. Prefer `kind: generator`, which produces a
-   fresh instance. A `bank` is fine if it has items whose labels aren't in `served`. A
-   `single instance` already in `served` is the weakest form there is — if it's all there is,
-   use it.
+   ```
+   node workflows/learn/tools/next-item.mjs <topic-folder> --goal <goal-id>
+   ```
 
-   `supply: vocabulary` — the entry is a stamp, and the task is a move from
-   [`../goal-setting/references/vocabulary-moves.md`](../goal-setting/references/vocabulary-moves.md).
-   Pick one whose label isn't near the front of `served`. **Prefer APPLY.** It draws on work
-   that didn't exist when the word was first met, so it can't be answered from memory of
-   answering before. That's exactly the property a review wants and the other moves don't
-   have.
+   Show the learner only what follows `--- learner sees ---`. It prefers a question they have
+   never been served, then the one served longest ago, so you need not filter by `served`. Run
+   it with `--key` to read the grading text, and keep that from them. A question may credit
+   other goals as well; that is fine, and step 3 says how it is ruled.
+
+   **Exit code 2 means no bank question names this goal**, and then the task comes from the
+   goal's activity, run live:
+
+   **An ordinary goal**: the task comes from the entry itself. Every activity with questions has
+   a generator, and a bank only when its `tasks/<activity-id>/` folder exists; with no bank
+   question naming this goal, run the generator live for a fresh question. A generator that
+   picks from real items, such as a numbered range in a book, is fine if it has items whose
+   labels aren't in `served`. An item already in `served` is the weakest form there is; if
+   it's all there is, use it.
+
+   **A word**: set one move live from
+   [`../goal-setting/references/vocabulary-moves.md`](../goal-setting/references/vocabulary-moves.md),
+   labelled `<MOVE>: <instance>`. Pick one whose label isn't near the front of `served`.
+   **Prefer APPLY.** It draws on work that didn't exist when the word was first met, so it can't
+   be answered from memory of answering before. That's exactly the property a review wants and
+   the other moves don't have.
 
    Either way, **don't say what the criterion is.** Just give them the task.
 
-2. **They attempt it cold.** Set the task, then stop talking.
+2. **They attempt it, cold unless they ask.** Set the task, then stop talking.
 
-   **Offer no help, and volunteer nothing, until it has been ruled on.** A review attempt is
-   worth exactly what it would be worth cold, and help of any kind makes it impossible to
-   assess whether they could still do this without you. As a heuristic, _anything that changed
-   what they did is help._
+   **Volunteer nothing until it has been ruled on.** A review attempt is worth what it would be
+   worth cold, and unasked help spoils that for no benefit. As a heuristic, _anything that
+   changed what they did is help._
 
-   If they ask for help, say plainly that this one is meant to be cold, that you'll go through
-   it with them straight after, but they should try to do it on their own. Say it once. If they
-   insist, give what's asked and record it as a failed attempt, which will cause it to come
-   back sooner.
+   **But help whenever they ask, at once and in full.** Don't tell them it is meant to be cold,
+   don't ask them to try first, and don't make them ask twice: refusing a learner who wants to
+   talk is the record coming before the learner. The first time they ask in a sitting, add one
+   short sentence as you help: this attempt will count as helped. That is the whole
+   consequence. The judge reads the transcript and rules it `unaided: no`, and a helped review
+   counts as a lapse, so the goal comes back sooner, which is right: needing help on a review
+   is the evidence that it is fading.
 
    The constraint is on this goal only. It has nothing to say about the one you just finished
    or the one after it — those are separate attempts with their own verdicts.
@@ -173,6 +191,15 @@ argument.
    sentence, never the name. It won't infer a missing field, and that's right: a verdict built
    on a guessed criterion is recorded exactly like a real one.
 
+   **Every bank question goes with its rubric**, the `--key` output as a `--- rubric ---` block
+   ahead of the record, whether it names one goal or several. Only a live generator's question
+   goes without one. One goal goes as `goal` and `criterion`; several go as `goals`, a list of
+   `{"goal": …, "criterion": …}` with each criterion resolved. A question that names goals with
+   different `adjudicator` slots goes to `study/judge` for all of them. Every goal the judge
+   rules on is an attempt and step 4 records each. A goal that was due is recorded as a review.
+   Another named goal is recorded as a review only if it was missed; one that passed counts as
+   evidence without moving it along its intervals, and so does one the judge could not decide.
+
    Both questions still matter here. _Unaided_ looks near-certain because you offered nothing,
    but they may have looked something up, and the judge is the party to decide that rather than
    you.
@@ -192,11 +219,30 @@ argument.
    node workflows/learn/tools/record-attempt.mjs <topic-folder> <goal-id> <label> --tags <tags> --axes '<json>' --source review
    ```
 
-   Same call the study phase makes, with `--source review` added. `<label>` is what the supply
-   served, in its own words — the entry id, with the bank item after a slash, or the move and a
-   note on the instance. That's what keeps it from being served back in three months, and
-   there's nowhere else it gets recorded. `--tags` is what the supply returned — `production`
-   or `reception` from the vocabulary supply, nothing at all from the curated one.
+   Same call the study phase makes, with `--source review` added. `<label>` is what the
+   activity served, in its own words: for a bank question the `<activity>/<scenario>/<question>`
+   label the picker printed, otherwise the entry id or the move and a note on the instance.
+   That's what keeps it from being served back in three months, and there's nowhere else it gets
+   recorded. `--tags` is what the activity returned: the picker's `tags:` line unless it says
+   `none`, or `production` or `reception` for a vocabulary move set live, and nothing otherwise.
+
+   **A question ruled against several goals is one call per goal**, each with its own `--axes`
+   and all with the same label and `--tags`. Which of them carry `--source review`:
+
+   - **A goal that was due:** `--source review`, pass or miss.
+   - **Any other named goal that was missed** (criterion `not met`, or `unaided: no`): also
+     `--source review`.
+   - **Any other named goal that passed:** omit `--source`.
+   - **An inconclusive ruling on a goal that was not due** (criterion `unclear`, or
+     `unaided: unclear`): omit `--source`.
+
+   `--source review` is what moves a goal along its intervals, so the asymmetry is deliberate.
+   A miss on a goal that was not due is as trustworthy as any, because the attempt was cold,
+   and recording it as a review moves the goal one step shorter so it comes back sooner. A
+   pass on one is not worth the same: recorded as a review it would promote the goal a step
+   it was not yet due to earn, whereas a pass without the flag only re-dates it from today at
+   the step it is already on. An inconclusive ruling is no evidence either way, so it leaves
+   that goal's schedule where it was.
 
    A review attempt is an attempt, and the log is what the interval rule is read from. It
    cannot unmake what was shown — nothing can — but a lapse belongs in the record of what
@@ -224,7 +270,9 @@ argument.
    wants to, they can edit the `notes.md` file for the topic; you can help them with the
    mechanics of opening the file.
 
-   **If they want to work through it again, do it here.** Offer the live `orient` and `deepen`
+   **If they want to work through it again, do it here.** For a lapsed word, go over what went
+   wrong and offer another move, set live or from the bank, rather than orient or deepen
+   candidates. For any other goal, offer the live `orient` and `deepen`
    candidates for that goal from `activities.md` and run one, following
    [`../study/references/running-an-activity.md`](../study/references/running-an-activity.md)
    the way the study phase does. Don't send them off to a study session — this is the session
@@ -250,7 +298,8 @@ had earned, and the record deliberately doesn't work that way.
 
 ## Failure modes in yourself
 
-- **Helping.** The whole phase is one restraint, and it will feel unkind every time.
+- **Volunteering help.** Unasked, it spoils a cold attempt and buys nothing.
+- **Making them ask twice**, or explaining why they shouldn't ask. They asked; help.
 - **Reassuring during the attempt.** "That looks right so far" is help. So is a tone.
 - **Skipping the record**, because a post-mortem ran long or the session ended abruptly. It's
   the one thing here that can't be recovered afterwards: the date doesn't move, the goal stays
@@ -266,6 +315,7 @@ had earned, and the record deliberately doesn't work that way.
 
 - [`learn`](workflows/learn/skills/learn/SKILL.md) — skill
 - [`topic`](workflows/learn/skills/topic/SKILL.md) — skill
+- [`next-item.mjs`](workflows/learn/tools/next-item.mjs) - tool
 - [`record-attempt.mjs`](workflows/learn/tools/record-attempt.mjs) — tool
 - [`record-status.mjs`](workflows/learn/tools/record-status.mjs) — tool
 - [`review-due.mjs`](workflows/learn/tools/review-due.mjs) — tool

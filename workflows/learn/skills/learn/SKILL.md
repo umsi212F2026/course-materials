@@ -1,6 +1,6 @@
 ---
 name: learn
-description: The way in. Surveys every learning topic, does the agent-only maintenance that doesn't need the learner, surfaces what's due or stuck, helps them choose what to work on, and hands off — to a topic, to a review sitting, or to adding something new. Use whenever someone sits down to learn and hasn't said exactly what they want to do.
+description: The way in. Surveys every learning topic, does the agent-only maintenance that doesn't need the learner, surfaces what's due or stuck, helps them choose what to work on, and hands off: to a topic, to a review sitting, or to adding something new. Use whenever someone sits down to learn and hasn't said exactly what they want to do.
 ---
 
 # Learn
@@ -87,8 +87,11 @@ default group, activities to work on, and its own `status.jsonl` agreeing with t
 
 That is deliberate, and it is why nothing above needs to know: a topic the course assigned and one
 the learner took through goal setting last week are the same shape by the time either is studied.
-The only thing that tells them apart is each goal's `origin`, which no phase of this workflow
-reads — it is there for the quiz generator, outside the loop.
+The only thing that tells them apart is `origin` in `goals.md`, on the topic or on a goal. Study
+and review never read it. The
+quiz generator does, outside the loop, and so does curation, but only to decide whether an
+instructor's run may take the course path and draft banks; a background run behaves the same on
+either.
 
 ## 1. Start pending work, in the background
 
@@ -102,6 +105,11 @@ Nobody wrote a note saying so; the queue just still has them on it.
 **Spawn and carry on.** Don't wait. That work can run a generate pass and two checks; the
 learner is in front of you wanting to do something, and making them watch housekeeping is a bad
 trade for a slightly fuller menu.
+
+**Say it is a background run when you spawn it.** Curation run that way never drafts question
+banks and never waits for the instructor's review, even on a course topic: it writes activities
+only, and their generators run live until a reviewed bank arrives from the course. Banks are
+drafted only when the instructor runs curation on a course topic themselves.
 
 Mention it in a clause when you offer — "that one's being refilled, give it a few minutes" —
 and don't offer that topic until it's done.
@@ -157,6 +165,12 @@ never appears as something waiting on anybody. It shows in `--report`, marked, w
 learner's reason — which is a fact about them, not work on offer. Don't count it as a topic
 being stuck, and don't raise it. If they say one doesn't matter, that goes to the topic's own
 session — `study`, `review` or `topic`, wherever they are — which records it.
+
+**A topic at `waiting elsewhere` is waiting on something outside the tutor, not stuck and not
+finished.** Every required goal is met, retired or deferred, and the deferred ones are waiting
+on somewhere else, which the survey row's `deferred` field holds as the where. Name it from those, for
+example "waiting on PS3". Don't count it among the stuck ones, and don't offer it as work. It
+goes to `study` only for the check-in, when they want to say how it went there.
 
 Retiring is something they say, never something you infer, at either scale. A topic untouched
 for six months is cold, not retired — those are different facts and only one of them is a

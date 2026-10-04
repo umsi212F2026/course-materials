@@ -20,30 +20,65 @@
 // { id, type, prompt } plus `rubric` on a free item, or `choices` and `answer` on an mcq.
 // Nothing downstream changes.
 //
+// WHAT THE PRIVATE TOOLS CAN RELY ON. A pool written against single-file banks draws exactly
+// what it always drew, and a single-file item keeps its exact shape, bare `id` included. That
+// holds until the pool's topics are migrated to folder banks (migrate-words.mjs), and the pool
+// is rewritten in the same change, so a re-bake after that draws differently. A folder item's
+// `id` is qualified and contains `/`, so the quiz app must treat an item id as an opaque string.
+// Every stratum carries `bank`, the bank its items come from.
+//
 // ANSWERS ARE 1-BASED IN THE FILE and 0-based in the output. The rubric file is written for a
 // person reading it next to the numbered list in tasks/, and the draw contract already uses an
 // index. Converting here is the only place that has to know.
+//
+// TWO LAYOUTS. A single-file bank is tasks/<name>.md with rubrics/<name>.md, one item per `###`.
+// A FOLDER BANK is tasks/<activity>/<scenario>.md with rubrics/<activity>/<scenario>.md: the top
+// of each file (before its first `###`) is shared by the scenario's questions, the setup in
+// tasks/ and the key in rubrics/, and each `###` is one question. The item's label is
+// <activity>/<scenario>/<question>, and its stratum is the activity. Once rubrics/<activity>/
+// exists, a scenario file with no rubric file beside it is a PROBLEM, though a single file without
+// one is skipped silently: a folder that has started a key is a bank, whereas a loose tasks/ file
+// may be a study activity. A LEGACY tasks/<activity>/ with no rubrics/<activity>/ at all is skipped
+// too, with no items and no problems: authored topics kept study material in folders like that
+// before folder banks existed, and calling every file in one a broken bank would bury the real
+// problems under dozens of phantom ones.
 
-import { readFileSync, readdirSync, existsSync } from 'node:fs';
+import { readFileSync, readdirSync, existsSync, statSync } from 'node:fs';
 import { join } from 'node:path';
+import { tagsForMove } from '../../../learn/tools/lib/moves.mjs';
 
-// One `### heading` block. Returns [{ id, body }] in file order.
-function sections(text) {
-  const out = [];
-  let id = null;
-  let lines = [];
+// The one splitter. A section starts at a `### <id>` line (no fence or comment tracking, and an id
+// outside [A-Za-z0-9-] is not a heading, so that line belongs to the section before it) and runs
+// to the line before the next one. Returns { preamble, sections: [{ id, text }] } with `text`
+// VERBATIM (heading line included, trailing blank lines included) and `preamble` the text before
+// the first section, or null when the file starts with one. Joining the preamble (if any) and
+// each section's text with '\n' gives the file back exactly. Anything that moves or rewrites
+// bank text uses this, so it and the reader of its output cannot disagree about where a
+// question ends.
+export function rawSections(text) {
+  const sections = [];
+  let pre = [];
+  let cur = null;
   for (const line of text.split('\n')) {
     const m = /^###\s+`?([A-Za-z0-9-]+)`?\s*$/.exec(line);
     if (m) {
-      if (id) out.push({ id, body: lines.join('\n').trim() });
-      id = m[1];
-      lines = [];
-    } else if (id) {
-      lines.push(line);
-    }
+      cur = { id: m[1], lines: [line] };
+      sections.push(cur);
+    } else if (cur) cur.lines.push(line);
+    else pre.push(line);
   }
-  if (id) out.push({ id, body: lines.join('\n').trim() });
-  return out;
+  return {
+    preamble: sections.length && !pre.length ? null : pre.join('\n'),
+    sections: sections.map((s) => ({ id: s.id, text: s.lines.join('\n') })),
+  };
+}
+
+// One `### heading` block. Returns [{ id, body }] in file order.
+function sections(text) {
+  return rawSections(text).sections.map((s) => ({
+    id: s.id,
+    body: s.text.split('\n').slice(1).join('\n').trim(),
+  }));
 }
 
 // `- **name:** value`, with continuation lines folded in. Returns { name: value }.
@@ -51,12 +86,14 @@ function fields(body) {
   const out = {};
   let key = null;
   for (const line of body.split('\n')) {
-    const m = /^-\s+\*\*([a-z]+):\*\*\s*(.*)$/.exec(line);
+    // Names may be several words (`tutor note`); a one-word name matches exactly as before.
+    const m = /^-\s+\*\*([a-z]+(?: [a-z]+)*):\*\*\s*(.*)$/.exec(line);
     if (m) {
       key = m[1];
       out[key] = m[2].trim();
     } else if (key && line.trim()) {
-      out[key] += ' ' + line.trim();
+      // A LIST ITEM KEEPS ITS OWN LINE (a multi-goal credit is one entry per goal); prose folds.
+      out[key] += (line.trim().startsWith('- ') ? '\n' : ' ') + line.trim();
     } else {
       key = null;
     }
@@ -182,15 +219,159 @@ export function readBank(dir, label = '') {
     }
   }
 
+  // A FOLDER QUESTION'S id IS QUALIFIED HERE, ON THE QUIZ PATH, AND NOWHERE ELSE. Its bare id
+  // (`q1`) repeats across scenarios and across topics by design, but every map downstream of a
+  // draw (the practice form's field names, byId, item_id, the grading queue, the instructor's
+  // bake and seed) is keyed on `id`, and two topics in one quiz could otherwise collide. So the
+  // id becomes <label>/<activity>/<scenario>/<question>, unique across a workspace, and nothing
+  // keyed on it has to change. readFolderBanks keeps the bare id because the study path (the
+  // picker, curation) works within one topic and reads `label`, which stays topic-local here
+  // too. Single-file items keep their bare ids, which pools and baked quizzes already name.
+  const folders = readFolderBanks(dir, label);
+  const qualified = folders.items.map((i) => ({ ...i, id: label ? `${label}/${i.label}` : i.label }));
+  return { items: [...items, ...qualified], problems: [...problems, ...folders.problems] };
+}
+
+/** The label an attempt on this item is recorded under in its topic's log. A FOLDER QUESTION IS
+ *  RECORDED BY ITS TOPIC-LOCAL LABEL, not its qualified id: the log already belongs to one topic,
+ *  and the study path records the same question under the same label, so a quiz attempt and a
+ *  study attempt on one question are one history. A single-file question keeps the label it has
+ *  always been recorded under. */
+export function recordLabel(item) {
+  if (item.label) return item.label;
+  return item.move ? `${item.move}: ${item.id}` : item.id;
+}
+
+// Everything before the first `###`, minus the file's first `#` line (its title), trimmed.
+function topPart(text) {
+  const out = [];
+  let titled = false;
+  for (const line of text.split('\n')) {
+    if (/^###\s/.test(line)) break;
+    // The title only: a later `# ` line (a shell comment in a fence, say) is part of the text.
+    if (!titled && /^#\s/.test(line)) {
+      titled = true;
+      continue;
+    }
+    out.push(line);
+  }
+  return out.join('\n').trim();
+}
+
+/** Read every folder bank in one source: tasks/<activity>/<scenario>.md against
+ *  rubrics/<activity>/<scenario>.md. Returns { items, problems } like readBank, and readBank
+ *  calls it, so every caller sees both kinds. Problems are collected, never thrown. */
+export function readFolderBanks(dir, label = '') {
+  const items = [];
+  const problems = [];
+  const tasksDir = join(dir, 'tasks');
+  const rubricsDir = join(dir, 'rubrics');
+  if (!existsSync(tasksDir)) return { items, problems };
+
+  const activities = readdirSync(tasksDir)
+    .filter((n) => statSync(join(tasksDir, n)).isDirectory())
+    .sort();
+  for (const activity of activities) {
+    // A LEGACY STUDY FOLDER, not a bank: see the header.
+    if (!existsSync(join(rubricsDir, activity))) continue;
+    const bank = label ? `${label}/${activity}` : activity;
+    const scenarios = readdirSync(join(tasksDir, activity)).filter((n) => n.endsWith('.md')).sort();
+    for (const file of scenarios) {
+      const scenario = file.replace(/\.md$/, '');
+      const where = `tasks/${activity}/${file}`;
+      const rubricPath = join(rubricsDir, activity, file);
+      if (!existsSync(rubricPath)) {
+        problems.push(`${where} has no rubric file at rubrics/${activity}/${file}, so nothing in it could grade`);
+        continue;
+      }
+
+      const rubricText = readFileSync(rubricPath, 'utf8');
+      const key = topPart(rubricText);
+      const rubrics = new Map();
+      for (const s of sections(rubricText)) {
+        if (rubrics.has(s.id)) problems.push(`${activity}/${scenario}/${s.id} has two rubric entries`);
+        else rubrics.set(s.id, fields(s.body));
+      }
+
+      const taskText = readFileSync(join(tasksDir, activity, file), 'utf8');
+      const setup = topPart(taskText);
+      const seen = new Set();
+      for (const s of sections(taskText)) {
+        const label3 = `${activity}/${scenario}/${s.id}`;
+        if (seen.has(s.id)) {
+          problems.push(`${label3} appears twice in ${where}; question ids must be unique within a scenario`);
+          continue;
+        }
+        seen.add(s.id);
+
+        const r = rubrics.get(s.id);
+        if (!r) {
+          problems.push(`${label3} is in ${where} with no rubric entry, so nothing could grade it`);
+          continue;
+        }
+
+        const { prompt: body, choices } = splitChoices(s.body);
+        const prompt = setup ? `${setup}\n\n${body}` : body;
+        const type = r.type || 'free';
+        const goals = (r.goal ?? '').split(',').map((g) => g.replace(/`/g, '').trim()).filter(Boolean);
+        const common = {
+          bank, activity, scenario, id: s.id, label: label3, goals,
+          ...(goals.length === 1 ? { goal: goals[0] } : {}),
+          ...(r.move ? { move: r.move } : {}),
+          tags: tagsForMove(r.move),
+          type, prompt, setup, key,
+          ...(r.answer ? { expected: r.answer } : {}),
+          ...(r['tutor note'] ? { tutorNote: r['tutor note'] } : {}),
+        };
+
+        if (type === 'mcq') {
+          if (!choices) {
+            problems.push(`${label3} is type mcq but its question carries no numbered choices`);
+            continue;
+          }
+          const n = Number(r.answer);
+          if (!Number.isInteger(n) || n < 1 || n > choices.length) {
+            problems.push(`${label3} has answer: ${r.answer}, which is not one of its ${choices.length} choices`);
+            continue;
+          }
+          items.push({ ...common, choices, answer: n - 1 });
+        } else {
+          if (!r.answer) {
+            problems.push(`${label3} has no answer in its rubric`);
+            continue;
+          }
+          // A multi-goal credit written as an indented list keeps one line per goal (see fields).
+          const credit = r.credit ? r.credit.charAt(0).toUpperCase() + r.credit.slice(1) : '';
+          const judged = credit ? `${r.answer} ${credit}` : r.answer;
+          // `credit` is the raw credit text alone, for checks that must not be satisfied by the
+          // key or the answer happening to mention a goal (idProblems' per-goal statement check).
+          items.push({ ...common, rubric: key ? `${key}\n\n${judged}` : judged, credit: r.credit ?? '' });
+        }
+      }
+      for (const id of rubrics.keys()) {
+        if (!seen.has(id)) problems.push(`${activity}/${scenario}/${id} has a rubric entry but no question in ${where}`);
+      }
+    }
+  }
   return { items, problems };
 }
 
 /** Read every source a pool draws from, merged into one bank.
  *
  *  THE SOURCES ARE DERIVED FROM THE DRAW KEYS rather than listed separately, so the two can
- *  never disagree. A key is `<source>/<tasks file>`, and the source is everything before the
- *  last slash: `learning-topics/react-apps-2026-09/words` reads
- *  `<root>/learning-topics/react-apps-2026-09` and takes its `words` bank.
+ *  never disagree. A key's source is the LONGEST PREFIX of its `/`-separated segments that names
+ *  a folder holding tasks/, and the rest of the key says what to draw from it: nothing (the
+ *  whole source, spread across its banks), `<name>` (a single-file bank or a folder activity),
+ *  or `<activity>/<scenario>`. So `learning-topics/react-apps-2026-09/words` reads
+ *  `<root>/learning-topics/react-apps-2026-09` and takes its `words` bank, exactly as when the
+ *  source was simply everything before the last slash, and `learning-topics/t1/a-x/s1` finds
+ *  the same source two segments sooner. Looking for tasks/ rather than counting segments is
+ *  what lets one key shape mean three levels without a pool having to say which. A key with no
+ *  such prefix falls back to the old reading, everything before the last slash, so a missing
+ *  source reports exactly what it always did.
+ *
+ *  The sources read are returned as `sources`, beside items and problems, so applyPool can
+ *  split each key the same way without touching the disk again.
  *
  *  A POOL CARRYING `topic` IS THE SINGLE-SOURCE FORM and predates this. Its draw keys are bare
  *  file names under one topic, and it is read exactly as before, so a session baked before this
@@ -199,13 +380,21 @@ export function readBank(dir, label = '') {
  *  A MISSING SOURCE IS A PROBLEM, NOT A THROW. A pool that has drifted from the repositories is
  *  how a quiz silently comes up short, and the caller decides whether to proceed. */
 export function readPoolSources(pool, root) {
-  if (pool.topic) return readBank(join(root, 'learning-topics', pool.topic));
+  // The topic form's one source is unlabelled, so its keys split against the empty prefix.
+  if (pool.topic) return { ...readBank(join(root, 'learning-topics', pool.topic)), sources: [''] };
 
   const items = [];
   const problems = [];
-  const sources = new Set(
-    Object.keys(pool.draw ?? {}).map((key) => key.split('/').slice(0, -1).join('/'))
-  );
+  const read = [];
+  const sourceOf = (key) => {
+    const parts = key.split('/');
+    for (let n = parts.length; n > 0; n--) {
+      const p = parts.slice(0, n).join('/');
+      if (existsSync(join(root, p, 'tasks')) && statSync(join(root, p, 'tasks')).isDirectory()) return p;
+    }
+    return parts.slice(0, -1).join('/');
+  };
+  const sources = new Set(Object.keys(pool.draw ?? {}).map(sourceOf));
 
   for (const source of sources) {
     if (!source) {
@@ -220,9 +409,45 @@ export function readPoolSources(pool, root) {
     const bank = readBank(dir, source);
     items.push(...bank.items);
     problems.push(...bank.problems);
+    read.push(source);
   }
 
-  return { items, problems };
+  return { items, problems, sources: read };
+}
+
+/** Split a draw key into the source it falls under and the rest: the longest of `sources` that
+ *  is the key or a prefix of it at a `/`. The empty source (the topic form) prefixes every key.
+ *  Null when none does, which applyPool reports as it always has. */
+function splitKey(key, sources) {
+  let best = null;
+  for (const s of sources) {
+    const rest = s === '' ? key : key === s ? '' : key.startsWith(`${s}/`) ? key.slice(s.length + 1) : null;
+    if (rest !== null && (best === null || s.length > best.source.length)) best = { source: s, rest };
+  }
+  return best;
+}
+
+/** Spread `take` across banks in name order: each gets floor(take/k), and the first take % k one
+ *  more. A BANK TOO SMALL FOR ITS SHARE PASSES THE SHORTFALL TO THE NEXT, wrapping round to any
+ *  bank with room left, so a topic that holds enough questions always supplies the count. It is
+ *  deterministic on purpose: the shape of the quiz is the pool's statement, and only which
+ *  questions fill it is random. Returns { parts, short }: parts are the banks given back with
+ *  their `take`, zero takes dropped, and short is the count nobody could supply. */
+function spread(take, banks) {
+  const k = banks.length;
+  let owed = 0;
+  const out = banks.map((b, i) => {
+    const want = Math.floor(take / k) + (i < take % k ? 1 : 0) + owed;
+    const got = Math.min(want, b.items.length);
+    owed = want - got;
+    return { ...b, take: got };
+  });
+  for (const b of out) {
+    const more = Math.min(owed, b.items.length - b.take);
+    b.take += more;
+    owed -= more;
+  }
+  return { parts: out.filter((b) => b.take > 0), short: k ? owed : take };
 }
 
 /** Apply one session's pool to a source's items.
@@ -253,17 +478,56 @@ export function applyPool(bank, pool) {
   }
 
   if (pool.draw) {
+    // THREE LEVELS, ONE KEY SHAPE (see readPoolSources). A key that is a bank is drawn as it
+    // always was, which is every key a pool written before folder banks carries. Otherwise the
+    // key splits against the sources read: nothing left is the whole source, spread across its
+    // banks; <activity>/<scenario> is one scenario of a folder activity. A topic-level key comes
+    // back as one stratum per bank it spread across, each named by the key and carrying `bank`,
+    // so a caller drawing per stratum honours the spread without knowing about it.
+    const sources = bank.sources ?? (pool.topic ? [''] : []);
+    const avail = (b) => (byBank.get(b) ?? []).filter((i) => !excluded.has(i.id));
     const strata = [];
     for (const [name, take] of Object.entries(pool.draw)) {
-      const available = (byBank.get(name) ?? []).filter((i) => !excluded.has(i.id));
-      if (!byBank.has(name)) {
+      const at = byBank.has(name) ? null : splitKey(name, sources);
+      if (at && at.rest === '') {
+        const prefix = at.source ? `${at.source}/` : '';
+        const banks = [...byBank.keys()]
+          .filter((b) => b.startsWith(prefix) && !b.slice(prefix.length).includes('/'))
+          .sort()
+          .map((b) => ({ bank: b, items: avail(b) }));
+        const { parts, short } = spread(take, banks);
+        if (short) problems.push(`pool draws ${take} from ${name}, which has only ${take - short} available`);
+        strata.push(...parts.map((p) => ({ name, take: p.take, items: p.items, bank: p.bank })));
+        continue;
+      }
+      // `owner` is the bank the stratum comes out of: the key itself, or a scenario key's activity.
+      let owner = name;
+      let scenario = null;
+      if (at && at.rest.split('/').length === 2) {
+        const [activity, s] = at.rest.split('/');
+        owner = at.source ? `${at.source}/${activity}` : activity;
+        scenario = s;
+      }
+      if (!byBank.has(owner)) {
         problems.push(`pool draws from ${name}, which is not a file in the topic's tasks/`);
         continue;
+      }
+      let available = avail(owner);
+      if (scenario !== null) {
+        if (!byBank.get(owner).some((i) => 'scenario' in i)) {
+          problems.push(`pool draws from ${name}, but ${owner} is a single-file bank, which has no scenarios`);
+          continue;
+        }
+        if (!byBank.get(owner).some((i) => i.scenario === scenario)) {
+          problems.push(`pool draws from ${name}, but ${owner} has no scenario ${scenario}`);
+          continue;
+        }
+        available = available.filter((i) => i.scenario === scenario);
       }
       if (available.length < take) {
         problems.push(`pool draws ${take} from ${name}, which has only ${available.length} available`);
       }
-      strata.push({ name, take, items: available });
+      strata.push({ name, take, items: available, bank: owner });
     }
     // EXHAUSTIVE ONLY IN THE SINGLE-SOURCE FORM. With one topic, a bank file the pool never
     // mentions is drift: the pool was written against a topic that has since grown a file. With
@@ -271,8 +535,13 @@ export function applyPool(bank, pool) {
     // draw from this week is the ordinary case, and a topic examined twice in a term is not a
     // defect the first time. The half that matters is still caught below, where a draw naming a
     // bank that does not exist is a problem either way.
+    //
+    // AND ONLY AGAINST SINGLE-FILE BANKS. The topic form predates folder banks, so a folder
+    // activity it does not mention is not drift from what the pool was written against; it is
+    // something the pool was never asked to know about.
     if (pool.topic) {
       for (const name of byBank.keys()) {
+        if (byBank.get(name).some((i) => 'scenario' in i)) continue;
         if (!Object.hasOwn(pool.draw, name)) problems.push(`${name} is in the topic but the pool's draw does not mention it`);
       }
     }

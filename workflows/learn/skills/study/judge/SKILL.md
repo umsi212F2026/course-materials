@@ -44,7 +44,7 @@ Collapsing them into "did they pass" loses the distinction the record is built o
 | ----------- | -------------------------------------------------------------------------------------------------------------------------------- |
 | `goal`      | the goal id from `goals.md`, whatever kind of goal it is                                                                         |
 | `criterion` | the goal's criterion, RESOLVED — its own text, or the sentence a reference like `vocabulary` points at. Never the reference name |
-| `label`     | what the supply served, in its own words: an activity id, a bank item after a slash, a move and a note on the instance           |
+| `label`     | what the activity served, in its own words: a bank question's path, an activity id, a move and a note on the instance            |
 | `record`    | the whole transcript, or — from the scan — an excerpt with the context either side                                               |
 | `sent by`   | `study`, `review` or `scan`                                                                                                      |
 
@@ -64,6 +64,31 @@ on; it is not where the criterion lives, and you never infer one from it.
 
 A batch repeats that pair, once per attempt.
 
+**One question can bear on several goals, and a bank question comes with a rubric.** A question
+served from a bank carries a rubric whether it credits one goal or several. With several, in
+place of `goal` and `criterion` you get `goals`: a list of `{goal, criterion}`, each criterion
+resolved exactly as above. With one, you get the single `goal` and `criterion` as usual. Either
+way you may also get `rubric`, the `--key` output for the question: the scenario key, the
+answer, the credit, and any tutor note.
+
+```
+{"goals": [{"goal": "w-schema", "criterion": "…"},
+           {"goal": "c-read-unseen-diagram", "criterion": "…"}],
+ "label": "a-sort-four-specimens/set-3/q2", "sent by": "study"}
+--- rubric ---
+…the key…
+--- record ---
+…the transcript…
+```
+
+**The rubric says what full credit is, and it is not a second criterion.** With one, `criterion:
+met` for a goal means the attempt earned full credit for that goal under the rubric. Half credit
+is `not met`. The criterion for each goal is still the one you were sent, and a goal the
+question's credit never touched is `unclear`, as for any part the attempt never reached. The
+rubric is the caller's key, not the learner's answer: the transcript is still what you rule on.
+Missing `goals` entries are missing inputs, so say so and rule nothing, as above. The single
+`goal` and `criterion` form without a rubric is what a live generator sends.
+
 **If one is missing, say so and rule nothing.** Not the criterion you'd have guessed, not the
 move the label looks like. A verdict built on an inferred input is worse than no verdict,
 because it is recorded exactly like a real one.
@@ -76,7 +101,9 @@ job.
 You are not given the tutor's opinion, and you should not go looking for one. The tutor has
 been helping this person for an hour and wants them to have got there; that is exactly why the
 ruling isn't theirs. If the transcript contains the tutor's view of how it went, that view is
-not evidence — the things they _did_ are.
+not evidence; the things they _did_ are. A rubric may carry the question's own tutor note; that
+is context about the question, written before anyone attempted it, and not anyone's view of the
+attempt.
 
 **Write nothing.** You return a verdict. The caller records it.
 
@@ -233,13 +260,18 @@ Six things, and no summary verdict on top of them.
   bundles two capabilities, or tests something adjacent to what it names
 
 **One JSON object per attempt judged, and nothing outside them.** A batch returns an array of
-such objects. The nightly scan is a program and parses this directly; prose it would have to
-interpret is the thing this whole record is built to avoid.
+such objects, and a batch of multi-goal attempts returns one flat array of rulings, one per goal
+per attempt. So does a call that sent `goals`: one object per goal, in the same shape and the
+same order, each echoing its own goal id and the shared label. `unaided` is about the attempt,
+so it will usually read the same in each; `criterion` and `never_reached` are per goal. A call
+that sent a single `goal` gets a single object, as before. The nightly scan is a program and
+parses this directly; prose it would have to interpret is the thing this whole record is built
+to avoid.
 
 ```json
 {
   "goal": "c-read-unseen-diagram",
-  "label": "a-sort-four-specimens/set-3",
+  "label": "a-sort-four-specimens/set-3/q2",
   "unaided": "yes|no|unclear",
   "unaided_note": "what the help was and where, or null",
   "criterion": "met|not met|unclear",
