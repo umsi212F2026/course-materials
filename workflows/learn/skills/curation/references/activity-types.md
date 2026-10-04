@@ -48,9 +48,11 @@ a `worked example` instruction, worked live as help, not an activity.
 ## Deepen
 
 **Gloss the unfamiliar.** The learner writes a one-line definition in their own words; the
-tutor replies with a discriminating near-miss — "you said X; does it still count if…". _Good
-for:_ running continuously alongside anything else. _Watch out:_ the learner writes first,
-always. Reversed, it becomes the tutor explaining and the learner agreeing.
+tutor replies with a discriminating near-miss: "you said X; does it still count if…". This is a
+tutor's move, not an activity: it runs alongside the orientation and alongside any help on a
+question, and its obligation is what keeps a reading in a `worked example` from being passive.
+_Watch out:_ the learner writes first, always. Reversed, it becomes the tutor explaining and
+the learner agreeing.
 
 **Contrast with non-examples.** A correct case beside a near-miss: which is which, and what
 gave it away. _Good for:_ concepts the learner can recognize but not define. Non-examples do

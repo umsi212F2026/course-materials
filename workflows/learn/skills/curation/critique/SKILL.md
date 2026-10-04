@@ -20,6 +20,12 @@ not from this file; there is no menu to judge, no artifact to weigh, and no Cove
 Nothing covering them is a gap and nothing about them is a finding. Judge the Goals table and
 the entries the generator wrote.
 
+**Older entries with no `checks` are listed, not judged.** A reading, a walkthrough or an
+exercise meant as practice before a check comes from before every activity was checkable, and
+curation converts it on the course path. List each by id in your report, apart from the
+findings, and write no finding or annotation about it one by one; a file-level annotation may
+say how many there are.
+
 **Work all four sections; each has its own unit.** §1 is every entry the generator wrote, §2
 every one of those again, for its `checks`, §3 the file as a whole, §4 every `blocked` cell.
 
@@ -46,7 +52,7 @@ With no knowledge of what the author intended:
 - **Is it an activity or a resource?** If it could be satisfied by reading and nodding, the
   learner obligation is missing. Outside the orientation, a reading, a video or a walkthrough is
   a resource however good its obligation: it belongs in a question activity's `worked example`,
-  and an entry made of one is a finding.
+  and a new entry made of one is a finding.
 - **Does `offer as` name a real difference** from its neighbors? "A good introduction" is not a
   characterization, and a menu whose candidates all sound the same is not a choice.
 - **Could a generator be run from what's written**, without asking the author what they meant?
@@ -132,6 +138,8 @@ Annotations help the tutor make use of the file as it is. **First round: finding
 
 **Findings** — for the generator. Keyed to entry or goal id, most consequential first, each
 saying what would fix it.
+
+**Older entries**: each live entry with no `checks`, by id, and nothing more.
 
 **Annotations** — text to be consumed by the tutor, who will never see your findings. Write
 them as final prose, ready to be placed verbatim; the orchestrator positions them but won't

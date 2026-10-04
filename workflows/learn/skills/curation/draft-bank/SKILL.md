@@ -12,10 +12,10 @@ description: Draft one activity's question bank on a course topic, from its gene
 else**: not `activities.md`, not `goals.md`, not another activity's bank. That is what lets one
 drafter per activity run in parallel without treading on each other.
 
-**Any question activity may get a bank, unless its generator works from real material.** If you
-are handed one whose generator picks from real items or from the learner's own work (their own
-app, their own agent, their own chats), or an orientation rehearsal, write nothing and say so in
-your reply. A bank would replace the learner's own
+**Any question activity may get a bank, unless its generator works from real material or it is
+an orientation rehearsal.** If you are handed one whose generator picks from real items or from
+the learner's own work (their own app, their own agent, their own chats), or an orientation
+rehearsal, write nothing and say so in your reply. A bank would replace the learner's own
 material with invented material, and the picker serves a bank whenever one exists, so the live
 generator would never run again.
 

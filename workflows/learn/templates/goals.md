@@ -233,7 +233,7 @@
   THE ORIENTATION ENTRY is shipped below, filled in, in every topic. It carries six slots and
   they are not yours to change. Delete it only if `what I already have` says this learner has
   seen the area laid out before; then say so there and let curation write
-  `n/a — already oriented`.
+  `n/a: already oriented`.
 
   HOW MANY CAPABILITIES. Usually one is enough: a second means the use needs a genuinely
   separate ability, not a restatement of the first. Past about three, something has been scoped

@@ -21,7 +21,7 @@ every goal.
 
 Sections 2 to 5 are mechanical and will likely become a program. Section 1 won't: confirming
 that a source is what it claims to be needs an agent, and it's the part worth most. Section 6 is
-half of each: a bank's `cases:` lines can be counted, a live generator's text has to be read.
+half of each: a bank's `cases:` lines can be counted, a generator's text has to be read.
 
 **Read `goals.md` and `activities.md`, and open anything they point at.** A URL, a file under
 `tasks/`, whatever an `artifact` names — you have to, since confirming a source is real means
@@ -139,10 +139,12 @@ second definition site this design exists to avoid.
 
 ## 6. Every case is exercised
 
-For each goal in `goals.md` with a `cases` slot, each of its cases must be
-exercised by some live activity: a banked question whose rubric `cases:` line lists it for that
-goal, or a live generator whose text says a kind of its questions carries it. A case neither
-covers is a finding, the same as an empty `checks` cell, keyed to the goal and naming the case.
+For each goal in `goals.md` with a `cases` slot, each of its cases must be exercised by some
+live activity, live meaning not dropped: a banked question whose rubric `cases:` line lists it
+for that goal, or any live activity whose generator says a kind of its questions carries it.
+A banked activity's generator counts too, since study runs it live when no bank question it
+still needs remains. A case neither covers is a finding, the same as an empty `checks` cell,
+keyed to the goal and naming the case.
 
 A banked question on such a goal with no `cases:` line was written before the goal had cases,
 and counts as exercising all of them; survey reports it, so don't report it again here.

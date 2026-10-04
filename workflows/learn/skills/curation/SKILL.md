@@ -140,7 +140,9 @@ course path the instructor is, at the two stops, and nobody else.
 3. **Revise, once.** Hand the findings from step 2 back to `curation/generate`; being given
    findings is what tells it to work them rather than to look for gaps. It may push back on one
    rather than acting on it — that's allowed, and its reasons come back to you rather than
-   being buried in the file.
+   being buried in the file. On the course path, the older entries with no `checks` that
+   `verify` listed go with these findings, one finding each (_Converting older files_), so
+   step 4 checks the converted entries before stop 1.
 
 4. **Check again**, same way, on the revised file — telling `critique` this is the second
    round, so annotations come back this time. `verify` skips whatever already carries a recent
@@ -158,8 +160,8 @@ course path the instructor is, at the two stops, and nobody else.
    version of the same defects as annotations, and you've just placed them. For each of
    `verify`'s, write `status: dropped — <the finding>` on that entry. `status` is yours to set;
    entry substance stays the generator's. `verify`'s list of older entries with no `checks` is
-   not findings: drop none of them, since _Converting older files_ takes them up on the course
-   path, and a plain-path run leaves them as they are.
+   not findings: drop none of them. On the course path they were converted in step 3, so the
+   list should be empty by now; a plain-path run leaves them as they are.
 
    **Regenerate the Coverage table if you dropped anything.** It's derived from the entries, so
    a drop leaves it claiming a check that no longer exists. A goal left with no live check is a
@@ -275,8 +277,9 @@ generator would never run again.
    Its `problems` cover a scenario with no rubric file, a question with no rubric entry or two,
    duplicate question ids, mcq answers that aren't a choice, a question naming no goal, a goal
    id that isn't in `goals.md`, a multi-goal question whose credit has no statement for one of
-   its goals, a `cases:` line naming a case its goal doesn't define, a question on a goal with
-   cases that lists none for it, and a bank folder with no activity entry. Each has one right
+   its goals, a malformed or duplicate case id, a `cases:` line naming a case its goal doesn't
+   define or a goal the question doesn't name, a question on a goal with cases that lists none
+   for it, and a bank folder with no activity entry. Each has one right
    answer, so hand an activity's problems back to its drafter (`full` mode again) rather than to
    the instructor, and re-run until there are none. Survey does not say whether every case is
    exercised; `bank-check` and `verify` do.
@@ -334,13 +337,15 @@ problems.
   goal has cases): every banked question names a goal. Then delete the old pair. An activity
   that pointed at a study bank usually has no `checks`; it is converted as the next item says,
   and gains `checks` naming every goal its new rubrics name.
-- **Activities with no `checks`, before stop 1.** Every activity but the orientation is now a
-  source of questions, and every question names a goal. Hand each older entry without `checks`
-  to `curation/generate` as a finding, to come back as one of these, and show the instructor
-  each one at stop 1:
+- **Activities with no `checks`, in the sequence's step 3.** Every activity but the orientation
+  is now a source of questions, and every question names a goal. Hand each older entry without
+  `checks` (the list `verify` returned in step 2) to `curation/generate` as a finding, with the
+  checkers' other findings, to come back as one of these. Step 4 then checks the converted
+  entries like any other, and the instructor sees each one at stop 1, where a fold or a drop
+  is theirs to overturn:
   - orientation material is kept as the orientation, one activity per topic;
   - a reading, video or narrated walkthrough is folded into a question activity's
-    `worked example`, which may cite it, or dropped; the instructor decides, one at a time;
+    `worked example`, which may cite it, or dropped, the instructor deciding one at a time;
   - an exercise with a right answer (sort, judge, critique) becomes a question activity with
     `checks`, a scenario with one question per item, sampled and banked like any other;
   - one built on the learner's own work becomes a live question activity with `checks`.

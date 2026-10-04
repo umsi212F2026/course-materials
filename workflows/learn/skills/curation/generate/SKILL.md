@@ -77,10 +77,9 @@ Don't add rows and don't remove them; that table's membership is the orchestrato
 3. Repeat until every row is complete or blocked — see _When a row can't be filled_ for when a
    row may be blocked. A file holding only the template skeleton is the case where every row is
    missing, which is a difference of degree and not of kind.
-4. Regenerate the Coverage table. It's derived from the `serves` and `checks` fields of the
-   live entries (a `group <name>` in `serves` expands to every goal in that group), so anything you
-   added or re-tagged has made it stale. A goal's `checks` cell also counts a live activity whose
-   bank holds a question whose rubric `goal:` names it.
+4. Regenerate the Coverage table. It's derived from the `checks` fields of the live entries,
+   so anything you added or re-tagged has made it stale. A goal's `checks` cell also counts a
+   live activity whose bank holds a question whose rubric `goal:` names it.
 
 ### Second call: work the findings
 
@@ -104,13 +103,17 @@ delete that note.
   else on the second pass. If no replacement can be built, the row is blocked — see _When a row
   can't be filled_.
 
-Regenerate the Coverage table if anything you did changed a `serves` or `checks` field. It is
+Regenerate the Coverage table if anything you did changed a `checks` field. It is
 built the same way as on the first call, banks included.
 
 ### Either call
 
 - **Keep every existing id**, don't renumber, and never regenerate a dropped entry — that field
   exists precisely to stop you.
+- **Leave an older entry with no `checks` as it is** (a reading, a walkthrough, an exercise
+  meant as practice before a check) unless it arrives as a finding. Converting one is the
+  course path's work, with the instructor deciding; never give a reading `checks` to satisfy
+  _Done when_, which counts only the entries you write or are handed.
 - **Leave `a-words` and legacy stamps alone.** The orchestrator writes `a-words`, and its text
   is fixed. An entry carrying `origin: generated` is a placeholder from before `a-words`; nothing
   serves from it, and `migrate-words.mjs` removes it.
@@ -302,7 +305,8 @@ reaches them, so a defect you noticed and didn't mention is a defect nobody ever
 
 Every Coverage row is complete or blocked — including `orientation` — and:
 
-- Every activity **carries `checks`**: anything a learner does can move a goal to met.
+- Every activity you wrote or were handed **carries `checks`**: anything a learner does can
+  move a goal to met. An older entry without it waits for its conversion (see _Either call_).
 - Every **case** of every goal is carried by some generator's questions.
 - Every `serves` and `checks` id **exists in the Goals table**, or is `all`; a `serves` item may
   also be `group <name>`, naming a group some goal is in.

@@ -126,9 +126,9 @@ with the learner.
 ## Coverage
 
 <!--
-  DERIVED. Every cell here is computed from the `serves` and `checks` fields of the
-  activities below — this table declares nothing. If the two disagree, the activities win
-  and this table is stale.
+  DERIVED. Every cell here is computed from the `checks` fields of the activities below and
+  the rubric `goal:` lines of their banks; this table declares nothing. If the two disagree,
+  the activities win and this table is stale.
 
   Regenerate it whenever activities are added, dropped, or re-tagged. It exists to restore
   the coverage view that was lost when activities became one flat list, and it's the first
@@ -153,9 +153,9 @@ with the learner.
 
   THE ORIENTATION GOAL is an ordinary row and always first, because it is first in goals.md.
   It is a goal like any other, with a criterion, an adjudicator and a bar — a row naming no
-  goal could never finish. It carries the activities that serve `all` — the ones that give the
-  learner the shape of the thing before any particular part is in play — and its `checks` cell
-  is filled like any other.
+  goal could never finish. Its `checks` cell is filled like any other, with the activity whose
+  `checks` names it: the one that gives the learner the shape of the thing before any
+  particular part is in play.
 
   If `goals.md` says the learner is already oriented, its entry there will have been deleted
   and this row won't exist. If the entry is there but `what I already have` settles it, write
@@ -264,8 +264,9 @@ with the learner.
                   wouldn't establish a criterion, because it does part of the work itself
                   (completing a partial instance doesn't show they could produce one from
                   nothing), is not an activity: it is help on some activity's questions. An
-                  older entry with no `checks` is converted at curation's next course-path
-                  run.
+                  older entry with no `checks` stays as it is until it is converted: on a
+                  course topic at curation's next course-path run, on a student's own topic
+                  when its learner next curates it.
 
   worked example  what to show at the first level of help: a solved instance, or an
                   instruction to work one live and narrate the decisions. It may cite a

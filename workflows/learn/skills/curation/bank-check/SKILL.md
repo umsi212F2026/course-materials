@@ -35,9 +35,10 @@ node workflows/learn/tools/survey.mjs --dir <data-dir> <topic-folder>
 with `<data-dir>` the folder that holds the topic. Its `problems` are the mechanical floor: a
 scenario with no rubric file, a question with no rubric entry or two, duplicate question ids, an
 mcq answer that is not one of its choices, a question naming no goal, a goal id that is not in
-`goals.md`, a multi-goal question with no credit statement for one of its goals, a `cases:` line
-naming a case its goal does not define, a question on a goal with cases that lists none for it,
-a bank folder with no activity entry.
+`goals.md`, a multi-goal question with no credit statement for one of its goals, a malformed or
+duplicate case id, a `cases:` line naming a case its goal does not define or a goal the question
+does not name, a question on a goal with cases that lists none for it, a bank folder with no
+activity entry.
 The orchestrator should have cleared these before calling you. Report any that name a bank
 label, verbatim and marked `question` (or `scenario`, for one about a whole file), and then
 check everything else anyway. Don't re-derive what survey checks; spend the reading on what it
