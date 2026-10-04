@@ -162,6 +162,69 @@ export function readGoals(dir) {
   return { goals, origin, written, malformed };
 }
 
+// --- the sequence ------------------------------------------------------------
+// `## Sequence`, after `## Goals`: a numbered list, one line per set, earliest first. An item is
+// a group, a capability slug or a goal id, written as the goals write them.
+//
+// A GOAL'S SET IS ITS MOST SPECIFIC MENTION: its id, else its capability slug, else its group. A
+// word added later therefore lands wherever its group is listed, with no edit here or in
+// goals.md. An item is checked against what it can name, not against which of the three it is,
+// so a group and a slug with one name are one item that matches both.
+//
+// NO SECTION IS A DECISION NOT YET MADE, NOT A DEFECT, so it raises no problem and `decided` is
+// false. The order used meanwhile is the three standard groups, then any other in order of first
+// appearance. A topic that has the section must place every goal: there is no catch-all.
+const SEQUENCE_HEADING = /^##\s+Sequence\s*$/m;
+const DEFAULT_SEQUENCE = ['orientation', 'vocabulary', 'capabilities'];
+
+export function readSequence(dir, goals) {
+  const file = join(dir, 'goals.md');
+  const text = existsSync(file) ? readFileSync(file, 'utf8').replace(/<!--[\s\S]*?-->/g, '') : '';
+
+  if (!SEQUENCE_HEADING.test(text)) {
+    const groups = [...new Set(goals.map((g) => g.group))];
+    const order = [...DEFAULT_SEQUENCE, ...groups.filter((n) => !DEFAULT_SEQUENCE.includes(n))];
+    const sets = order
+      .map((name) => goals.filter((g) => g.group === name).map((g) => g.id))
+      .filter((ids) => ids.length);
+    return { decided: false, sets, problems: [] };
+  }
+
+  const problems = [];
+  const lines = [];
+  for (const line of section(text, SEQUENCE_HEADING).split('\n')) {
+    const m = line.match(/^\s*\d+\.\s+(.*)$/);
+    if (m) lines.push(listField(m[1]));
+  }
+
+  const names = new Set();
+  for (const g of goals) for (const n of [g.id, g.capability, g.group]) if (n) names.add(n);
+  const ids = new Set(goals.map((g) => g.id));
+  const listed = new Map();
+  lines.forEach((items, i) => {
+    for (const item of items) {
+      if (!names.has(item)) problems.push(`Sequence names ${item}, which is no group, capability or goal`);
+      if (!ids.has(item)) continue;
+      if (!listed.has(item)) listed.set(item, new Set());
+      listed.get(item).add(i);
+    }
+  });
+  for (const [id, at] of listed)
+    if (at.size > 1) problems.push(`Sequence lists ${id} in two sets`);
+
+  const sets = lines.map(() => []);
+  for (const g of goals) {
+    if (!g.id) continue;
+    const first = (name) => (name ? lines.findIndex((items) => items.includes(name)) : -1);
+    let at = first(g.id);
+    if (at === -1) at = first(g.capability);
+    if (at === -1) at = first(g.group);
+    if (at === -1) problems.push(`${g.id} is in no set in the Sequence`);
+    else sets[at].push(g.id);
+  }
+  return { decided: true, sets, problems };
+}
+
 // Every goal in the topic, keyed by id.
 export function readIds(dir) {
   const byId = new Map();
@@ -402,12 +465,23 @@ export function surveyTopic(dir) {
     };
   });
 
+  // `current` IS THE FIRST SET WITH AN OPEN GOAL. Retired, deferred and met goals stay listed, so a
+  // reader can draw the whole sequence, but none of them is work for this sitting.
+  const sequence = readSequence(dir, goals);
+  const byId = new Map(rows.map((r) => [r.id, r]));
+  const stateOf = (r) => (r.retired ? 'retired' : r.deferred ? 'deferred' : r.met ? 'met' : 'open');
+  const sets = sequence.sets.map((ids) => ({
+    goals: ids.map((id) => ({ id, state: stateOf(byId.get(id)) })),
+  }));
+  const current = sets.findIndex((s) => s.goals.some((g) => g.state === 'open'));
+
   return {
     dir,
     phase: derivePhase({ retired, goals, live, rows }),
     retired,
     origin,
     groups: groupRows(rows),
+    sequence: { decided: sequence.decided, sets, current: current === -1 ? null : current },
     lastTouched: log.length ? log[log.length - 1].at.slice(0, 10) : null,
     // What is waiting, and whether the learner is needed for it. `learn` splits on `needs`:
     // `curation` is agent-only and gets spawned in the background, `goal-setting` goes on the
@@ -460,6 +534,8 @@ export function idProblems(dir, status = statusOf(dir)) {
 
     found.push(...goal.problems);
   }
+
+  found.push(...readSequence(dir, goals).problems);
 
   // A capability is made of parts, so one goal alone under a slug is a grouping of nothing.
   const parts = new Map();

@@ -1,0 +1,88 @@
+// goals.md's `## Sequence`: sets of goals in order. Each goal's set is its most specific mention.
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { writeFileSync, readFileSync } from 'node:fs';
+import { join, dirname } from 'node:path';
+import { makeTopic, run, survey, CAP_GOAL } from './helpers.mjs';
+
+const word = (id) => `### \`${id}\`\n- **goal:** x\n- **criterion:** vocabulary\n- **group:** vocabulary\n`;
+const orient = (id) => `### \`${id}\`\n- **goal:** x\n- **criterion:** done\n- **group:** orientation\n`;
+const other = (id) => `### \`${id}\`\n- **goal:** x\n- **criterion:** done\n- **group:** extras\n`;
+const CAP = '- **capability:** weigh-hosting-plans\n';
+
+// The Sequence section goes after Goals, as it does in a real topic.
+function topic(goals, sequence) {
+  const dir = makeTopic({ goals: goals.join('\n') });
+  if (sequence !== undefined) {
+    const file = join(dir, 'goals.md');
+    writeFileSync(file, readFileSync(file, 'utf8') + `\n## Sequence\n\n${sequence}\n`);
+  }
+  return dir;
+}
+const setsOf = (dir) => survey(dir).sequence.sets.map((s) => s.goals.map((g) => g.id));
+
+test('no section: not decided, and the default order fills the sets', () => {
+  const dir = topic([other('x-1'), CAP_GOAL('c-a'), word('w-a'), orient('o-a')]);
+  const s = survey(dir);
+  assert.equal(s.sequence.decided, false);
+  assert.deepEqual(setsOf(dir), [['o-a'], ['w-a'], ['c-a'], ['x-1']]);
+  assert.deepEqual(s.problems.filter((p) => /equence|no set/.test(p)), []);
+});
+
+test('the most specific mention decides: id over slug over group', () => {
+  const dir = topic(
+    [orient('o-a'), word('w-a'), word('w-lock-in'), CAP_GOAL('c-weigh-sleep'), CAP_GOAL('c-p1', CAP), CAP_GOAL('c-p2', CAP), CAP_GOAL('c-z')],
+    '1. orientation\n2. vocabulary, `c-weigh-sleep`\n3. capabilities\n4. w-lock-in'
+  );
+  assert.deepEqual(setsOf(dir), [['o-a'], ['w-a', 'c-weigh-sleep'], ['c-p1', 'c-p2', 'c-z'], ['w-lock-in']]);
+  assert.deepEqual(survey(dir).problems.filter((p) => /equence|no set/.test(p)), []);
+});
+
+test('a capability slug puts all its parts in its set, and a goal id elsewhere beats it', () => {
+  const goals = [CAP_GOAL('c-p1', CAP), CAP_GOAL('c-p2', CAP), CAP_GOAL('c-p3', CAP), word('w-a')];
+  const dir = topic(goals, '1. weigh-hosting-plans\n2. vocabulary, capabilities');
+  assert.deepEqual(setsOf(dir), [['c-p1', 'c-p2', 'c-p3'], ['w-a']]);
+  const moved = topic(goals, '1. weigh-hosting-plans\n2. vocabulary, c-p2');
+  assert.deepEqual(setsOf(moved), [['c-p1', 'c-p3'], ['c-p2', 'w-a']]);
+});
+
+test('a word added later lands in its group set, and in Goals, not in Sequence', () => {
+  const dir = topic([word('w-a'), CAP_GOAL('c-a')], '1. vocabulary\n2. capabilities');
+  const before = readFileSync(join(dir, 'goals.md'), 'utf8');
+  const tail = before.slice(before.indexOf('## Sequence'));
+  const r = run('new-word.mjs', ['--dir', dirname(dir), 'topic', 'a new word', 'w-new']);
+  assert.equal(r.code, 0, r.stderr);
+  const after = readFileSync(join(dir, 'goals.md'), 'utf8');
+  assert.ok(after.indexOf('w-new') < after.indexOf('## Sequence'));
+  assert.equal(after.slice(after.indexOf('## Sequence')), tail);
+  assert.deepEqual(setsOf(dir), [['w-a', 'w-new'], ['c-a']]);
+});
+
+test('each problem is reported with its exact message', () => {
+  const dir = topic([word('w-a'), word('w-b'), CAP_GOAL('c-a')], '1. vocabulary, nonsense, w-a\n2. w-a');
+  const p = survey(dir).problems;
+  assert.ok(p.includes('Sequence names nonsense, which is no group, capability or goal'), p.join('\n'));
+  assert.ok(p.includes('Sequence lists w-a in two sets'), p.join('\n'));
+  assert.ok(p.includes('c-a is in no set in the Sequence'), p.join('\n'));
+});
+
+test('current is the first set with an open goal, and null when nothing is open', () => {
+  const dir = topic([word('w-a'), word('w-b'), word('w-c'), CAP_GOAL('c-a')], '1. w-a\n2. w-b\n3. w-c\n4. capabilities');
+  run('record-status.mjs', [dir, 'retired', 'w-a', '--reason', 'x']);
+  run('record-status.mjs', [dir, 'deferred', 'w-b', '--where', 'elsewhere']);
+  let s = survey(dir).sequence;
+  assert.deepEqual(s.sets.slice(0, 2).map((x) => x.goals[0].state), ['retired', 'deferred']);
+  assert.equal(s.current, 2);
+  run('record-attempt.mjs', [dir, 'w-c', 'x/1', '--axes', '{"unaided":"yes","criterion":"met"}']);
+  run('record-status.mjs', [dir, 'retired', 'c-a', '--reason', 'x']);
+  s = survey(dir).sequence;
+  assert.equal(s.sets[2].goals[0].state, 'met');
+  assert.equal(s.current, null);
+});
+
+test('--report says not decided yet only when undecided', () => {
+  const undecided = topic([word('w-a')]);
+  assert.match(run('survey.mjs', ['--dir', dirname(undecided), undecided, '--report']).stdout, /sequence: not decided yet/);
+  const decided = topic([word('w-a')], '1. vocabulary');
+  assert.doesNotMatch(run('survey.mjs', ['--dir', dirname(decided), decided, '--report']).stdout, /sequence:/);
+});

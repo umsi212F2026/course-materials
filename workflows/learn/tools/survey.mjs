@@ -93,6 +93,7 @@ for (const s of surveys) {
   }
 
   console.log(`  last touched: ${s.lastTouched ?? 'never'}`);
+  if (!s.sequence.decided) console.log('  sequence: not decided yet');
 
   // One width across the whole topic, so the columns line up between groups — both the id
   // column and the tick, which is why the lines are built before any of them is printed.
