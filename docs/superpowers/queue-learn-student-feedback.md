@@ -39,6 +39,7 @@ been merged or pushed.
 | 7 | Web side panel for tutor-initiated questions | deferred (feasibility test first) |
 | 8 | Personalized problem-set questions | deferred (spec B not written) |
 | 9 | Every activity checkable; recuration of each topic | to do (design first) |
+| 10 | APPLY and the student's own work, within personalization | after the release (with item 8) |
 
 Outside this branch, done 2026-10-04 and merged locally but not pushed: this branch into
 course-materials `main`; the six course topics, migrated on learning-topics branch
@@ -183,6 +184,21 @@ merged into main again before that push.
    This is likely part of why students have not finished topics in reasonable time. The three new
    topics get the same treatment in their part 2 re-evaluation; config-and-secrets is already
    being curated this way, with the deviation noted in its Check notes until the skills change.
+10. **APPLY and the student's own work.** After the release, and thought through as part of the
+    overall personalization plan with item 8. Found 2026-10-04: the vocabulary move APPLY ("uses
+    the word about something that really happened in their own work") has stopped appearing.
+    The banks hold 179 word questions and none is APPLY (52 CATCH, 47 DEFINE, 49 DISTINGUISH, 31
+    INTERPRET), and review sets a move live only when `next-item.mjs` finds no bank question
+    for the word (exit 2), so review's "prefer APPLY" is never reached. Nothing breaks, since
+    CATCH and DISTINGUISH also meet "one production pass". To think through:
+    - two forms: the student brings the instance (fixed prompt and rubric, so bankable with
+      `move: APPLY`), or the tutor builds the question from their files (live only, the same
+      shape as item 8's personalized questions and config-and-secrets' own-deploy activities);
+    - when it is set: not at a word's first meeting in study; preferred in review, which needs
+      the picker to favour a tag (something like `next-item.mjs --prefer-tag APPLY`);
+    - the quiz: an APPLY answer cannot be judged without the student's work, so either the quiz
+      path drops APPLY questions or the grader judges only whether the instance is genuine;
+    - how "theirs" is checked: their assignments repository, git log, or problem-set repo.
 
 ## Actions on the learning-topics repository (outside this branch)
 
