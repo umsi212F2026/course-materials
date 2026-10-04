@@ -16,7 +16,8 @@ the activity isn't obvious from the entry.
 
 **A word, through `a-words`**: ask for the word's question with
 `node workflows/learn/tools/next-item.mjs <topic-folder> --goal <word-id>` and serve it as a
-bank question, below. **Exit 2 means nothing is banked for that word, so you pick a move from
+bank question, below. **Never ask for it with `--activity a-words`**: that serves an arbitrary
+word, not the one being studied. **Exit 2 means nothing is banked for that word, so you pick a move from
 `../../goal-setting/references/vocabulary-moves.md` and instantiate it.** There are no
 candidates to offer and no choice to put to the learner. Take one the word hasn't had
 recently. This returns the labels this goal has already been given, most recent first:

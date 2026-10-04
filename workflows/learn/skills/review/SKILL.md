@@ -266,7 +266,9 @@ argument.
    wants to, they can edit the `notes.md` file for the topic; you can help them with the
    mechanics of opening the file.
 
-   **If they want to work through it again, do it here.** Offer the live `orient` and `deepen`
+   **If they want to work through it again, do it here.** For a lapsed word, go over what went
+   wrong and offer another move, set live or from the bank, rather than orient or deepen
+   candidates. For any other goal, offer the live `orient` and `deepen`
    candidates for that goal from `activities.md` and run one, following
    [`../study/references/running-an-activity.md`](../study/references/running-an-activity.md)
    the way the study phase does. Don't send them off to a study session — this is the session

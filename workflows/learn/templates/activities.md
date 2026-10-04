@@ -192,8 +192,9 @@ with the learner.
   learner does  the obligation, not just the resource — this is the field that makes it an
                 activity rather than a reading list
   tutor role    the stance to take while this runs: explainer, socratic questioner,
-                critique target, critic, role-play partner, or none — the learner works
-                alone and you wait
+                critique target, critic, role-play partner, examiner (sets a question cold and
+                leaves the judging to the adjudicator), or none (the learner works
+                alone and you wait)
   tutor does    during, and afterwards
   done when     for orient and deepen: the learner can attempt the real thing with the
                 artifact still beside them. For an activity carrying `checks`: its criterion

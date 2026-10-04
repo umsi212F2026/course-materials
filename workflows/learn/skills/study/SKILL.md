@@ -41,7 +41,8 @@ attempt and its ruling, which `workflows/learn/tools/survey.mjs` prints.
 
 **A goal is a claim about the learner that can be true or false; an activity is an occasion
 that produces evidence for it.** A capability, a vocabulary word and the orientation are all
-goals, they are all entries in `goals.md`, and you reach all of them the same way.
+goals, they are all entries in `goals.md`, and you reach all of them the same way. **A word is
+a goal in group `vocabulary`**; that is the whole definition, here and in every other skill.
 
 What differs is the **slots** each one carries: who rules on an attempt, and what accumulation
 of rulings makes the claim true. Read them off the entry; don't
@@ -76,7 +77,8 @@ ask differently rather than repeating it.
    asked. An entry carrying `origin: generated` is a legacy stamp; offer nothing from it.
 
    **A word is studied through `a-words`, and there is no choice to put to them.** Ask for its
-   question:
+   question, always by the word's goal id and never with `--activity a-words`, which would serve
+   an arbitrary word:
 
    ```
    node workflows/learn/tools/next-item.mjs <topic-folder> --goal <word-id>
@@ -259,7 +261,8 @@ couldn't tell — that's `unclear`. Two cases, and both are ordinary:
   nobody. There was nothing for an adjudicator to settle, and review already counts this as a
   lapse.
 - **The activity couldn't have settled anything** — a curated entry carrying no `checks`, so a
-  pass at it wouldn't establish the criterion however unaided. Record
+  pass at it wouldn't establish the criterion however unaided. This never applies to `a-words`,
+  or to any generator whose questions name their goals: those finish the goals they name. Record
   `{"unaided":"yes","criterion":"unchecked"}`. It moves no date and establishes nothing, which
   is exactly right.
 
@@ -279,8 +282,9 @@ wasted. When a goal lands you may offer to keep going — **once, with something
 never as a standing invitation.**
 
 Specific means naming the gap the record shows, and the record shows one either way. For a word
-it's the moves it hasn't had — the six, minus what `served.mjs` hands back: met by DEFINE and
-DISTINGUISH, it's never been used about their own work. For a curated goal it's the check's
+it's the moves it hasn't had, of the five: read each earlier move from the served question's key
+(its `move`), or from the `<MOVE>:` prefix of a live label. Met by DEFINE and DISTINGUISH, it's
+never been used about their own work. For a curated goal it's the check's
 `doesn't show`, which is the field where curation admitted what passing wouldn't establish.
 
 Then name what you'd run. _"Do you want to try catching an incorrect usage, or just move on?"_

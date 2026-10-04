@@ -461,8 +461,8 @@
         <bpmn:startEvent id="C_start" name="goals.md has capabilities">
           <bpmn:outgoing>c1</bpmn:outgoing>
         </bpmn:startEvent>
-        <bpmn:serviceTask id="C_stamp" name="Stamp entries for goals that supply their own&#10;curation, step 0">
-          <bpmn:documentation>workflows/learn/skills/curation/SKILL.md, step 0. A goal whose supply slot names anything but `curated` produces its own activities — a vocabulary word's moves come from the six-move menu, not from this file — so there is no artifact to find and no menu to choose among. What it needs is one entry carrying `origin: generated`, so that every goal is reachable through the same lookup and review never has to ask what kind of goal it is looking at. Idempotent, and outside the revision loop: it runs once per curation run, and a goal that already has its entry is left alone.</bpmn:documentation>
+        <bpmn:serviceTask id="C_stamp" name="Write the a-words entry if the topic&#10;has words and lacks one, step 0">
+          <bpmn:documentation>workflows/learn/skills/curation/SKILL.md, step 0. The words are served by one ordinary activity, `a-words`, whose generator is the five moves in vocabulary-moves.md, so there is no artifact to find and no menu to choose among per word. A topic with any goal in group `vocabulary` and no `a-words` entry gets that one entry, exactly as written, so that every goal is reachable through the same lookup and review never has to ask what kind of goal it is looking at. Idempotent, and outside the revision loop: it runs once per curation run, and a topic that already has the entry is left alone.</bpmn:documentation>
           <bpmn:incoming>c1</bpmn:incoming>
           <bpmn:outgoing>c15</bpmn:outgoing>
           <bpmn:property id="Property_stamp_tr" name="__targetRef_placeholder" />
@@ -560,7 +560,7 @@
           </bpmn:dataOutputAssociation>
         </bpmn:serviceTask>
         <bpmn:scriptTask id="C_clear" name="Clear the queue: curated, or blocked&#10;record-status.mjs">
-          <bpmn:documentation>workflows/learn/skills/curation/SKILL.md, step 6, through workflows/learn/tools/record-status.mjs. Every goal this phase was invited for gets exactly one line: `curated` for one that now has live entries — including a goal only stamped in step 0 — and `blocked … needs: goal-setting` for one nothing could be built for, with what would have to change. There is no third outcome. A goal left on the queue is a goal learn invites this phase back for, silently, forever, with nobody present to fix what is actually wrong with it; that dead end is what the status log was built to close.</bpmn:documentation>
+          <bpmn:documentation>workflows/learn/skills/curation/SKILL.md, step 6, through workflows/learn/tools/record-status.mjs. Every goal this phase was invited for gets exactly one line: `curated` for one that now has live entries, including a word, which the `a-words` entry written in step 0 serves, and `blocked … needs: goal-setting` for one nothing could be built for, with what would have to change. There is no third outcome. A goal left on the queue is a goal learn invites this phase back for, silently, forever, with nobody present to fix what is actually wrong with it; that dead end is what the status log was built to close.</bpmn:documentation>
           <bpmn:incoming>c12</bpmn:incoming>
           <bpmn:outgoing>c16</bpmn:outgoing>
           <bpmn:property id="Property_c_clear" name="__targetRef_placeholder" />
@@ -746,7 +746,7 @@
         <bpmn:dataObjectReference id="DOR_el_log" name="attempts.jsonl" dataObjectRef="DO_log" />
         <bpmn:dataObjectReference id="DOR_el_status_d" name="status.jsonl" dataObjectRef="DO_status" />
         <bpmn:dataObjectReference id="DOR_el_status_r" name="status.jsonl" dataObjectRef="DO_status" />
-        <bpmn:task id="S_choose" name="Choose among what the supply offers">
+        <bpmn:task id="S_choose" name="Choose among what the entries offer">
           <bpmn:incoming>s_el_no</bpmn:incoming>
           <bpmn:outgoing>s4</bpmn:outgoing>
         </bpmn:task>
@@ -756,7 +756,7 @@
           <bpmn:outgoing>s16</bpmn:outgoing>
         </bpmn:exclusiveGateway>
         <bpmn:scriptTask id="S_block" name="Say what has to change upstream&#10;record-status.mjs">
-          <bpmn:documentation>workflows/learn/tools/record-status.mjs, writing a `blocked` line to this topic's status log. Two things reach it, and the difference is who has to act. `needs: curation` — every live candidate for this goal has been dropped, or the instances its supply produces are bad; an agent fixes that alone and learn spawns it in the background. `needs: goal-setting` — the criterion turns out to be untestable or to bundle two capabilities; that needs the learner, and goes on their menu. A tutor who wrote neither would leave a goal that cannot be worked on and nothing saying why.</bpmn:documentation>
+          <bpmn:documentation>workflows/learn/tools/record-status.mjs, writing a `blocked` line to this topic's status log. Two things reach it, and the difference is who has to act. `needs: curation`: every live candidate for this goal has been dropped, or the questions its generator produces are bad; an agent fixes that alone and learn spawns it in the background. `needs: goal-setting`: the criterion turns out to be untestable or to bundle two capabilities; that needs the learner, and goes on their menu. A tutor who wrote neither would leave a goal that cannot be worked on and nothing saying why.</bpmn:documentation>
           <bpmn:incoming>s16</bpmn:incoming>
           <bpmn:outgoing>s15</bpmn:outgoing>
           <bpmn:property id="Property_s_block" name="__targetRef_placeholder" />
@@ -808,7 +808,7 @@
             </bpmn:dataOutputAssociation>
           </bpmn:serviceTask>
           <bpmn:scriptTask id="RUN_served" name="What has this already been given?&#10;served.mjs">
-            <bpmn:documentation>workflows/learn/tools/served.mjs — the labels this goal has already been given, returned unmodified. A label is whatever the supply that wrote it chose to write, and that supply is the only thing that reads it back: the vocabulary supply writes the move and a note on the instance, the curated supply writes the entry id and a bank item after a slash. Recomputed from the attempt log rather than cached, because a generator's labels grow for as long as the goal keeps coming back in review.</bpmn:documentation>
+            <bpmn:documentation>workflows/learn/tools/served.mjs, the labels this goal has already been given, returned unmodified. A label is whatever the activity that wrote it chose to write, and that activity is the only thing that reads it back: a live vocabulary move writes `&lt;MOVE&gt;: &lt;instance&gt;`, and a banked question writes its path under the bank. Recomputed from the attempt log rather than cached, because a generator's labels grow for as long as the goal keeps coming back in review.</bpmn:documentation>
             <bpmn:property id="Property_served_tr" name="__targetRef_placeholder" />
             <bpmn:dataInputAssociation id="a_served_log">
               <bpmn:sourceRef>DOR_run_log</bpmn:sourceRef>
@@ -836,7 +836,7 @@
           <bpmn:outgoing>s10</bpmn:outgoing>
         </bpmn:exclusiveGateway>
         <bpmn:scriptTask id="S_log" name="Log the attempt&#10;record-attempt.mjs">
-          <bpmn:documentation>workflows/learn/tools/record-attempt.mjs. Every attempt goes through it, missed ones included — nothing can be worked out from a record of only what worked. It checks the goal id against goals.md, stores the two axes raw and collapses nothing, records the label and tags the supply returned, and asks the goal's own bar of the whole log. It sets no date and writes nowhere else: the schedule is a fold over the file it has just appended to, so recording the attempt is what sets the date.</bpmn:documentation>
+          <bpmn:documentation>workflows/learn/tools/record-attempt.mjs. Every attempt goes through it, missed ones included, because nothing can be worked out from a record of only what worked. It checks the goal id against goals.md, stores the two axes raw and collapses nothing, records the label and tags the served question carried, and asks the goal's own bar of the whole log. It sets no date and writes nowhere else: the schedule is a fold over the file it has just appended to, so recording the attempt is what sets the date.</bpmn:documentation>
           <bpmn:incoming>s10</bpmn:incoming>
           <bpmn:outgoing>s14</bpmn:outgoing>
           <bpmn:property id="Property_s_log" name="__targetRef_placeholder" />
@@ -903,7 +903,7 @@
         <bpmn:sequenceFlow id="s_el_rejoin" sourceRef="S_el_merge" targetRef="S_merge3" />
         <bpmn:sequenceFlow id="s4" sourceRef="S_choose" targetRef="S_offerable" />
         <bpmn:sequenceFlow id="s5" name="yes" sourceRef="S_offerable" targetRef="S_run">
-          <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">the goal's supply returned something to run. Otherwise that goal is stuck until something upstream changes, and saying so is the only useful thing left to do with it</bpmn:conditionExpression>
+          <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">an activity entry for the goal has something to run. Otherwise that goal is stuck until something upstream changes, and saying so is the only useful thing left to do with it</bpmn:conditionExpression>
         </bpmn:sequenceFlow>
         <bpmn:sequenceFlow id="s6" sourceRef="S_run" targetRef="S_gate_judge" />
         <bpmn:sequenceFlow id="s7" name="yes" sourceRef="S_gate_judge" targetRef="S_judge">
@@ -1125,7 +1125,7 @@
           <bpmn:targetRef>Property_r_due</bpmn:targetRef>
         </bpmn:dataInputAssociation>
       </bpmn:scriptTask>
-      <bpmn:serviceTask id="R_setup" name="Set the task: whatever the goal&#39;s supply returns">
+      <bpmn:serviceTask id="R_setup" name="Set the task: whatever the chosen entry serves">
         <bpmn:incoming>Flow_0ybsgz2</bpmn:incoming>
         <bpmn:outgoing>Flow_0zf28qi</bpmn:outgoing>
         <bpmn:property id="Property_04229ld" name="__targetRef_placeholder" />
@@ -1240,7 +1240,7 @@
       <bpmn:sequenceFlow id="r12" name="no" sourceRef="R_another" targetRef="End_R" />
       <bpmn:sequenceFlow id="Flow_0zf28qi" sourceRef="R_setup" targetRef="R_checkable" />
       <bpmn:sequenceFlow id="r15" name="yes" sourceRef="R_checkable" targetRef="R_attempt">
-        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">activities.md has a live entry that checks this goal, so the supply has something to serve</bpmn:conditionExpression>
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">activities.md has a live entry that checks this goal, so there is something to serve</bpmn:conditionExpression>
       </bpmn:sequenceFlow>
       <bpmn:sequenceFlow id="r13" name="no" sourceRef="R_checkable" targetRef="R_block" />
       <bpmn:sequenceFlow id="r14" sourceRef="R_block" targetRef="R_merge2" />

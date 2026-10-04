@@ -218,7 +218,8 @@ export function readActivities(dir) {
 
 // LEGACY STAMPS ARE NOT LIVE. An `origin: generated` entry was written for a goal whose supply
 // produced its own activities; the supply is retired, so a stamp points at nothing the tutor can
-// run. It is skipped everywhere and never reported, which is also why a topic whose only entries
+// run. It is skipped everywhere and never reported as an entry (idProblems still reports a stamp
+// that names a missing goal), which is also why a topic whose only entries
 // for its words are stamps still derives its phase from the entries that are real.
 export const liveActivities = (dir) =>
   readActivities(dir).filter((e) => !e.dropped && !e.generated);

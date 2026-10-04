@@ -10,8 +10,8 @@ system asks of any of them.
 
 **Every slot defaults.** An ordinary capability carries no slot values at all. A word carries
 the three that differ from the default; an orientation carries six. There are no named types:
-nothing in the system says "this is a word", only that this goal's `criterion` is `vocabulary`
-and its group is one the `a-words` activity serves.
+nothing in the system says "this is a word", only that this goal is in group `vocabulary`
+(which is also where its `criterion` of `vocabulary` puts it by default).
 `capability` is the one slot with no default: it is simply absent on a goal that isn't a part.
 
 ## The eight slots
@@ -172,12 +172,14 @@ stamped entry is skipped; `workflows/learn/tools/migrate-words.mjs` removes both
 **How every goal is served, in full.** Read the live entries in `activities.md`: present, not
 carrying `status: dropped`, and not a legacy stamp. Those whose `checks` names this goal can
 finish it; those whose `serves` names it, its group, or `all` can be run against it but cannot
-finish it. Offer among them using each entry's `offer as`, and let the learner choose; that is
+finish it, with one exception: **a generator's questions finish the goals they name.** Each
+`a-words` question names its word's goal, so it finishes that word, whether it was banked or set live. Offer among them using each entry's `offer as`, and let the learner choose; that is
 the whole of the judgement here.
 
 - **instruction**: the chosen entry's `learner does`, `tutor role` and `tutor does`, run as
   written. If it has a bank, the question `next-item.mjs` serves.
-- **label**: the question's path when it came from a bank, otherwise the entry id. That is a
+- **label**: the question's path when it came from a bank; for a live vocabulary move,
+  `<MOVE>: <instance>`; otherwise the entry id. That is a
   private channel like any other label; it happens to be readable, which is convenient.
 - **tags**: the question's, where its `move` gives it one, and otherwise none. A tag every
   curated check carried would say nothing, and nothing reads one there: those goals use

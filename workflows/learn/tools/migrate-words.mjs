@@ -29,6 +29,9 @@
 // legacy files edited (temp file, then rename) or deleted. A pair is deleted only when nothing
 // but a title is left in it.
 //
+// NOT ATOMIC. A rename that fails partway through the edits is not rolled back; the files
+// already renamed stay changed, and the new a-words files stay in place.
+//
 // ONE-SHOT. It refuses if tasks/a-words/ or rubrics/a-words/ already exists, so a second run can
 // never duplicate a question. --dry-run prints the same summary and writes nothing.
 
@@ -201,7 +204,8 @@ export function planMigration(dir) {
 
   for (const [goal, m] of moved) {
     const word = words.get(goal).text;
-    const body = (parts) => parts.map((p) => p.trimEnd()).join('\n\n') + '\n';
+    // Only trailing whitespace-only lines go: trimEnd would also strip spaces from the last content line.
+    const body = (parts) => parts.map((p) => p.replace(/(\n[ \t]*)*$/, '')).join('\n\n') + '\n';
     created.set(m.tFile, `# ${word}\n\n${body(m.tasks)}`);
     created.set(m.rFile, `# Rubric: ${word}\n\n${body(m.rubrics)}`);
     summary.push(`moved ${m.tasks.length} question${m.tasks.length === 1 ? '' : 's'} for ${goal}`);
@@ -215,11 +219,14 @@ export function planMigration(dir) {
   const stamps = new Set(activities.filter((e) => e.generated && onlyWords([...e.serves, ...e.checks])).map((e) => e.id));
   let acts = original;
   if (stamps.size) {
-    const r = removeBlocks(acts, (l) => { const m = /^###\s+`?([A-Za-z0-9-]+)`?\s*$/.exec(l); return !!m && stamps.has(m[1]); }, true);
+    const gone = new Set();
+    const r = removeBlocks(acts, (l) => { const m = /^###\s+`?([A-Za-z0-9-]+)`?\s*$/.exec(l); if (m && stamps.has(m[1])) gone.add(m[1]); return !!m && stamps.has(m[1]); }, true);
     acts = r.text;
+    // A stamp readActivities saw but the line scan skipped (an inline `<!--` can hide it) stays behind.
+    for (const id of stamps) if (!gone.has(id)) warnings.push(`${actsFile}: the stamp ${id} was not removed; delete it by hand.`);
     if (r.count) summary.push(`removed ${r.count} stamped entr${r.count === 1 ? 'y' : 'ies'} from activities.md`);
   }
-  if (!activities.some((e) => e.id === 'a-words')) {
+  if (words.size && !activities.some((e) => e.id === 'a-words')) {
     acts = acts.replace(/\n*$/, '') + (acts.trim() ? '\n\n' : '') + A_WORDS;
     summary.push('added the a-words entry to activities.md');
   }
@@ -302,10 +309,12 @@ function main() {
   const plan = planMigration(dir);
   if (plan.refusals.length) die(`Refusing, nothing was changed:\n  ${plan.refusals.join('\n  ')}`);
   for (const w of plan.warnings) console.error(`warning: ${w}`);
-  console.log(flags['dry-run'] ? 'dry run, nothing written:' : 'migrated:');
-  for (const line of plan.summary) console.log(`  ${line}`);
-  if (!plan.summary.length) console.log('  nothing to do');
-  if (flags['dry-run']) return;
+  const report = (head) => {
+    console.log(head);
+    for (const line of plan.summary) console.log(`  ${line}`);
+    if (!plan.summary.length) console.log('  nothing to do');
+  };
+  if (flags['dry-run']) return report('dry run, nothing written:');
 
   // NEW FILES FIRST, THEN VERIFIED, THEN EDITS, THEN DELETIONS.
   const undo = () => {
@@ -331,6 +340,7 @@ function main() {
     renameSync(tmp, path);
   }
   for (const path of plan.removals) rmSync(path);
+  report('migrated:');
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) main();

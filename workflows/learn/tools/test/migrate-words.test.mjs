@@ -2,7 +2,7 @@
 // tasks/a-words/<goal-id>.md and retires the stamps and supply lines that served them.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdirSync, writeFileSync, readFileSync, existsSync } from 'node:fs';
+import { mkdirSync, writeFileSync, readFileSync, existsSync, chmodSync } from 'node:fs';
 import { join } from 'node:path';
 import { makeTopic, run, survey, CAP_GOAL } from './helpers.mjs';
 import { readFolderBanks } from '../../../quiz/tools/lib/bank.mjs';
@@ -241,4 +241,40 @@ test('a pair emptied of questions but holding preamble prose is kept, with a war
   assert.match(r.stderr, /were kept/);
   assert.match(read(dir, 'tasks/i.md'), /Keep this prose\./);
   assert.equal(existsSync(join(dir, 'rubrics/i.md')), true);
+});
+
+test('trailing spaces on the last line of a moved question are kept, and verification passes', () => {
+  const dir = bare('# T\n\n' + TASK('q1', 'One.') + '### q2\n\nEnds in spaces.   \n\n', '# R\n\n' + RUB('q1', 'w-a', 'define') + RUB('q2', 'w-a', 'use'));
+  const r = run('migrate-words.mjs', [dir]);
+  assert.equal(r.code, 0, r.stderr);
+  assert.ok(read(dir, 'tasks/a-words/w-a.md').endsWith('Ends in spaces.   \n'));
+});
+
+test('a topic with no word goals gets no a-words entry, and survey finds nothing new', () => {
+  const dir = makeTopic({ goals: CAP_GOAL('c-x'), activities: '# Activities\n\n' + CURATED });
+  const before = problems(dir);
+  const r = run('migrate-words.mjs', [dir]);
+  assert.equal(r.code, 0, r.stderr);
+  assert.doesNotMatch(read(dir, 'activities.md'), /a-words/);
+  assert.doesNotMatch(r.stdout, /a-words/);
+  for (const p of problems(dir)) assert.ok(before.includes(p), `new problem: ${p}`);
+});
+
+test('a run that fails while writing prints no migrated summary', () => {
+  const dir = bare('# T\n\n' + TASK('q1', 'One.'), '# R\n\n' + RUB('q1', 'w-a', 'define'));
+  chmodSync(join(dir, 'rubrics'), 0o555);
+  try {
+    const r = run('migrate-words.mjs', [dir]);
+    assert.equal(r.code, 1);
+    assert.doesNotMatch(r.stdout, /migrated:/);
+  } finally {
+    chmodSync(join(dir, 'rubrics'), 0o755);
+  }
+});
+
+test('a stamp that was found but could not be removed is warned about by name', () => {
+  const acts = '# Activities\n\nNote `<!--` here\n\n' + STAMP('a-w-a', 'w-a') + CURATED;
+  const dir = bare('# T\n\n' + TASK('q1', 'One.'), '# R\n\n' + RUB('q1', 'w-a', 'define'), { acts });
+  const r = run('migrate-words.mjs', [dir]);
+  assert.match(r.stderr, /warning: .*a-w-a.*not removed/);
 });
