@@ -36,11 +36,15 @@ been merged or pushed.
 | 4 | Help always available; a helped attempt counts as helped | **DONE** |
 | 5 | Sequenced sets of goals | **DONE** |
 | 6 | Progress view | **DONE** |
-| 7 | Web side panel for tutor-initiated questions | to do (feasibility test first) |
-| 8 | Personalized problem-set questions | to do (spec B not written) |
+| 7 | Web side panel for tutor-initiated questions | deferred (feasibility test first) |
+| 8 | Personalized problem-set questions | deferred (spec B not written) |
 
-Outside this branch, still to do: the actions on the learning-topics repository and on
-course-private, listed below.
+Outside this branch, done 2026-10-04 and not yet pushed: the six course topics are migrated on
+learning-topics branch `unified-migration` (worktree `.worktrees/learning-topics-unified-migration`),
+and course-private's quiz tools are adapted on branch `quiz-folder-banks` (worktree
+`.worktrees/course-private-quiz-folder-banks`; 120 tests pass). The pools for sessions 5, 7 and
+9 are updated on this branch. Still to do: release, and the three new topics in their own
+worktrees (cloud-hosting, deploy-config, database-hosting), which get the same migration then.
 
 ## In order
 
@@ -181,6 +185,15 @@ course-private, listed below.
   as well (react-apps, web-backends, software-construction) it would also draw from banks the
   old pool never named.
 
+Left over from the migration, for the next curation of each topic:
+
+- commits-and-history keeps `tasks/words.md` and `rubrics/words.md` holding only a title and
+  preamble, because migrate-words keeps a file with text of its own. Delete or fold them.
+- Each topic's `items.md` still holds its capability questions, to be placed into activities.
+- The old guidance comments in each topic's goals.md still describe `supply` lines.
+- Session 3's pool does not draw: its source `workflows-2026-09` is in no learning-topics
+  checkout. This predates the migration.
+
 ## Actions on course-private (outside this branch)
 
 The shared quiz libraries changed in phase 5. Single-goal questions from single-file banks work
@@ -203,7 +216,9 @@ reach a real quiz. The mechanisms are explained in the header comments of
 - **quiz-bank-check**: check and tally `goals`, not only `goal`.
 - **tests/quiz-draw.test.mjs**: four tests fail on this branch because the fixture topic has no
   `goals.md`. Add one with `**origin:** course` and an entry for each goal its rubrics name.
-- **The quiz app**: confirm it treats an item id as an opaque string; qualified ids contain `/`.
+- **The quiz app**: confirmed 2026-10-04. The client sends an id through `encodeURIComponent`,
+  Express 5.2.1 decodes the `:itemId` parameter back exactly (probed with a qualified id), and
+  the OpenShift route passes the path through.
 - No change needed: quiz-seed, quiz-grade (`--queue` and `--merge`), quiz-export, quiz-scores.
 
 ## Parked ideas
@@ -220,17 +235,13 @@ reach a real quiz. The mechanisms are explained in the header comments of
 - A long or multi-line `--note` renders verbatim in survey's `last`.
 - `elsewhere.test.mjs`: its regex truncates on an escaped quote.
 - `learn.bpmn`: two record flows share a stub off `S_el_choice`.
-- `study/SKILL.md` still says "a `resumed` line proves they already chose"; it now reads the
-  survey's `resumed` field.
 
 ## Deferred minors from item 3, phase 1
 
 - No test of `MOVE_TAGS`'s shape.
 - `bank.mjs`: `label3` is a clumsy name; the credit capitalise-and-join is duplicated between the
   single-file and folder paths; `statSync` throws on a broken symlink in `tasks/`.
-- `bank.mjs` `topPart` drops every `# ` line, not only the title. Fix before phase 4 drafting.
 - No mcq folder test of `expected`, or of `move` being absent.
-- `pick.mjs`: an unparseable `at` gives NaN ordering.
 - `next-item.mjs`: untested paths (equal-`at` ties, exit 1 on misuse).
 
 ## Deferred minors from item 3, phase 2
