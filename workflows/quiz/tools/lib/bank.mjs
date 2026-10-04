@@ -212,8 +212,27 @@ export function readBank(dir, label = '') {
     }
   }
 
+  // A FOLDER QUESTION'S id IS QUALIFIED HERE, ON THE QUIZ PATH, AND NOWHERE ELSE. Its bare id
+  // (`q1`) repeats across scenarios and across topics by design, but every map downstream of a
+  // draw (the practice form's field names, byId, item_id, the grading queue, the instructor's
+  // bake and seed) is keyed on `id`, and two topics in one quiz could otherwise collide. So the
+  // id becomes <label>/<activity>/<scenario>/<question>, unique across a workspace, and nothing
+  // keyed on it has to change. readFolderBanks keeps the bare id because the study path (the
+  // picker, curation) works within one topic and reads `label`, which stays topic-local here
+  // too. Single-file items keep their bare ids, which pools and baked quizzes already name.
   const folders = readFolderBanks(dir, label);
-  return { items: [...items, ...folders.items], problems: [...problems, ...folders.problems] };
+  const qualified = folders.items.map((i) => ({ ...i, id: label ? `${label}/${i.label}` : i.label }));
+  return { items: [...items, ...qualified], problems: [...problems, ...folders.problems] };
+}
+
+/** The label an attempt on this item is recorded under in its topic's log. A FOLDER QUESTION IS
+ *  RECORDED BY ITS TOPIC-LOCAL LABEL, not its qualified id: the log already belongs to one topic,
+ *  and the study path records the same question under the same label, so a quiz attempt and a
+ *  study attempt on one question are one history. A single-file question keeps the label it has
+ *  always been recorded under. */
+export function recordLabel(item) {
+  if (item.label) return item.label;
+  return item.move ? `${item.move}: ${item.id}` : item.id;
 }
 
 // Everything before the first `###`, minus the file's `#` title line, trimmed.
@@ -328,9 +347,19 @@ export function readFolderBanks(dir, label = '') {
 /** Read every source a pool draws from, merged into one bank.
  *
  *  THE SOURCES ARE DERIVED FROM THE DRAW KEYS rather than listed separately, so the two can
- *  never disagree. A key is `<source>/<tasks file>`, and the source is everything before the
- *  last slash: `learning-topics/react-apps-2026-09/words` reads
- *  `<root>/learning-topics/react-apps-2026-09` and takes its `words` bank.
+ *  never disagree. A key's source is the LONGEST PREFIX of its `/`-separated segments that names
+ *  a folder holding tasks/, and the rest of the key says what to draw from it: nothing (the
+ *  whole source, spread across its banks), `<name>` (a single-file bank or a folder activity),
+ *  or `<activity>/<scenario>`. So `learning-topics/react-apps-2026-09/words` reads
+ *  `<root>/learning-topics/react-apps-2026-09` and takes its `words` bank, exactly as when the
+ *  source was simply everything before the last slash, and `learning-topics/t1/a-x/s1` finds
+ *  the same source two segments sooner. Looking for tasks/ rather than counting segments is
+ *  what lets one key shape mean three levels without a pool having to say which. A key with no
+ *  such prefix falls back to the old reading, everything before the last slash, so a missing
+ *  source reports exactly what it always did.
+ *
+ *  The sources read are returned as `sources`, beside items and problems, so applyPool can
+ *  split each key the same way without touching the disk again.
  *
  *  A POOL CARRYING `topic` IS THE SINGLE-SOURCE FORM and predates this. Its draw keys are bare
  *  file names under one topic, and it is read exactly as before, so a session baked before this
@@ -339,13 +368,21 @@ export function readFolderBanks(dir, label = '') {
  *  A MISSING SOURCE IS A PROBLEM, NOT A THROW. A pool that has drifted from the repositories is
  *  how a quiz silently comes up short, and the caller decides whether to proceed. */
 export function readPoolSources(pool, root) {
-  if (pool.topic) return readBank(join(root, 'learning-topics', pool.topic));
+  // The topic form's one source is unlabelled, so its keys split against the empty prefix.
+  if (pool.topic) return { ...readBank(join(root, 'learning-topics', pool.topic)), sources: [''] };
 
   const items = [];
   const problems = [];
-  const sources = new Set(
-    Object.keys(pool.draw ?? {}).map((key) => key.split('/').slice(0, -1).join('/'))
-  );
+  const read = [];
+  const sourceOf = (key) => {
+    const parts = key.split('/');
+    for (let n = parts.length; n > 0; n--) {
+      const p = parts.slice(0, n).join('/');
+      if (existsSync(join(root, p, 'tasks')) && statSync(join(root, p, 'tasks')).isDirectory()) return p;
+    }
+    return parts.slice(0, -1).join('/');
+  };
+  const sources = new Set(Object.keys(pool.draw ?? {}).map(sourceOf));
 
   for (const source of sources) {
     if (!source) {
@@ -360,9 +397,45 @@ export function readPoolSources(pool, root) {
     const bank = readBank(dir, source);
     items.push(...bank.items);
     problems.push(...bank.problems);
+    read.push(source);
   }
 
-  return { items, problems };
+  return { items, problems, sources: read };
+}
+
+/** Split a draw key into the source it falls under and the rest: the longest of `sources` that
+ *  is the key or a prefix of it at a `/`. The empty source (the topic form) prefixes every key.
+ *  Null when none does, which applyPool reports as it always has. */
+function splitKey(key, sources) {
+  let best = null;
+  for (const s of sources) {
+    const rest = s === '' ? key : key === s ? '' : key.startsWith(`${s}/`) ? key.slice(s.length + 1) : null;
+    if (rest !== null && (best === null || s.length > best.source.length)) best = { source: s, rest };
+  }
+  return best;
+}
+
+/** Spread `take` across banks in name order: each gets floor(take/k), and the first take % k one
+ *  more. A BANK TOO SMALL FOR ITS SHARE PASSES THE SHORTFALL TO THE NEXT, wrapping round to any
+ *  bank with room left, so a topic that holds enough questions always supplies the count. It is
+ *  deterministic on purpose: the shape of the quiz is the pool's statement, and only which
+ *  questions fill it is random. Returns { parts, short }: parts are the banks given back with
+ *  their `take`, zero takes dropped, and short is the count nobody could supply. */
+function spread(take, banks) {
+  const k = banks.length;
+  let owed = 0;
+  const out = banks.map((b, i) => {
+    const want = Math.floor(take / k) + (i < take % k ? 1 : 0) + owed;
+    const got = Math.min(want, b.items.length);
+    owed = want - got;
+    return { ...b, take: got };
+  });
+  for (const b of out) {
+    const more = Math.min(owed, b.items.length - b.take);
+    b.take += more;
+    owed -= more;
+  }
+  return { parts: out.filter((b) => b.take > 0), short: k ? owed : take };
 }
 
 /** Apply one session's pool to a source's items.
@@ -393,12 +466,51 @@ export function applyPool(bank, pool) {
   }
 
   if (pool.draw) {
+    // THREE LEVELS, ONE KEY SHAPE (see readPoolSources). A key that is a bank is drawn as it
+    // always was, which is every key a pool written before folder banks carries. Otherwise the
+    // key splits against the sources read: nothing left is the whole source, spread across its
+    // banks; <activity>/<scenario> is one scenario of a folder activity. A topic-level key comes
+    // back as one stratum per bank it spread across, each named by the key and carrying `bank`,
+    // so a caller drawing per stratum honours the spread without knowing about it.
+    const sources = bank.sources ?? (pool.topic ? [''] : []);
+    const avail = (b) => (byBank.get(b) ?? []).filter((i) => !excluded.has(i.id));
     const strata = [];
     for (const [name, take] of Object.entries(pool.draw)) {
-      const available = (byBank.get(name) ?? []).filter((i) => !excluded.has(i.id));
-      if (!byBank.has(name)) {
+      const at = byBank.has(name) ? null : splitKey(name, sources);
+      if (at && at.rest === '') {
+        const prefix = at.source ? `${at.source}/` : '';
+        const banks = [...byBank.keys()]
+          .filter((b) => b.startsWith(prefix) && !b.slice(prefix.length).includes('/'))
+          .sort()
+          .map((b) => ({ bank: b, items: avail(b) }));
+        const { parts, short } = spread(take, banks);
+        if (short) problems.push(`pool draws ${take} from ${name}, which has only ${take - short} available`);
+        strata.push(...parts.map((p) => ({ name, take: p.take, items: p.items, bank: p.bank })));
+        continue;
+      }
+      // `owner` is the bank the stratum comes out of: the key itself, or a scenario key's activity.
+      let owner = name;
+      let scenario = null;
+      if (at && at.rest.split('/').length === 2) {
+        const [activity, s] = at.rest.split('/');
+        owner = at.source ? `${at.source}/${activity}` : activity;
+        scenario = s;
+      }
+      if (!byBank.has(owner)) {
         problems.push(`pool draws from ${name}, which is not a file in the topic's tasks/`);
         continue;
+      }
+      let available = avail(owner);
+      if (scenario !== null) {
+        if (!byBank.get(owner).some((i) => 'scenario' in i)) {
+          problems.push(`pool draws from ${name}, but ${owner} is a single-file bank, which has no scenarios`);
+          continue;
+        }
+        if (!byBank.get(owner).some((i) => i.scenario === scenario)) {
+          problems.push(`pool draws from ${name}, but ${owner} has no scenario ${scenario}`);
+          continue;
+        }
+        available = available.filter((i) => i.scenario === scenario);
       }
       if (available.length < take) {
         problems.push(`pool draws ${take} from ${name}, which has only ${available.length} available`);
@@ -411,8 +523,13 @@ export function applyPool(bank, pool) {
     // draw from this week is the ordinary case, and a topic examined twice in a term is not a
     // defect the first time. The half that matters is still caught below, where a draw naming a
     // bank that does not exist is a problem either way.
+    //
+    // AND ONLY AGAINST SINGLE-FILE BANKS. The topic form predates folder banks, so a folder
+    // activity it does not mention is not drift from what the pool was written against; it is
+    // something the pool was never asked to know about.
     if (pool.topic) {
       for (const name of byBank.keys()) {
+        if (byBank.get(name).some((i) => 'scenario' in i)) continue;
         if (!Object.hasOwn(pool.draw, name)) problems.push(`${name} is in the topic but the pool's draw does not mention it`);
       }
     }

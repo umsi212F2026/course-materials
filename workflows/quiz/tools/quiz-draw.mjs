@@ -116,7 +116,9 @@ export function drawPractice(pool, root, { seed } = {}) {
   // A SHORT DRAW IS SERVED, NOT REFUSED. Practising the rest is worth doing. But nobody can
   // count the questions they were never shown, so this is the one thing the draw has to say
   // out loud, and the skill has to pass it on.
-  const drawnBy = new Map(shape.map((s) => [s.name, s.drawn]));
+  // Summed by name, because a topic-level key comes back as one stratum per bank it spread over.
+  const drawnBy = new Map();
+  for (const s of shape) drawnBy.set(s.name, (drawnBy.get(s.name) ?? 0) + s.drawn);
   for (const [name, take] of Object.entries(pool.draw ?? {})) {
     const got = drawnBy.get(name) ?? 0;
     if (got < take) problems.push(`${name} drew ${got} of the ${take} asked for`);
