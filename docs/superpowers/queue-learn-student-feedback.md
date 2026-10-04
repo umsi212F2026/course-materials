@@ -94,6 +94,30 @@ plan, implementation). Update this file as items finish or are added.
   as well (react-apps, web-backends, software-construction) it would also draw from banks the
   old pool never named.
 
+## Actions on course-private (outside this branch)
+
+The shared quiz libraries changed in phase 5. Single-goal questions from single-file banks work
+as before; these changes are needed before folder-bank questions, and especially multi-goal ones,
+reach a real quiz. Details for each are in `workflows/quiz/tools/CONTRACT.md`.
+
+- **quiz-regrade** (needed for any folder-bank question): `resolveRubrics` (around lines 61-75)
+  must find a folder question's rubric at `rubrics/<activity>/<scenario>.md` and its task at
+  `tasks/<activity>/<scenario>.md`, from the item's `activity` and `scenario`. For multi-goal
+  questions, the prompt needs a `per_goal` variant of its verdict shape, and its coverage check
+  must accept a verdict carrying `per_goal` with no top-level `credit`.
+- **quiz-review** (needed for any folder-bank question): the same `resolveRubrics` fix (it calls
+  it around line 592).
+- **quiz-bake**: call `courseOnly` before drawing, filtering each stratum by object identity, and
+  report its dropped questions and any stratum it leaves short. Cosmetic: print `s.bank ??
+  s.name` in the plan line.
+- **quiz-comments**: score with `graded.value ?? CREDIT_VALUE[graded.credit]`, add a word for
+  `partial`, and consider listing each `per_goal` entry's `missed`.
+- **quiz-bank-check**: check and tally `goals`, not only `goal`.
+- **tests/quiz-draw.test.mjs**: four tests fail on this branch because the fixture topic has no
+  `goals.md`. Add one with `**origin:** course` and an entry for each goal its rubrics name.
+- **The quiz app**: confirm it treats an item id as an opaque string; qualified ids contain `/`.
+- No change needed: quiz-seed, quiz-grade (`--queue` and `--merge`), quiz-export, quiz-scores.
+
 ## Parked ideas
 
 - Evidence for a `taught elsewhere` goal drawn from that problem set's personalized questions.
