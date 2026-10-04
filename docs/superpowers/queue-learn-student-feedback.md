@@ -69,12 +69,15 @@ been merged or pushed.
    on the learning-topics repository".
 6. ~~**Progress view.**~~ Done, the tool in `238a646` and its fix in `fc13d01`; study shows it
    (the full view at the open and when a set finishes, one set's line after each attempt) and
-   the study guide explains it. Item 7 will draw `--json`. Original brief: Metacognitive information for the student: the sequence of sets from item 5
-   drawn as columns, with checkmarks and other marks for attempts and completions (and, from
-   item 2, deferred and done-elsewhere), shown at the start of a session and again after each
-   task. The instructor wants hierarchy (capabilities grouping their parts) so a topic doesn't
-   read as an overwhelming list. Survey already gives the data (`groups[].capabilities`, rows with
-   `met`, `deferred`, `last`). Rendering in chat or in item 7's web panel is open.
+   the study guide explains it. Item 7 will draw `--json`, which will need goal text, structured
+   capability data (slug, met, total) and goals.md order for an HTML panel, since today
+   `next[].name` is a formatted string and goals are sorted by state. Original brief:
+   Metacognitive information for the student: the sequence of sets from item 5 drawn as columns,
+   with checkmarks and other marks for attempts and completions (and, from item 2, deferred and
+   done-elsewhere), shown at the start of a session and again after each task. The instructor
+   wants hierarchy (capabilities grouping their parts) so a topic doesn't read as an
+   overwhelming list. Survey already gives the data (`groups[].capabilities`, rows with `met`,
+   `deferred`, `last`). Rendering in chat or in item 7's web panel is open.
 7. **Web side panel for tutor-initiated questions.** Questions the tutor sets open in a web page
    beside the chat, so the chat stays mostly student-initiated; the chat notices when the student
    presses Submit. The chat stays responsive throughout; if the student uses it during a question,

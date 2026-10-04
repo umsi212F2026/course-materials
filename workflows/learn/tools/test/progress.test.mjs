@@ -1,6 +1,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { buildProgress, renderFull, renderSet } from '../lib/progress.mjs';
+import { mkdtempSync, readdirSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { makeTopic, run, CAP_GOAL } from './helpers.mjs';
 
 // A survey-shaped object from compact rows: [id, group, state, attempts, extra]. state is the
@@ -136,6 +139,28 @@ test('renderSet: the current set and a later one', () => {
   assert.equal(renderSet(v, 2), 'Capabilities  ~.  0/2   (set 2 of 2; set 1 is still next)');
 });
 
+test('renderSet: an earlier, finished set says next, not still next', () => {
+  const rows = [['o1', 'orientation', 'met'], ['v1', 'vocabulary', 'open']];
+  const v = buildProgress(fake(rows, [['o1'], ['v1']]));
+  assert.equal(renderSet(v, 1), 'Orientation  #  1/1   (set 1 of 2; set 2 is next)');
+  assert.equal(renderSet(v, 2), 'Words  .  0/1   (set 2 of 2)');
+});
+
+test('a set with no goal yet is labelled by its one written item', () => {
+  const s = fake([['o1', 'orientation', 'met']], [['o1'], [], [], []]);
+  s.sequence.sets[0].items = ['orientation'];
+  s.sequence.sets[1].items = ['vocabulary'];
+  s.sequence.sets[2].items = ['capabilities'];
+  s.sequence.sets[3].items = ['a', 'b'];
+  assert.deepEqual(buildProgress(s).sets.map((x) => x.label), ['Orientation', 'Words', 'Capabilities', 'Set 4']);
+});
+
+test('finished: no goal tried or open, so met, deferred or empty', () => {
+  const rows = [['a', 'orientation', 'met'], ['b', 'vocabulary', 'deferred'], ['c', 'capabilities', 'open', 1], ['d', 'quality', 'retired']];
+  const v = buildProgress(fake(rows, [['a'], ['b'], ['c'], ['d']]));
+  assert.deepEqual(v.sets.map((x) => x.finished), [true, true, false, true]);
+});
+
 test('output is ASCII only', () => {
   const rows = [...wordSet(['met', ['open', 1], 'deferred']), ['a', 'orientation', 'open']];
   const v = buildProgress(fake(rows, [['a'], ['w1', 'w2', 'w3']]));
@@ -148,7 +173,7 @@ test('CLI: draws the view and is not decided without a Sequence section', () => 
   const dir = makeTopic({ goals: CLI_GOALS });
   const r = run('progress.mjs', [dir]);
   assert.equal(r.code, 0, r.stderr);
-  assert.match(r.stdout, /^topic - sequence not decided yet - set 1 of \d+ is next\n/);
+  assert.match(r.stdout, /^topic - sequence not decided yet - set 1 of 1 is next\n/);
   assert.match(r.stdout, /<- next/);
   assert.match(r.stdout, / # met {2}~ tried {2}\. not started {2}> deferred\n$/);
 });
@@ -157,7 +182,9 @@ test('CLI: --json keys, --set line, and usage errors exit 1', () => {
   const dir = makeTopic({ goals: CLI_GOALS });
   const j = JSON.parse(run('progress.mjs', [dir, '--json']).stdout);
   assert.deepEqual(Object.keys(j), ['topic', 'decided', 'current', 'sets', 'next', 'deferred']);
-  assert.deepEqual(Object.keys(j.sets[0]), ['number', 'label', 'met', 'total', 'goals']);
+  assert.deepEqual(Object.keys(j.sets[0]), ['number', 'label', 'met', 'total', 'finished', 'goals']);
+  assert.equal(j.sets[0].finished, false);
+  assert.deepEqual(Object.keys(j.sets[0].goals[0]), ['id', 'state', 'mark', 'capability', 'where']);
   const one = run('progress.mjs', [dir, '--set', '1']);
   assert.equal(one.code, 0, one.stderr);
   assert.match(one.stdout, /\(set 1 of \d+\)\n$/);
@@ -174,4 +201,53 @@ test('current is the survey\'s own, converted to 1-based, not recomputed', () =>
   assert.equal(v.current, 2);
   assert.deepEqual(v.next.map((n) => n.name), ['w2']);
   assert.equal(buildProgress(fake(rows, [['w1'], ['w2']], { current: null })).current, null);
+});
+
+test('CLI: a fresh template topic labels its empty sets Orientation, Words, Capabilities', () => {
+  const parent = mkdtempSync(join(tmpdir(), 'learn-progress-'));
+  assert.equal(run('new-topic.mjs', ['--dir', parent, 'area']).code, 0);
+  const j = JSON.parse(run('progress.mjs', [join(parent, readdirSync(parent)[0]), '--json']).stdout);
+  assert.deepEqual(j.sets.map((s) => s.label), ['Orientation', 'Words', 'Capabilities']);
+});
+
+const ORIENT = '- **group:** orientation\n';
+const AFTER_GOALS = [CAP_GOAL('o-a', ORIENT), CAP_GOAL('o-b', ORIENT), CAP_GOAL('c-x')].join('\n');
+const PASS = '{"unaided":"yes","criterion":"met"}';
+const afterTopic = () =>
+  makeTopic({ goals: AFTER_GOALS, activities: '### a-x\n- **serves:** all\n' });
+
+test('CLI --after: a mid-set attempt prints the one-set line, the attempt that finishes the set the full view', () => {
+  const dir = afterTopic();
+  run('record-attempt.mjs', [dir, 'o-a', 'a-x/1', '--axes', PASS]);
+  const mid = run('progress.mjs', [dir, '--after', 'o-a']);
+  assert.equal(mid.code, 0, mid.stderr);
+  assert.equal(mid.stdout, 'Orientation  #.  1/2   (set 1 of 2)\n');
+  run('record-attempt.mjs', [dir, 'o-b', 'a-x/2', '--axes', PASS]);
+  const done = run('progress.mjs', [dir, '--after', 'o-b']);
+  assert.match(done.stdout, /^topic - sequence not decided yet - set 2 of 2 is next\n/);
+  assert.match(done.stdout, / # met /);
+});
+
+test('CLI --after: a deferral that finishes a set prints the full view', () => {
+  const dir = afterTopic();
+  run('record-attempt.mjs', [dir, 'o-a', 'a-x/1', '--axes', PASS]);
+  assert.equal(run('record-status.mjs', [dir, 'deferred', 'o-b', '--where', 'PS3']).code, 0);
+  assert.match(run('progress.mjs', [dir, '--after', 'o-b']).stdout, /^topic - /);
+});
+
+test('CLI --after: a retired goal is placed in its own set', () => {
+  const dir = afterTopic();
+  assert.equal(run('record-status.mjs', [dir, 'retired', 'c-x', '--reason', 'x']).code, 0);
+  const r = run('progress.mjs', [dir, '--after', 'c-x']);
+  assert.equal(r.code, 0, r.stderr);
+  assert.match(r.stdout, /^topic - /);
+  assert.match(r.stdout, / 2 Capabilities .* 0\/0\n/);
+});
+
+test('CLI --after: an unknown goal, a missing id, and a combination are usage errors', () => {
+  const dir = afterTopic();
+  assert.equal(run('progress.mjs', [dir, '--after', 'nope']).code, 1);
+  assert.equal(run('progress.mjs', [dir, '--after']).code, 1);
+  assert.equal(run('progress.mjs', [dir, '--after', 'o-a', '--set', '1']).code, 1);
+  assert.equal(run('progress.mjs', [dir, '--after', 'o-a', '--json']).code, 1);
 });

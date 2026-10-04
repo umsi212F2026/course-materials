@@ -23,6 +23,7 @@ const LEGEND = ' # met  ~ tried  . not started  > deferred';
 const WIDTH = 96;
 const NAMES_SHOWN = 6;
 
+const STANDARD = ['orientation', 'vocabulary', 'capabilities'];
 const LABELS = { vocabulary: 'Words' };
 const titleCase = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 
@@ -33,7 +34,13 @@ export function buildProgress(s) {
   const sets = s.sequence.sets.map((set, i) => {
     const number = i + 1;
     const groups = [...new Set(set.goals.map((g) => rows.get(g.id).group))];
-    const label = groups.length === 1 ? (LABELS[groups[0]] ?? titleCase(groups[0])) : `Set ${number}`;
+    // AN EMPTY SET IS NAMED BY ITS WRITTEN ITEM. A fresh template topic has sets with no goal yet;
+    // when the line is exactly one group name, that name is the label.
+    const named = groups.length === 1 ? groups[0] : null;
+    const only = set.items?.length === 1 ? set.items[0] : null;
+    const byItem = !groups.length && only && (STANDARD.includes(only) || s.groups.some((g) => g.name === only)) ? only : null;
+    const name = named ?? byItem;
+    const label = name ? (LABELS[name] ?? titleCase(name)) : `Set ${number}`;
 
     const goals = set.goals
       .filter((g) => g.state !== 'retired')
@@ -50,7 +57,10 @@ export function buildProgress(s) {
         };
       })
       .sort((a, b) => ORDER.indexOf(a.state) - ORDER.indexOf(b.state));
-    return { number, label, met: goals.filter((g) => g.state === 'met').length, total: goals.length, goals };
+    // FINISHED: nothing in the set is still tried or not started, so what is left is met or
+    // deferred (or the set is empty). Study uses it to choose the one-set line or the full view.
+    const finished = !goals.some((g) => g.state === 'tried' || g.state === 'open');
+    return { number, label, met: goals.filter((g) => g.state === 'met').length, total: goals.length, finished, goals };
   });
 
   const idx = s.sequence.current ?? -1;
@@ -149,6 +159,11 @@ export function renderFull(v) {
 
 export function renderSet(v, n) {
   const x = v.sets[n - 1];
-  const still = v.current !== null && v.current !== n ? `; set ${v.current} is still next` : '';
+  // "Still" only when the set shown is ahead of the current one; an earlier, finished set is
+  // simply behind it.
+  const still =
+    v.current === null || v.current === n
+      ? ''
+      : `; set ${v.current} is ${v.current < n ? 'still ' : ''}next`;
   return `${x.label}  ${marksOf(x)}  ${x.met}/${x.total}   (set ${n} of ${v.sets.length}${still})`;
 }

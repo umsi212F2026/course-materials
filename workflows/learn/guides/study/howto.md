@@ -16,7 +16,8 @@ nobody comments.
 **The progress view.** At the start the tutor shows a picture of the topic: one row for each set
 of goals, in order, with a mark for each goal. `#` is met, `~` is tried but not met yet, `.` is
 not started, and `>` is one you said you will learn elsewhere. The number at the end of a row is
-how many are met out of how many. An arrow points at the set the tutor will suggest from next,
+how many are met out of how many. An arrow usually points at the set the tutor will suggest from
+next (it skips goals with nothing ready to study, so now and then it suggests from a later set),
 and below the picture it names what is left there. After each attempt you see just that set's
 line, so you can watch the marks change; when you finish a set you see the whole picture again.
 

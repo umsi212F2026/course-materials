@@ -11,7 +11,7 @@ data as HTML.
 
 ## The tool
 
-`node workflows/learn/tools/progress.mjs <topic-folder> [--json] [--set <n>]`
+`node workflows/learn/tools/progress.mjs <topic-folder> [--json] [--set <n>] [--after <goal-id>]`
 
 The output is plain ASCII, so it renders the same in every terminal, Windows consoles included.
 
@@ -59,9 +59,18 @@ Words  ###....>  3/8   (set 2 of 3)
 Capabilities  #~...  1/5   (set 3 of 3; set 2 is still next)
 ```
 
+### After a goal (`--after <goal-id>`)
+
+Prints the one-set line for the set containing that goal, or the full view when that set is now
+finished (none of its goals is `tried` or `open`, so each is met, deferred or retired). The tool
+decides, so the tutor never has to work out which set a goal is in or whether the attempt
+finished it. A retired goal is placed by the survey's `sequence.sets`, which still lists it. An
+unknown goal id is a usage error (exit 1), and so is combining `--after` with `--set` or
+`--json`.
+
 ### Data (`--json`)
 
-`{ topic, decided, current, sets: [{ number, label, met, total, goals: [{ id, state, mark,
+`{ topic, decided, current, sets: [{ number, label, met, total, finished, goals: [{ id, state, mark,
 capability, where }] }], next: [...] }`, where `state` is `met`, `tried`, `open` or `deferred`
 and `where` is the deferral's place. This is the shape item 7 will draw.
 
@@ -70,9 +79,10 @@ and `where` is the deferral's place. This is the shape item 7 will draw.
 
 - **At the start of a session**, the full view, in place of the two-or-three-line summary of
   where things stand; then one line on where they left off (the last attempt and its ruling).
-- **After each recorded attempt**, the one-set line for the set that goal is in (`--set`).
-- **When an attempt finishes its set** (nothing left in it: every goal met, deferred or
-  retired), the full view instead, so the next set is seen opening up.
+- **After each recorded attempt, deferral or retirement**, run `progress.mjs <topic> --after
+  <goal-id>` and show what it prints: the one-set line for the set that goal is in.
+- **When that finishes its set** (nothing left in it that is tried or not started), the same
+  command prints the full view instead, so the next set is seen opening up.
 
 Review and the quiz do not show it.
 
@@ -81,4 +91,6 @@ Review and the quiz do not show it.
 Marks and their order; counts excluding retired; labels (single group, mixed set); `<- next` and
 the header variants (next, every set done, not decided); the next-set line (tried first, a split
 capability as one slug with a fraction, truncation, deferred in parentheses); `--set` for the
-current set and for a later set; `--json` shape; output is ASCII only.
+current set and for a later set ("still next" only when the set shown is ahead of the current one);
+`--after` (mid-set, set-finishing attempt, set-finishing deferral, retired goal, unknown id); empty-set
+labels from the written item; `--json` shape including `finished`; output is ASCII only.

@@ -192,10 +192,9 @@ export function readSequence(dir, goals) {
   if (!SEQUENCE_HEADING.test(text)) {
     const groups = [...new Set(goals.map((g) => g.group))];
     const order = [...DEFAULT_SEQUENCE, ...groups.filter((n) => !DEFAULT_SEQUENCE.includes(n))];
-    const sets = order
-      .map((name) => goals.filter((g) => g.group === name).map((g) => g.id))
-      .filter((ids) => ids.length);
-    return { decided: false, sets, problems: [] };
+    const all = order.map((name) => ({ name, ids: goals.filter((g) => g.group === name).map((g) => g.id) }));
+    const kept = all.filter((x) => x.ids.length);
+    return { decided: false, sets: kept.map((x) => x.ids), items: kept.map((x) => [x.name]), problems: [] };
   }
 
   const problems = [];
@@ -234,7 +233,9 @@ export function readSequence(dir, goals) {
     if (at === -1) problems.push(`${g.id} is in no set in the Sequence`);
     else sets[at].push(g.id);
   }
-  return { decided: true, sets, problems };
+  // `items` is each set's line as written, parallel to `sets`, so a reader can name a set that
+  // has no goal in it yet.
+  return { decided: true, sets, items: lines, problems };
 }
 
 // Every goal in the topic, keyed by id.
@@ -482,8 +483,9 @@ export function surveyTopic(dir) {
   const sequence = readSequence(dir, goals);
   const byId = new Map(rows.map((r) => [r.id, r]));
   const stateOf = (r) => (r.retired ? 'retired' : r.deferred ? 'deferred' : r.met ? 'met' : 'open');
-  const sets = sequence.sets.map((ids) => ({
+  const sets = sequence.sets.map((ids, i) => ({
     goals: ids.map((id) => ({ id, state: stateOf(byId.get(id)) })),
+    items: sequence.items[i],
   }));
   const current = sets.findIndex((s) => s.goals.some((g) => g.state === 'open'));
 

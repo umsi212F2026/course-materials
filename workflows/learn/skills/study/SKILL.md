@@ -199,13 +199,12 @@ ask differently rather than repeating it.
    **A question ruled against several goals is one `record-attempt.mjs` call per goal**, each
    with that ruling's `--axes`, and all with the question's label and its `--tags`.
 
-   **Then show where that leaves them.** Run
-   `node workflows/learn/tools/progress.mjs <topic-folder> --set <n>`, `n` being the set the
-   goal is in, and paste the one line. When that attempt finished its set (nothing in it is
-   left that is neither met nor deferred), run it without `--set` instead and paste the full
-   view, so the next set is seen opening up. Its header, or `--json` (`sets[].goals[].id` and
-   `current`), tells you which set a goal is in and whether the set is finished. Review and the
-   quiz do not show it.
+   **Then show where that leaves them.** After every `record-attempt.mjs` call, and after
+   recording a deferral or a retirement, run
+   `node workflows/learn/tools/progress.mjs <topic-folder> --after <goal-id>` and paste what it
+   prints. It prints the one line for the goal's set, or the full view when that finished the
+   set, so the next set is seen opening up; the tool works out which. Review and the quiz do
+   not show it.
 
    Nothing else needs recording about the activity. The log holds what was attempted and how it
    went, and that is what the next tutor reads as where you left off.
