@@ -20,6 +20,7 @@ import { join } from 'node:path';
 import { readFolderBanks } from '../../quiz/tools/lib/bank.mjs';
 import { readLog, readGoals, liveActivities } from './lib/topic.mjs';
 import { pick, stillNeeded, rankByCase } from './lib/pick.mjs';
+import { met } from './lib/bars.mjs';
 
 const USAGE = `usage:
   node workflows/learn/tools/next-item.mjs <topic> (--goal <id> | --activity <id>) [--after <label>] [--review] [--key]`;
@@ -84,6 +85,7 @@ const result = pick(hasEntries ? items.filter((it) => live.has(it.activity)) : i
   review: !!flags.review,
   needed: (it) => stillNeeded(it, goalsById, attemptsByGoal),
   caseRank: rankByCase(goalsById.get(flags.goal), attemptsByGoal.get(flags.goal) ?? [], { review: !!flags.review }),
+  goalMet: goalsById.has(flags.goal) && met(goalsById.get(flags.goal), attemptsByGoal.get(flags.goal) ?? []),
 });
 if (!result) {
   console.error(`no bank questions for ${flags.goal ?? flags.activity}; run the activity's generator live`);

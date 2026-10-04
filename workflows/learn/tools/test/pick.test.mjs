@@ -143,6 +143,36 @@ test('study never serves a question no longer needed, even with nothing else on 
   assert.equal(pick([q1, q3], midLog, { goal: 'g1', needed, review: true }).item.label, 'a-x/s1/q1');
 });
 
+test('study on a met goal serves a repeat, as before', () => {
+  const q1 = withCases('a-x/s1/q1', { g1: ['easy'] });
+  const q2 = withCases('a-x/s2/q1', { g1: ['hard'] });
+  const log = [{ ...passed(['easy', 'hard'], '2026-10-02T00:00:00Z'), label: 'a-x/s2/q1' }, seen('a-x/s1/q1', '2026-10-03T00:00:00Z')];
+  const needed = (it) => stillNeeded(it, new Map([['g1', CG]]), new Map([['g1', log]]));
+  const r = pick([q1, q2], log, { goal: 'g1', needed, goalMet: true });
+  assert.equal(r.item.label, 'a-x/s2/q1');
+  assert.equal(r.repeat, true);
+});
+
+test('--activity with every goal met serves as before; with one needed, only the needed', () => {
+  const q1 = withCases('a-x/s1/q1', { g1: ['easy'] });
+  const q2 = withCases('a-x/s2/q1', { g1: ['hard'] });
+  const log = [seen('a-x/s1/q1', '2026-10-01T00:00:00Z'), seen('a-x/s2/q1', '2026-10-02T00:00:00Z')];
+  assert.equal(pick([q1, q2], log, { activity: 'a-x', needed: () => false }).item.label, 'a-x/s1/q1');
+  assert.equal(pick([q1, q2], log, { activity: 'a-x', needed: (it) => it === q2 }).item.label, 'a-x/s2/q1');
+});
+
+test('CLI study on a met goal serves a repeat', () => {
+  const dir = makeTopic({ goals: CAP_GOAL('g-one'), activities: '### a-x\n- **checks:** g-one\n' });
+  bank(dir);
+  mkdirSync(join(dir, 'evidence'), { recursive: true });
+  writeFileSync(join(dir, 'evidence', 'attempts.jsonl'),
+    JSON.stringify({ at: '2026-10-01T00:00:00Z', goal: 'g-one', label: 'a-x/crumbs/v1', unaided: 'yes', criterion: 'met' }) + '\n');
+  const r = run('next-item.mjs', [dir, '--goal', 'g-one']);
+  assert.equal(r.code, 0, r.stderr);
+  assert.match(r.stdout, /label: a-x\/crumbs\/v1\n[\s\S]*repeat: yes/);
+  assert.equal(run('next-item.mjs', [dir, '--activity', 'a-x']).code, 0);
+});
+
 test('CLI study exits 2 when only questions no longer needed are banked', () => {
   const dir = makeTopic({
     goals: CAP_GOAL('g1', '- **cases:**\n  - `easy`: e\n  - `hard`: h\n  - `mid`: m\n'),

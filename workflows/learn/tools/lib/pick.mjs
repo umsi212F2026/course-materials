@@ -62,7 +62,7 @@ export function rankByCase(goal, attempts, { review = false } = {}) {
   };
 }
 
-export function pick(items, log, { goal, activity, after, review = false, needed = () => true, caseRank = () => 0 } = {}) {
+export function pick(items, log, { goal, activity, after, review = false, needed = () => true, caseRank = () => 0, goalMet = false } = {}) {
   const served = new Set(log.map((line) => line.label));
   // In study an item waits behind any earlier unserved, still-needed question in its scenario;
   // `open` maps the scenario to that question.
@@ -76,9 +76,13 @@ export function pick(items, log, { goal, activity, after, review = false, needed
     }
   }
   // STUDY NEVER SERVES A SKIPPED QUESTION: a later one in its scenario may already have given its
-  // answer away. So one no longer needed is no candidate at all, and a goal whose remaining cases
-  // no banked question carries gets null, which sends the tutor to the generator.
-  const wanted = items.filter((it) => (goal ? it.goals.includes(goal) : it.activity === activity) && (review || needed(it)));
+  // answer away. So while there is still something to show, one no longer needed is no candidate
+  // at all, and a goal whose remaining cases no banked question carries gets null, which sends
+  // the tutor to the generator. NOTHING LEFT TO SHOW IS PRACTICE: a met goal (`goalMet`), or an
+  // activity none of whose questions is needed, is served repeats exactly as before.
+  const matching = items.filter((it) => (goal ? it.goals.includes(goal) : it.activity === activity));
+  const filter = !review && (goal ? !goalMet : matching.some((it) => needed(it)));
+  const wanted = filter ? matching.filter((it) => needed(it)) : matching;
   if (!wanted.length) return null;
   const candidates = wanted.filter((it) => !waiting.has(it));
   // EVERY CANDIDATE WAITING IS NOT AN EMPTY BANK. The question holding up the earliest of them is
