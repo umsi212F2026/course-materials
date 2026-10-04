@@ -119,10 +119,11 @@ goals goes unscored.
   `not met` otherwise, except on a capability item where it is `unchecked` either way.
   `unaided` is `yes` for a quiz taken in class, and for practice it is what the transcript
   shows: `no` if the answer was discussed or looked up before it was given
-- **`flag`**: `true` when this credit is worth a person's eye. Three cases and no others: the
-  answer is close enough to the line that a reasonable person could mark it either way; it
-  contradicts something the credit line says not to accept but appears to be right anyway; or
-  the item is a capability item, where the mark and the evidence disagree by construction
+- **`flag`**: `true` when this credit is worth a person's eye. Three cases, and when you cannot
+  tell whether one applies, treat it as applying: the answer is close enough to the line that a
+  reasonable person could mark it either way; it contradicts something the credit line says not
+  to accept but appears to be right anyway; or the item is a capability item, where the mark and
+  the evidence disagree by construction
 - **`flag_reason`**: one clause saying why, written to the person reviewing rather than to the
   student. Required whenever `flag` is true, and empty otherwise. **It is not `missed`.** That
   field belongs to the student and is empty on full credit, so a flag on a correct answer has
@@ -165,13 +166,17 @@ And for a question whose `goals` names two:
 }
 ```
 
-## The flag is not acted on yet
+## The flag decides what a person reads
 
-Nothing branches on it. The instructor reads every script this term regardless, and compares
-the flags against their own overrides; that comparison is what decides whether the flag can
-later be trusted to narrow the reading. So a flag costs nothing when wrong and is worth setting
-whenever the case genuinely fits. Do not set it on every half credit to be safe: a flag on
-everything carries no information and would make the comparison say nothing.
+The instructor reviews the flagged answers and nothing else. An unflagged verdict goes to the
+gradebook exactly as you wrote it, and nobody reads it again unless the student asks. So the two
+ways of getting the flag wrong do not cost the same: an unneeded flag costs the instructor a few
+seconds, and a missing one is a mark nobody checks.
+
+**When you are unsure whether an answer is worth a look, flag it.** That is the whole of the
+lean, and it applies to your own doubt about the ruling, not to how good the answer is. A clear
+miss against a clear line is not a flag, however low the credit: flagging every half and none
+would turn the review back into reading every script, which is the work the flag exists to save.
 
 ## The pressures on you
 
@@ -210,7 +215,7 @@ differently for the same answer, which is a worse failure than a wrong line appl
 in the flag's clause what you think is wrong with the line, specifically enough to act on.
 
 The caller decides what happens next, and the two callers do different things. The batch runner
-puts it in front of the instructor, who is reading every script anyway. The practice quiz puts
+puts it in front of the instructor, who reviews every flagged answer. The practice quiz puts
 it in front of the student, who may argue, and there the student's judgement can overturn the
 mark. Neither of those is your call.
 

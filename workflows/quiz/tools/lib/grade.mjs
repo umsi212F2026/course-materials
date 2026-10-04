@@ -221,9 +221,9 @@ export function mergeGrades(rows, verdicts, { date, session, corrections = [] })
     }
 
     // A CORRECTION OVERRIDES, IT DOES NOT ERASE. The grader's own verdict stays beside it as
-    // `grader_credit`, because the reason for reading every script this term is to compare the
-    // grader's flags against what the instructor actually overrode. Overwriting the original
-    // would destroy the only evidence that comparison runs on.
+    // `grader_credit`, because comparing the grader's flags against what the instructor actually
+    // overrode is how anyone learns whether the flag is catching what it should. Overwriting the
+    // original would destroy the only evidence that comparison runs on.
     const fixKey = `${r.uniqname}\u0000${r.item.id}`;
     const rawFix = fixes.get(fixKey);
     // A CORRECTION APPLIES ONLY IF IT IS NEWER THAN THE VERDICT IT CORRECTS. That one rule is
