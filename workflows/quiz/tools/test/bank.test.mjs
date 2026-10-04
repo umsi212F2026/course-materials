@@ -86,6 +86,15 @@ test("main-bank has no setup, and a single goal also sets goal", () => {
   assert.equal(item.rubric, "Cost.");
 });
 
+test("only the title is dropped from the setup, not a later `# ` line", () => {
+  const dir = source({
+    "tasks/a-x/shell.md": "# Shell\n\nRun this:\n\n```\n# list the files\nls\n```\n\n### q1\n\nWhat does it print?\n",
+    "rubrics/a-x/shell.md": "# Shell key\n\n### q1\n\n- **goal:** g-one\n- **answer:** The files.\n",
+  });
+  const [item] = readFolderBanks(dir).items;
+  assert.equal(item.setup, "Run this:\n\n```\n# list the files\nls\n```");
+});
+
 test("a vocabulary move becomes a tag", () => {
   const dir = source({
     "tasks/a-words/idempotent.md": "### w1\n\nSpot the error.\n",

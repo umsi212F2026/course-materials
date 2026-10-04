@@ -28,7 +28,8 @@ export function pick(items, log, { goal, activity, after } = {}) {
 
   const latest = new Map();
   for (const line of log) {
-    if (typeof line.label !== 'string' || typeof line.at !== 'string') continue;
+    // An `at` that does not parse is skipped like a missing one, or NaN would scramble the sort.
+    if (typeof line.label !== 'string' || typeof line.at !== 'string' || Number.isNaN(Date.parse(line.at))) continue;
     const prev = latest.get(line.label);
     if (prev === undefined || Date.parse(line.at) > Date.parse(prev)) latest.set(line.label, line.at);
   }

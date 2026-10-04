@@ -242,12 +242,17 @@ export function recordLabel(item) {
   return item.move ? `${item.move}: ${item.id}` : item.id;
 }
 
-// Everything before the first `###`, minus the file's `#` title line, trimmed.
+// Everything before the first `###`, minus the file's first `#` line (its title), trimmed.
 function topPart(text) {
   const out = [];
+  let titled = false;
   for (const line of text.split('\n')) {
     if (/^###\s/.test(line)) break;
-    if (/^#\s/.test(line)) continue;
+    // The title only: a later `# ` line (a shell comment in a fence, say) is part of the text.
+    if (!titled && /^#\s/.test(line)) {
+      titled = true;
+      continue;
+    }
     out.push(line);
   }
   return out.join('\n').trim();

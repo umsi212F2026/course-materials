@@ -58,6 +58,18 @@ test('log lines that match no candidate are ignored', () => {
   assert.equal(r.repeat, false);
 });
 
+test('a log line whose at does not parse is skipped, not sorted as NaN', () => {
+  const log = [
+    seen('a-x/s1/q1', 'yesterday'),
+    seen('a-x/s1/q1', '2026-10-03T10:00:00Z'),
+    seen('a-x/s1/q2', '2026-10-01T10:00:00Z'),
+    seen('a-x/s1/q2', 'not a date'),
+  ];
+  const r = pick([A1, A2], log, { goal: 'g1' });
+  assert.equal(r.item.label, 'a-x/s1/q2');
+  assert.equal(r.lastServed, '2026-10-01T10:00:00Z');
+});
+
 test('no candidates gives null', () => {
   assert.equal(pick([A1], [], { goal: 'nope' }), null);
 });

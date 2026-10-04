@@ -363,7 +363,7 @@ the learner can always do the goal here.
 it is taught. "First time" means the goal carries `taught elsewhere`, has no attempts, is not
 currently deferred, and its survey row has `resumed: false`. Offer it at most once per sitting.
 Nothing records "do it here", so a learner who chose it and never attempted may see the menu
-once more next session, which is cheap; a `resumed` line proves they already chose. Then offer
+once more next session, which is cheap; `resumed: true` on the survey row proves they already chose. Then offer
 four choices, in one short block:
 
 1. **Do it here.** Ordinary study.
