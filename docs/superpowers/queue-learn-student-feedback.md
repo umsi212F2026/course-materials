@@ -38,9 +38,9 @@ been merged or pushed.
 | 6 | Progress view | **DONE** |
 | 7 | Web side panel for tutor-initiated questions | deferred (feasibility test first) |
 | 8 | Personalized problem-set questions | deferred (spec B not written) |
-| 9 | Every activity checkable; recuration of each topic | to do (design first) |
+| 9 | Every activity checkable; recuration of each topic | generic half **DONE** (with 11); each topic's recuration to do |
 | 10 | APPLY and the student's own work, within personalization | after the release (with item 8) |
-| 11 | Criteria with named cases, each to be shown | design in progress (needed for today's curation) |
+| 11 | Criteria with named cases, each to be shown | **DONE** (spec `specs/2026-10-04-criterion-cases-design.md`, plan `plans/2026-10-04-criterion-cases.md`) |
 
 Outside this branch, done 2026-10-04 and merged locally but not pushed: this branch into
 course-materials `main`; the six course topics, migrated on learning-topics branch
