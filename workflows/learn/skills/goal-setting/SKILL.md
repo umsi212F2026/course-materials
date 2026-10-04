@@ -318,6 +318,29 @@ and don't count towards it.
   there instead the first time it reaches the goal. Keep the goal and its criterion as they
   are: the mark changes how the goal is reached, not whether it counts.
 
+### The order they're tackled in
+
+The `## Sequence` section after `## Goals`: numbered sets, earliest first, each line a list of
+groups, capability slugs or goal ids. Study works through it in order, choosing at random
+within a set. How an item resolves to a goal, and what counts as a problem, is explained in
+the template's comment; read it there rather than here.
+
+**Moves**
+
+- **ORDER THE SETS**: scaled to what the topic already has, so it costs the least it can:
+  - _No Sequence section yet, once the goals are settled._ Propose a sequence and write the
+    section, confirmed with the learner (the instructor, for a course topic). Words before the
+    capabilities that use them; parts that build on each other in order. This runs in any
+    goal-setting conversation on such a topic, including one that only adds goals, since it is
+    how an older topic gets its sequence.
+  - _A section exists and this conversation added goals._ Check only where the new goals land.
+    A new word falls into its group's set with no edit; raise a placement only if it looks
+    wrong, a basic capability that others build on, say.
+  - _A section exists and nothing new needs placing._ Skip the move, unless the learner asks
+    to reorder.
+
+Then run `survey.mjs` and read its problems: a goal in no set is the one to look for.
+
 ### Any field
 
 **Moves**

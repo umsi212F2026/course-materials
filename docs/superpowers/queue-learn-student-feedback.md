@@ -60,11 +60,11 @@ been merged or pushed.
    quiz too, and simply records the attempt as not independent (`unaided: no`). For work done in
    a web page the student knows whether they got help, so there is little room for
    self-deception. Bounded change (skill text); design in chat, then implement.
-5. **Sequenced sets of goals.** Goal-setting also decides an order in which goals are tackled: a
-   sequence of sets, with random order within a set; vocabulary generally comes before the
-   integrative capability goals. Builds on the capability hierarchy from item 3 (part-goals share
-   a `capability:` slug). Needs a design: where the order is written (goals.md), and how study
-   offers the next goal from it.
+5. ~~**Sequenced sets of goals.**~~ Done, `9332b07`, `f7beb10` and the commit that taught
+   goal-setting and study the sequence. Spec `specs/2026-10-04-goal-sequence-design.md`. A
+   `## Sequence` section in goals.md, `next-goal.mjs` for study, survey problems for an item
+   that matches nothing, a goal in two sets and a goal in none. Migration is under "Actions on
+   the learning-topics repository".
 6. **Progress view.** Metacognitive information for the student: the sequence of sets from item 5
    drawn as columns, with checkmarks and other marks for attempts and completions (and, from
    item 2, deferred and done-elsewhere), shown at the start of a session and again after each
@@ -102,6 +102,11 @@ been merged or pushed.
   above `## Goals`), and remove the per-goal `origin: course` stamps it makes redundant. Until
   then the per-goal stamps keep working. Check with `survey.mjs`: each topic's `origin` should
   read `course` and no problems should appear.
+- Add a `## Sequence` section to each course topic's `goals.md`, after `## Goals`: a short
+  default (`1. orientation`, `2. vocabulary`, `3. capabilities`), adjusted per topic where a
+  capability is basic enough to come with the words, or parts build on each other. Until then
+  survey reports `sequence: not decided yet` and the default order applies, which is not a
+  problem. Check with `survey.mjs`: no problem should name a Sequence item or a goal in no set.
 - Run `node workflows/learn/tools/migrate-words.mjs <topic-folder>` on each course topic, with
   `--dry-run` first to read its summary. It moves banked word questions into `a-words`, adds
   the `a-words` entry, and removes the word stamps and `supply` lines. Then, during that topic's

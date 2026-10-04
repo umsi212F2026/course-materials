@@ -70,7 +70,24 @@ ask differently rather than repeating it.
 
 **Then loop, until they stop:**
 
-1. **They choose.** Skip any goal that is deferred; see _Goals taught elsewhere_. Offer the
+1. **They choose.** Unless they have named a goal, find the next one from the topic's sequence:
+
+   ```
+   node workflows/learn/tools/next-goal.mjs <topic-folder>
+   ```
+
+   It prints `goal: <id>` and `set: <n> of <total>`, chosen at random from the first set that
+   still has an open goal; you do not choose among them yourself. Offer that goal's activities
+   as below. **The sequence is a recommendation.** A learner who wants any other goal, from any
+   set, gets it with no comment. Exit 2 (`nothing open in <topic>` on stderr) means no goal is
+   open, so say where things stand rather than offering anything.
+
+   If it also prints `sequence: not decided yet`, the topic has no Sequence section: say so
+   once in the sitting and offer to set one, which is a goal-setting conversation (see _When
+   something upstream has to change_ for how to hand over). If they would rather not, carry on;
+   the tool is already using the default order.
+
+   Skip any goal that is deferred; see _Goals taught elsewhere_. Offer the
    live `activities.md` entries whose `serves` or `checks` names this goal (a `serves` item may
    be `group <name>`, which names every goal in that group, including ones added later): use
    each entry's `offer as` to make the choice real rather than a list of titles. Suggest when
@@ -449,6 +466,7 @@ lose each other's writes, so this one ends first.
 - [`curation`](workflows/learn/skills/curation/SKILL.md) — skill
 - [`goal-setting`](workflows/learn/skills/goal-setting/SKILL.md) — skill
 - [`learn`](workflows/learn/skills/learn/SKILL.md) — skill
+- [`next-goal.mjs`](workflows/learn/tools/next-goal.mjs) - tool
 - [`next-item.mjs`](workflows/learn/tools/next-item.mjs) - tool
 - [`record-attempt.mjs`](workflows/learn/tools/record-attempt.mjs) — tool
 - [`record-status.mjs`](workflows/learn/tools/record-status.mjs) — tool

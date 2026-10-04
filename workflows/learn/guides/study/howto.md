@@ -8,6 +8,11 @@ sessions fit together; this is what happens inside one.
 The tutor says where things stand, you pick something to work on from a few options, you do it,
 it gets recorded, and you pick again — until you stop. You stop whenever you like.
 
+What the tutor suggests next comes from the topic's sequence: sets of goals your goals file
+puts in an order, so that the words come before the things that use them. Within a set it picks
+for you. It is only a suggestion, so you can always pick something else, from any set, and
+nobody comments.
+
 The options come with a note on what's different about each, not just titles. If two sound the
 same to you, say so; the tutor may be able to explain and, if not, it's a real problem that
 should be sent back to the curator or the goal-setting process.
