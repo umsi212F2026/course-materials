@@ -27,8 +27,11 @@ worktree cannot perform it.
 ## Private branches are not landed
 
 **This repository is public.** Work that is not ready, or not for students — an unreleased
-assignment, notes about a particular student, a rubric — is kept on a branch that is never
-pushed and never merged.
+assignment, notes about a particular student — is kept on a branch that is never pushed and
+never merged.
+
+Rubrics are not private. Every learning topic carries a `rubrics/` folder on its public `main`
+by design, so a branch adding rubrics is ordinary topic work and lands like any other.
 
 Merging is what makes it public: it carries the branch's whole history onto `main`, including
 everything written on the way, and no later commit takes that back.
