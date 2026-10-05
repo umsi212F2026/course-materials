@@ -78,11 +78,11 @@ reporting only. Run from the main checkout, not from inside a worktree.
    continuing on the integration branch — that is a normal outcome here, not an oversight. Move
    it only on a yes.
 
-7. **Offer branch cleanup.** Removing a worktree leaves its branch intact. If `<feature>` is
-   merged into the `<integration-branch>` (from step 3), offer `git branch -d <feature>` —
-   safe, because git refuses if it isn't actually merged. If it is unmerged, do NOT offer `-D`:
-   just note the branch remains and why. With no remote, `-D` on unmerged work is unrecoverable
-   outside the reflog.
+7. **Delete the merged branch.** Removing a worktree leaves its branch intact. If `<feature>` is
+   merged into the `<integration-branch>` (from step 3), run `git branch -d <feature>` without
+   asking. It is safe, because git refuses if the branch isn't actually merged, and deleting it
+   is part of what teardown means. If it is unmerged, do NOT offer `-D`: just note the branch
+   remains and why. With no remote, `-D` on unmerged work is unrecoverable outside the reflog.
 
 ## Notes
 
