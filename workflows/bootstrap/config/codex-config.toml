@@ -19,7 +19,8 @@
 # The effort is pinned rather than left to the app because it is roughly half of what determines
 # a bill and nothing else records it anywhere.
 #
-# `name` is what shows at the bottom left of the app window, so it doubles as the visible
+# `name` is what shows when the settings gear at the bottom left of the app window is clicked,
+# so it doubles as the visible
 # proof that this file is installed and working.
 
 model = "gpt-5.6-luna"

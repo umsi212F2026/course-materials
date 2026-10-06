@@ -445,13 +445,14 @@ been the wrong one — signing in, importing from other apps, changing model. If
 unsure on a screen this document doesn't cover, the safe move is the quieter option, and asking
 you.
 
-**Worked when:** they send you a screenshot of the main window — the one with a message box —
-and you can see **"UM GPT Toolkit"** at the bottom left of it. That text comes from the
-settings file they installed in step 3, so seeing it proves the app is pointed at the
-University's service rather than the company's. **Look at it yourself rather than asking them
-to confirm**: this is the screen where a student in the wrong ChatGPT app has no way of
-knowing, and the same picture tells you both things at once. If the text is not there, step 3
-did not take; send them back to it rather than going on.
+**Worked when:** they click the **settings gear** at the bottom left of the main window, the
+one with a message box, and send you a screenshot of the whole window with what opened, and you
+can see **"UM GPT Toolkit"** in it. That text comes from the settings file they installed in
+step 3, so seeing it proves the app is pointed at the University's service rather than the
+company's. **Look at it yourself rather than asking them to confirm**: this is the screen where
+a student in the wrong ChatGPT app has no way of knowing, and the same picture tells you both
+things at once. If the text is not there, step 3 did not take; send them back to it rather than
+going on.
 
 **Students on their own subscription will not see that text**, because they skipped step 3.
 That is correct for them. Their check is simply that they have reached the main window signed
