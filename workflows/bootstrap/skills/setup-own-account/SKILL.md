@@ -52,7 +52,8 @@ on the STOPPED message below. Otherwise your last message is this, and nothing c
 > 2. **Quit it completely**, not just its window. On a Mac, press Command+Q.
 > 3. **Reopen it**, choose **Sign in another way**, and paste your key from
 >    toolkit.umgpt.umich.edu, as you did on the first day.
-> 4. Check the bottom left of the window says **UM GPT Toolkit**.
+> 4. **Check it.** Click the settings gear at the bottom left of the window. What opens should
+>    say **UM GPT Toolkit**.
 
 Run it once. It prints one line beginning `SWITCHED`, `ALREADY SWITCHED` or `STOPPED`, and that
 line decides your message. Never write out what it would have said.
@@ -67,11 +68,12 @@ If it says **SWITCHED**, your last message is this, and nothing comes after it:
 >    trial at https://chatgpt.com/students/2026/ in your browser first.
 > 2. **Log out of this app**: the **ChatGPT** menu, then **Logout**.
 > 3. **Quit it completely**, not just its window. On a Mac, press Command+Q.
-> 4. **Reopen it.** On the sign-in screen, choose **Continue to sign in**, the large dark
+> 4. **Reopen it.** On the sign-in screen, choose **Continue to sign in**, the large black
 >    button, and sign in with your own ChatGPT account. On the first day you used *Sign in
 >    another way*; use the other button now.
-> 5. **Check the bottom left of the window.** It used to say **UM GPT Toolkit**. It shouldn't
->    any more, and the app should answer when you type to it.
+> 5. **Check it.** Click the settings gear at the bottom left of the window. What opens used to
+>    say **UM GPT Toolkit**, and it shouldn't any more. The app should also answer when you
+>    type to it.
 > 6. **Change your model.** Click the model name at the bottom of the window, then click it
 >    again in the little slider popup that opens. Select **default**, and then in the slider
 >    select **GPT-6.1 Sol Light**.
