@@ -88,6 +88,10 @@ on; APPLY needs the learner's own work, which a bank cannot hold. So a word's ba
 from its confusables, and adding a real near miss to `goals.md` is how a word gets more
 questions. A word with no confusable has only its CATCH questions.
 
+**In the file, the CATCH questions come first.** A word's questions are studied in file order,
+and a DISTINGUISH names the very confusion a CATCH is often built on, so a DISTINGUISH served
+first tells the learner where the CATCH's error is.
+
 **DEFINE and INTERPRET are follow-ups, set live as help.** When a learner misses a banked
 question, the tutor may set a DEFINE or an INTERPRET for that word, live, to rebuild what the
 word names; it is help, recorded `unaided: no`, so it counts toward nothing. Then the tutor

@@ -16,3 +16,13 @@ vendor's own pages.
   Mozilla's beginner track for how the web works: servers, requests, HTML, CSS, JavaScript.
   Vendor-neutral and maintained. Its short explainers, such as "What is a web server?", work well
   as a read-first before a longer lesson.
+
+## Not the learner's own live work
+
+**A topic the course seeds has no activity that works on the learner's own live app, repository
+or agent.** Every activity works from a described or banked scenario instead, so don't choose
+the activity type that applies a goal to the learner's own case. Working on their own app is what
+the labs and problem sets are for. A criterion that says "an app" means a described one.
+
+The exception is a setup task where the setup is the capability, such as connecting the agent to
+the learner's own host: there is no agent work to judge, so nothing to just agree to.
