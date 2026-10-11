@@ -168,6 +168,8 @@ if (unknownTags.length) {
 // toward every case (so older passes still count). Left unchecked here, a ruled attempt that
 // forgot --cases would quietly meet them all, so a ruling on such a goal must say which. An
 // --outcome (declared, elsewhere, abandoned) is the learner's word or a non-attempt and needs none.
+// A `declared` that names cases is their word on those cases alone, not on the goal: the choice
+// study offers on a goal with cases after a not-met ruling the learner thinks was wrong.
 const cases = (flags.cases ?? '')
   .split(',')
   .map((c) => c.trim())

@@ -83,6 +83,10 @@ feedback and three choices:
    comes back in a review a few days later, checked just as strictly. So you aren't skipping the
    test, just moving it.
 
+When the goal is one with several cases, such as a deck of cards or a set of scenarios, the third
+choice is narrower: **count this one as right and go on** to the next question. That question
+counts as passed, and the goal is met once every case is.
+
 ## Goals you'll learn in class
 
 Some goals are also taught in class or on a problem set. When the tutor first reaches one, it

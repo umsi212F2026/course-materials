@@ -199,6 +199,11 @@ ask differently rather than repeating it.
       offer it again until the next session.
    3. **Mark it as learned.** See _When the learner marks it learned_, below.
 
+   **On a goal with cases, the third choice is instead: count this one as right and go on to
+   the next question in this scenario.** "Mark it as learned" there would pass every case on one
+   ruling, including those they have never been asked, and a learner choosing it after one
+   question means that question. See _When the learner marks it learned_.
+
    Judges are deliberately tough, and a learner who has had the feedback is the best placed to
    say whether another round would teach them anything. Don't argue with the choice, and don't
    ask for a reason.
@@ -388,6 +393,17 @@ their word rather than as an adjudicated pass: visibly weaker, and it counts.
 now counts as met, and it comes back for review in about three days, judged just as strictly.
 Declaring moves the test to review; it doesn't remove it. (A goal carrying `recurrence: never`
 is simply done.)
+
+**On a goal with cases, after a `not met`, it covers the question, not the goal.** Record it with
+the question's cases, from its `cases:` line or the ones the live question carried:
+
+```
+node workflows/learn/tools/record-attempt.mjs <topic-folder> <goal-id> <label> --outcome declared --cases <case>,<case> --note "<their words, if any>"
+```
+
+Those cases count as passed and the rest stay as they were. Say so in a line, then serve the next
+question with `--after <label>`. Only a learner who says unprompted that they have the whole
+goal gets the plain declaration above.
 
 ### Goals taught elsewhere
 
