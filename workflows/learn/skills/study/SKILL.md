@@ -398,7 +398,7 @@ is simply done.)
 the question's cases, from its `cases:` line or the ones the live question carried:
 
 ```
-node workflows/learn/tools/record-attempt.mjs <topic-folder> <goal-id> <label> --outcome declared --cases <case>,<case> --note "<their words, if any>"
+node workflows/learn/tools/record-attempt.mjs <topic-folder> <goal-id> <label> --outcome declared --cases <case>,<case> --note "<their words, if any>" --progress
 ```
 
 Those cases count as passed and the rest stay as they were. Say so in a line, then serve the next
