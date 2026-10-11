@@ -85,6 +85,15 @@ test('the learner\'s own word meets a goal with cases', () => {
   assert.equal(met(G(), [{ outcome: 'elsewhere' }]), true);
 });
 
+test('the learner\'s word naming cases meets only those cases, whatever the bar', () => {
+  assert.equal(met(G(), [{ outcome: 'declared', cases: ['a'] }]), false);
+  assert.equal(met(G(), [{ outcome: 'declared', cases: ['a'] }, pass(['b'])]), true);
+  assert.equal(met(G('one production pass'), [{ outcome: 'declared', cases: ['a', 'b'] }]), true);
+  assert.deepEqual(casesDemonstrated(G(), [{ outcome: 'declared', cases: ['a'] }]), { passed: 1, total: 2 });
+  const r = casePasses(G(), [{ outcome: 'declared', cases: ['a'], at: '2026-10-01T00:00:00Z' }]);
+  assert.deepEqual(r, { a: { passed: true, at: Date.parse('2026-10-01T00:00:00Z') }, b: { passed: false, at: -Infinity } });
+});
+
 test('one production pass needs the production tag on each case', () => {
   const g = G('one production pass');
   assert.equal(met(g, [pass(['a'], { tags: ['production'] }), pass(['b'])]), false);
@@ -222,6 +231,14 @@ test('an --outcome needs no --cases, and a goal without cases records as before'
   assert.equal(run('record-attempt.mjs', [dir, 'c-a', 'l', '--outcome', 'declared']).code, 0);
   assert.equal(run('record-attempt.mjs', [dir, 'c-b', 'l', '--axes', AXES]).code, 0);
   assert.ok(!('cases' in lastAttempt(dir)));
+});
+
+test('record-attempt stores --cases on a declaration, which leaves the other cases unmet', () => {
+  const dir = withCases();
+  const r = run('record-attempt.mjs', [dir, 'c-a', 'a-x/s1/q1', '--outcome', 'declared', '--cases', 'one']);
+  assert.equal(r.code, 0, r.stderr);
+  assert.deepEqual(lastAttempt(dir).cases, ['one']);
+  assert.match(r.stdout, /bar not met/);
 });
 
 test('next-item prints the cases a question exercises', () => {

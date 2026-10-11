@@ -97,7 +97,11 @@ export function met(goal, attempts) {
   // The learner's own word (declared or elsewhere) satisfies any bar, and it is applied here
   // rather than inside each of them: it is a fact about the learner's own assertion, not about
   // the accumulation of rulings that a bar is asking after.
-  if (attempts.some(isOwnWord)) return true;
+  //
+  // ONE THAT NAMES CASES COVERS ONLY THOSE. It is what a learner says on a goal with cases after
+  // a not-met ruling they think was wrong ("count that one and go on"), and it counts as a pass of
+  // the question's cases, not of the goal. With no `cases` field it is the whole goal, as before.
+  if (attempts.some((r) => isOwnWord(r) && !r.cases)) return true;
 
   const bar = BARS[goal.bar];
   if (!bar) throw new Error(`${goal.id} has bar: ${goal.bar}, which nothing implements.`);
@@ -105,10 +109,16 @@ export function met(goal, attempts) {
   // case. Still an existence test per case, so a bar once true stays true. AN ATTEMPT WITH NO
   // `cases` FIELD COUNTS TOWARD EVERY CASE: a pass recorded before the goal named cases, or by a
   // tutor with nothing to say about them, is grandfathered rather than discarded.
-  return goal.cases?.length ? goal.cases.every((c) => bar(forCase(attempts, c.id))) : bar(attempts);
+  return goal.cases?.length ? goal.cases.every((c) => caseMet(bar, attempts, c.id)) : bar(attempts);
 }
 
 const forCase = (attempts, id) => attempts.filter((r) => !r.cases || r.cases.includes(id));
+
+// The learner's word on a case satisfies that case's bar, whatever the bar, as it does a goal's.
+const caseMet = (bar, attempts, id) => {
+  const mine = forCase(attempts, id);
+  return mine.some(isOwnWord) || bar(mine);
+};
 
 // How many of a goal's cases its bar holds for, for display. Null when the goal names none.
 export function casesDemonstrated(goal, attempts) {
@@ -116,7 +126,7 @@ export function casesDemonstrated(goal, attempts) {
   const bar = BARS[goal.bar];
   if (!bar) throw new Error(`${goal.id} has bar: ${goal.bar}, which nothing implements.`);
   return {
-    passed: goal.cases.filter((c) => bar(forCase(attempts, c.id))).length,
+    passed: goal.cases.filter((c) => caseMet(bar, attempts, c.id)).length,
     total: goal.cases.length,
   };
 }
@@ -125,16 +135,16 @@ export function casesDemonstrated(goal, attempts) {
 // `{ [caseId]: { passed, at } }`, `at` in ms and -Infinity when never (or never at a time that
 // parses). Null when the goal names none.
 //
-// A SINGLE ATTEMPT PASSES A CASE WHEN THE BAR HOLDS OVER IT ALONE. Every bar is an existence
-// test, so those are exactly the attempts that make it true, and the latest is when the case was
-// last shown. Same per-case view as `met`, grandfathering included.
+// A SINGLE ATTEMPT PASSES A CASE WHEN THE BAR HOLDS OVER IT ALONE, or when it is the learner's
+// word. Every bar is an existence test, so those are exactly the attempts that make it true, and
+// the latest is when the case was last shown. Same per-case view as `met`, grandfathering included.
 export function casePasses(goal, attempts) {
   if (!goal.cases?.length) return null;
   const bar = BARS[goal.bar];
   if (!bar) throw new Error(`${goal.id} has bar: ${goal.bar}, which nothing implements.`);
   const out = {};
   for (const c of goal.cases) {
-    const passes = forCase(attempts, c.id).filter((r) => bar([r]));
+    const passes = forCase(attempts, c.id).filter((r) => isOwnWord(r) || bar([r]));
     const times = passes.map((r) => (typeof r.at === 'string' ? Date.parse(r.at) : NaN)).filter((t) => !Number.isNaN(t));
     out[c.id] = { passed: passes.length > 0, at: Math.max(-Infinity, ...times) };
   }
