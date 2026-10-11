@@ -40,7 +40,9 @@ node workflows/learn/tools/next-item.mjs <topic-folder> --activity <activity-id>
 It prints a `label:`, the goals the question credits, its `tags:`, a `cases: <goal>: x, y` line
 for each goal it exercises named cases of, and whether it is a repeat, then
 `--- learner sees ---` and the text. **Show the learner only what follows that line, and
-stop at `--- key ---`.** One run with `--key` is enough, since it prints the learner's section
+stop at `--- key ---`.** **Show all of it, every time, the scenario's setup included**, even for
+the next question in a scenario they have just been answering: the learner sees only your latest
+message, and can't scroll back to a setup you showed once. One run with `--key` is enough, since it prints the learner's section
 too: everything from `--- key ---` on is the grading text, for the judge and never for the
 learner, and any `--- tutor note ---` is for you. A learner who carries on gets
 `--after <last label>`, which keeps them in the same scenario where there is more of it. Keep
@@ -70,7 +72,8 @@ deferred, or retired). You don't steer any of
 this, and you don't tell the learner which cases are left.
 
 **Exit code 2 means nothing banked is left for that activity**, and so does there being no
-`tasks/<activity-id>/` folder. Then run the entry's generator live, as above. Where the goal has
+`tasks/<activity-id>/` folder. Then run the entry's generator live, as above. A scenario written
+live is shown the same way as a banked one: its setup in full above every question. Where the goal has
 cases, the generator says which cases each of its question shapes carries; note the ones the
 question you set exercises, since they go to the judge's inputs as
 `--cases <goal>:<case>,<case>` and to `record-attempt.mjs` as `--cases`.
