@@ -22,6 +22,7 @@ import { readFolderBanks } from '../../quiz/tools/lib/bank.mjs';
 import { readLog, readGoals, liveActivities, statusOf } from './lib/topic.mjs';
 import { pick, stillNeeded, rankByCase } from './lib/pick.mjs';
 import { met } from './lib/bars.mjs';
+import { learnerText, keyText } from './lib/item.mjs';
 
 const USAGE = `usage:
   node workflows/learn/tools/next-item.mjs <topic> (--goal <id> | --activity <id>) [--after <label>] [--review] [--key]`;
@@ -119,19 +120,7 @@ const lines = [
   // another goal, and the tutor records an attempt per goal it names, as for any question.
   ...(keepsOrder ? [`served first: keeps ${keepsOrder} in order`] : []),
   '--- learner sees ---',
-  item.prompt,
+  learnerText(item),
 ];
-if (item.type === 'mcq') item.choices.forEach((c, i) => lines.push(`${i + 1}. ${c}`));
-if (flags.key) {
-  // An mcq's key is the scenario's key (when it has one) and then the correct choice, numbered
-  // as the learner saw it.
-  lines.push('--- key ---');
-  if (item.type === 'mcq') {
-    if (item.key) lines.push(item.key);
-    lines.push(`${item.answer + 1}. ${item.choices[item.answer]}`);
-  } else {
-    lines.push(item.rubric);
-  }
-  if (item.tutorNote) lines.push('--- tutor note ---', item.tutorNote);
-}
+if (flags.key) lines.push('--- key ---', keyText(item));
 console.log(lines.join('\n'));

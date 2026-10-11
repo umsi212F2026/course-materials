@@ -1,14 +1,14 @@
 ---
 name: study-judge
-description: Rule on one attempt — whether it was unaided, and whether it meets the goal's criterion. Reads what was attempted, the criterion, and the transcript or excerpt; writes nothing and returns a verdict on each question separately. The default `adjudicator` slot: called by study after an attempt that might have been unaided, and by review after every cold attempt. A third caller, the daily transcript scan, is designed but not built.
+description: Rule on one attempt: whether it was unaided, and whether it meets the goal's criterion. Reads the criterion and what was attempted through judge-input.mjs, and the transcript or excerpt from the caller; writes nothing and returns a verdict on each question separately. The default `adjudicator` slot: called by study after an attempt that might have been unaided, and by review after every cold attempt. A third caller, the daily transcript scan, is designed but not built.
 ---
 
 # Study — judge
 
 ## Operates on
 
-Nothing on disk. You are handed an attempt and you rule on it; you open no files and write
-none. The caller records the outcome.
+Nothing on disk. You are handed an attempt and you rule on it. You run one read-only command to
+fetch what you are ruling against, and write nothing. The caller records the outcome.
 
 **Two callers today: `study` and `review`.** A third — the daily transcript scan, which would
 send excerpts of a word used unprompted in other work — is designed and deferred — designed but
@@ -38,61 +38,64 @@ Collapsing them into "did they pass" loses the distinction the record is built o
 
 ## What you get, and what you don't
 
-**Five things per attempt, and you need all five:**
-
-|             |                                                                                                                                  |
-| ----------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| `goal`      | the goal id from `goals.md`, whatever kind of goal it is                                                                         |
-| `criterion` | the goal's criterion, RESOLVED — its own text, or the sentence a reference like `vocabulary` points at. Never the reference name |
-| `label`     | what the activity served, in its own words: a bank question's path, an activity id, a move and a note on the instance            |
-| `record`    | the whole transcript, or — from the scan — an excerpt with the context either side                                               |
-| `sent by`   | `study`, `review` or `scan`                                                                                                      |
-
-**All three callers send the same shape**: everything but the record as a JSON object, then the
-record as a labelled block. The record is a transcript — escaping one into a string field is
-where this would break, for the program as much as for the tutors.
+**All three callers send the same shape**: who sent it, the command that prints your inputs,
+and the record as a labelled block.
 
 ```
-{"goal": "w-schema", "criterion": "…", "label": "CATCH: subject/verb agreement",
- "sent by": "study"}
+sent by: study
+inputs: node /…/workflows/learn/tools/judge-input.mjs /…/<topic-folder> a-sort-four-specimens/set-3/q2
 --- record ---
 …the transcript or excerpt…
 ```
 
+`sent by` is `study`, `review` or `scan`. The record is the transcript of the attempt, or, from
+the scan, an excerpt with the context either side.
+
+**Run the `inputs` command first, exactly as given.** It reads the topic folder and prints
+everything else you rule with, so nothing in it passed through the caller's hands:
+
+```
+{"goal": "c-read-unseen-diagram", "criterion": "…", "label": "a-sort-four-specimens/set-3/q2"}
+--- question ---
+…what the learner was shown…
+--- rubric ---
+…the key…
+```
+
+| field       | what it is                                                                                                                       |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `goal`      | the goal id from `goals.md`, whatever kind of goal it is                                                                         |
+| `criterion` | the goal's criterion, RESOLVED: its own text, or the sentence a reference like `vocabulary` points at                            |
+| `label`     | what the activity served, in its own words: a bank question's path, an activity id, a move and a note on the instance            |
+
 **The label is opaque to you too.** It tells you what was served so you can say what you ruled
 on; it is not where the criterion lives, and you never infer one from it.
 
-A batch repeats that pair, once per attempt.
+**A bank question prints its `question` and `rubric`; a question set live prints neither**, so
+for one of those the record itself has to show what was asked. The rubric is the question's
+key: the scenario key, the answer, the credit, and any tutor note.
 
-**One question can bear on several goals, and a bank question comes with a rubric.** A question
-served from a bank carries a rubric whether it credits one goal or several. With several, in
-place of `goal` and `criterion` you get `goals`: a list of `{goal, criterion}`, each criterion
-resolved exactly as above. With one, you get the single `goal` and `criterion` as usual. Either
-way you may also get `rubric`, the `--key` output for the question: the scenario key, the
-answer, the credit, and any tutor note.
+A batch repeats the `inputs` line and the record, once per attempt.
+
+**One question can bear on several goals.** Then in place of `goal` and `criterion` the first
+line has `goals`: a list of `{goal, criterion}`, each criterion resolved exactly as above.
 
 ```
 {"goals": [{"goal": "w-schema", "criterion": "…"},
            {"goal": "c-read-unseen-diagram", "criterion": "…"}],
- "label": "a-sort-four-specimens/set-3/q2", "sent by": "study"}
---- rubric ---
-…the key…
---- record ---
-…the transcript…
+ "label": "a-sort-four-specimens/set-3/q2"}
 ```
 
 **The rubric says what full credit is, and it is not a second criterion.** With one, `criterion:
 met` for a goal means the attempt earned full credit for that goal under the rubric. Half credit
-is `not met`. The criterion for each goal is still the one you were sent, and a goal the
+is `not met`. The criterion for each goal is still the one the inputs printed, and a goal the
 question's credit never touched is `unclear`, as for any part the attempt never reached. The
-rubric is the caller's key, not the learner's answer: the transcript is still what you rule on.
-Missing `goals` entries are missing inputs, so say so and rule nothing, as above. The single
-`goal` and `criterion` form without a rubric is what a live generator sends.
+rubric is the question's key, not the learner's answer: the transcript is still what you rule on.
 
 **A goal may name cases**, parts of its criterion that must each be shown, and a question
 exercises some of them. Then that goal arrives with `cases` beside its `criterion`: the ones
 this question exercises, each as its id and the line saying what it is. That is the same place
-whether the call sent a single `goal` or a `goals` list, where it sits inside that goal's entry:
+whether the inputs printed a single `goal` or a `goals` list, where it sits inside that goal's entry:
 
 ```
 {"goal": "c-judge-secret-request", "criterion": "…",
@@ -107,9 +110,11 @@ are not this question's to reach, so they are never grounds for `unclear` or for
 a concern about what was attempted: the question can still establish what it lists. There is
 no per-case field in what you return.
 
-**If one is missing, say so and rule nothing.** Not the criterion you'd have guessed, not the
-move the label looks like. A verdict built on an inferred input is worse than no verdict,
-because it is recorded exactly like a real one.
+**If anything is missing, say so and rule nothing.** No `inputs` line, a command that exits
+with an error, no record: return what was missing, or the command's error word for word, and no
+verdict. Not the criterion you'd have guessed, not the move the label looks like. A verdict
+built on an inferred input is worse than no verdict, because it is recorded exactly like a real
+one.
 
 **The scan always claims APPLY.** Nobody set it — the scan found the word in use and is
 asserting that use qualifies. Judge it against APPLY's pass condition like any other attempt; a
@@ -209,8 +214,8 @@ describing it, doing the thing without describing it is a failure.
 
 ## Words in particular
 
-A word's criterion is `vocabulary` — _uses the word well_ — and the caller resolves that to the
-sentence before sending it. The substance is in
+A word's criterion is `vocabulary` (_uses the word well_), and the inputs resolve that to the
+sentence. The substance is in
 [`../../goal-setting/references/vocabulary-moves.md`](../../goal-setting/references/vocabulary-moves.md).
 Read the pass condition for the move the label names, and rule against that. It is still the
 criterion as written; the writing is just one indirection away.
@@ -279,10 +284,10 @@ Six things, and no summary verdict on top of them.
 
 **One JSON object per attempt judged, and nothing outside them.** A batch returns an array of
 such objects, and a batch of multi-goal attempts returns one flat array of rulings, one per goal
-per attempt. So does a call that sent `goals`: one object per goal, in the same shape and the
+per attempt. So do inputs that print `goals`: one object per goal, in the same shape and the
 same order, each echoing its own goal id and the shared label. `unaided` is about the attempt,
-so it will usually read the same in each; `criterion` and `never_reached` are per goal. A call
-that sent a single `goal` gets a single object, as before. The nightly scan is a program and
+so it will usually read the same in each; `criterion` and `never_reached` are per goal. Inputs
+printing a single `goal` get a single object. The nightly scan is a program and
 parses this directly; prose it would have to interpret is the thing this whole record is built
 to avoid.
 

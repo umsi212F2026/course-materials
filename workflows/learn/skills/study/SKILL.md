@@ -144,41 +144,41 @@ ask differently rather than repeating it.
    slot says who rules.
 
    **`study/judge`** — the default, and the one to use when the claim is strong enough that
-   being the interested party matters. Send it in a fresh context, in the shape it expects, or
-   it will refuse — a JSON object, then the record as a labelled block:
+   being the interested party matters. Spawn it in a fresh context with this message, and
+   nothing more, every path absolute:
 
    ```
-   {"goal": "c-merge-conflict", "criterion": "…", "label": "a-resolve-three/case-2",
-    "sent by": "study"}
+   Follow /…/workflows/learn/skills/study/judge/SKILL.md.
+   sent by: study
+   inputs: node /…/workflows/learn/tools/judge-input.mjs /…/<topic-folder> <label>
    --- record ---
-   …the whole transcript…
+   …every turn from the question on, the learner's and yours, verbatim…
    ```
 
-   `criterion` is the goal's, resolved: its own text, or — where the entry names a reference
-   like `vocabulary` — the sentence that reference points at, from
-   [`../goal-setting/references/slots.md`](../goal-setting/references/slots.md). Send the
-   sentence, never the name. `label` is what the activity served.
+   **Don't read the judge's skill yourself, and don't copy the criterion, cases, question or
+   rubric into the message.** The judge reads its skill, and `judge-input.mjs` prints the rest
+   from the topic folder. The learner waits while you write this message, so the record is the
+   only part you type.
 
-   **Every bank question goes to the judge with its rubric**, the `--key` output as a
-   `--- rubric ---` block ahead of the record, whether it names one goal or several. Only a live
-   generator's question goes without one. The picker's `goals:` line lists what it credits. For
-   one goal, send `goal` and `criterion` as above. For several, send `goals`, a list of
-   `{"goal": …, "criterion": …}` with each criterion resolved the same way, and the judge
-   returns one ruling per goal, as a JSON array. A question that names goals with different
-   `adjudicator` slots goes to `study/judge` for all of them.
+   **The record starts where the question was put to them.** For a bank question, leave out the
+   question itself, since the judge's inputs print it. For a question set live, the record
+   starts with the question as you set it, because nothing else shows the judge what was asked.
 
-   **A goal the picker printed a `cases:` line for** also gets `cases`, beside its `criterion`:
-   each case the question exercises, as `{"id": …, "text": …}` with the text from `goals.md`.
-   A question set live sends the same, for the cases its generator says it carries. The judge's
-   one ruling on the goal covers all of them, so it needs to know which they are, or it reads
-   the cases this question was never meant to reach as gaps.
+   `<label>` is the one `next-item.mjs` printed. A question set live adds `--goal <goal-id>`,
+   and the judge returns one ruling. A bank question names its own goals, and when there are
+   several the judge returns one ruling per goal, as a JSON array. A question that names goals
+   with different `adjudicator` slots goes to `study/judge` for all of them.
+
+   **A goal with cases needs to know which this question exercises.** A bank question's
+   `cases:` lines already say. Where they don't, add `--cases <goal-id>:<case>,<case>`: for a
+   question set live, the cases its generator says it carries; for a bank question printing no
+   `cases:` line for such a goal, the ones you judged it to exercise (see _The record_).
+   `judge-input.mjs` refuses a goal with cases and none named, and the judge returns that
+   refusal rather than a ruling. Add the flag and send it again.
 
    **Every banked question names a goal**, and survey reports one that doesn't. If the picker
    ever prints an empty `goals:` line, the question is a fault: run it and discuss it, but record
    nothing.
-
-   It won't infer a missing field, and that's right: a verdict built on a guessed criterion is
-   recorded exactly like a real one.
 
    **`tutor`** — you rule, in session, no extra call. Same contract, same two axes, and the
    ruling gets recorded exactly like the judge's. It is on a goal because its question is
@@ -214,12 +214,13 @@ ask differently rather than repeating it.
    **A goal with cases needs `--cases` on every ruled attempt**, naming the cases the question
    exercised; see _The record_.
 
-   **Then show where that leaves them.** After every `record-attempt.mjs` call, and after
-   recording a deferral or a retirement, run
-   `node workflows/learn/tools/progress.mjs <topic-folder> --after <goal-id>` and paste what it
-   prints. It prints the one line for the goal's set, or the full view when that finished the
-   set, so the next set is seen opening up; the tool works out which. Review and the quiz do
-   not show it. A goal with some of its cases passed shows `~`, which the legend reads `in
+   **Then show where that leaves them.** Pass `--progress` on every `record-attempt.mjs` call
+   you make, and paste what it prints under `--- progress ---`. After recording a deferral or a
+   retirement, run `node workflows/learn/tools/progress.mjs <topic-folder> --after <goal-id>`
+   for the same view. It is the one line for the goal's set, or the full view when that
+   finished the set, so the next set is seen opening up; the tool works out which. For a
+   question ruled against several goals, paste the last call's. Review and the quiz do not
+   show it. A goal with some of its cases passed shows `~`, which the legend reads `in
    progress`, and the tool adds a line such as `c-judge-secret-request: 2 of 3 cases
    demonstrated`.
 
@@ -273,10 +274,10 @@ often true and is itself worth knowing.
 was, run
 
 ```
-node workflows/learn/tools/record-attempt.mjs <topic-folder> <goal-id> <label> --axes '<json>'
-node workflows/learn/tools/record-attempt.mjs <topic-folder> <goal-id> <label> --tags production --axes '<json>'
-node workflows/learn/tools/record-attempt.mjs <topic-folder> <goal-id> <label> --cases allows-safe --axes '<json>'
-node workflows/learn/tools/record-attempt.mjs <topic-folder> <goal-id> <label> --outcome abandoned
+node workflows/learn/tools/record-attempt.mjs <topic-folder> <goal-id> <label> --axes '<json>' --progress
+node workflows/learn/tools/record-attempt.mjs <topic-folder> <goal-id> <label> --tags production --axes '<json>' --progress
+node workflows/learn/tools/record-attempt.mjs <topic-folder> <goal-id> <label> --cases allows-safe --axes '<json>' --progress
+node workflows/learn/tools/record-attempt.mjs <topic-folder> <goal-id> <label> --outcome abandoned --progress
 ```
 
 **`<label>` is what the activity served, in its own words.** For a question from a bank it is
@@ -377,7 +378,7 @@ word on top of it.
 three choices offered after every `not met`, and they may also say it unprompted. Record it:
 
 ```
-node workflows/learn/tools/record-attempt.mjs <topic-folder> <goal-id> <label> --outcome declared --note "<their words, if any>"
+node workflows/learn/tools/record-attempt.mjs <topic-folder> <goal-id> <label> --outcome declared --note "<their words, if any>" --progress
 ```
 
 `<label>` is the activity just attempted. A declaration satisfies any bar and is recorded as
@@ -411,7 +412,7 @@ Don't argue with the choice, and don't ask for a reason. A goal they will meet e
 saved, not a corner cut.
 
 ```
-node workflows/learn/tools/record-attempt.mjs <topic-folder> <goal-id> elsewhere --outcome elsewhere --note "<where>"
+node workflows/learn/tools/record-attempt.mjs <topic-folder> <goal-id> elsewhere --outcome elsewhere --note "<where>" --progress
 node workflows/learn/tools/record-status.mjs <topic-folder> deferred <goal-id> --where "<where>"
 ```
 
@@ -521,6 +522,7 @@ lose each other's writes, so this one ends first.
 - [`curation`](workflows/learn/skills/curation/SKILL.md) — skill
 - [`goal-setting`](workflows/learn/skills/goal-setting/SKILL.md) — skill
 - [`learn`](workflows/learn/skills/learn/SKILL.md) — skill
+- [`judge-input.mjs`](workflows/learn/tools/judge-input.mjs) - tool
 - [`next-goal.mjs`](workflows/learn/tools/next-goal.mjs) - tool
 - [`next-item.mjs`](workflows/learn/tools/next-item.mjs) - tool
 - [`progress.mjs`](workflows/learn/tools/progress.mjs) - tool

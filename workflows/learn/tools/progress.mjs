@@ -6,7 +6,8 @@
 // current set), the current set's remaining goals, and a legend. `--set <n>` prints only that
 // set's one line, with its place in the sequence. `--json` prints the data the text is drawn
 // from, for a panel that draws it another way. `--after <goal-id>` is what study runs after
-// recording an attempt, a deferral or a retirement: it finds the goal's set itself (a retired goal
+// recording a deferral or a retirement (after an attempt, `record-attempt.mjs --progress` prints
+// the same thing in the same call): it finds the goal's set itself (a retired goal
 // too, from the survey's own sequence) and prints that set's one line, or the full view when the
 // set is finished, so the tutor never has to work out either. Nothing is stored; everything
 // comes from surveyTopic. A folder with no goals.md, or a `--set` outside the sequence, is a usage error
@@ -16,7 +17,7 @@
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { surveyTopic } from './lib/topic.mjs';
-import { buildProgress, renderFull, renderSet, casesLine } from './lib/progress.mjs';
+import { buildProgress, renderFull, renderSet, renderAfter } from './lib/progress.mjs';
 
 const USAGE = `usage:
   node workflows/learn/tools/progress.mjs <topic-folder> [--json] [--set <n>] [--after <goal-id>]`;
@@ -56,15 +57,9 @@ const survey = surveyTopic(dir);
 const view = buildProgress(survey);
 
 if (after !== undefined) {
-  // The survey's sets still list retired goals, which the view omits, so place the goal there.
-  const at = survey.sequence.sets.findIndex((set) => set.goals.some((g) => g.id === after));
-  if (at === -1) die(`${after} is not a goal in the sequence of ${dir}.`);
-  if (view.sets[at].finished) console.log(renderFull(view));
-  else {
-    console.log(renderSet(view, at + 1));
-    const line = casesLine(view, after);
-    if (line) console.log(line);
-  }
+  const text = renderAfter(survey, view, after);
+  if (text === null) die(`${after} is not a goal in the sequence of ${dir}.`);
+  console.log(text);
 } else if (json) console.log(JSON.stringify(view, null, 2));
 else if (setArg !== undefined) {
   const n = Number(setArg);
