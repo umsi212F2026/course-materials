@@ -181,3 +181,15 @@ export function casesLine(v, id) {
   if (!g || !g.cases || g.state === 'met') return null;
   return `  ${g.id}: ${g.cases.passed} of ${g.cases.total} cases demonstrated`;
 }
+
+// What study shows after recording on a goal: its set's one line (and cases line), or the full
+// view when that set is finished. Null when the goal is in no set. Shared by `progress.mjs
+// --after` and `record-attempt.mjs --progress`, which print the same thing.
+export function renderAfter(s, v, id) {
+  // The survey's sets still list retired goals, which the view omits, so place the goal there.
+  const at = s.sequence.sets.findIndex((set) => set.goals.some((g) => g.id === id));
+  if (at === -1) return null;
+  if (v.sets[at].finished) return renderFull(v);
+  const line = casesLine(v, id);
+  return line ? `${renderSet(v, at + 1)}\n${line}` : renderSet(v, at + 1);
+}

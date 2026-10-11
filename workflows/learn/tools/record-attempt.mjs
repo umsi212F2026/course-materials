@@ -17,6 +17,8 @@
 //                                attempt (--axes) for a goal that has cases, unless its criterion is
 //                                unchecked; refused for one that has none
 //   --note "..."                 optional, e.g. why they stopped
+//   --progress                   then print where that leaves the topic, as `progress.mjs --after
+//                                <goal-id>` does. Study passes it; review and the quiz do not show it
 //
 // ONE CODE PATH FOR EVERY GOAL. A capability, a word and an orientation all arrive here the
 // same way; what differs is the slots the goal carries, and the only thing this file does with
@@ -48,7 +50,8 @@
 
 import { appendFileSync, mkdirSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { readIds, attemptsFor, isGoalRetired } from './lib/topic.mjs';
+import { readIds, attemptsFor, isGoalRetired, surveyTopic } from './lib/topic.mjs';
+import { buildProgress, renderAfter } from './lib/progress.mjs';
 import { met, describeRuling } from './lib/bars.mjs';
 import { TAGS, checkTags } from './lib/slots.mjs';
 import { reviewSchedule } from './lib/schedule.mjs';
@@ -62,7 +65,8 @@ const USAGE = `usage:
   --tags ${Object.keys(TAGS).join(',')}
   --cases <case>,<case>   which of the goal's cases the question exercised
   --source study | review | quiz | scan   (default study)
-  --note "..."`;
+  --note "..."
+  --progress              then print where that leaves the topic`;
 
 const die = (msg) => {
   console.error(msg);
@@ -88,6 +92,10 @@ for (let i = 0; i < argv.length; i++) {
     continue;
   }
   const name = argv[i].slice(2);
+  if (name === 'progress') {
+    flags.progress = true;
+    continue;
+  }
   if (!FLAGS.includes(name)) {
     const near = FLAGS.filter((f) => f.startsWith(name.slice(0, 2)) || name.startsWith(f.slice(0, 2)));
     die(
@@ -257,3 +265,13 @@ if (after !== before) console.log(`  bar met (${goal.bar})`);
 else console.log(`  bar ${after ? 'already met' : 'not met'} (${goal.bar})`);
 if (retired) console.log(`  this goal was retired — recorded anyway. Say so if you want it back in review.`);
 else if (scheduled) console.log(`  next review ${scheduled.due} (${scheduled.days} days)`);
+
+// --- where that leaves them --------------------------------------------------
+// ONE CALL INSTEAD OF TWO. Study shows this after every attempt, and running progress.mjs as a
+// separate command cost the learner a turn of waiting each time. A topic with no sequence
+// placement for the goal prints nothing here, which progress.mjs would have refused.
+if (flags.progress) {
+  const survey = surveyTopic(dir);
+  const text = renderAfter(survey, buildProgress(survey), goalId);
+  if (text !== null) console.log(`--- progress ---\n${text}`);
+}

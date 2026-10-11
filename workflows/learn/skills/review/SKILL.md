@@ -179,31 +179,26 @@ argument.
 3. **Get it adjudicated.** The goal's `adjudicator` slot says who rules, and it is the same
    adjudicator the first pass used.
 
-   **`study/judge`** — the default. Hand it the whole transcript in a fresh context, in the
-   shape it expects, or it will refuse — a JSON object, then the record as a labelled block:
+   **`study/judge`**, the default. Spawn it in a fresh context with this message, and nothing
+   more, every path absolute:
 
    ```
-   {"goal": "w-schema", "criterion": "…", "label": "APPLY: their deploy script",
-    "sent by": "review"}
+   Follow /…/workflows/learn/skills/study/judge/SKILL.md.
+   sent by: review
+   inputs: node /…/workflows/learn/tools/judge-input.mjs /…/<topic-folder> <label>
    --- record ---
-   …the whole transcript…
+   …every turn from the question on, the learner's and yours, verbatim…
    ```
 
-   `criterion` is the goal's, resolved: its own text, or — where the entry names a reference
-   like `vocabulary` — the sentence that reference points at, from
-   [`../goal-setting/references/slots.md`](../goal-setting/references/slots.md). Send the
-   sentence, never the name. It won't infer a missing field, and that's right: a verdict built
-   on a guessed criterion is recorded exactly like a real one.
-
-   **Every bank question goes with its rubric**, the `--key` output as a `--- rubric ---` block
-   ahead of the record, whether it names one goal or several. Only a live generator's question
-   goes without one. One goal goes as `goal` and `criterion`; several go as `goals`, a list of
-   `{"goal": …, "criterion": …}` with each criterion resolved. A question that names goals with
-   different `adjudicator` slots goes to `study/judge` for all of them. A goal the picker printed
-   a `cases:` line for also gets `cases`, each case the question exercises as
-   `{"id": …, "text": …}`, exactly as study sends it; a question set live sends the cases its
-   generator says it carries, the same way. Every goal the judge rules on is an attempt and
-   step 4 records each. A goal that was due is recorded as a review.
+   **Don't read the judge's skill yourself, and don't copy the criterion, cases, question or
+   rubric into the message**: the learner waits while you write it, and `judge-input.mjs`
+   prints them from the topic folder. For a bank question the record leaves the question out,
+   since the inputs print it; for a question set live it starts with the question as you set
+   it, and the `inputs` line adds `--goal <goal-id>`. A goal with cases that the question's
+   `cases:` lines don't cover gets `--cases <goal-id>:<case>,<case>`, exactly as study sends
+   it. A question that names goals with different `adjudicator` slots goes to `study/judge`
+   for all of them, and the judge returns one ruling per goal. Every goal the judge rules on is
+   an attempt and step 4 records each. A goal that was due is recorded as a review.
    Another named goal is recorded as a review only if it was missed; one that passed counts as
    evidence without moving it along its intervals, and so does one the judge could not decide.
 
@@ -329,6 +324,7 @@ had earned, and the record deliberately doesn't work that way.
 
 - [`learn`](workflows/learn/skills/learn/SKILL.md) — skill
 - [`topic`](workflows/learn/skills/topic/SKILL.md) — skill
+- [`judge-input.mjs`](workflows/learn/tools/judge-input.mjs) - tool
 - [`next-item.mjs`](workflows/learn/tools/next-item.mjs) - tool
 - [`record-attempt.mjs`](workflows/learn/tools/record-attempt.mjs) — tool
 - [`record-status.mjs`](workflows/learn/tools/record-status.mjs) — tool
