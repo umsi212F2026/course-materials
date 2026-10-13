@@ -1,0 +1,12 @@
+{
+  "_note": "The per-session selection: how many questions to draw from each bank on one date. Published, because a practice quiz is generated from this same file by the same library, so students practise the shape they will actually face. It says how many from where and nothing about which questions: the draw is random per student, and the questions themselves live in the sources named below, which students already have.",
+  "session": 13,
+  "date": "2026-10-13",
+  "draw": {
+    "learning-topics/deploy-pipeline-2026-10/a-words": 1,
+    "learning-topics/debug-deployed-2026-10/a-words": 1,
+    "learning-topics/sign-in-and-permissions-2026-10/a-words": 1,
+    "learning-topics/deploy-pipeline-2026-10/a-diagnose-from-evidence": 1,
+    "learning-topics/deploy-pipeline-2026-10/a-critique-database-account": 1
+  }
+}
