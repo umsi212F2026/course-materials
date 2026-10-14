@@ -260,7 +260,7 @@ and a silence costs the learner.
 ## When a row can't be filled
 
 Sometimes the problem is upstream and no amount of ingenuity here will fix it. Write
-`blocked — <why>` in the cell you couldn't fill, and say so in your reply. A blocked row ends
+`blocked: <why>` in the cell you couldn't fill, and say so in your reply. A blocked row ends
 the loop for that capability; it does not end the phase.
 
 The bar is high, because giving up is easier than the alternative and you will be tempted
@@ -295,7 +295,7 @@ matching your work against the list it gave you.
 the learner's and which you may not edit — so each needs the same three things: which
 capability, what's wrong, and what would have to change.
 
-- _Blocking_ — you wrote `blocked — <why>` in a cell because nothing could fill it. The
+- _Blocking_ — you wrote `blocked: <why>` in a cell because nothing could fill it. The
   conditions are in _When a row can't be filled_, above.
 - _Non-blocking_ — you worked around it and wrote what you could. A criterion that bundles two
   capabilities is the usual case: you can serve half of it, and nobody downstream will see that

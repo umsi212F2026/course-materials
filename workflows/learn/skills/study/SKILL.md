@@ -244,7 +244,7 @@ recorded is the close.
 **Drop an activity whenever you learn it's not worth offering again**, which belongs to no step
 in particular. It might be while you're offering — you read the entry and see it assumes prior
 knowledge they haven't got. It might be mid-run, when the bank turns out to be empty. It might
-be after an attempt. Write `status: dropped — <why>` in `activities.md`. The `<why>` you write
+be after an attempt. Write `status: dropped: <why>` in `activities.md`. The `<why>` you write
 is curation's only feedback, so make it specific enough to stop a new proposal being made with
 the same defect. But don't record an activity as dropped when a learner simply didn't meet the
 criterion; that's the ordinary outcome of a working check.

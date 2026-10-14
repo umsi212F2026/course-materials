@@ -1,10 +1,10 @@
-# Learning goals — <AREA>
+# Learning goals: <AREA>
 
-**What I want to be able to do, and what would count as having got there.**
+**What I want to be able to do, and what would count as having gotten there.**
 
 <!--
   Everything in HTML comments is guidance, not content. It doesn't appear in a rendered
-  view, so this reads clean if you leave it in — but delete each one as you fill its
+  view, so this reads clean if you leave it in, but delete each one as you fill its
   section and the file stays short.
 
   This is the layout for <area>-<yyyy>-<mm>/goals.md in your learning-topics repository,
@@ -18,25 +18,25 @@
 
   The rule:
 
-    Two to four lower-case words with hyphens between, conventionally prefixed — `c-` for a
+    Two to four lower-case words with hyphens between, conventionally prefixed: `c-` for a
     capability, `w-` for a word, `o-` for an orientation. `c-read-unseen-diagram`,
     `w-persistence`.
 
     THE PREFIX IS A READING AID AND NOTHING ELSE. No program decides anything from it; what
     kind of goal this is, if the question even arises, is answered by its slots. What is
-    checked is that a goal id doesn't start with `a-`, which activities.md's entries do — a
+    checked is that a goal id doesn't start with `a-`, which activities.md's entries do. A
     log line carries both side by side, and the prefix is what makes that parse at a glance.
 
     AIM AT WHAT THE THING IS, not at how the entry is phrased. `token, and what it costs` is
     `w-token-cost`, not `w-token-and-what-it-costs`. Stopwords carry nothing and you will be
     reading these in a log.
 
-    UNIQUE WITHIN THE TOPIC — across the goals here and across activities.md's entries,
+    UNIQUE WITHIN THE TOPIC: across the goals here and across activities.md's entries,
     including its dropped ones, which keep their ids. Nothing checks you as you write; a
     duplicate surfaces later when workflows/learn/tools/survey.mjs walks the folder, and by then attempts point
     at it.
 
-  AN ID IS PERMANENT. Reword an entry and the id stays — the log already points at it, and a
+  AN ID IS PERMANENT. Reword an entry and the id stays: the log already points at it, and a
   rename orphans everything recorded against it. An entry that becomes a genuinely different
   capability is a new entry with a new id, not a rename.
 
@@ -58,7 +58,7 @@
 
 <!--
   The nearest thing already known well, and where it stops.
-  This is a claim, not a verified fact — it's a self-report about one's own knowledge,
+  This is a claim, not a verified fact: it's a self-report about one's own knowledge,
   and the assessment may contradict it.
 -->
 
@@ -138,8 +138,8 @@
         does, including what it rules out
 
   That is a complete entry. `criterion` is the only field an ordinary capability writes, and
-  it is the one that does the work: it may need a judgment call when the time comes — most
-  will — but it has to say what's being examined, or whoever checks it later invents the
+  it is the one that does the work: it may need a judgment call when the time comes (most
+  will), but it has to say what's being examined, or whoever checks it later invents the
   object as well as the verdict.
 
   A WORD carries three slots, and workflows/learn/tools/new-word.mjs writes them for you. Don't type them:
@@ -160,7 +160,7 @@
   INTERPRET may set its sentence using one. Any future generator that wants its own fields
   puts them the same way: bullets nothing else reads.
 
-  WHAT IT NAMES is a pointer, not a definition — "the promised shape", not what a schema is.
+  WHAT IT NAMES is a pointer, not a definition: "the promised shape", not what a schema is.
   Topology, the same latitude the interview has: enough to recognize the word when it turns
   up, never enough to pass DEFINE with.
 
@@ -173,14 +173,14 @@
   DEFINE rejects one as an answer, because "an AI agent is a bot" names the thing again rather
   than saying what it is. DISTINGUISH is never aimed at one: there is no difference to name,
   so a learner who says exactly that would be right and would fail anyway. And INTERPRET may
-  set its unseen sentence using one, so the word has to be recognised under a name the lecture
+  set its unseen sentence using one, so the word has to be recognized under a name the lecture
   never used.
 
   Put only names here. A phrase that reads like a definition rather than a label is not a
   synonym, and DEFINE would then reject the very answer it should accept.
 
   A word may carry a further line where this learner has a specific wrong idea waiting for
-  them — `- **watch for:** thinks an API key is a password`. Rare. It is a HINT TO WHOEVER
+  them: `- **watch for:** thinks an API key is a password`. Rare. It is a HINT TO WHOEVER
   SETS THE MOVE, not an extra thing to satisfy: aim a CATCH or a DISTINGUISH at it and the
   confusion gets tested by the ordinary bar.
 
@@ -189,14 +189,14 @@
   have is the commonest way a topic grows, and it must not cost a goal-setting session.
 
   GIVING ONE UP IS NOT A DELETION EITHER. A learner who decides a word doesn't matter gets a
-  `retired` line in the status log naming it — `record-status.mjs <topic> retired <goal-id>
-  --reason "…"` — and the entry stays here untouched. It stops being offered, stops coming
+  `retired` line in the status log naming it (`record-status.mjs <topic> retired <goal-id>
+  --reason "…"`), and the entry stays here untouched. It stops being offered, stops coming
   back in review and leaves its group's fraction, and the attempts it already has stay in the
   log pointing at an id that is still where they left it. Removing the entry instead would
   orphan those lines, which survey reports as a problem.
 
-  If meeting the vocabulary bar would leave them unable to do the thing, it isn't a word —
-  it's a capability, and it gets an ordinary entry with a criterion someone thought about.
+  If meeting the vocabulary bar would leave them unable to do the thing, it isn't a word.
+  It's a capability, and it gets an ordinary entry with a criterion someone thought about.
 
   ANY GOAL may carry `- **taught elsewhere:** PS2; session 5 in-class activity`, naming where
   else it is taught. The instructor writes it on assigned topics, and goal setting writes it
@@ -241,9 +241,9 @@
   with no slug counts as one.
 
   THE ABSENCE OF ANY CAPABILITY ENTRY IS LOAD-BEARING. "This file has no goal in the default
-  group" is what the rest of the workflow reads as *goal setting hasn't happened* — it's the
+  group" is what the rest of the workflow reads as *goal setting hasn't happened*. It's the
   state add-topic leaves, and it's what routes a topic to goal setting. Words and the
-  orientation entry are in their own groups and don't count towards it. So never write a
+  orientation entry are in their own groups and don't count toward it. So never write a
   placeholder capability entry; an empty section is the honest signal.
 
   A TOPIC OF WORDS ALONE says so instead, with `**capabilities:** none` on its own line between

@@ -1,9 +1,9 @@
-# Notes — <AREA>
+# Notes: <AREA>
 
 ## Glossary of terms, in my words
 
-- **term1** — ...in your own words...
-- **term2** — ...in your own words...
+- **term1**: ...in your own words...
+- **term2**: ...in your own words...
 
 ## What clicked
 
@@ -19,4 +19,4 @@
 
 ## Deliberately skipped
 
-- **term** — why I decided not to learn it
+- **term**: why I decided not to learn it

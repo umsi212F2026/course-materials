@@ -128,7 +128,7 @@ course path the instructor is, at the two stops, and nobody else.
    **Three things come back, and each is handled differently.**
 
    **Artifact markers, from `verify` — into the file now.** `verified: <date>` on each artifact
-   it confirmed, `NOT VERIFIED — <what couldn't be checked>` on each it couldn't settle.
+   it confirmed, `NOT VERIFIED: <what couldn't be checked>` on each it couldn't settle.
    Nothing on the ones it found _wrong_: those are findings, and a fixed entry gets a new
    artifact with no marker. These aren't comments on defects the generator might resolve,
    they're facts that stay true — and step 4's check pass reads them to know what it can skip,
@@ -163,7 +163,7 @@ course path the instructor is, at the two stops, and nobody else.
 
    _Findings, from the second report._ `critique`'s need no action — it writes the tutor-facing
    version of the same defects as annotations, and you've just placed them. For each of
-   `verify`'s, write `status: dropped — <the finding>` on that entry. `status` is yours to set;
+   `verify`'s, write `status: dropped: <the finding>` on that entry. `status` is yours to set;
    entry substance stays the generator's. `verify`'s list of older entries with no `checks` is
    not findings: drop none of them. On the course path they were converted in step 3, so the
    list should be empty by now; a plain-path run leaves them as they are.

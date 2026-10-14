@@ -1,31 +1,31 @@
-# Activities — <AREA>
+# Activities: <AREA>
 
 Candidate activities for the study phase. More than will be used; the tutor chooses among them
 with the learner.
 
 <!--
   WHO THIS IS FOR. Written by the curation agent, read by the tutor agent. A human can read
-  it and occasionally will — someone debugging the workflow, or the learner if they ask —
+  it and occasionally will (someone debugging the workflow, or the learner if they ask),
   so keep it legible. But write for the tutor: fields over prose, and everything it needs to
   actually run an activity rather than describe one.
 
-  Delete these comments as you fill the file. Not for tidiness — they cost the tutor
+  Delete these comments as you fill the file. Not for tidiness: they cost the tutor
   context on every read.
 
   This is the layout for <area>-<yyyy>-<mm>/activities.md in your learning-topics repository,
   which is created blank by
   workflows/learn/tools/new-topic.mjs before any phase runs. Don't edit this file; edit the copy.
 
-  ONE FLAT LIST. No sections per goal — an activity can serve several, and orienting
+  ONE FLAT LIST. No sections per goal: an activity can serve several, and orienting
   activities just serve all of them. The `serves` and `supports` fields are how the tutor
   narrows down.
 
-  IDs are `a-` plus two to four kebab-case words, readable on their own —
+  IDs are `a-` plus two to four kebab-case words, readable on their own:
   `a-read-unseen-diagram`, not `a-1`. The `a-` prefix is the one namespace rule that is
   load-bearing: goals.md's ids never start with it, and workflows/learn/tools/survey.mjs checks that.
 
   UNIQUE ACROSS THE TOPIC, not just across this file: these entries and every goal in
-  goals.md. Nothing checks as you write — workflows/learn/tools/survey.mjs reports a duplicate the next time
+  goals.md. Nothing checks as you write: workflows/learn/tools/survey.mjs reports a duplicate the next time
   it walks the folder, by which point attempts point at it.
 
   They are STABLE. An id assigned once never changes, even if the wording it was derived from
@@ -55,7 +55,7 @@ with the learner.
   AN ACTIVITY IS THE ORIENTATION, OR A SOURCE OF QUESTIONS, banked or set live. Every question
   has a rubric (a live one's is its generator's criterion) and names at least one goal, so every
   activity carries `checks` and anything a learner does can move a goal to met. Any question can
-  be attempted with help, so nothing needs a separate place to practise first. Outside the
+  be attempted with help, so nothing needs a separate place to practice first. Outside the
   orientation, a reading, a video or a worked example is not an activity: it is help on a
   question, the first level of it, in that activity's `worked example`.
 
@@ -68,7 +68,7 @@ with the learner.
   is met; and where the method is the same, one scenario may carry questions on several goals,
   in different capabilities.
 
-  CANDIDATES, deliberately more than will be used — you can't tell whether an artifact will
+  CANDIDATES, deliberately more than will be used: you can't tell whether an artifact will
   orient someone until they try it. Don't rank them; characterize them, so the tutor can
   offer a real choice.
 
@@ -86,12 +86,12 @@ with the learner.
 
 <!--
   Authored by curation/critique and placed by the orchestrator. Rewritten wholesale each pass,
-  so don't edit it — it will be replaced.
+  so don't edit it. It will be replaced.
 
   Dated, and short. What the tutor should know about this file as a whole before using it:
   the menu skews toward reading, two capabilities are thinner than they look, the depth
-  runs heavier than goals.md asks for. Only things that survived the revision round —
-  anything that got fixed doesn't belong here.
+  runs heavier than goals.md asks for. Only things that survived the revision round.
+  Anything that got fixed doesn't belong here.
 
   Empty is a legitimate and good outcome. Say "nothing at file level" rather than inventing
   an observation.
@@ -109,16 +109,16 @@ with the learner.
   Coverage row could show.
 
   The `criterion` column is COPIED, and for a goal whose criterion is a reference rather than
-  the learner's own text — `vocabulary`, `orientation` — copy the reference name. The
+  the learner's own text (`vocabulary`, `orientation`), copy the reference name. The
   sentence it points at is in workflows/learn/skills/goal-setting/references/slots.md and doesn't belong here
   in two places.
 
-  The ids here are what `serves` refers to. They are COPIED FROM goals.md, not assigned here —
+  The ids here are what `serves` refers to. They are COPIED FROM goals.md, not assigned here:
   goals.md is where a goal is named, and this table is a convenience copy of it. If an id
   here doesn't match one there, this file is the one that's wrong.
 -->
 
-| id                      | Goal | Criterion — what gets examined, and what counts |
+| id                      | Goal | Criterion: what gets examined, and what counts  |
 | ----------------------- | ---- | ----------------------------------------------- |
 | `o-orientation`         |      | `orientation`                                   |
 | `c-read-unseen-diagram` |      |                                                 |
@@ -140,19 +140,19 @@ with the learner.
   checks  live activities whose `checks` names this goal, or whose bank holds a question
           whose rubric `goal:` names it
   notes   authored by curation/critique, placed by the orchestrator. Usually empty. For deficiencies an empty cell can't
-          express — most often that every check for this goal shares the same
+          express: most often that every check for this goal shares the same
           `doesn't show`, so the coverage is only apparent.
 
   Dropped activities don't appear. An empty `checks` cell is a gap, and that's the whole
   point of the table. A goal with cases has a second kind of gap the table can't show, a case
   no question exercises; curation/verify looks for that one.
 
-  A cell may instead read `blocked — <why>`, meaning curation tried and couldn't: no
+  A cell may instead read `blocked: <why>`, meaning curation tried and couldn't: no
   verifiable artifact exists, or the criterion can't be examined by anything constructible.
   That's a defect in goals.md rather than here, and it needs the learner to resolve.
 
   THE ORIENTATION GOAL is an ordinary row and always first, because it is first in goals.md.
-  It is a goal like any other, with a criterion, an adjudicator and a bar — a row naming no
+  It is a goal like any other, with a criterion, an adjudicator and a bar. A row naming no
   goal could never finish. Its `checks` cell is filled like any other, with the activity whose
   `checks` names it: the one that gives the learner the shape of the thing before any
   particular part is in play.
@@ -194,26 +194,26 @@ with the learner.
                 the `checks` field below.
   artifact      what it is and where, and roughly how long it takes
   verified      the date curation/verify confirmed this artifact is real and
-                is what the entry says it is. `NOT VERIFIED — <what couldn't be confirmed>`
+                is what the entry says it is. `NOT VERIFIED: <what couldn't be confirmed>`
                 if it couldn't. Absent means nobody has looked yet.
 
-                Anyone editing the artifact clears this — a marker attached to a different
+                Anyone editing the artifact clears this: a marker attached to a different
                 source than the one it was granted for is worse than none.
-  learner does  the obligation, not just the resource — this is the field that makes it an
+  learner does  the obligation, not just the resource: this is the field that makes it an
                 activity rather than a reading list
   tutor role    the stance to take while this runs: explainer, socratic questioner,
                 critique target, critic, role-play partner, examiner (sets a question cold and
                 leaves the judging to the adjudicator), or none (the learner works
                 alone and you wait)
-  tutor does    during, and afterwards
+  tutor does    during, and afterward
   done when     the criterion of a goal in `checks` met with no help. For the orientation,
                 that is the learner able to attempt the real thing with the artifact still
                 beside them.
-  offer as      what makes this one different from its neighbors — fastest, most thorough,
+  offer as      what makes this one different from its neighbors: fastest, most thorough,
                 assumes more background, hands-on rather than expository. This is what you
                 say when presenting a choice, so make it a real distinction.
   check note    authored by curation/critique, placed by the orchestrator. Present only when there is
-                something the tutor should know that the entry itself doesn't say — a
+                something the tutor should know that the entry itself doesn't say: a
                 generator whose difficulty is underspecified, an artifact that's real but
                 harder going than it looks, a task that works but only once.
 
@@ -232,11 +232,11 @@ with the learner.
   origin        omit. `generated` marks a legacy stamp from before `a-words`; see the note
                 at the head of this file. Nothing serves from one and nothing new carries it.
 
-  status        omit while the activity is live — that's the default and needs no saying.
-                When it stops being a candidate, `dropped — <why, and who>`: the curator
+  status        omit while the activity is live: that's the default and needs no saying.
+                When it stops being a candidate, `dropped: <why, and who>`: the curator
                 writing it off as unworkable before anyone tried, or the tutor after it
-                failed in practice — a source that oriented nobody, a task that turned out
-                to test the wrong thing.
+                failed in practice (a source that oriented nobody, a task that turned out
+                to test the wrong thing).
 
                 Not progress. What's been attempted and how it went lives in
                 evidence/attempts.jsonl; this field is only about whether the candidate is

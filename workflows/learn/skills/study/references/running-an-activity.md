@@ -209,7 +209,7 @@ analysis than that to drop the activity.
 1. **Record the attempt**, with `--outcome abandoned`. No bar counts it and no date moves — it
    establishes nothing, which is what happened. Always, whoever decided and whatever the
    reason.
-2. **Only if the activity is at fault, write `status: dropped — <why, and who decided>`** on
+2. **Only if the activity is at fault, write `status: dropped: <why, and who decided>`** on
    its entry in `activities.md`. Never on `a-words`, or on a legacy stamp carrying
    `origin: generated`: there is nothing in either to be wrong. A bad word question is a fault
    in the bank or the moves, and goes on the queue:
