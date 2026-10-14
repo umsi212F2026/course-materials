@@ -224,3 +224,40 @@ test("a blockquote in a question keeps its lines; ordinary wrapping still joins"
   const { items } = readFolderBanks(dir);
   assert.equal(items[0].prompt, "She wrote:\n\n> first line\n> second line\n\nAnd then it wrapped here.");
 });
+
+// Build a one-question folder bank around `body` and return the parsed prompt.
+function promptOf(body) {
+  const dir = source({
+    "tasks/a-x/s.md": `### q1\n\n${body}\n`,
+    "rubrics/a-x/s.md": "### q1\n\n- **answer:** X.\n",
+  });
+  return readFolderBanks(dir).items[0].prompt;
+}
+
+test("a fenced block keeps its lines, its indentation and its blank lines", () => {
+  const body = "Git says:\n\n```\n$ git status\nOn branch main\n\n  modified: app.js\n```\n\nWhat\nhappened?";
+  assert.equal(promptOf(body), "Git says:\n\n```\n$ git status\nOn branch main\n\n  modified: app.js\n```\n\nWhat happened?");
+});
+
+test("a numbered line inside a fenced block is not taken for an mcq's choices", () => {
+  const dir = source({
+    "tasks/a-x/s.md": "### q1\n\nThe log:\n\n```\n1. started\n```\n\nWhich is it?\n\n1. Alpha\n2. Beta\n",
+    "rubrics/a-x/s.md": "### q1\n\n- **type:** mcq\n- **answer:** 2\n",
+  });
+  const [item] = readFolderBanks(dir).items;
+  assert.equal(item.prompt, "The log:\n\n```\n1. started\n```\n\nWhich is it?");
+  assert.deepEqual(item.choices, ["Alpha", "Beta"]);
+});
+
+test("table rows keep their lines", () => {
+  const body = "The table:\n\n| Action | Who |\n| --- | --- |\n| Delete | Owner |\n\nWhat is wrong?";
+  assert.equal(promptOf(body), body);
+});
+
+test("each bullet keeps its line, and a wrapped bullet joins onto its own line", () => {
+  const body = "It behaves like this:\n\n- **Pinecart** hosts a\n  built frontend.\n- Its CDN caches files.\n\nWhat do you\nexpect?";
+  assert.equal(
+    promptOf(body),
+    "It behaves like this:\n\n- **Pinecart** hosts a built frontend.\n- Its CDN caches files.\n\nWhat do you expect?"
+  );
+});

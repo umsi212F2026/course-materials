@@ -101,27 +101,66 @@ function fields(body) {
   return out;
 }
 
-// A question body is prose, optionally followed by a numbered list that is the mcq's choices.
-// Markdown wraps prose at the column, and a hard newline inside a sentence would reach the
-// student verbatim. Single newlines become spaces; blank lines stay, so a two-paragraph question
-// keeps its break. A LINE STARTING `>` KEEPS ITS NEWLINE, because a blockquote is lines the author
-// broke on purpose (a quoted exchange, a snippet), and joining them made one run-on line.
+// A question body is Markdown, optionally followed by a numbered list that is the mcq's choices.
+// Prose is wrapped at the column, and a hard newline inside a sentence would reach a reader that
+// shows text as it is, so a wrapped line joins the one before it with a space. Blank lines stay,
+// so a two-paragraph question keeps its break.
+//
+// EVERYTHING ELSE KEEPS ITS LINES, because there the line break is the structure. A fenced block
+// is copied verbatim, blank lines and indentation included: it is a log or a file, and joining it
+// made one run-on line. A line starting a blockquote, a bullet, a table row or a heading starts a
+// line of its own. A wrapped bullet still joins onto its own bullet; a table row or a heading
+// never takes a continuation.
+const BLOCK_START = /^\s*(?:>|\||#{1,6}\s|[-*+]\s)/;
+const FENCE = /^(`{3,}|~{3,})/;
+
 function unwrap(text) {
-  return text
-    .split(/\n\s*\n/)
-    .map((para) =>
-      para
-        .split('\n')
-        .map((l) => l.trim())
-        .reduce((out, l, i) => out + (i === 0 ? '' : l.startsWith('>') ? '\n' : ' ') + l, '')
-        .trim()
-    )
-    .join('\n\n');
+  const out = [];
+  let fence = null;
+  let joinable = false;
+  for (const line of text.split('\n')) {
+    const t = line.trim();
+    if (fence) {
+      out.push(line.trimEnd());
+      if (t.startsWith(fence)) fence = null;
+      continue;
+    }
+    const f = FENCE.exec(t);
+    if (f) {
+      out.push(t);
+      fence = f[1];
+      joinable = false;
+    } else if (!t) {
+      if (out.length && out[out.length - 1] !== '') out.push('');
+      joinable = false;
+    } else if (BLOCK_START.test(line)) {
+      // A bullet keeps its indentation, which is what nests it; the rest are trimmed.
+      out.push(/^[-*+]\s/.test(t) ? line.trimEnd() : t);
+      joinable = !/^[|#]/.test(t);
+    } else if (joinable) {
+      out[out.length - 1] += ` ${t}`;
+    } else {
+      out.push(t);
+      joinable = true;
+    }
+  }
+  return out.join('\n').trim();
 }
 
 function splitChoices(body) {
   const lines = body.split('\n');
-  const first = lines.findIndex((l) => /^\d+\.\s+/.test(l.trim()));
+  // A numbered line inside a fenced block is part of a log or a file, not a choice.
+  let fence = null;
+  const first = lines.findIndex((l) => {
+    const t = l.trim();
+    if (fence) {
+      if (t.startsWith(fence)) fence = null;
+      return false;
+    }
+    const f = FENCE.exec(t);
+    if (f) fence = f[1];
+    return !f && /^\d+\.\s+/.test(t);
+  });
   if (first === -1) return { prompt: unwrap(body), choices: null };
   const choices = lines
     .slice(first)
