@@ -1,0 +1,42 @@
+{
+  "_note": "The per-session selection: how many questions to draw from each bank on one date. Published, because a practice quiz is generated from this same file by the same library, so students practise the shape they will actually face. It says how many from where and nothing about which questions: the draw is random per student, and the questions themselves live in the sources named below, which students already have.",
+  "session": 15,
+  "date": "2026-10-22",
+  "draw": {
+    "learning-topics/commits-and-history-2026-09/a-words": 1,
+    "learning-topics/commits-and-history-2026-09/commit-and-restore": 1,
+    "learning-topics/coding-agents-2026-09/a-words": 1,
+    "learning-topics/coding-agents-2026-09/items": 1,
+    "learning-topics/react-apps-2026-09/a-words": 1,
+    "learning-topics/react-apps-2026-09/items": 1,
+    "learning-topics/web-backends-2026-09/a-words": 1,
+    "learning-topics/web-backends-2026-09/items": 1,
+    "learning-topics/software-design-2026-09/a-words": 1,
+    "learning-topics/software-design-2026-09/items": 1,
+    "learning-topics/software-construction-2026-09/a-words": 1,
+    "learning-topics/software-construction-2026-09/items": 1,
+    "learning-topics/cloud-hosting-2026-10/a-words": 1,
+    "learning-topics/cloud-hosting-2026-10/a-place-described-plan": 1,
+    "learning-topics/database-hosting-2026-10/a-words": 1,
+    "learning-topics/database-hosting-2026-10/a-judge-described-plan": 1,
+    "learning-topics/deploy-config-2026-10/a-words": 1,
+    "learning-topics/deploy-config-2026-10/a-deploy-chat": 1,
+    "learning-topics/debug-deployed-2026-10/a-words": 1,
+    "learning-topics/debug-deployed-2026-10/a-locate-described-failure": 1,
+    "learning-topics/deploy-pipeline-2026-10/a-words": 1,
+    "learning-topics/deploy-pipeline-2026-10/a-judge-pipeline-plan": 1,
+    "learning-topics/sign-in-and-permissions-2026-10/a-words": 1,
+    "learning-topics/sign-in-and-permissions-2026-10/a-critique-permissions-plan": 1,
+    "learning-topics/defensive-measures-2026-10/a-words": 1
+  },
+  "exclude": {
+    "learning-topics/commits-and-history-2026-09/a-words/w-history/q-log-last-commit": "full credit needs a point the question never asks for",
+    "learning-topics/commits-and-history-2026-09/a-words/w-merge/q-merged-no-conflicts": "the right choice is much the longest",
+    "learning-topics/coding-agents-2026-09/a-words/w-compaction/q-compacted-report": "the right choice is much the longest",
+    "learning-topics/coding-agents-2026-09/a-words/w-input-tokens/q-what-counts-as-input": "the right choice is much the longest",
+    "learning-topics/react-apps-2026-09/a-words/w-routing/q-routing-same-page-every-address": "the right choice is much the longest",
+    "learning-topics/software-design-2026-09/a-words/w-spike/q-spike-twenty-minutes": "the prompt states what earns the credit",
+    "q-manual-newest-first": "credit turns on one word rather than on what the answer describes",
+    "q-manual-make-sure-notes-work": "credit accepts only two of the valid pushbacks"
+  }
+}
