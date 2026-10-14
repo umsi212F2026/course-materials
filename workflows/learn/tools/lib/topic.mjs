@@ -167,11 +167,28 @@ function headerStudyBy(text) {
   return { value: { date: m[1], position, of }, bad: null };
 }
 
+// A TOPIC OF WORDS ALONE, in a `**capabilities:** none` line beside the origin header. Goal
+// setting writes it when the decision is that this topic has no capability to reach, only words
+// to meet. Without it, a topic with no goal in the default group reads as goal setting not yet
+// run, which is the state add-topic leaves; the line is what tells the two apart, so it has to be
+// written down rather than inferred from the words being there. `none` is the only value. Any
+// other is returned as `bad` for idProblems and read as no line, the direction that sends the
+// topic back to goal setting rather than past it.
+function headerCapabilities(text) {
+  const at = text.search(GOALS_HEADING);
+  const head = (at === -1 ? text : text.slice(0, at)).replace(/<!--[\s\S]*?-->/g, '');
+  const line = head.match(/^\*\*capabilities:\*\*.*$/m);
+  if (!line) return { value: false, bad: null };
+  if (/^\*\*capabilities:\*\*\s*none\s*$/.test(line[0])) return { value: true, bad: null };
+  return { value: false, bad: line[0].trim() };
+}
+
 export function readGoals(dir) {
   const file = join(dir, 'goals.md');
-  if (!existsSync(file)) return { goals: [], origin: 'learner', studyBy: null };
+  if (!existsSync(file)) return { goals: [], origin: 'learner', studyBy: null, wordsOnly: false };
   const text = readFileSync(file, 'utf8');
   const { value: studyBy, bad: studyByBad } = headerStudyBy(text);
+  const { value: wordsOnly, bad: capabilitiesBad } = headerCapabilities(text);
   const { value: written, malformed } = headerOrigin(text);
   const origin = written && Object.hasOwn(ORIGINS, written) ? written : 'learner';
   const goals = entries(section(text, GOALS_HEADING)).map((e) => {
@@ -179,7 +196,7 @@ export function readGoals(dir) {
     if (!e.fields.origin) goal.origin = origin;
     return goal;
   });
-  return { goals, origin, written, malformed, studyBy, studyByBad };
+  return { goals, origin, written, malformed, studyBy, studyByBad, wordsOnly, capabilitiesBad };
 }
 
 // --- the sequence ------------------------------------------------------------
@@ -373,13 +390,14 @@ export function attemptsFor(dir, goal) {
 
 // Six phases, and `in review` is deliberately not one of them: a goal enters review the moment
 // it is met, while the rest of the topic is still being studied, so a topic is routinely both.
-export function derivePhase({ retired, goals, live, rows }) {
+export function derivePhase({ retired, goals, live, rows, wordsOnly = false }) {
   if (retired) return 'retired';
 
   // GOAL SETTING HASN'T HAPPENED. The absence of any goal in the default group is what says so
   // — it is the state add-topic leaves, with a word list and nothing else. The orientation
-  // entry the template ships is in its own group and doesn't count towards this.
-  if (!goals.some((g) => g.group === DEFAULT_GROUP)) return 'not started';
+  // entry the template ships is in its own group and doesn't count towards this. A topic whose
+  // header says `capabilities: none` has had goal setting, which decided there would be none.
+  if (!wordsOnly && !goals.some((g) => g.group === DEFAULT_GROUP)) return 'not started';
 
   // Before asking whether curation has anything to offer, ask whether anything still needs
   // offering. A topic that is finished but whose entries were all dropped is done, not waiting
@@ -463,7 +481,7 @@ function groupRows(rows) {
 }
 
 export function surveyTopic(dir) {
-  const { goals, origin, studyBy } = readGoals(dir);
+  const { goals, origin, studyBy, wordsOnly } = readGoals(dir);
   const log = readLog(dir);
   const live = liveActivities(dir);
   const status = statusOf(dir);
@@ -514,9 +532,12 @@ export function surveyTopic(dir) {
 
   return {
     dir,
-    phase: derivePhase({ retired, goals, live, rows }),
+    phase: derivePhase({ retired, goals, live, rows, wordsOnly }),
     retired,
     origin,
+    // True when goals.md says `capabilities: none`: words and an orientation are the whole topic,
+    // by decision. Curation reads it to know it has nothing to build but those.
+    wordsOnly,
     // `{ date, position, of }` or null: which session this course topic prepares for, and its
     // place among that session's topics. The learn skill offers course topics in this order.
     studyBy,
@@ -545,13 +566,22 @@ export function surveyTopic(dir) {
 // nothing implements is a goal nobody can record an attempt against, and record-attempt.mjs
 // refuses it there rather than writing a line about a goal it can't derive anything from.
 export function idProblems(dir, status = statusOf(dir)) {
-  const { goals, written, malformed, studyByBad } = readGoals(dir);
+  const { goals, written, malformed, studyByBad, wordsOnly, capabilitiesBad } = readGoals(dir);
   const found = [];
   const seen = new Map();
 
   if (malformed) found.push(`goals.md has an origin line that isn't one word: "${malformed}"`);
   if (studyByBad)
     found.push(`goals.md has a study by line that isn't "<yyyy-mm-dd>" or "<yyyy-mm-dd>, <n> of <m>": "${studyByBad}"`);
+  if (capabilitiesBad)
+    found.push(`goals.md has a capabilities line whose only allowed value is "none": "${capabilitiesBad}"`);
+  // Both can't be true. The line is a decision that there is no capability, so a capability under
+  // it means one of the two is stale, and only the person who wrote them can say which.
+  if (wordsOnly) {
+    const caps = goals.filter((g) => g.group === DEFAULT_GROUP).map((g) => g.id);
+    if (caps.length)
+      found.push(`goals.md says capabilities: none, but has capability goals: ${caps.join(', ')}`);
+  }
 
   if (written && !Object.hasOwn(ORIGINS, written))
     found.push(`goals.md has origin: ${written}, which is not one of: ${Object.keys(ORIGINS).join(', ')}`);

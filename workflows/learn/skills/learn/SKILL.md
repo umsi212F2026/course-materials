@@ -138,7 +138,8 @@ Work out, across all topics:
   that blocked it said would have to change — say that, not "this one's blocked".
 - **Cold** — topics untouched long enough that resuming means rereading `notes.md` first. Worth
   flagging as a cost, not as a reproach.
-- **On offer** — topics at _not started_, meaning `goals.md` has nothing in the default group.
+- **On offer** — topics at _not started_, meaning `goals.md` has nothing in the default group
+  and no `capabilities: none` line.
   Nothing has happened to these: the course's suggestions and anything they added themselves
   and haven't got to, which look the same on purpose. Different from a topic that's been
   goal-set and left, and the menu should say so — "you haven't looked at this one" and "this

@@ -1067,7 +1067,7 @@
       <bpmn:sequenceFlow id="f_phase" sourceRef="S_phase" targetRef="Task_topic" />
       <bpmn:sequenceFlow id="f_routed" sourceRef="Task_topic" targetRef="Gate_route" />
       <bpmn:sequenceFlow id="f_goals" name="goals" sourceRef="Gate_route" targetRef="Conv_goals">
-        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">goals.md has no goal in the default group; or Stuck says this topic needs goal setting; or every required goal is met and the learner is here, because adding to a finished topic is what they came for</bpmn:conditionExpression>
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">goals.md has no goal in the default group and no capabilities: none line; or Stuck says this topic needs goal setting; or every required goal is met and the learner is here, because adding to a finished topic is what they came for</bpmn:conditionExpression>
       </bpmn:sequenceFlow>
       <bpmn:sequenceFlow id="f_curate" name="activities" sourceRef="Gate_route" targetRef="Sub_curate">
         <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">a goal has no live candidate left in activities.md</bpmn:conditionExpression>

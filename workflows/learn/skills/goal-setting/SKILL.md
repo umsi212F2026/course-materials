@@ -299,6 +299,14 @@ The absence of any of these is what the rest of the workflow reads as _goal sett
 happened_, so never write a placeholder one. Words and the orientation are in their own groups
 and don't count towards it.
 
+**When the use needs only the words, say so in the file instead.** Being able to follow and join
+a conversation about an area, with an agent or a person, can be met by its vocabulary alone.
+Then write `**capabilities:** none` on its own line under the title, beside any `**origin:**`
+line, and no capability entry. That line is the record that goal setting ran and decided on
+none, which is what lets curation and study go ahead. It is a decision, so confirm it with the
+learner (the instructor, for a course topic) rather than writing it because no capability came
+up. Adding a capability later means deleting the line, or survey reports the two together.
+
 **Moves**
 
 - **DEMAND A CHECKABLE FORM** — Every criterion needs to be checkable. If it isn't, ask "what

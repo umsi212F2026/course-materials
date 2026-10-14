@@ -43,7 +43,7 @@ stale.
 
 |                                                                     |                                                       |
 | ------------------------------------------------------------------- | ----------------------------------------------------- |
-| `goals.md` with no goal in the default group                        | nothing has started. Goal setting.                    |
+| `goals.md` with no goal in the default group, and no `capabilities: none` line | nothing has started. Goal setting.         |
 | goals, no live activities                                           | curation, then study.                                 |
 | live activities, required goals unmet                               | study.                                                |
 | every required goal met, retired or deferred; at least one deferred | `waiting elsewhere`. Study, for the check-in.         |
@@ -102,7 +102,8 @@ not to trust them.
 **A topic at _nothing has started_ goes to goal setting, whatever the queue says.** A fresh
 folder always carries an outstanding `needs: curation` for its orientation entry, because
 `new-topic.mjs` queues one when it makes the folder. Curation cannot act on it: its precondition
-is a goal in the default group, and that is exactly what _not started_ means there isn't. So the
+is a goal in the default group, or the `capabilities: none` line that says goal setting decided
+on none, and _not started_ means there is neither. So the
 item is real but unsatisfiable, and it clears itself once goal setting has run and curation
 follows. Don't go and read curation to work this out, and don't spawn it to watch it decline.
 

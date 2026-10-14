@@ -27,10 +27,15 @@ wrote, verbatim. And don't edit the substance of any entry; that's the generator
 
 ## Preconditions
 
-`<topic-dir>/goals.md` exists and has at least one goal in the **default group** —
-`capabilities`. A file with words and an orientation and nothing else is what `add-topic`
-leaves behind: goal setting hasn't run, this phase has nothing to derive from, and you should
-stop and say so.
+`<topic-dir>/goals.md` exists and has at least one goal in the **default group**
+(`capabilities`), or a `**capabilities:** none` line under its title. A file with words and an
+orientation and nothing else, and no such line, is what `add-topic` leaves behind: goal setting
+hasn't run, this phase has nothing to derive from, and you should stop and say so.
+
+**With the line, the topic is words and an orientation by decision.** Build the orientation and
+`a-words`, and nothing else: there is no capability to serve. A capability goal beside the line
+is a contradiction survey reports; stop and say so rather than guessing which of the two is
+stale.
 
 ## Every goal is served by an activity; words share one
 

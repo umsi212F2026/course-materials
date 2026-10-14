@@ -245,6 +245,12 @@
   state add-topic leaves, and it's what routes a topic to goal setting. Words and the
   orientation entry are in their own groups and don't count towards it. So never write a
   placeholder capability entry; an empty section is the honest signal.
+
+  A TOPIC OF WORDS ALONE says so instead, with `**capabilities:** none` on its own line between
+  the title and `## Goals`, beside any origin line. Goal setting writes it when the use needs
+  the vocabulary and nothing more; it is what tells "decided on no capability" apart from "goal
+  setting hasn't run". `none` is its only value, and survey.mjs reports any other, and the line
+  beside a capability entry.
 -->
 
 ### `o-orientation`
