@@ -31,6 +31,8 @@ import { fileURLToPath } from "node:url";
 import { drawPractice, loadPool, listPools } from "./quiz-draw.mjs";
 import { collectAnswers, buildQueue, mergeGrades, itemGoals, CREDIT_VALUE } from "./lib/grade.mjs";
 import { recordLabel } from "./lib/bank.mjs";
+// THE QUIZ APP'S RENDERER, so a question looks here as it will on the day.
+import { markdown, markdownInline } from "./lib/markdown.mjs";
 // THE LEARN WORKFLOW'S READER, not a second one. What a practice quiz leaves behind is an
 // attempt in a topic's log, so this tool already lives on the far side of that boundary; a
 // private copy of how goals.md parses would be one more thing to keep in step with it.
@@ -81,11 +83,11 @@ function page(items, source) {
           ? `<ul class=choices>${(it.choices ?? [])
               .map(
                 (c, j) =>
-                  `<li><label><input type=radio name="${esc(it.id)}" value="${j}"><span>${esc(c)}</span></label></li>`,
+                  `<li><label><input type=radio name="${esc(it.id)}" value="${j}"><span>${markdownInline(c)}</span></label></li>`,
               )
               .join("")}</ul>`
           : `<textarea name="${esc(it.id)}" rows=5 placeholder="Your answer, in your own words"></textarea>`;
-      return `<section><h2>Question ${i + 1} of ${items.length}</h2><p class=prompt>${esc(it.prompt)}</p>${field}</section>`;
+      return `<section><h2>Question ${i + 1} of ${items.length}</h2><div class=prompt>${markdown(it.prompt)}</div>${field}</section>`;
     })
     .join("");
 
@@ -99,7 +101,19 @@ function page(items, source) {
  .cold{background:#fff6e0;border:1px solid #e0c98a;color:#5d4508;padding:11px 14px;font-size:14px;margin:0 0 26px}
  section{background:#fff;border:1px solid #dcdcd8;border-radius:6px;padding:18px 20px;margin:0 0 18px}
  h2{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#6b6b6b;margin:0 0 10px}
- .prompt{margin:0 0 14px;white-space:pre-wrap}
+ .prompt{margin:0 0 14px}
+ .prompt p,.prompt ul,.prompt ol,.prompt pre,.prompt table,.prompt blockquote{margin:0 0 .8em}
+ .prompt>:last-child{margin-bottom:0}
+ .prompt h4{font-size:inherit;margin:0 0 .4em}
+ .prompt ul,.prompt ol{padding-left:24px}
+ .prompt code{font:.9em ui-monospace,Menlo,monospace;background:#f1f0ea;padding:1px 4px;border-radius:3px}
+ .prompt pre{background:#f6f6f3;border:1px solid #e4e4df;border-radius:5px;padding:10px 12px;overflow-x:auto}
+ .prompt pre code{background:none;padding:0;font-size:13px;line-height:1.45}
+ .prompt table{border-collapse:collapse;font-size:14px;display:block;overflow-x:auto}
+ .prompt th,.prompt td{border:1px solid #dcdcd8;padding:5px 9px;text-align:left;vertical-align:top}
+ .prompt th{background:#f6f6f3}
+ .prompt blockquote{border-left:3px solid #c9d6e6;padding:2px 0 2px 14px;color:#333}
+ ul.choices code{font:.9em ui-monospace,Menlo,monospace;background:#f1f0ea;padding:1px 4px;border-radius:3px}
  textarea{width:100%;box-sizing:border-box;padding:10px;border:1px solid #dcdcd8;border-radius:5px;font:inherit}
  /* A locked answer still has to be readable: WebKit greys disabled text out, and the whole
     point of leaving the page up is that they can read what they wrote while the agent marks
