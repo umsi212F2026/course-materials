@@ -176,15 +176,21 @@ test("exclude takes qualified folder ids and bare single-file ids", () => {
 });
 
 // BACKWARD COMPATIBILITY against the real pools and the real sources: every published pool must
-// draw the same strata, sizes and problems as bank.mjs did at 0ce78cb. The old module is written
+// draw the same strata, sizes and problems as bank.mjs did at BASELINE. The old module is written
 // to a temp tree that mirrors its relative import of moves.mjs.
-test("every real pool draws as it did at 0ce78cb", async (t) => {
+//
+// MOVE THE BASELINE WHEN THE POOL FORMAT GROWS, not when this fails. A pool using something the
+// baseline cannot read (an exclude naming a qualified folder id, say) differs because the format
+// changed, which is a decision, not a regression. The baseline is then the commit that made the
+// change, and every pool should still draw the same against it.
+const BASELINE = "675f524";
+test(`every real pool draws as it did at ${BASELINE}`, async (t) => {
   const ROOT = process.env.SOURCES_ROOT ?? resolve(REPO, "..");
   let oldSrc;
   try {
-    oldSrc = execFileSync("git", ["show", "0ce78cb:workflows/quiz/tools/lib/bank.mjs"], { cwd: REPO, encoding: "utf8" });
+    oldSrc = execFileSync("git", ["show", `${BASELINE}:workflows/quiz/tools/lib/bank.mjs`], { cwd: REPO, encoding: "utf8" });
   } catch {
-    t.skip("commit 0ce78cb is not available");
+    t.skip(`commit ${BASELINE} is not available`);
     return;
   }
   const scratch = mkdtempSync(join(tmpdir(), "pool-compat-"));
