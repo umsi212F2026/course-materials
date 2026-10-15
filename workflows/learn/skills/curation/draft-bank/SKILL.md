@@ -159,6 +159,9 @@ The rules behind that example:
     in the activity's entry already, and a note about the whole scenario goes in its key.
 - **An instruction every question needs** ("answer in two or three sentences") goes at the top
   of each scenario's setup, or in each question of `main-bank`. Nothing is shared across files.
+  It says how to answer, never what the learner may have open: "nothing open in front of them"
+  in vocabulary-moves.md is how the tutor runs a move live, and a bank question is also served
+  in class and in practice, where the setting decides that.
 
 ## What makes a question good
 
