@@ -249,6 +249,33 @@ test("a numbered line inside a fenced block is not taken for an mcq's choices", 
   assert.deepEqual(item.choices, ["Alpha", "Beta"]);
 });
 
+test("a free question keeps its numbered list and everything after it", () => {
+  const body = "And its plan:\n\n1. Add `requireAuth`, which refuses\n   anyone not signed in.\n2. Add a `role` column.\n\nWould you agree to this\nas it stands?";
+  assert.equal(
+    promptOf(body),
+    "And its plan:\n\n1. Add `requireAuth`, which refuses anyone not signed in.\n2. Add a `role` column.\n\nWould you agree to this as it stands?"
+  );
+});
+
+test("an mcq choice that wraps keeps all of its text", () => {
+  const dir = source({
+    "tasks/a-x/s.md": "### q1\n\nWhich is it?\n\n1. Alpha, which runs on\n   two lines\n2. Beta\n",
+    "rubrics/a-x/s.md": "### q1\n\n- **type:** mcq\n- **answer:** 2\n",
+  });
+  const [item] = readFolderBanks(dir).items;
+  assert.deepEqual(item.choices, ["Alpha, which runs on two lines", "Beta"]);
+});
+
+test("an mcq whose question has its own numbered list takes only the last list as choices", () => {
+  const dir = source({
+    "tasks/a-x/s.md": "### q1\n\nThe plan:\n\n1. Build it.\n2. Ship it.\n\nWhich step is wrong?\n\n1. The first\n2. The second\n",
+    "rubrics/a-x/s.md": "### q1\n\n- **type:** mcq\n- **answer:** 2\n",
+  });
+  const [item] = readFolderBanks(dir).items;
+  assert.equal(item.prompt, "The plan:\n\n1. Build it.\n2. Ship it.\n\nWhich step is wrong?");
+  assert.deepEqual(item.choices, ["The first", "The second"]);
+});
+
 test("table rows keep their lines", () => {
   const body = "The table:\n\n| Action | Who |\n| --- | --- |\n| Delete | Owner |\n\nWhat is wrong?";
   assert.equal(promptOf(body), body);

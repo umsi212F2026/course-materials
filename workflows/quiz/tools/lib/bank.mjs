@@ -101,17 +101,18 @@ function fields(body) {
   return out;
 }
 
-// A question body is Markdown, optionally followed by a numbered list that is the mcq's choices.
+// A question body is Markdown. An mcq's body ends with a numbered list that is its choices.
 // Prose is wrapped at the column, and a hard newline inside a sentence would reach a reader that
 // shows text as it is, so a wrapped line joins the one before it with a space. Blank lines stay,
 // so a two-paragraph question keeps its break.
 //
 // EVERYTHING ELSE KEEPS ITS LINES, because there the line break is the structure. A fenced block
 // is copied verbatim, blank lines and indentation included: it is a log or a file, and joining it
-// made one run-on line. A line starting a blockquote, a bullet, a table row or a heading starts a
-// line of its own. A wrapped bullet still joins onto its own bullet; a table row or a heading
-// never takes a continuation.
-const BLOCK_START = /^\s*(?:>|\||#{1,6}\s|[-*+]\s)/;
+// made one run-on line. A line starting a blockquote, a bullet, a numbered item, a table row or a
+// heading starts a line of its own. A wrapped list item still joins onto its own item; a table
+// row or a heading never takes a continuation.
+const BLOCK_START = /^\s*(?:>|\||#{1,6}\s|[-*+]\s|\d+\.\s)/;
+const LIST_ITEM = /^([-*+]|\d+\.)\s/;
 const FENCE = /^(`{3,}|~{3,})/;
 
 function unwrap(text) {
@@ -134,8 +135,8 @@ function unwrap(text) {
       if (out.length && out[out.length - 1] !== '') out.push('');
       joinable = false;
     } else if (BLOCK_START.test(line)) {
-      // A bullet keeps its indentation, which is what nests it; the rest are trimmed.
-      out.push(/^[-*+]\s/.test(t) ? line.trimEnd() : t);
+      // A list item keeps its indentation, which is what nests it; the rest are trimmed.
+      out.push(LIST_ITEM.test(t) ? line.trimEnd() : t);
       joinable = !/^[|#]/.test(t);
     } else if (joinable) {
       out[out.length - 1] += ` ${t}`;
@@ -147,26 +148,34 @@ function unwrap(text) {
   return out.join('\n').trim();
 }
 
-function splitChoices(body) {
+// ONLY AN mcq HAS CHOICES. A free question's numbered list is part of what it asks about (an
+// agent's plan, say), and reading it as choices would drop it and everything after it. An mcq's
+// choices are its LAST list starting at `1.`, so a numbered plan in its question stays put. A
+// choice that wraps joins onto its own line.
+function splitChoices(body, type) {
+  if (type !== 'mcq') return { prompt: unwrap(body), choices: null };
   const lines = body.split('\n');
   // A numbered line inside a fenced block is part of a log or a file, not a choice.
   let fence = null;
-  const first = lines.findIndex((l) => {
+  let first = -1;
+  lines.forEach((l, i) => {
     const t = l.trim();
     if (fence) {
       if (t.startsWith(fence)) fence = null;
-      return false;
+      return;
     }
     const f = FENCE.exec(t);
     if (f) fence = f[1];
-    return !f && /^\d+\.\s+/.test(t);
+    else if (/^1\.\s+/.test(t)) first = i;
   });
   if (first === -1) return { prompt: unwrap(body), choices: null };
-  const choices = lines
-    .slice(first)
-    .map((l) => /^\d+\.\s+(.*)$/.exec(l.trim()))
-    .filter(Boolean)
-    .map((m) => m[1].trim());
+  const choices = [];
+  for (const l of lines.slice(first)) {
+    const t = l.trim();
+    const m = /^\d+\.\s+(.*)$/.exec(t);
+    if (m) choices.push(m[1].trim());
+    else if (t) choices[choices.length - 1] += ` ${t}`;
+  }
   return { prompt: unwrap(lines.slice(0, first).join('\n')), choices };
 }
 
@@ -246,8 +255,8 @@ export function readBank(dir, label = '') {
         continue;
       }
 
-      const { prompt, choices } = splitChoices(s.body);
       const type = r.type || 'free';
+      const { prompt, choices } = splitChoices(s.body, type);
       // Which bank this came out of. A pool can then say how many to draw from each, which is
       // what `curation/generate` means by a bank entry having to "say how many and how to pick".
       const base = name.replace(/\.md$/, '');
@@ -387,9 +396,9 @@ export function readFolderBanks(dir, label = '') {
           continue;
         }
 
-        const { prompt: body, choices } = splitChoices(s.body);
-        const prompt = setup ? `${setup}\n\n${body}` : body;
         const type = r.type || 'free';
+        const { prompt: body, choices } = splitChoices(s.body, type);
+        const prompt = setup ? `${setup}\n\n${body}` : body;
         const goals = (r.goal ?? '').split(',').map((g) => g.replace(/`/g, '').trim()).filter(Boolean);
         const qc = parseQuestionCases(r.cases, goals, label3);
         problems.push(...qc.problems);
