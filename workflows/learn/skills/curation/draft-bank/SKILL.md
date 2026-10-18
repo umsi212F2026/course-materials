@@ -35,7 +35,8 @@ in `checks`", read the words in group `vocabulary`. In `sample` mode that is onl
 no file in `tasks/a-words/` yet. In `full` mode it is every word, including one sampled at stop
 1. Each scenario is one word, named for its goal id, and each question's `goal:` is that one
 word, with its `move:` set. **A word's bank is one DISTINGUISH question per entry on its
-`nearest confusable` line, then one or two CATCH questions, and nothing else**: no DEFINE or
+`nearest confusable` line, then one or two CATCH questions, aiming for one free and one mcq
+and keeping only the good ones, and nothing else**: no DEFINE or
 INTERPRET (reception moves, which can never meet the word's bar; the tutor sets them live as
 help) and no APPLY (it needs the learner's own work). See "What a word's bank holds" in
 vocabulary-moves.md. A word's target size is that, not three.
@@ -195,7 +196,11 @@ the criterion is met here, no more and no less. A statement that asks for less c
 goal too easily; one that asks for more holds the learner to a bar the goal never set.
 
 **An mcq has one right choice**, and each wrong one is wrong for a reason the setup supplies,
-not by a technicality.
+not by a technicality. One line per choice, however long it runs. **Length must not give the
+right choice away**: keep the choices within a few words of each other, and across the topic's
+mcqs make the right one the shortest on some and the longest on few, since left alone it drifts
+longest on nearly every one. Vary its position too: choices reach the learner in the order
+written.
 
 Write no em dash or en dash anywhere in a bank: these files ship to students in the course's
 own voice.

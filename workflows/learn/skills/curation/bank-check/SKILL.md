@@ -51,9 +51,12 @@ generator never declared collects evidence the generator was never reviewed for.
 
 **For `a-words`, also check each word's bank against "What a word's bank holds" in
 vocabulary-moves.md**: one DISTINGUISH question per entry on the word's `nearest confusable`
-line, aimed at that entry, and one or two CATCH questions. Report a DEFINE, INTERPRET or APPLY
-question in a bank drafted under this rule, a confusable with no DISTINGUISH question, and a
-DISTINGUISH aimed at a synonym. In a released topic's older bank, list its DEFINE and INTERPRET
+line, aimed at that entry, and one or two CATCH questions, at least one of them free. Report a
+DEFINE, INTERPRET or APPLY question in a bank drafted under this rule, a confusable with no
+DISTINGUISH question, a DISTINGUISH aimed at a synonym, a word whose only CATCH is an mcq, and an
+mcq CATCH with a wrong choice that doesn't misuse the word. A word with no mcq CATCH is not a
+finding: the drafter keeps one only when it comes out good. Across the topic's mcqs, report a
+right choice that is the longest on most of them, or that sits in one position on most. In a released topic's older bank, list its DEFINE and INTERPRET
 questions instead, for the instructor to decide at the course path's recuration.
 
 ## Every question, six checks

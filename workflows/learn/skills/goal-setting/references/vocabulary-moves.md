@@ -65,7 +65,7 @@ And the labels already served, from
 | **DEFINE**      | says what the word names, in their own words, nothing open in front of them      | the definition is right, and is neither the source's sentence reworded nor just another of its names | reception  |
 | **INTERPRET**   | reads a sentence they haven't seen that uses the word, says what's being claimed | the claim is recovered, including what it rules out                           | reception  |
 | **DISTINGUISH** | given a confusable term, says what separates them                                | the difference named is the one that matters, not an incidental one           | production |
-| **CATCH**       | given a sentence that misuses the word, says what's wrong                        | the actual error is named, not a different quibble                            | production |
+| **CATCH**       | given a sentence that misuses the word, says what's wrong; or, as a multiple choice, picks the one statement of several that doesn't misuse it | the actual error is named, not a different quibble; for a multiple choice, the right choice is picked | production |
 | **APPLY**       | uses the word about something that really happened in their own work             | the instance is genuinely one of these, and is theirs                         | production |
 
 The **pass condition** is what an adjudicator rules against — the criterion above, one
@@ -87,6 +87,19 @@ never meet `one production pass`, so a banked one is a question the word can nev
 on; APPLY needs the learner's own work, which a bank cannot hold. So a word's bank size follows
 from its confusables, and adding a real near miss to `goals.md` is how a word gets more
 questions. A word with no confusable has only its CATCH questions.
+
+**Aim for two CATCH questions: one the learner answers in their own words, and one multiple
+choice.** Keep only the good ones: a multiple choice that can't be made good is left out, not
+kept to make up the number, and the word keeps its free-response CATCH alone. A multiple choice
+CATCH's choices are four statements about one described situation, each using the word: three
+misuse it, each the way a
+learner really might (the confusion on the word's _watch for_ line, the word read as its
+confusable, the word stretched past what it names), and one uses it correctly. Picking the
+correct one is spotting the error in the other three, so it is a production move like any
+CATCH, and it passes when the right choice is picked. Each wrong choice is wrong for a reason
+the situation supplies, never on a technicality. The choices are close in length, and across a
+topic's multiple choices the right one is not the longest on most of them and does not sit in
+one position.
 
 **In the file, the CATCH questions come first.** A word's questions are studied in file order,
 and a DISTINGUISH names the very confusion a CATCH is often built on, so a DISTINGUISH served
