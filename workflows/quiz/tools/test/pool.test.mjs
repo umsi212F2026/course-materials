@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { join, dirname, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { execFileSync } from "node:child_process";
-import { readBank, readPoolSources, applyPool, recordLabel } from "../lib/bank.mjs";
+import { readBank, readPoolSources, applyPool, recordLabel, keyParts } from "../lib/bank.mjs";
 import { drawPractice } from "../quiz-draw.mjs";
 
 const REPO = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "..");
@@ -160,6 +160,51 @@ test("topic form checks exhaustiveness against single-file banks only", () => {
   assert.ok(!problems.some((p) => p.startsWith("a-y")));
 });
 
+test("a key joining banks with | is one stratum drawn from their union", () => {
+  const root = workspace(T1);
+  const key = "learning-topics/t1/a-x | learning-topics/t1/a-y";
+  const { shape, strata, problems } = drawn({ draw: { [key]: 1 } }, root);
+  assert.deepEqual(problems, []);
+  assert.deepEqual(shape, [[key, 1, 6]]);
+  assert.deepEqual(
+    [...new Set(strata[0].items.map((i) => i.bank))].sort(),
+    ["learning-topics/t1/a-x", "learning-topics/t1/a-y"],
+  );
+  // A practice draw serves the count from it, and reports nothing short.
+  const d = drawPractice({ draw: { [key]: 1 } }, root, { seed: "s", preferUnseen: false });
+  assert.equal(d.items.length, 1);
+  assert.deepEqual(d.problems, []);
+});
+
+test("a joined key reads each part's source, even across topics", () => {
+  const root = workspace({
+    ...T1,
+    "learning-topics/t2/tasks/b.md": ids(2, "b"),
+    "learning-topics/t2/rubrics/b.md": idKeys(2, "b"),
+  });
+  const key = "learning-topics/t1/items | learning-topics/t2/b";
+  const { shape, problems } = drawn({ draw: { [key]: 2 } }, root);
+  assert.deepEqual(problems, []);
+  assert.deepEqual(shape, [[key, 2, 6]]);
+});
+
+test("a joined key naming a bank that does not exist is a problem", () => {
+  const root = workspace(T1);
+  const key = "learning-topics/t1/a-x | learning-topics/t1/a-nope";
+  const { shape, problems } = drawn({ draw: { [key]: 1 } }, root);
+  // The part that exists still supplies the stratum; only the missing one is reported.
+  assert.deepEqual(shape, [[key, 1, 5]]);
+  assert.deepEqual(problems, [`pool draws from learning-topics/t1/a-nope, which is not a file in the topic's tasks/`]);
+});
+
+test("exclude applies inside a joined stratum", () => {
+  const root = workspace(T1);
+  const key = "learning-topics/t1/a-y | learning-topics/t1/items";
+  const { strata, problems } = drawn({ draw: { [key]: 1 }, exclude: { "learning-topics/t1/a-y/s1/q1": "", i2: "" } }, root);
+  assert.deepEqual(problems, []);
+  assert.deepEqual(strata[0].items.map((i) => i.id), ["i1", "i3", "i4"]);
+});
+
 test("exclude takes qualified folder ids and bare single-file ids", () => {
   const root = workspace(T1);
   const pool = {
@@ -209,7 +254,7 @@ test(`every real pool draws as it did at ${BASELINE}`, async (t) => {
     const pool = JSON.parse(readFileSync(join(dir, name), "utf8"));
     const sources = pool.topic
       ? [join("learning-topics", pool.topic)]
-      : Object.keys(pool.draw ?? {}).map((k) => k.split("/").slice(0, -1).join("/"));
+      : Object.keys(pool.draw ?? {}).flatMap(keyParts).map((k) => k.split("/").slice(0, -1).join("/"));
     const missing = sources.filter((s) => !existsSync(join(ROOT, s)));
     if (missing.length) {
       t.diagnostic(`${name}: skipped, ${missing.join(", ")} not under ${ROOT}`);

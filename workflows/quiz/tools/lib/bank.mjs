@@ -461,6 +461,9 @@ export function readFolderBanks(dir, label = '') {
  *  The sources read are returned as `sources`, beside items and problems, so applyPool can
  *  split each key the same way without touching the disk again.
  *
+ *  A JOINED KEY, `<key> | <key>`, is one stratum drawn from the union of its parts (see
+ *  applyPool), so each part's source is read as if it were a key of its own.
+ *
  *  A POOL CARRYING `topic` IS THE SINGLE-SOURCE FORM and predates this. Its draw keys are bare
  *  file names under one topic, and it is read exactly as before, so a session baked before this
  *  change re-bakes unchanged. That is the only reason the old shape survives.
@@ -482,7 +485,7 @@ export function readPoolSources(pool, root) {
     }
     return parts.slice(0, -1).join('/');
   };
-  const sources = new Set(Object.keys(pool.draw ?? {}).map(sourceOf));
+  const sources = new Set(Object.keys(pool.draw ?? {}).flatMap(keyParts).map(sourceOf));
 
   for (const source of sources) {
     if (!source) {
@@ -502,6 +505,9 @@ export function readPoolSources(pool, root) {
 
   return { items, problems, sources: read };
 }
+
+/** The keys a draw key joins with ` | `; a plain key is its own one part. */
+export const keyParts = (key) => key.split(" | ").map((k) => k.trim());
 
 /** Split a draw key into the source it falls under and the rest: the longest of `sources` that
  *  is the key or a prefix of it at a `/`. The empty source (the topic form) prefixes every key.
@@ -572,21 +578,26 @@ export function applyPool(bank, pool) {
     // banks; <activity>/<scenario> is one scenario of a folder activity. A topic-level key comes
     // back as one stratum per bank it spread across, each named by the key and carrying `bank`,
     // so a caller drawing per stratum honours the spread without knowing about it.
+    //
+    // A JOINED KEY, `<key> | <key>`, is ONE stratum whose questions are the union of its parts,
+    // so the banks share the count: a draw of 1 from two banks gives each student one question
+    // from either, each question as likely as any other, as a single bank already shares its
+    // count among the goals it holds. It carries no `bank`, since it has several. A part that
+    // does not resolve is reported as a plain key would be, and the rest still supply it.
     const sources = bank.sources ?? (pool.topic ? [''] : []);
     const avail = (b) => (byBank.get(b) ?? []).filter((i) => !excluded.has(i.id));
-    const strata = [];
-    for (const [name, take] of Object.entries(pool.draw)) {
+
+    // What one plain key names: { whole: [{ bank, items }] } for a whole source, { owner, items }
+    // for a bank or one scenario of it, or { problem } when it names nothing.
+    const resolveKey = (name) => {
       const at = byBank.has(name) ? null : splitKey(name, sources);
       if (at && at.rest === '') {
         const prefix = at.source ? `${at.source}/` : '';
-        const banks = [...byBank.keys()]
+        const whole = [...byBank.keys()]
           .filter((b) => b.startsWith(prefix) && !b.slice(prefix.length).includes('/'))
           .sort()
           .map((b) => ({ bank: b, items: avail(b) }));
-        const { parts, short } = spread(take, banks);
-        if (short) problems.push(`pool draws ${take} from ${name}, which has only ${take - short} available`);
-        strata.push(...parts.map((p) => ({ name, take: p.take, items: p.items, bank: p.bank })));
-        continue;
+        return { whole };
       }
       // `owner` is the bank the stratum comes out of: the key itself, or a scenario key's activity.
       let owner = name;
@@ -596,26 +607,49 @@ export function applyPool(bank, pool) {
         owner = at.source ? `${at.source}/${activity}` : activity;
         scenario = s;
       }
-      if (!byBank.has(owner)) {
-        problems.push(`pool draws from ${name}, which is not a file in the topic's tasks/`);
-        continue;
-      }
+      if (!byBank.has(owner)) return { problem: `pool draws from ${name}, which is not a file in the topic's tasks/` };
       let available = avail(owner);
       if (scenario !== null) {
         if (!byBank.get(owner).some((i) => 'scenario' in i)) {
-          problems.push(`pool draws from ${name}, but ${owner} is a single-file bank, which has no scenarios`);
-          continue;
+          return { problem: `pool draws from ${name}, but ${owner} is a single-file bank, which has no scenarios` };
         }
         if (!byBank.get(owner).some((i) => i.scenario === scenario)) {
-          problems.push(`pool draws from ${name}, but ${owner} has no scenario ${scenario}`);
-          continue;
+          return { problem: `pool draws from ${name}, but ${owner} has no scenario ${scenario}` };
         }
         available = available.filter((i) => i.scenario === scenario);
       }
-      if (available.length < take) {
-        problems.push(`pool draws ${take} from ${name}, which has only ${available.length} available`);
+      return { owner, items: available };
+    };
+
+    const strata = [];
+    for (const [name, take] of Object.entries(pool.draw)) {
+      const parts = keyParts(name);
+      if (parts.length > 1) {
+        const items = [];
+        for (const part of parts) {
+          const got = resolveKey(part);
+          if (got.problem) problems.push(got.problem);
+          else items.push(...(got.whole ? got.whole.flatMap((b) => b.items) : got.items));
+        }
+        if (items.length < take) problems.push(`pool draws ${take} from ${name}, which has only ${items.length} available`);
+        strata.push({ name, take, items });
+        continue;
       }
-      strata.push({ name, take, items: available, bank: owner });
+      const got = resolveKey(name);
+      if (got.problem) {
+        problems.push(got.problem);
+        continue;
+      }
+      if (got.whole) {
+        const { parts: spreadParts, short } = spread(take, got.whole);
+        if (short) problems.push(`pool draws ${take} from ${name}, which has only ${take - short} available`);
+        strata.push(...spreadParts.map((p) => ({ name, take: p.take, items: p.items, bank: p.bank })));
+        continue;
+      }
+      if (got.items.length < take) {
+        problems.push(`pool draws ${take} from ${name}, which has only ${got.items.length} available`);
+      }
+      strata.push({ name, take, items: got.items, bank: got.owner });
     }
     // EXHAUSTIVE ONLY IN THE SINGLE-SOURCE FORM. With one topic, a bank file the pool never
     // mentions is drift: the pool was written against a topic that has since grown a file. With

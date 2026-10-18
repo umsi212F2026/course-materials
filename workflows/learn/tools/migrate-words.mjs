@@ -43,7 +43,7 @@ import { existsSync, readFileSync, readdirSync, writeFileSync, mkdirSync, rmSync
 import { join, dirname, basename, resolve } from 'node:path';
 import { pathToFileURL, fileURLToPath } from 'node:url';
 import { readGoals, readActivities } from './lib/topic.mjs';
-import { rawSections } from '../../quiz/tools/lib/bank.mjs';
+import { rawSections, keyParts } from '../../quiz/tools/lib/bank.mjs';
 
 const USAGE = `usage:
   node workflows/learn/tools/migrate-words.mjs <topic-folder> [--dry-run]
@@ -324,16 +324,19 @@ export function poolWarnings(plan, dir, repo = REPO) {
       continue;
     }
     for (const key of Object.keys(pool.draw ?? {})) {
-      const parts = key.split('/');
-      let bank = null;
-      if (pool.topic) bank = pool.topic === folder ? parts[0] : null;
-      else {
-        const at = parts.indexOf('learning-topics');
-        if (at !== -1 && parts[at + 1] === folder) bank = parts[at + 2] ?? null;
+      // A joined key draws from each of its parts, so any one of them can be the shrunk bank.
+      for (const part of keyParts(key)) {
+        const parts = part.split('/');
+        let bank = null;
+        if (pool.topic) bank = pool.topic === folder ? parts[0] : null;
+        else {
+          const at = parts.indexOf('learning-topics');
+          if (at !== -1 && parts[at + 1] === folder) bank = parts[at + 2] ?? null;
+        }
+        if (!bank || !counts.has(bank)) continue;
+        const [before, after] = counts.get(bank);
+        out.push(`quiz-bank/${name}: "${key}" draws from bank ${bank}, which this run takes from ${before} questions to ${after}; update the pool in the same change.`);
       }
-      if (!bank || !counts.has(bank)) continue;
-      const [before, after] = counts.get(bank);
-      out.push(`quiz-bank/${name}: "${key}" draws from bank ${bank}, which this run takes from ${before} questions to ${after}; update the pool in the same change.`);
     }
   }
   return out;

@@ -307,6 +307,15 @@ test('warns for each pool key naming a bank of this topic that the run shrinks o
   assert.match(poolWarnings(planMigration(words), words, repo)[0], /from 3 questions to 0/);
 });
 
+test('warns for a joined pool key one of whose parts is a bank the run shrinks', () => {
+  const key = 'learning-topics/other/items | learning-topics/topic/items';
+  const repo = repoWith({ 'session-9.pool.json': { draw: { [key]: 1 } } });
+  const dir = build();
+  assert.deepEqual(poolWarnings(planMigration(dir), dir, repo), [
+    `quiz-bank/session-9.pool.json: "${key}" draws from bank items, which this run takes from 4 questions to 1; update the pool in the same change.`,
+  ]);
+});
+
 test('with no quiz-bank there are no pool warnings', () => {
   const dir = build();
   assert.deepEqual(poolWarnings(planMigration(dir), dir, join(tmpdir(), 'no-such-repo-here')), []);
