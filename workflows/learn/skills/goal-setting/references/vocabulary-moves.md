@@ -101,9 +101,11 @@ the situation supplies, never on a technicality. The choices are close in length
 topic's multiple choices the right one is not the longest on most of them and does not sit in
 one position.
 
-**In the file, the CATCH questions come first.** A word's questions are studied in file order,
-and a DISTINGUISH names the very confusion a CATCH is often built on, so a DISTINGUISH served
-first tells the learner where the CATCH's error is.
+**Any order in the file will do.** A word's questions are studied in file order, and the picker
+skips the rest once the word is met, so a later question is served only after a miss on an
+earlier one, when the learner has just had that one's feedback. An earlier question that names
+the confusion a later one is built on gives away nothing that feedback hasn't. Most learners meet
+only the first, so put first the move you would most like a word tested on.
 
 **DEFINE and INTERPRET are follow-ups, set live as help.** When a learner misses a banked
 question, the tutor may set a DEFINE or an INTERPRET for that word, live, to rebuild what the

@@ -83,7 +83,10 @@ it has them, from `goals.md`, resolving a reference criterion through
    the rest, and not through a question written before it in the same scenario. Study serves a
    scenario's questions in file order, skipping one no longer needed, so a later question may
    reveal an earlier one's answer, but none may reveal a later one's. Nor may a question depend
-   on another's answer to be answered, which a learner who skipped that one never saw.
+   on another's answer to be answered, which a learner who skipped that one never saw. **Except
+   in `a-words`**: every question in a word's file names that one word, so a later one is served
+   only after a miss on an earlier one, once its feedback has been given, and an earlier question
+   revealing a later one's answer is not a finding there.
 5. **An mcq is unambiguous.** Exactly one choice is right, given the setup, and it is the one
    `answer` names (1-based). Each wrong choice is wrong for a reason the setup supplies, not on a
    technicality a careful learner could argue.
