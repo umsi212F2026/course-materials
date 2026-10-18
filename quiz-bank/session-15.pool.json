@@ -24,19 +24,17 @@
     "learning-topics/debug-deployed-2026-10/a-words": 1,
     "learning-topics/debug-deployed-2026-10/a-locate-described-failure": 1,
     "learning-topics/deploy-pipeline-2026-10/a-words": 1,
-    "learning-topics/deploy-pipeline-2026-10/a-judge-pipeline-plan": 1,
+    "learning-topics/deploy-pipeline-2026-10/a-judge-pipeline-plan | learning-topics/deploy-pipeline-2026-10/a-judge-database-plan": 1,
+    "learning-topics/deploy-pipeline-2026-10/a-diagnose-from-evidence": 1,
     "learning-topics/sign-in-and-permissions-2026-10/a-words": 1,
-    "learning-topics/sign-in-and-permissions-2026-10/a-critique-permissions-plan": 1,
+    "learning-topics/sign-in-and-permissions-2026-10/a-critique-permissions-plan | learning-topics/sign-in-and-permissions-2026-10/a-critique-sign-in-plan": 1,
     "learning-topics/defensive-measures-2026-10/a-words": 1
   },
   "exclude": {
-    "learning-topics/commits-and-history-2026-09/a-words/w-history/q-log-last-commit": "full credit needs a point the question never asks for",
-    "learning-topics/commits-and-history-2026-09/a-words/w-merge/q-merged-no-conflicts": "the right choice is much the longest",
-    "learning-topics/coding-agents-2026-09/a-words/w-compaction/q-compacted-report": "the right choice is much the longest",
-    "learning-topics/coding-agents-2026-09/a-words/w-input-tokens/q-what-counts-as-input": "the right choice is much the longest",
-    "learning-topics/react-apps-2026-09/a-words/w-routing/q-routing-same-page-every-address": "the right choice is much the longest",
-    "learning-topics/software-design-2026-09/a-words/w-spike/q-spike-twenty-minutes": "the prompt states what earns the credit",
-    "q-manual-newest-first": "credit turns on one word rather than on what the answer describes",
-    "q-manual-make-sure-notes-work": "credit accepts only two of the valid pushbacks"
+    "learning-topics/deploy-pipeline-2026-10/a-judge-database-plan/clubhop/q1": "names its fault in plain words, close to a giveaway beside the rest",
+    "learning-topics/deploy-pipeline-2026-10/a-diagnose-from-evidence/swapshelf/q3": "much heavier than the rest: two steps the prompt does not signal",
+    "learning-topics/deploy-pipeline-2026-10/a-diagnose-from-evidence/plotshare/q1": "much lighter than the rest: the evidence states the answer",
+    "learning-topics/deploy-pipeline-2026-10/a-diagnose-from-evidence/tidecall/q1": "much lighter than the rest: the evidence states the answer",
+    "learning-topics/deploy-pipeline-2026-10/a-diagnose-from-evidence/tidecall/q2": "much lighter than the rest: the evidence states the answer"
   }
 }

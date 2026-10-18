@@ -228,7 +228,7 @@ test("exclude takes qualified folder ids and bare single-file ids", () => {
 // baseline cannot read (an exclude naming a qualified folder id, say) differs because the format
 // changed, which is a decision, not a regression. The baseline is then the commit that made the
 // change, and every pool should still draw the same against it.
-const BASELINE = "675f524";
+const BASELINE = "8700681";
 test(`every real pool draws as it did at ${BASELINE}`, async (t) => {
   const ROOT = process.env.SOURCES_ROOT ?? resolve(REPO, "..");
   let oldSrc;
