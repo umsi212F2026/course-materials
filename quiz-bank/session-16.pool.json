@@ -1,0 +1,12 @@
+{
+  "_note": "The per-session selection: how many questions to draw from each bank on one date. Published, because a practice quiz is generated from this same file by the same library, so students practise the shape they will actually face. It says how many from where and nothing about which questions: the draw is random per student, and the questions themselves live in the sources named below, which students already have.",
+  "session": 16,
+  "date": "2026-10-27",
+  "draw": {
+    "learning-topics/simulation-2026-10/a-words/w-simulation | learning-topics/simulation-2026-10/a-words/w-simulation-model": 1,
+    "learning-topics/simulation-2026-10/a-words/w-model-parameter": 1,
+    "learning-topics/simulation-2026-10/a-words/w-stochastic": 1,
+    "learning-topics/simulation-2026-10/a-words/w-simulation-trial | learning-topics/simulation-2026-10/a-words/w-simulation-outcome": 1,
+    "learning-topics/simulation-2026-10/a-words/w-outcome-distribution": 1
+  }
+}
