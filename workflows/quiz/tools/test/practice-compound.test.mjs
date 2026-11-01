@@ -82,3 +82,9 @@ test("--score reports a compound as one row with its parts", () => {
   assert.equal(b.expected, "Because blue.");
   assert.equal(out.score, 0.25);
 });
+
+test("record counts a compound's multiple-choice parts as settled in code", () => {
+  const dir = mkdtempSync(join(tmpdir(), "practice-"));
+  const plain = { id: "q1", type: "mcq", prompt: "?", choices: ["a", "b"], answer: 0 };
+  assert.equal(record(dir, "s", [compound, plain], {}).mcq, 2);
+});

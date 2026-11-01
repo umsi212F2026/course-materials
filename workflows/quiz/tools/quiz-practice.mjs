@@ -310,7 +310,8 @@ export function record(dir, source, items, answers) {
   // path that consumes a verdict, which multiple choice is not, so every mcq verdict came back
   // as "matches no answered item" and the run refused to score. The instructor's runner never
   // hit it because its verdicts file only ever holds the skill's rulings.
-  const mcq = rows.filter((r) => r.item.type === "mcq");
+  // COUNTED PER GRADED UNIT, so a compound's multiple-choice parts are counted as a plain mcq is.
+  const mcq = rows.flatMap((r) => gradedParts(r.item)).filter((u) => u.type === "mcq");
   return { queue, mcq: mcq.length, date };
 }
 
