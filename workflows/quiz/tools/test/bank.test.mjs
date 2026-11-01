@@ -95,6 +95,49 @@ test("only the title is dropped from the setup, not a later `# ` line", () => {
   assert.equal(item.setup, "Run this:\n\n```\n# list the files\nls\n```");
 });
 
+const TWO_KEY = "### q1\n\n- **goal:** g-one\n- **answer:** A.\n\n### q2\n\n- **goal:** g-one\n- **answer:** B.\n";
+
+test("## Framing splits the top part: setup and prompt carry no framing", () => {
+  const dir = source({
+    "tasks/a-x/crumbs.md":
+      "# Crumbs\n\nThe app: Crumbs.\n\n## Framing\n\nEach question is a separate decision.\n\n### q1\n\nWhat first?\n\n### q2\n\nWhat next?\n",
+    "rubrics/a-x/crumbs.md": TWO_KEY,
+  });
+  const [item] = readFolderBanks(dir).items;
+  assert.equal(item.setup, "The app: Crumbs.");
+  assert.equal(item.framing, "Each question is a separate decision.");
+  assert.ok(!item.prompt.includes("Framing"));
+  assert.ok(!item.prompt.includes("separate decision"));
+  assert.equal(item.prompt, "The app: Crumbs.\n\nWhat first?");
+});
+
+test("a file with no marker has empty framing and reads as before", () => {
+  const dir = source({ "tasks/a-x/crumbs.md": CRUMBS_TASK, "rubrics/a-x/crumbs.md": CRUMBS_RUBRIC });
+  const [item] = readFolderBanks(dir).items;
+  assert.equal(item.framing, "");
+  assert.equal(item.setup, "The app: Crumbs.");
+});
+
+test("the marker tolerates trailing spaces and CRLF", () => {
+  const dir = source({
+    "tasks/a-x/crumbs.md": "The app: Crumbs.\n\n## Framing  \r\n\nEach question is a separate decision.\n\n### q1\n\nWhat first?\n\n### q2\n\nWhat next?\n",
+    "rubrics/a-x/crumbs.md": TWO_KEY,
+  });
+  const [item] = readFolderBanks(dir).items;
+  assert.equal(item.setup, "The app: Crumbs.");
+  assert.equal(item.framing, "Each question is a separate decision.");
+});
+
+test("a top part that is only framing leaves setup empty", () => {
+  const dir = source({
+    "tasks/a-x/crumbs.md": "## Framing\n\nEach question is a separate decision.\n\n### q1\n\nName it.\n\n### q2\n\nName another.\n",
+    "rubrics/a-x/crumbs.md": TWO_KEY,
+  });
+  const [item] = readFolderBanks(dir).items;
+  assert.equal(item.setup, "");
+  assert.equal(item.prompt, "Name it.");
+});
+
 test("a vocabulary move becomes a tag", () => {
   const dir = source({
     "tasks/a-words/idempotent.md": "### w1\n\nSpot the error.\n",

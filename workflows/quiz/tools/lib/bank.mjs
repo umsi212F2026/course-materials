@@ -42,6 +42,14 @@
 // too, with no items and no problems: authored topics kept study material in folders like that
 // before folder banks existed, and calling every file in one a broken bank would bury the real
 // problems under dozens of phantom ones.
+//
+// A SCENARIO'S FRAMING NEVER REACHES A PROMPT. A tasks/ top part may end in a `## Framing` line
+// and the text under it, which introduces the run of questions ("each question is a different
+// change"). An item's `setup` is the scenario above the marker, its `framing` the text below it,
+// and its `prompt` is the setup and the question, never the framing: a draw shows one question,
+// and words about a run read as broken above it. Study prints the framing itself, before the
+// first question it serves from a scenario (next-item.mjs). A file without the marker reads as
+// before, with `framing` empty.
 
 import { readFileSync, readdirSync, existsSync, statSync } from 'node:fs';
 import { join } from 'node:path';
@@ -344,6 +352,38 @@ function topPart(text) {
   return out.join('\n').trim();
 }
 
+// THE MARKER IS EXACT, trailing whitespace aside (a CRLF file's `\r` included). Any other `##` line
+// in a scenario's top part is a near miss, reported rather than guessed at, because a guess wrong
+// either way puts text in front of a learner that was not meant for them.
+const FRAMING_MARKER = /^## Framing\s*$/;
+
+// A tasks/ file's top part, split at its `## Framing` line: the scenario above it, which every
+// question is shown with, and the framing below it, which introduces the run and is shown in study
+// before the first question only. Same title rule as topPart. A second marker stays in the framing
+// as text and is counted, so the caller can report it.
+function scenarioParts(text) {
+  const setup = [];
+  const framing = [];
+  const nearMisses = [];
+  let markers = 0;
+  let titled = false;
+  for (const line of text.split('\n')) {
+    if (/^###\s/.test(line)) break;
+    if (!titled && /^#\s/.test(line)) {
+      titled = true;
+      continue;
+    }
+    if (FRAMING_MARKER.test(line)) {
+      markers++;
+      if (markers === 1) continue;
+    } else if (/^##/.test(line)) {
+      nearMisses.push(line.trimEnd());
+    }
+    (markers ? framing : setup).push(line);
+  }
+  return { setup: setup.join('\n').trim(), framing: framing.join('\n').trim(), markers, nearMisses };
+}
+
 /** Read every folder bank in one source: tasks/<activity>/<scenario>.md against
  *  rubrics/<activity>/<scenario>.md. Returns { items, problems } like readBank, and readBank
  *  calls it, so every caller sees both kinds. Problems are collected, never thrown. */
@@ -380,7 +420,7 @@ export function readFolderBanks(dir, label = '') {
       }
 
       const taskText = readFileSync(join(tasksDir, activity, file), 'utf8');
-      const setup = topPart(taskText);
+      const { setup, framing } = scenarioParts(taskText);
       const seen = new Set();
       for (const s of sections(taskText)) {
         const label3 = `${activity}/${scenario}/${s.id}`;
@@ -407,7 +447,7 @@ export function readFolderBanks(dir, label = '') {
           ...(goals.length === 1 ? { goal: goals[0] } : {}),
           ...(r.move ? { move: r.move } : {}),
           tags: tagsForMove(r.move),
-          type, prompt, setup, key,
+          type, prompt, setup, framing, key,
           ...(r.answer ? { expected: r.answer } : {}),
           ...(r['tutor note'] ? { tutorNote: r['tutor note'] } : {}),
         };
