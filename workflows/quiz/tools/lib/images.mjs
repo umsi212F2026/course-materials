@@ -21,7 +21,7 @@ const PNG_SIGNATURE = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0
 // The largest image, decoded, that the seed will accept. It matches the quiz app's cap and the
 // seed's, so an author's bank check fails here rather than on seed day.
 const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
-const IMAGE_LINE =/^\s*!\[([^\]]*)\]\(([^)\s]+)\)\s*$/;
+const IMAGE_LINE = /^\s*!\[([^\]]*)\]\(([^)\s]+)\)\s*$/;
 // Greedy on purpose: alt text may hold brackets, and a reference must not slip past by having them.
 // The renderer's fence pattern (lib/markdown.mjs), so the two agree on what is code.
 const FENCE = /^\s*(`{3,}|~{3,})/;
