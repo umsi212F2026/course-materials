@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { mkdtempSync, mkdirSync, writeFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { basename, join } from "node:path";
 import { resolveImages, sourceDir, taskFile } from "../lib/images.mjs";
 
 const SIG = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
@@ -44,7 +44,7 @@ test("tolerates CRLF and trailing spaces", () => {
   const { src, hash } = fixture();
   const out = resolveImages([item("Setup.\r\n\r\n![d](pic.png)  \r\n\r\nQ?")], () => src);
   assert.deepEqual(out.problems, []);
-  assert.match(out.items[0].prompt, new RegExp(`!\\[d\\]\\(/api/images/${hash}\\.png\\)`));
+  assert.equal(out.items[0].prompt.replace(/\r/g, ""), `Setup.\n\n![d](/api/images/${hash}.png)\n\nQ?`);
 });
 
 for (const [name, target] of [
@@ -53,6 +53,8 @@ for (const [name, target] of [
   ["a path outside the source", "../../../outside.png"],
   ["an absolute path", "/etc/x.png"],
   ["a URL", "https://e.com/x.png"],
+  ["a Windows drive path", "C:\\x.png"],
+  ["a directory", "."],
 ]) {
   test(`${name} is a problem and drops the item`, () => {
     const { src } = fixture();
@@ -61,14 +63,33 @@ for (const [name, target] of [
     assert.deepEqual(out.images, {});
     assert.equal(out.problems.length, 1);
     assert.ok(out.problems[0].includes("the-id"), out.problems[0]);
-    assert.ok(out.problems[0].includes(target) || target.startsWith("../"), out.problems[0]);
+    assert.ok(out.problems[0].includes(target), out.problems[0]);
   });
 }
+
+test("a sibling folder sharing the source's name prefix is outside it", () => {
+  const { src, bytes } = fixture();
+  mkdirSync(`${src}-other`, { recursive: true });
+  writeFileSync(join(`${src}-other`, "x.png"), bytes);
+  const target = `../../../${basename(src)}-other/x.png`;
+  const out = resolveImages([item(`![d](${target})`, "sib")], () => src);
+  assert.equal(out.items.length, 0);
+  assert.equal(out.problems.length, 1);
+  assert.ok(out.problems[0].includes("sib"));
+});
+
+test("a directory named like an image is cannot-be-read, not missing", () => {
+  const { src } = fixture();
+  mkdirSync(join(src, "tasks", "a-x", "dir.png"));
+  const out = resolveImages([item("![d](dir.png)", "dd")], () => src);
+  assert.equal(out.items.length, 0);
+  assert.match(out.problems[0], /cannot be read/);
+});
 
 test("a leftover reference is a problem", () => {
   const { src } = fixture();
   const hex = "a".repeat(64);
-  for (const prompt of ["See ![d](pic.png) here.", `![d](/api/images/${hex}.png)`]) {
+  for (const prompt of ["See ![d](pic.png) here.", `![d](/api/images/${hex}.png)`, "See ![a [b]](pic.png) here.", "![a [b]](pic.png)"]) {
     const out = resolveImages([item(prompt, "left")], () => src);
     assert.equal(out.items.length, 0, prompt);
     assert.equal(out.problems.length, 1, prompt);

@@ -19,8 +19,11 @@ import { basename, dirname, isAbsolute, join, relative, resolve, sep } from "nod
 
 const PNG_SIGNATURE = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
 const IMAGE_LINE = /^\s*!\[([^\]]*)\]\(([^)\s]+)\)\s*$/;
-const ANY_IMAGE = /!\[[^\]]*\]\(/;
-const SCHEME = /^[A-Za-z][A-Za-z0-9+.-]*:/;
+// Greedy on purpose: alt text may hold brackets, and a reference must not slip past by having them.
+const ANY_IMAGE = /!\[.*\]\(/;
+// Two letters or more, so a Windows drive letter is not mistaken for a scheme.
+const SCHEME = /^[A-Za-z][A-Za-z0-9+.-]+:/;
+const DRIVE = /^[A-Za-z]:[\\/]/;
 
 /** The source folder an item's task file lives in. A pool carrying `topic` is the single-source
  *  form, whose banks are bare names; otherwise `bank` is `<source label>/<activity or file>` and
@@ -40,6 +43,7 @@ export function taskFile(src, item) {
 // Resolve one image target to { path, hash } or { problem } (a reason, without the item id).
 function load(src, item, target) {
   if (SCHEME.test(target)) return { problem: "is a URL, and only a file beside the task is allowed" };
+  if (isAbsolute(target) || DRIVE.test(target)) return { problem: "is an absolute path, and only a path beside the task is allowed" };
   const path = resolve(dirname(taskFile(src, item)), target);
   const rel = relative(src, path);
   if (rel === "" || rel === ".." || rel.startsWith(`..${sep}`) || isAbsolute(rel)) {
@@ -48,8 +52,8 @@ function load(src, item, target) {
   let bytes;
   try {
     bytes = readFileSync(path);
-  } catch {
-    return { problem: "does not exist" };
+  } catch (e) {
+    return { problem: e?.code === "ENOENT" ? "does not exist" : "cannot be read" };
   }
   if (bytes.length < PNG_SIGNATURE.length || !bytes.subarray(0, PNG_SIGNATURE.length).equals(PNG_SIGNATURE)) {
     return { problem: "is not a PNG" };
