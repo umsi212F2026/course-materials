@@ -250,4 +250,4 @@ For each topic, in this order: `deploy-pipeline-2026-10`, `sign-in-and-permissio
 - [ ] **Step 3:** For each touched topic, `survey.mjs` reports no new problems, and `node tools/publish-topic.mjs <topic> <worktree>` (from `course-private`) passes.
 - [ ] **Step 4:** Grep the worktree diff for dashes with the pattern in Global Constraints. Expected: none.
 - [ ] **Step 5:** Give Paul the path to `diff -r draws-before draws-after` as a file in the scratchpad, plus the commit list. He reads that diff to approve.
-- [ ] **Step 6:** After his approval, the release follows the `course-private` AGENTS.md route, run by Paul or with his explicit go-ahead: stamp and verify each topic, merge from the `learning-topics` checkout, push, then remove the worktree and branch.
+- [ ] **Step 6:** After his approval, Paul releases this and the course-materials branch together, so no student updates one without the other being available. The release follows the `course-private` AGENTS.md route, run by Paul or with his explicit go-ahead: stamp and verify each topic, merge from the `learning-topics` checkout, push, then remove the worktree and branch.
