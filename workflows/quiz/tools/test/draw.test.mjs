@@ -154,10 +154,22 @@ test("the images map holds only the drawn items' images", () => {
 test("a surplus item fills the slot of a broken-image item, with no shortfall", () => {
   const root = fixture({ n: 3 });
   const dir = join(root, "learning-topics/t1/tasks/a-x");
-  writeFileSync(join(dir, "s1.md"), "### q1\n\nLook.\n\n![A](a.png)\n\n### q2\n\nLook.\n\n![Gone](missing.png)\n\n### q3\n\nPlain.\n");
+  const task = (second) => `### q1\n\nLook.\n\n![A](a.png)\n\n### q2\n\nLook.\n\n![B](${second})\n\n### q3\n\nPlain.\n`;
   writeFileSync(join(dir, "a.png"), PNG);
-  const { items, problems } = drawPractice(pool(2), root, { seed: "x" });
-  assert.deepEqual(items.map((i) => i.label).sort(), ["a-x/s1/q1", "a-x/s1/q3"]);
-  assert.ok(problems.some((m) => m.includes("missing.png")));
-  assert.ok(!problems.some((m) => m.includes("drew")));
+  const seeds = ["a", "b", "c", "d", "e", "f", "g", "h"];
+
+  // Control: with q2's image valid, some seed draws q2, so the seeds below can actually expose a
+  // draw that picked before dropping. Without this the test could pass on a lucky seed.
+  writeFileSync(join(dir, "ok.png"), Buffer.concat([PNG, Buffer.from("ok")]));
+  writeFileSync(join(dir, "s1.md"), task("ok.png"));
+  const control = seeds.map((seed) => drawPractice(pool(2), root, { seed, preferUnseen: false }).items.map((i) => i.label));
+  assert.ok(control.some((labels) => labels.includes("a-x/s1/q2")));
+
+  writeFileSync(join(dir, "s1.md"), task("missing.png"));
+  for (const seed of seeds) {
+    const { items, problems } = drawPractice(pool(2), root, { seed, preferUnseen: false });
+    assert.deepEqual(items.map((i) => i.label).sort(), ["a-x/s1/q1", "a-x/s1/q3"]);
+    assert.ok(problems.some((m) => m.includes("missing.png")));
+    assert.ok(!problems.some((m) => m.includes("drew")));
+  }
 });
