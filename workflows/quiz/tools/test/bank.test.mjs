@@ -138,6 +138,107 @@ test("a top part that is only framing leaves setup empty", () => {
   assert.equal(item.prompt, "Name it.");
 });
 
+// One scenario, a-x/crumbs, from its top part and two question bodies; the item is always served.
+function framed(top, q1 = "What first?", { scenario = "crumbs", rubric = TWO_KEY } = {}) {
+  const dir = source({
+    [`tasks/a-x/${scenario}.md`]: `${top}\n\n### q1\n\n${q1}\n\n### q2\n\nWhat next?\n`,
+    [`rubrics/a-x/${scenario}.md`]: rubric,
+  });
+  const { items, problems } = readFolderBanks(dir);
+  assert.equal(items.length, 2, "every item is still served");
+  return problems;
+}
+
+test("a run phrase in the scenario part is a framing problem", () => {
+  const problems = framed("The app: Crumbs. Each question is a different change.");
+  assert.deepEqual(problems, [
+    'a-x/crumbs: the scenario part says "Each question", which speaks of a run of questions; move it under ## Framing (framing rule)',
+  ]);
+});
+
+test("each run phrase is caught", () => {
+  for (const [text, phrase] of [
+    ["The questions below are about Crumbs.", "questions below"],
+    ["The questions follow the deploy in order.", "The questions follow"],
+    ["Answer each with care.", "Answer each"],
+    ["Say why, except where a question asks for a reply.", "where a question asks"],
+    ["Some show an exchange. Others show a message.", "some ... others"],
+  ]) {
+    const problems = framed(`The app: Crumbs. ${text}`);
+    assert.ok(
+      problems.includes(`a-x/crumbs: the scenario part says "${phrase}", which speaks of a run of questions; move it under ## Framing (framing rule)`),
+      `${text} -> ${problems.join(" | ")}`,
+    );
+  }
+});
+
+test("some and others in different paragraphs are not a run phrase", () => {
+  assert.deepEqual(framed("Some recipes are old.\n\nThe others are new."), []);
+});
+
+test("an answering instruction in the scenario part is a framing problem", () => {
+  assert.deepEqual(framed("The app: Crumbs.\n\nAnswer in two or three sentences."), [
+    'a-x/crumbs: the scenario part says "Answer in", which says how to answer; put it in each question (framing rule)',
+  ]);
+  assert.deepEqual(framed("The app: Crumbs. Say why, in a sentence or two."), [
+    'a-x/crumbs: the scenario part says "in a sentence", which says how to answer; put it in each question (framing rule)',
+  ]);
+});
+
+test("an answering instruction in the framing is a framing problem", () => {
+  assert.deepEqual(framed("The app: Crumbs.\n\n## Framing\n\nEach question is a separate decision. Answer in two sentences."), [
+    'a-x/crumbs: the framing says "Answer in", which says how to answer; put it in each question (framing rule)',
+  ]);
+});
+
+test("run phrases under ## Framing are not problems", () => {
+  assert.deepEqual(framed("The app: Crumbs.\n\n## Framing\n\nEach question is a different change."), []);
+});
+
+test("an answering instruction in a question is not a problem", () => {
+  assert.deepEqual(framed("The app: Crumbs.", "What first? Answer in two or three sentences."), []);
+});
+
+test("an empty ## Framing is a problem", () => {
+  assert.deepEqual(framed("The app: Crumbs.\n\n## Framing"), ["a-x/crumbs: ## Framing has nothing under it (framing rule)"]);
+});
+
+test("a second ## Framing is a problem", () => {
+  assert.deepEqual(framed("The app: Crumbs.\n\n## Framing\n\nEach question is a decision.\n\n## Framing\n\nIn order."), [
+    "a-x/crumbs: ## Framing appears 2 times; only the first is the marker (framing rule)",
+  ]);
+});
+
+test("## framing in lower case is a near miss", () => {
+  assert.deepEqual(framed("The app: Crumbs.\n\n## framing\n\nEach decision stands alone."), [
+    'a-x/crumbs: "## framing" is not the marker; write it exactly as ## Framing (framing rule)',
+  ]);
+});
+
+test("main-bank has no framing", () => {
+  assert.deepEqual(framed("## Framing\n\nAll about risks.", "Name a risk.", { scenario: "main-bank" }), [
+    "a-x/main-bank: main-bank has no framing (framing rule)",
+  ]);
+});
+
+test("## Framing in a rubric file is a problem", () => {
+  assert.deepEqual(framed("The app: Crumbs.", "What first?", { rubric: `Key.\n\n## Framing\n\nRun.\n\n${TWO_KEY}` }), [
+    "a-x/crumbs: rubrics/a-x/crumbs.md has a ## Framing line; a key has no framing (framing rule)",
+  ]);
+});
+
+test("## Framing in a question is a problem", () => {
+  assert.deepEqual(framed("The app: Crumbs.", "What first?\n\n## Framing\n\nMore."), [
+    "a-x/crumbs/q1: ## Framing in a question is not a marker; it belongs in the top part (framing rule)",
+  ]);
+});
+
+test("answer only in a question is a problem", () => {
+  assert.deepEqual(framed("The app: Crumbs.", "For this plan, answer only this: what first?"), [
+    'a-x/crumbs/q1: says "answer only", which overrides how to answer; say it in this question alone (framing rule)',
+  ]);
+});
+
 test("a vocabulary move becomes a tag", () => {
   const dir = source({
     "tasks/a-words/idempotent.md": "### w1\n\nSpot the error.\n",

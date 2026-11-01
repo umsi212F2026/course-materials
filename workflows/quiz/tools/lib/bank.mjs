@@ -384,6 +384,62 @@ function scenarioParts(text) {
   return { setup: setup.join('\n').trim(), framing: framing.join('\n').trim(), markers, nearMisses };
 }
 
+// WHAT THE FRAMING RULE CATCHES BY WORDING. A run phrase speaks of the questions as a set, so it
+// belongs in the framing and is a fault only in the scenario part, which every draw shows. How to
+// answer belongs in each question, so it is a fault in the scenario part and in the framing alike.
+// These are the phrase-level cases; bank-check judges the rest. Every framing problem ends in
+// FRAMING_RULE, so a reader can tell the new rule's findings from older ones.
+export const FRAMING_RULE = ' (framing rule)';
+const RUN_PHRASES = [/\beach question\b/i, /\bquestions below\b/i, /\bthe questions follow\b/i, /\banswer each\b/i, /\bwhere a question asks\b/i];
+const ANSWERING = [/\banswer in\b/i, /\bin (a|one|two|three|four|five)\b[^.?!\n]*\bsentences?\b/i];
+
+function firstMatch(text, patterns) {
+  for (const re of patterns) {
+    const m = text.match(re);
+    if (m) return m[0];
+  }
+  return null;
+}
+
+// "Some show an exchange ... Others show a message" introduces a mix of question kinds. Two words
+// that common are a run phrase only together, in one paragraph.
+function runPhrase(text) {
+  const found = firstMatch(text, RUN_PHRASES);
+  if (found) return found;
+  return text.split(/\n\s*\n/).some((p) => /\bsome\b/i.test(p) && /\bothers\b/i.test(p)) ? 'some ... others' : null;
+}
+
+/** The framing rule's findings for one scenario's top parts. `scn` is <activity>/<scenario>. */
+function framingProblems(scn, scenario, parts, rubricText, rubricWhere) {
+  const out = [];
+  const run = runPhrase(parts.setup);
+  if (run) out.push(`${scn}: the scenario part says "${run}", which speaks of a run of questions; move it under ## Framing`);
+  const inSetup = firstMatch(parts.setup, ANSWERING);
+  if (inSetup) out.push(`${scn}: the scenario part says "${inSetup}", which says how to answer; put it in each question`);
+  const inFraming = firstMatch(parts.framing, ANSWERING);
+  if (inFraming) out.push(`${scn}: the framing says "${inFraming}", which says how to answer; put it in each question`);
+  if (parts.markers && !parts.framing) out.push(`${scn}: ## Framing has nothing under it`);
+  if (parts.markers > 1) out.push(`${scn}: ## Framing appears ${parts.markers} times; only the first is the marker`);
+  for (const line of parts.nearMisses) out.push(`${scn}: "${line}" is not the marker; write it exactly as ## Framing`);
+  if (scenario === 'main-bank' && parts.markers) out.push(`${scn}: main-bank has no framing`);
+  if (rubricText.split('\n').some((l) => FRAMING_MARKER.test(l))) {
+    out.push(`${scn}: ${rubricWhere} has a ## Framing line; a key has no framing`);
+  }
+  return out.map((p) => p + FRAMING_RULE);
+}
+
+/** The framing rule's findings for one question body. */
+function questionFramingProblems(label, body) {
+  const out = [];
+  if (body.split('\n').some((l) => FRAMING_MARKER.test(l))) {
+    out.push(`${label}: ## Framing in a question is not a marker; it belongs in the top part`);
+  }
+  if (/\banswer only\b/i.test(body)) {
+    out.push(`${label}: says "answer only", which overrides how to answer; say it in this question alone`);
+  }
+  return out.map((p) => p + FRAMING_RULE);
+}
+
 /** Read every folder bank in one source: tasks/<activity>/<scenario>.md against
  *  rubrics/<activity>/<scenario>.md. Returns { items, problems } like readBank, and readBank
  *  calls it, so every caller sees both kinds. Problems are collected, never thrown. */
@@ -420,7 +476,9 @@ export function readFolderBanks(dir, label = '') {
       }
 
       const taskText = readFileSync(join(tasksDir, activity, file), 'utf8');
-      const { setup, framing } = scenarioParts(taskText);
+      const parts = scenarioParts(taskText);
+      const { setup, framing } = parts;
+      problems.push(...framingProblems(`${activity}/${scenario}`, scenario, parts, rubricText, `rubrics/${activity}/${file}`));
       const seen = new Set();
       for (const s of sections(taskText)) {
         const label3 = `${activity}/${scenario}/${s.id}`;
@@ -429,6 +487,7 @@ export function readFolderBanks(dir, label = '') {
           continue;
         }
         seen.add(s.id);
+        problems.push(...questionFramingProblems(label3, s.body));
 
         const r = rubrics.get(s.id);
         if (!r) {

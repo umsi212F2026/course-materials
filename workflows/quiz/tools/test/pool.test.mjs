@@ -260,7 +260,11 @@ test(`every real pool draws as it did at ${BASELINE}`, async (t) => {
       t.diagnostic(`${name}: skipped, ${missing.join(", ")} not under ${ROOT}`);
       continue;
     }
-    const shape = (r) => ({ strata: r.strata.map((s) => [s.name, s.take, s.items.length]), problems: r.problems });
+    // Framing problems are new on purpose, and the learning-topics migration clears them.
+    const shape = (r) => ({
+      strata: r.strata.map((s) => [s.name, s.take, s.items.length]),
+      problems: r.problems.filter((p) => !p.endsWith(" (framing rule)")),
+    });
     const before = shape(old.applyPool(old.readPoolSources(pool, ROOT), pool));
     const after = shape(applyPool(readPoolSources(pool, ROOT), pool));
     assert.deepEqual(after, before, name);
