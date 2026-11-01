@@ -102,6 +102,14 @@ beside theirs is a second answer to the same question that nothing reads. Leave 
 line as a whole and flag it.** That is a line written before multi-goal questions, and the
 flag's clause should say so.
 
+## One part of a compound
+
+**An `item` ending `#<letter>` is one part of a compound question, and it is ruled on its own.**
+Its `prompt` is the stem and that part together, so read it as one question, and its `rubric`
+is that part's alone. Give it one mark and the ordinary six things, with no `per_goal`: the
+caller averages a compound's parts, and a mark you computed for the whole is a second answer
+that nothing reads. Echo the `item` back with its `#<letter>`, as you were given it.
+
 ## What to return
 
 Six things, and no summary verdict on top of them. A question whose `goals` names more than one
