@@ -73,14 +73,20 @@ are format slips with one right answer.
 ## The format, exactly
 
 One scenario is two files with the same name, one in each folder. A file's top part, before its
-first `###`, is shared by all its questions: the setup in `tasks/`, the key in `rubrics/`. Then
-one `### <question-id>` section per question, in both files, with the same ids.
+first `###`, is shared by all its questions: the setup in `tasks/`, the key in `rubrics/`. A
+`tasks/` top part may end in a `## Framing` line and the framing under it; a `rubrics/` top part
+is the key and nothing else. Then one `### <question-id>` section per question, in both files,
+with the same ids.
 
 `tasks/a-judge-plan-weighings/crumbs.md`, what the learner sees:
 
 ```
 Crumbs is a two-person bakery moving its order form off a spreadsheet. It takes about forty
 orders a week, most of them on Friday evening. Neither owner writes code.
+
+## Framing
+
+Each question is a separate decision Crumbs faces.
 
 ### q1
 
@@ -132,8 +138,18 @@ The rules behind that example:
   method is the same; every goal still comes from the activity's `checks`. An exercise of many
   items (sort these, judge each) is one scenario with a question per item.
 - **`main-bank` is the reserved scenario for questions with no shared setup.** Its top part is
-  empty, and each question carries whatever situation it needs in its own body. Never give a
-  scenario with a setup that name, and never use it to avoid naming one.
+  empty, framing included, and each question carries whatever situation it needs in its own
+  body. Never give a scenario with a setup that name, and never use it to avoid naming one.
+- **The setup describes the situation and nothing else.** A draw shows one question under it,
+  alone, so it never speaks of the questions as a set ("each question", "the questions below")
+  and never says how to answer.
+- **Framing introduces the run, and only that:** how the questions relate, or the order they
+  come in ("each question is a different change, on a different day"). It goes under
+  `## Framing`, at the end of the top part, and study shows it above the first question it
+  serves from the scenario only; a draw never shows it. So it never carries a fact an answer
+  depends on, and never says how to answer. Most scenarios need none. The test: read each
+  question under the setup alone, with no framing. If it is not a complete task, the question
+  is at fault.
 - **Question ids are letters, digits and hyphens, unique within their scenario**; `q1`, `q2` is
   fine. A heading with any other character is not a heading to the reader, and its text runs on
   into the question before it. The label everywhere is
@@ -158,8 +174,9 @@ The rules behind that example:
   - `tutor note:` optional; follow-ups for this one question, for the tutor only: a known trap,
     what to ask when the answer is wrong in a particular way. What holds for every question is
     in the activity's entry already, and a note about the whole scenario goes in its key.
-- **An instruction every question needs** ("answer in two or three sentences") goes at the top
-  of each scenario's setup, or in each question of `main-bank`. Nothing is shared across files.
+- **How to answer goes in each question** ("answer in two or three sentences"), in every
+  scenario, `main-bank` included, even when every question in the file says the same; an mcq
+  needs none. Nothing is shared across questions or files.
   It says how to answer, never what the learner may have open: "nothing open in front of them"
   in vocabulary-moves.md is how the tutor runs a move live, and a bank question is also served
   in class and in practice, where the setting decides that.

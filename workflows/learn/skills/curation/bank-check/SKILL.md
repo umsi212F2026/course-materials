@@ -1,6 +1,6 @@
 ---
 name: curation-bank-check
-description: Check a course topic's question banks question by question, in a fresh context. Each answer must be true of its scenario, each question answerable from the setup alone without giving its answer away, each goal's credit statement faithful to that goal's criterion, each mcq unambiguous, and each listed case really exercised and not bundled with one a learner could split from it; it also reports which cases each bank exercises and which it never does. Returns findings per label, each marked question, scenario or generator; writes nothing. Called by the curation orchestrator on the course path, after the banks are drafted.
+description: Check a course topic's question banks question by question, in a fresh context. Each answer must be true of its scenario, each question answerable from the setup alone without giving its answer away, each goal's credit statement faithful to that goal's criterion, each mcq unambiguous, and each listed case really exercised and not bundled with one a learner could split from it, each question complete when drawn alone without its scenario's framing, and each worded to admit the answer its key gives; it also reports which cases each bank exercises and which it never does. Returns findings per label, each marked question, scenario or generator; writes nothing. Called by the curation orchestrator on the course path, after the banks are drafted.
 ---
 
 # Curation: bank check
@@ -59,10 +59,11 @@ finding: the drafter keeps one only when it comes out good. Across the topic's m
 right choice that is the longest on most of them, or that sits in one position on most. In a released topic's older bank, list its DEFINE and INTERPRET
 questions instead, for the instructor to decide at the course path's recuration.
 
-## Every question, six checks
+## Every question, eight checks
 
 For each `### <question-id>` in each `tasks/<activity-id>/<scenario-id>.md`, read the
-scenario's setup, the question, the scenario's key (the top of its rubric file), the question's
+scenario's setup (its top part above any `## Framing` line), its framing if it has one, the
+question, the scenario's key (the top of its rubric file), the question's
 rubric entry, and the criterion of each goal its `goal:` line names, with the goal's cases if
 it has them, from `goals.md`, resolving a reference criterion through
 `workflows/learn/skills/goal-setting/references/slots.md`.
@@ -94,14 +95,25 @@ it has them, from `goals.md`, resolving a reference criterion through
    in full, really exercise every case its `cases:` line lists? A case listed but not reached
    would be passed untested. And could a learner get one listed case right and another wrong?
    One ruling covers all of them, so such a question should be split, one per case.
+7. **It stands alone when drawn.** A quiz shows the setup and this one question, never the
+   framing and never another question, so checks 1, 2 and 5 judge against the setup alone.
+   Read the setup and the question together, with no framing: is it a complete task that says
+   how to answer? Report a setup that speaks of the questions as a set or says how to answer; a
+   question that makes sense only through the framing or a sibling question; and framing that
+   carries a fact an answer depends on, or says how to answer. Survey already reports the
+   plainest wordings of these; this check is for the rest.
+8. **Its wording fits the answer its key gives.** The question does not presuppose an answer of
+   a shape the key rejects: asking which step decides something when the key says no step does
+   and the omission is the answer, or asking for one cause when the key names two.
 
 ## Marking each finding
 
 Every finding carries one mark, which says what has to change:
 
 - **`question`**: this question is at fault, and fixing or cutting it is enough.
-- **`scenario`**: the setup or the key is, so every question in the scenario inherits it. A setup
-  missing a fact, or a key that contradicts the setup.
+- **`scenario`**: the setup, the framing or the key is, so every question in the scenario
+  inherits it. A setup missing a fact, a key that contradicts the setup, a setup that speaks of
+  the run or says how to answer, or framing that carries a fact or says how to answer.
 - **`generator`**: the cause is in the activity's generator, so redrafting the bank would make the
   same mistake again. Several scenarios from one activity failing the same way, a difficulty the
   generator never pinned down, a goal mapping that doesn't hold for the questions it produces.
