@@ -254,6 +254,12 @@ function readCompound(taskBody, rubricBody, where, key) {
     problems.push(`${where} names goals ${goals.join(', ')}; a compound credits exactly one goal`);
   }
 
+  // `in`, as for a part's goal: an empty line is still an answer written on the question. A
+  // question-level `tutor note` is allowed, since study prints it first, unlettered.
+  if ('answer' in r || 'credit' in r) {
+    problems.push(`${where} has an answer or credit on the question itself; each part carries its own`);
+  }
+
   for (const [side, list] of [['task', task.parts], ['rubric', rubric.parts]]) {
     const letters = list.map((p) => p.label);
     if (letters.some((l, i) => l !== String.fromCharCode(97 + i))) {

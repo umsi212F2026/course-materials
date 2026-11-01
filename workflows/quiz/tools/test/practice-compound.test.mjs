@@ -71,6 +71,8 @@ test("--score reports a compound as one row with its parts", () => {
   assert.equal(row.choices, null);
   assert.equal(row.expected, null);
   assert.deepEqual(row.parts.map((p) => p.label), ["a", "b"]);
+  // The skill gives the stem once, so a part's row carries only its own prompt.
+  assert.deepEqual(row.parts.map((p) => p.prompt), ["Pick one.", "Say why."]);
   const [a, b] = row.parts;
   assert.equal(a.answer, "red");
   assert.equal(a.expected, "blue");

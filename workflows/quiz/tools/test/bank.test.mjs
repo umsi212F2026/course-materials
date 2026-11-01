@@ -590,6 +590,26 @@ test("a goal or cases on a part is a problem", () => {
   compoundFault(CQ_TASK, CQ_RUBRIC.replace("- **type:** mcq\n", "- **type:** mcq\n- **cases:** x\n"), "belong to the question");
 });
 
+test("an answer or credit on the compound itself is a problem, in both layouts", () => {
+  for (const line of ["- **answer:** Revise\n", "- **credit:** full for Revise\n", "- **answer:**\n"]) {
+    const rubric = CQ_RUBRIC.replace("- **type:** compound\n", `- **type:** compound\n${line}`);
+    compoundFault(CQ_TASK, rubric, "each part carries its own");
+    const dir = source({ "tasks/review.md": CQ_TASK, "rubrics/review.md": rubric });
+    const { items, problems } = readBank(dir);
+    assert.deepEqual(items, []);
+    assert.ok(problems.some((p) => p.includes("q1") && p.includes("each part carries its own")), problems.join(" | "));
+  }
+});
+
+test("a tutor note on the compound itself is allowed", () => {
+  const rubric = CQ_RUBRIC.replace("- **type:** compound\n", "- **type:** compound\n- **tutor note:** Both parts use one diagram.\n");
+  const dir = source({ "tasks/a-x/review.md": CQ_TASK, "rubrics/a-x/review.md": rubric });
+  const { items, problems } = readFolderBanks(dir);
+  assert.deepEqual(problems, []);
+  assert.equal(items.length, 1);
+  assert.equal(items[0].tutorNote, "Both parts use one diagram.");
+});
+
 test("a part with no text before its choices is a problem", () => {
   compoundFault(CQ_TASK.replace("\"It runs only after the plan is written.\"\n", ""), CQ_RUBRIC, "has no text");
 });

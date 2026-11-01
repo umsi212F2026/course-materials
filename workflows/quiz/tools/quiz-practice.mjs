@@ -409,10 +409,6 @@ function score(dir) {
             : it?.expected ?? null,
         axes: i.axes,
         flag: i.flag,
-        // ONE ENTRY PER GOAL A MULTI-GOAL QUESTION NAMES, each its own record-attempt call. The
-        // verdict's per-goal ruling where there was one; where there was none (multiple choice,
-        // or nothing written) the one mark is the mark on every goal. The capability call is
-        // made per goal too, since a question can name one goal met by writing and one not.
         // A COMPOUND'S ANSWER, CHOICES AND KEY LIVE ON ITS PARTS, so the row's own are null and each
         // part carries what a question of its type does, an mcq's resolved to the choice text.
         ...(i.parts
@@ -420,7 +416,8 @@ function score(dir) {
               parts: gradedParts(it).map((u, k) => ({
                 label: u.label,
                 type: u.type,
-                prompt: u.prompt,
+                // The part's own text: the skill gives the stem once, then each part.
+                prompt: it.parts[k].prompt,
                 answer: said({ id: u.key, type: u.type, choices: u.choices }),
                 choices: u.choices ?? null,
                 credit: i.parts[k].credit,
@@ -429,6 +426,10 @@ function score(dir) {
               })),
             }
           : {}),
+        // ONE ENTRY PER GOAL A MULTI-GOAL QUESTION NAMES, each its own record-attempt call. The
+        // verdict's per-goal ruling where there was one; where there was none (multiple choice,
+        // or nothing written) the one mark is the mark on every goal. The capability call is
+        // made per goal too, since a question can name one goal met by writing and one not.
         ...(named.length > 1
           ? {
               per_goal: named.map((g) => {

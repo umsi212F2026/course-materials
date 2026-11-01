@@ -237,9 +237,10 @@ export function mergeGrades(rows, verdicts, { date, session, corrections = [] })
   };
 
   // EACH PART SETTLED AS A QUESTION OF ITS TYPE IS SETTLED, its correction applied by the same
-  // rule, and the parts then averaged. An answered part with no verdict, or a verdict that is not
-  // a credit, leaves the whole compound unscored, as it would a question: averaging over the
-  // parts that were ruled would score the question as if the missing part had not been asked.
+  // rule, and the parts then averaged. An answered part with no verdict, a verdict that is not
+  // a credit, or a verdict that gives a part a per_goal, leaves the whole compound unscored, as
+  // it would a question: averaging over the parts that were ruled would score the question as if
+  // the missing part had not been asked.
   // Every part's verdict is marked used either way, so one part's problem is not also reported
   // as another part's stray verdict.
   const settleCompound = (r) => {
