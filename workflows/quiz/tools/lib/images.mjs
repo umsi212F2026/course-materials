@@ -13,13 +13,15 @@
 //
 // BUILT-INS ONLY, because the instructor's bake imports this file by relative path.
 
-import { readFileSync } from "node:fs";
+import { readFileSync, realpathSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { basename, dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 
 const PNG_SIGNATURE = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
 const IMAGE_LINE = /^\s*!\[([^\]]*)\]\(([^)\s]+)\)\s*$/;
 // Greedy on purpose: alt text may hold brackets, and a reference must not slip past by having them.
+// The renderer's fence pattern (lib/markdown.mjs), so the two agree on what is code.
+const FENCE = /^\s*(`{3,}|~{3,})/;
 const ANY_IMAGE = /!\[.*\]\(/;
 // Two letters or more, so a Windows drive letter is not mistaken for a scheme.
 const SCHEME = /^[A-Za-z][A-Za-z0-9+.-]+:/;
@@ -51,6 +53,12 @@ function load(src, item, target) {
   }
   let bytes;
   try {
+    // A link inside the source can point outside it, and readFileSync follows links, so the
+    // lexical check above is not enough: compare where the file really is.
+    const real = relative(realpathSync(src), realpathSync(path));
+    if (real === "" || real === ".." || real.startsWith(`..${sep}`) || isAbsolute(real)) {
+      return { problem: "points outside the source folder" };
+    }
     bytes = readFileSync(path);
   } catch (e) {
     return { problem: e?.code === "ENOENT" ? "does not exist" : "cannot be read" };
@@ -76,21 +84,33 @@ function load(src, item, target) {
 export function resolveItem(item, src) {
   const bad = [];
   const found = {};
+  const name = `${item.id}${item.bank ? ` (${item.bank})` : ""}`;
+  let fence = null;
   const lines = String(item.prompt ?? "").split("\n").map((raw) => {
     const line = raw.endsWith("\r") ? raw.slice(0, -1) : raw;
+    // Inside a fenced block a line is code, shown as it is: never rewritten, never flagged.
+    const mark = FENCE.exec(line)?.[1];
+    if (fence) {
+      if (mark && line.trim().startsWith(fence)) fence = null;
+      return raw;
+    }
+    if (mark) {
+      fence = mark;
+      return raw;
+    }
     const m = IMAGE_LINE.exec(line);
     if (!m) {
-      if (ANY_IMAGE.test(line)) bad.push(`${item.id}: image reference "${line.trim()}" is not on a line of its own, or is already a served URL`);
+      if (ANY_IMAGE.test(line.replace(/`[^`]+`/g, ""))) bad.push(`${name}: image reference "${line.trim()}" is not on a line of its own, or is already a served URL`);
       return raw;
     }
     const [, alt, target] = m;
     if (target.startsWith("/api/images/")) {
-      bad.push(`${item.id}: image reference "${target}" is a served URL; write the file name beside the task instead`);
+      bad.push(`${name}: image reference "${target}" is a served URL; write the file name beside the task instead`);
       return raw;
     }
     const got = load(src, item, target);
     if (got.problem) {
-      bad.push(`${item.id}: image ${target} ${got.problem}`);
+      bad.push(`${name}: image ${target} ${got.problem}`);
       return raw;
     }
     found[got.hash] = got.path;

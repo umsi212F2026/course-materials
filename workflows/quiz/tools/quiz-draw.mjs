@@ -36,7 +36,7 @@ import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { resolve, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { readPoolSources, applyPool, recordLabel } from "./lib/bank.mjs";
-import { resolveImages, sourceDir } from "./lib/images.mjs";
+import { resolveItem, sourceDir } from "./lib/images.mjs";
 import { readLog, readGoals } from "../../learn/tools/lib/topic.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
