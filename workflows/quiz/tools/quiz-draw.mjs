@@ -23,6 +23,10 @@
 // the opposite requirement: a second attempt that served the same four questions would be
 // testing recall of this morning rather than of the material. `--seed` exists for tests.
 //
+// IMAGES COME BACK AS A MAP, NOT BYTES. A prompt's figure line is rewritten to the content-hash
+// URL the quiz app serves, and `images` says which file each hash stands for. An item whose image
+// is missing is dropped before picking and reported, like one that names a non-course goal.
+//
 // THE RUBRICS COME WITH THE DRAW, and that is not a leak. They live in the topic, which
 // students already have, and the whole design is that studying the material and studying for
 // the quiz are the same act. Not showing them until the answer is given is a discipline the
@@ -32,6 +36,7 @@ import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { resolve, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { readPoolSources, applyPool, recordLabel } from "./lib/bank.mjs";
+import { resolveImages, sourceDir } from "./lib/images.mjs";
 import { readLog, readGoals } from "../../learn/tools/lib/topic.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -143,10 +148,24 @@ export function drawPractice(pool, root, { seed, preferUnseen = true } = {}) {
   // of where it goes. The instructor's bake needs neither and does not carry them.
   const withTopic = strata.map((s) => ({ ...s, items: s.items.map((it) => ({ ...it, topic: topicDir(pool, it, root) })) }));
   const course = courseOnly(withTopic.flatMap((s) => s.items));
-  // By identity, not id: single-file ids repeat across topics in a multi-source draw.
-  const keep = new Set(course.items);
+  // IMAGES ARE RESOLVED HERE, BEFORE PICKING, where courseOnly drops items. An item whose picture
+  // is missing is dropped like an item with the wrong goal, so it never fills a slot and the
+  // shortfall check below reports the stratum as short. Resolving after the draw would serve the
+  // student a quiz with a hole in it.
+  // One call per item, because the step returns new objects with no record of which input each
+  // came from, and a dropped item has to be told apart from a kept one by identity.
+  const twin = new Map();
+  const images = {};
+  const imageProblems = [];
+  for (const it of course.items) {
+    if (twin.has(it)) continue;
+    const got = resolveImages([it], (x) => sourceDir(pool, x, root));
+    twin.set(it, got.items[0] ?? null);
+    Object.assign(images, got.images);
+    imageProblems.push(...got.problems);
+  }
   // An item sitting in two strata would be reported twice; once says it.
-  problems.push(...new Set(course.problems));
+  problems.push(...new Set([...course.problems, ...imageProblems]));
 
   const lastSeen = new Map();
   // As instants, not strings, as pick.mjs does: two offsets or a missing `Z` sort wrongly as text.
@@ -166,7 +185,7 @@ export function drawPractice(pool, root, { seed, preferUnseen = true } = {}) {
   const items = [];
   const shape = [];
   for (const s of withTopic) {
-    const pickable = s.items.filter((it) => keep.has(it));
+    const pickable = s.items.map((it) => twin.get(it)).filter(Boolean);
     const count = Math.min(s.take, pickable.length);
     // Without preferUnseen only `count` are picked, so later strata consume the same RNG values as before.
     let drawn = pick(pickable, preferUnseen ? pickable.length : count, next);
@@ -197,7 +216,7 @@ export function drawPractice(pool, root, { seed, preferUnseen = true } = {}) {
     if (got < take) problems.push(`${name} drew ${got} of the ${take} asked for`);
   }
 
-  return { items, strata: shape, problems };
+  return { items, strata: shape, problems, images };
 }
 
 /** The published pool for one session, from the clone this tool lives in. */
@@ -254,7 +273,7 @@ function main() {
     process.exit(1);
   }
 
-  const { items, strata, problems } = drawPractice(pool, ROOT, {
+  const { items, strata, problems, images } = drawPractice(pool, ROOT, {
     seed: seedAt === -1 ? undefined : process.argv[seedAt + 1],
   });
 
@@ -268,7 +287,7 @@ function main() {
   }
 
   process.stdout.write(
-    JSON.stringify({ session: pool.session, date: pool.date, drawn: new Date().toISOString(), strata, items }, null, 2) + "\n",
+    JSON.stringify({ session: pool.session, date: pool.date, drawn: new Date().toISOString(), strata, items, images }, null, 2) + "\n",
   );
 }
 

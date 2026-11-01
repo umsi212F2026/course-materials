@@ -112,3 +112,29 @@ test("attempt times are compared as instants, not as strings", () => {
   }
 });
 
+
+// Overwrites the fixture's task file so q1 shows an image that exists and q2 one that does not.
+const PNG = Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), Buffer.from("fake")]);
+function withImages(root) {
+  const dir = join(root, "learning-topics/t1/tasks/a-x");
+  writeFileSync(join(dir, "s1.md"), "### q1\n\nLook.\n\n![The diagram](good.png)\n\n### q2\n\nLook.\n\n![Gone](missing.png)\n");
+  writeFileSync(join(dir, "good.png"), PNG);
+}
+
+test("an item with a missing image is dropped before picking, so the stratum reports the shortfall", () => {
+  const root = fixture();
+  withImages(root);
+  const { items, images, problems } = drawPractice(pool(2), root, { seed: "x" });
+  assert.deepEqual(items.map((i) => i.label), ["a-x/s1/q1"]);
+  assert.match(items[0].prompt, /!\[The diagram\]\(\/api\/images\/[0-9a-f]{64}\.png\)/);
+  const hashes = Object.keys(images);
+  assert.equal(hashes.length, 1);
+  assert.ok(items[0].prompt.includes(hashes[0]));
+  assert.equal(images[hashes[0]], join(root, "learning-topics/t1/tasks/a-x/good.png"));
+  assert.ok(problems.some((m) => m.includes("q2") && m.includes("missing.png")));
+  assert.ok(problems.includes("learning-topics/t1/a-x/s1 drew 1 of the 2 asked for"));
+});
+
+test("a pool without images returns an empty map", () => {
+  assert.deepEqual(drawPractice(pool(1), fixture(), { seed: "x" }).images, {});
+});
