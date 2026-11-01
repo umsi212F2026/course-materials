@@ -282,11 +282,15 @@ function readCompound(taskBody, rubricBody, where, key) {
       problems.push(`${at} has type: ${type}; a part is mcq or free`);
       continue;
     }
-    if (pf.goal || pf.cases) problems.push(`${at} names a goal or cases; those belong to the question`);
+    // `in`, not truthiness: an empty `- **goal:**` line is still a goal written on a part.
+    if ('goal' in pf || 'cases' in pf) problems.push(`${at} names a goal or cases; those belong to the question`);
     // The images step rewrites only `prompt`, so an image in a part would never be served.
     if (/!\[[^\]]*\]\(/.test(p.body)) problems.push(`${at} has an image; images go in the stem`);
     const { prompt, choices } = splitChoices(p.body, type);
-    if (!prompt) problems.push(`${at} has no text`);
+    if (!prompt) {
+      problems.push(`${at} has no text`);
+      continue;
+    }
     const note = pf['tutor note'] ? { tutorNote: pf['tutor note'] } : {};
     if (type === 'mcq') {
       if (!choices) {
@@ -443,8 +447,7 @@ export function readBank(dir, label = '') {
           continue;
         }
         // One string, because that is what the draw contract and the grader already take.
-        const credit = r.credit ? r.credit.charAt(0).toUpperCase() + r.credit.slice(1) : '';
-        const rubric = credit ? `${r.answer} ${credit}` : r.answer;
+        const rubric = judgedText(r);
         items.push({ bank, ...recording, id: s.id, type, prompt, rubric });
       }
     }
@@ -677,8 +680,7 @@ export function readFolderBanks(dir, label = '') {
             continue;
           }
           // A multi-goal credit written as an indented list keeps one line per goal (see fields).
-          const credit = r.credit ? r.credit.charAt(0).toUpperCase() + r.credit.slice(1) : '';
-          const judged = credit ? `${r.answer} ${credit}` : r.answer;
+          const judged = judgedText(r);
           // `credit` is the raw credit text alone, for checks that must not be satisfied by the
           // key or the answer happening to mention a goal (idProblems' per-goal statement check).
           items.push({ ...common, rubric: key ? `${key}\n\n${judged}` : judged, credit: r.credit ?? '' });

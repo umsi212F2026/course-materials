@@ -511,7 +511,7 @@ test("a question with #### parts reads as one compound item", () => {
 
 test("a single-file bank reads a compound in the single-file shape", () => {
   const dir = source({
-    "tasks/review.md": CQ_TASK.replace("`c-review`", "c-review"),
+    "tasks/review.md": CQ_TASK,
     "rubrics/review.md": CQ_RUBRIC.replace("`c-review`", "c-review"),
   });
   const { items, problems } = readBank(dir);
@@ -535,6 +535,18 @@ const swapAB = (text) => text.replace("#### a", "#### X").replace("#### b", "###
 
 test("a compound with one part is a problem", () => {
   compoundFault(onlyA(CQ_TASK), onlyA(CQ_RUBRIC), "at least two");
+});
+
+test("a single-file compound with one part is a problem, and is left out", () => {
+  const dir = source({ "tasks/review.md": onlyA(CQ_TASK), "rubrics/review.md": onlyA(CQ_RUBRIC) });
+  const { items, problems } = readBank(dir);
+  assert.deepEqual(items, []);
+  assert.ok(problems.some((p) => p.includes("q1") && p.includes("at least two")), problems.join(" | "));
+});
+
+test("an empty goal or cases line on a part is a problem", () => {
+  compoundFault(CQ_TASK, CQ_RUBRIC.replace("- **type:** mcq\n", "- **type:** mcq\n- **goal:**\n"), "belong to the question");
+  compoundFault(CQ_TASK, CQ_RUBRIC.replace("- **type:** mcq\n", "- **type:** mcq\n- **cases:**\n"), "belong to the question");
 });
 
 test("a part on one side only is a problem", () => {
