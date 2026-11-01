@@ -152,16 +152,16 @@ export function drawPractice(pool, root, { seed, preferUnseen = true } = {}) {
   // is missing is dropped like an item with the wrong goal, so it never fills a slot and the
   // shortfall check below reports the stratum as short. Resolving after the draw would serve the
   // student a quiz with a hole in it.
-  // One call per item, because the step returns new objects with no record of which input each
-  // came from, and a dropped item has to be told apart from a kept one by identity.
+  // Per item through resolveItem, which says which input each result came from. A dropped item
+  // is told apart from a kept one by identity, since ids repeat across topics.
   const twin = new Map();
   const found = {};
   const imageProblems = [];
   for (const it of course.items) {
     if (twin.has(it)) continue;
-    const got = resolveImages([it], (x) => sourceDir(pool, x, root));
-    twin.set(it, got.items[0] ?? null);
-    Object.assign(found, got.images);
+    const got = resolveItem(it, sourceDir(pool, it, root));
+    twin.set(it, got.item);
+    for (const [hash, path] of Object.entries(got.images)) found[hash] ??= path;
     imageProblems.push(...got.problems);
   }
   // An item sitting in two strata would be reported twice; once says it.

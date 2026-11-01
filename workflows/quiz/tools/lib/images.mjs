@@ -61,52 +61,61 @@ function load(src, item, target) {
   return { path, hash: createHash("sha256").update(bytes).digest("hex") };
 }
 
-/** Rewrite every image line in the drawn items' prompts.
- *
- *  `sourceOf(item)` gives the item's source folder. Returns { items, images, problems }: `items`
- *  are NEW objects with rewritten prompts (the input is not touched), `images` maps each hash to
- *  the absolute path of a file with those bytes, and `problems` are strings naming the item and
- *  the path. An item with any problem is left out of `items` rather than served with a broken
+/** Rewrite one item's image lines. Returns { item, images, problems }: `item` is a NEW object with
+ *  the prompt rewritten (the input is not touched), or `null` when the item is dropped; `images`
+ *  maps each hash to the absolute path of a file with those bytes; `problems` are strings naming
+ *  the item and the path. An item with any problem is dropped rather than served with a broken
  *  picture, and the caller decides whether to proceed, as with the bank's own problems.
+ *
+ *  THIS IS THE PRIMITIVE, per item, so a caller can tell which input a result came from. Items
+ *  from different topics can share an `id`, so matching output to input by id is not safe.
  *
  *  ONLY A LINE OF ITS OWN IS AN IMAGE. `![alt](file.png)` in mid-sentence, or an author's own
  *  `/api/images/...` URL, is a leftover and a problem: the renderer shows only a figure line, and
  *  an author must not be able to name a hash the seed never checked. */
+export function resolveItem(item, src) {
+  const bad = [];
+  const found = {};
+  const lines = String(item.prompt ?? "").split("\n").map((raw) => {
+    const line = raw.endsWith("\r") ? raw.slice(0, -1) : raw;
+    const m = IMAGE_LINE.exec(line);
+    if (!m) {
+      if (ANY_IMAGE.test(line)) bad.push(`${item.id}: image reference "${line.trim()}" is not on a line of its own, or is already a served URL`);
+      return raw;
+    }
+    const [, alt, target] = m;
+    if (target.startsWith("/api/images/")) {
+      bad.push(`${item.id}: image reference "${target}" is a served URL; write the file name beside the task instead`);
+      return raw;
+    }
+    const got = load(src, item, target);
+    if (got.problem) {
+      bad.push(`${item.id}: image ${target} ${got.problem}`);
+      return raw;
+    }
+    found[got.hash] = got.path;
+    return `![${alt}](/api/images/${got.hash}.png)`;
+  });
+  if (bad.length) return { item: null, images: {}, problems: bad };
+  // An item with no prompt has nothing to rewrite, and gains no empty one.
+  return { item: item.prompt == null ? { ...item } : { ...item, prompt: lines.join("\n") }, images: found, problems: [] };
+}
+
+/** Rewrite every image line in the drawn items' prompts, item by item through resolveItem.
+ *
+ *  `sourceOf(item)` gives the item's source folder. Returns { items, images, problems }: the kept
+ *  items in input order, one `images` map (the first path wins for shared bytes), and all the
+ *  problems. */
 export function resolveImages(items, sourceOf) {
   const out = [];
   const images = {};
   const problems = [];
   for (const item of items) {
-    const src = sourceOf(item);
-    const bad = [];
-    const found = {};
-    const lines = String(item.prompt ?? "").split("\n").map((raw) => {
-      const line = raw.endsWith("\r") ? raw.slice(0, -1) : raw;
-      const m = IMAGE_LINE.exec(line);
-      if (!m) {
-        if (ANY_IMAGE.test(line)) bad.push(`${item.id}: image reference "${line.trim()}" is not on a line of its own, or is already a served URL`);
-        return raw;
-      }
-      const [, alt, target] = m;
-      if (target.startsWith("/api/images/")) {
-        bad.push(`${item.id}: image reference "${target}" is a served URL; write the file name beside the task instead`);
-        return raw;
-      }
-      const got = load(src, item, target);
-      if (got.problem) {
-        bad.push(`${item.id}: image ${target} ${got.problem}`);
-        return raw;
-      }
-      found[got.hash] = got.path;
-      return `![${alt}](/api/images/${got.hash}.png)`;
-    });
-    if (bad.length) {
-      problems.push(...bad);
-      continue;
-    }
-    for (const [hash, path] of Object.entries(found)) images[hash] ??= path;
-    // An item with no prompt has nothing to rewrite, and gains no empty one.
-    out.push(item.prompt == null ? { ...item } : { ...item, prompt: lines.join("\n") });
+    const got = resolveItem(item, sourceOf(item));
+    problems.push(...got.problems);
+    if (!got.item) continue;
+    for (const [hash, path] of Object.entries(got.images)) images[hash] ??= path;
+    out.push(got.item);
   }
   return { items: out, images, problems };
 }

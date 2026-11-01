@@ -123,6 +123,34 @@ test("an image inside a sentence is text", () => {
   const out = markdown(`See ![d](/api/images/${HASH}.png) here.`);
   assert.ok(!out.includes("<img"), out);
   assert.ok(!out.includes("<a "), out);
+  assert.ok(out.includes(`![d](/api/images/${HASH}.png)`), out);
+});
+
+test("a 65-digit hash stays text", () => {
+  const out = markdown(`![d](/api/images/${HASH}a.png)`);
+  assert.ok(!out.includes("<img"), out);
+  assert.ok(out.includes("![d]("), out);
+});
+
+test("an indented image line is a figure", () => {
+  assert.equal(markdown(`   ![d](/api/images/${HASH}.png)`), FIGURE);
+});
+
+test("an image line right under a list item ends the list and is a figure", () => {
+  const out = markdown(`- one\n![d](/api/images/${HASH}.png)`);
+  assert.equal(out, `<ul><li>one</li></ul>${FIGURE}`);
+});
+
+test("an image inside a table cell stays text", () => {
+  const out = markdown(`| a |\n| - |\n| ![d](/api/images/${HASH}.png) |`);
+  assert.ok(!out.includes("<img"), out);
+  assert.ok(out.includes("![d](/api/images/"), out);
+});
+
+test("placeholder control characters in the input are not read back as placeholders", () => {
+  assert.ok(!markdown("a \u00010\u0001 b").includes("undefined"));
+  assert.ok(!markdown("a \u00000\u0000 b").includes("undefined"));
+  assert.ok(!markdownInline("a \u00010\u0001 b").includes("undefined"));
 });
 
 test("nothing in, nothing out", () => {

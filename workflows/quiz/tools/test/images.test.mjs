@@ -1,10 +1,10 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { mkdtempSync, mkdirSync, writeFileSync } from "node:fs";
+import { mkdtempSync, mkdirSync, symlinkSync, writeFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
-import { resolveImages, sourceDir, taskFile } from "../lib/images.mjs";
+import { resolveImages, resolveItem, sourceDir, taskFile } from "../lib/images.mjs";
 
 const SIG = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
 const png = (tail) => Buffer.concat([SIG, Buffer.from(tail)]);
@@ -54,7 +54,6 @@ for (const [name, target] of [
   ["an absolute path", "/etc/x.png"],
   ["a URL", "https://e.com/x.png"],
   ["a Windows drive path", "C:\\x.png"],
-  ["a directory", "."],
 ]) {
   test(`${name} is a problem and drops the item`, () => {
     const { src } = fixture();
@@ -66,6 +65,111 @@ for (const [name, target] of [
     assert.ok(out.problems[0].includes(target), out.problems[0]);
   });
 }
+
+test("a directory is reported as cannot be read", () => {
+  const { src } = fixture();
+  const out = resolveImages([item("![d](.)", "the-id")], () => src);
+  assert.match(out.problems[0], /cannot be read/);
+});
+
+test("a symlink inside the source to a PNG outside it is refused", () => {
+  const { src, bytes } = fixture();
+  const away = mkdtempSync(join(tmpdir(), "images-away-"));
+  writeFileSync(join(away, "x.png"), bytes);
+  symlinkSync(join(away, "x.png"), join(src, "tasks", "a-x", "link.png"));
+  const out = resolveImages([item("![d](link.png)", "ln")], () => src);
+  assert.equal(out.items.length, 0);
+  assert.match(out.problems[0], /outside the source folder/);
+});
+
+test("a symlink that stays inside the source is accepted", () => {
+  const { src, hash } = fixture();
+  symlinkSync(join(src, "tasks", "a-x", "pic.png"), join(src, "tasks", "a-x", "alias.png"));
+  const out = resolveImages([item("![d](alias.png)", "ok")], () => src);
+  assert.deepEqual(out.problems, []);
+  assert.ok(out.items[0].prompt.includes(hash));
+});
+
+test("a source folder that is itself reached through a symlink still works", () => {
+  const { src, hash } = fixture();
+  const holder = mkdtempSync(join(tmpdir(), "images-hold-"));
+  symlinkSync(src, join(holder, "via"));
+  const out = resolveImages([item("![d](pic.png)")], () => join(holder, "via"));
+  assert.deepEqual(out.problems, []);
+  assert.ok(out.items[0].prompt.includes(hash));
+});
+
+test("problems name the bank, so two q1 items from different topics stay distinct", () => {
+  const { src } = fixture();
+  const a = { ...item("![d](nope.png)", "q1"), bank: "t1/a-x" };
+  const b = { ...item("![d](nope.png)", "q1"), bank: "t2/a-x" };
+  const out = resolveImages([a, b], () => src);
+  assert.equal(new Set(out.problems).size, 2);
+  assert.ok(out.problems[0].includes("(t1/a-x)"), out.problems[0]);
+  assert.ok(out.problems[1].includes("(t2/a-x)"), out.problems[1]);
+  const bare = resolveImages([{ id: "z", prompt: "See ![d](pic.png) x" }], () => src);
+  assert.ok(bare.problems[0].startsWith("z:"), bare.problems[0]);
+});
+
+test("an image line inside a fenced block is left alone and not mapped", () => {
+  const { src } = fixture();
+  const prompt = "Example:\n\n```\n![d](pic.png)\n```\n\n~~~md\n![d](nope.png)\n~~~\n\nQ?";
+  const out = resolveImages([item(prompt)], () => src);
+  assert.deepEqual(out.problems, []);
+  assert.equal(out.items[0].prompt, prompt);
+  assert.deepEqual(out.images, {});
+});
+
+test("an image line after a fence closes is still rewritten", () => {
+  const { src, hash } = fixture();
+  const out = resolveImages([item("```\nx\n```\n![d](pic.png)")], () => src);
+  assert.deepEqual(out.problems, []);
+  assert.ok(out.items[0].prompt.endsWith(`![d](/api/images/${hash}.png)`));
+});
+
+test("an inline code span showing image syntax is not a leftover", () => {
+  const { src } = fixture();
+  const prompt = "Use `![x](y)` syntax.";
+  const out = resolveImages([item(prompt)], () => src);
+  assert.deepEqual(out.problems, []);
+  assert.equal(out.items[0].prompt, prompt);
+});
+
+test("an image inside a blockquote is refused as a leftover", () => {
+  const { src } = fixture();
+  const out = resolveImages([item("> ![d](pic.png)", "bq")], () => src);
+  assert.equal(out.items.length, 0);
+  assert.equal(out.problems.length, 1);
+  assert.match(out.problems[0], /not on a line of its own/);
+});
+
+test("resolveItem: a kept item comes back rewritten with its own images", () => {
+  const { src, hash } = fixture();
+  const it = item("![d](pic.png)");
+  const got = resolveItem(it, src);
+  assert.deepEqual(got.problems, []);
+  assert.notEqual(got.item, it);
+  assert.equal(got.item.prompt, `![d](/api/images/${hash}.png)`);
+  assert.deepEqual(got.images, { [hash]: join(src, "tasks", "a-x", "pic.png") });
+});
+
+test("resolveItem: a dropped item is null, with no images and its problems", () => {
+  const { src } = fixture();
+  const got = resolveItem(item("![d](pic.png)\n\n![d](nope.png)", "dr"), src);
+  assert.equal(got.item, null);
+  assert.deepEqual(got.images, {});
+  assert.equal(got.problems.length, 1);
+});
+
+test("resolveItem: an item with no prompt keeps none", () => {
+  const { src } = fixture();
+  const { prompt, ...bare } = item("x");
+  const got = resolveItem(bare, src);
+  assert.deepEqual(got.item, bare);
+  assert.ok(!("prompt" in got.item));
+  assert.deepEqual(got.images, {});
+  assert.deepEqual(got.problems, []);
+});
 
 test("a sibling folder sharing the source's name prefix is outside it", () => {
   const { src, bytes } = fixture();
