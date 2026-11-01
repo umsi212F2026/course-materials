@@ -498,9 +498,9 @@ Submitting on success is what turns "the student says it works" into something t
         <dc:Bounds x="620" y="315" width="50" height="50" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Gate_ok_di" bpmnElement="Gate_ok" isMarkerVisible="true">
-        <dc:Bounds x="1080" y="505" width="50" height="50" />
+        <dc:Bounds x="1480" y="505" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1050" y="496" width="40" height="27" />
+          <dc:Bounds x="1450" y="496" width="40" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Gate_fix_di" bpmnElement="Gate_fix" isMarkerVisible="true">
@@ -516,10 +516,10 @@ Submitting on success is what turns "the student says it works" into something t
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Task_workspace_di" bpmnElement="Task_workspace">
-        <dc:Bounds x="760" y="300" width="220" height="80" />
+        <dc:Bounds x="760" y="180" width="220" height="340" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Prog_doctor_di" bpmnElement="Prog_doctor">
-        <dc:Bounds x="760" y="490" width="220" height="80" />
+        <dc:Bounds x="1180" y="490" width="220" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Task_report_blocked_di" bpmnElement="Task_report_blocked">
         <dc:Bounds x="1240" y="120" width="200" height="80" />
@@ -576,31 +576,31 @@ Submitting on success is what turns "the student says it works" into something t
         <di:waypoint x="1080" y="340" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="b5_di" bpmnElement="b5">
-        <di:waypoint x="980" y="530" />
-        <di:waypoint x="1080" y="530" />
+        <di:waypoint x="1400" y="530" />
+        <di:waypoint x="1480" y="530" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="b6_di" bpmnElement="b6">
-        <di:waypoint x="1105" y="555" />
-        <di:waypoint x="1105" y="590" />
+        <di:waypoint x="1505" y="555" />
+        <di:waypoint x="1505" y="590" />
         <di:waypoint x="645" y="590" />
         <di:waypoint x="645" y="365" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1113" y="573" width="34" height="14" />
+          <dc:Bounds x="1513" y="573" width="34" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="b7_di" bpmnElement="b7">
-        <di:waypoint x="1130" y="530" />
+        <di:waypoint x="1530" y="530" />
         <di:waypoint x="1780" y="530" />
         <di:waypoint x="1780" y="200" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1160" y="513" width="40" height="14" />
+          <dc:Bounds x="1560" y="513" width="40" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="b8_di" bpmnElement="b8">
         <di:waypoint x="1105" y="370" />
         <di:waypoint x="1105" y="420" />
-        <di:waypoint x="870" y="420" />
-        <di:waypoint x="870" y="490" />
+        <di:waypoint x="1290" y="420" />
+        <di:waypoint x="1290" y="490" />
         <bpmndi:BPMNLabel>
           <dc:Bounds x="1111" y="400" width="18" height="14" />
         </bpmndi:BPMNLabel>

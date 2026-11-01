@@ -1369,9 +1369,9 @@ Discarding the work is not on the menu. It happens only when the human asks for 
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="DOR_spec_di" bpmnElement="DOR_spec" color:background-color="#eef2f9">
-        <dc:Bounds x="1520" y="430" width="36" height="50" />
+        <dc:Bounds x="1602" y="430" width="36" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1493" y="485" width="90" height="40" />
+          <dc:Bounds x="1575" y="485" width="90" height="40" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="DOR_plan_di" bpmnElement="DOR_plan" color:background-color="#f2eef9">
@@ -1381,7 +1381,7 @@ Discarding the work is not on the menu. It happens only when the human asks for 
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Sub_brainstorm_di" bpmnElement="Sub_brainstorm" isExpanded="false">
-        <dc:Bounds x="1350" y="190" width="220" height="190" />
+        <dc:Bounds x="1350" y="190" width="220" height="640" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Sub_plan_di" bpmnElement="Sub_plan" isExpanded="false">
         <dc:Bounds x="1670" y="190" width="220" height="190" />
@@ -1503,12 +1503,12 @@ Discarding the work is not on the menu. It happens only when the human asks for 
         <di:waypoint x="1990" y="755" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="doa_spec_di" bpmnElement="doa_spec">
-        <di:waypoint x="1507" y="380" />
-        <di:waypoint x="1538" y="430" />
+        <di:waypoint x="1570" y="455" />
+        <di:waypoint x="1602" y="455" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="dia_spec_plan_di" bpmnElement="dia_spec_plan">
-        <di:waypoint x="1556" y="446" />
-        <di:waypoint x="1730" y="446" />
+        <di:waypoint x="1638" y="455" />
+        <di:waypoint x="1730" y="455" />
         <di:waypoint x="1730" y="380" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="doa_plan_di" bpmnElement="doa_plan">
