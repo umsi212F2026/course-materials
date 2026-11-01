@@ -6,7 +6,8 @@
 //
 // IT COVERS WHAT THE BANKS USE, not all of Markdown: paragraphs, fenced blocks, bullets and
 // numbered lists (nested by indentation), tables, blockquotes, headings, code spans, bold,
-// italic and http(s) links. Anything else shows as the text it is, which is readable.
+// italic, http(s) links, and an image on a line of its own (only the quiz app's /api/images/
+// route, shown as a figure; every other image form stays text). Anything else shows as the text it is, which is readable.
 //
 // ESCAPING COMES FIRST, so nothing a bank says can become markup it did not ask for, and no
 // dependency: the quiz tools ship to students with nothing to install.
@@ -21,17 +22,27 @@ const ITEM = /^(\s*)([-*+]|\d+[.)])\s+(.*)$/;
 const ROW = /^\s*\|/;
 const RULE = /^\s*\|?\s*:?-+:?\s*(\|\s*:?-+:?\s*)*\|?\s*$/;
 
-const startsBlock = (line) => FENCE.test(line) || HEADING.test(line) || QUOTE.test(line) || ITEM.test(line) || ROW.test(line);
+// An image is a line to itself, and only the one URL form a draw uses: the quiz app's own image
+// route, a 64-digit hex hash, PNG. Nothing a bank says can point a student's browser elsewhere.
+const IMAGE = /^\s*!\[([^\]]*)\]\((\/api\/images\/[0-9a-f]{64}\.png)\)\s*$/;
 
-/** Code spans are set aside before anything else, so their contents are never read as markup. */
+const startsBlock = (line) =>
+  FENCE.test(line) || HEADING.test(line) || QUOTE.test(line) || ITEM.test(line) || ROW.test(line) || IMAGE.test(line);
+
+/** Code spans are set aside before anything else, so their contents are never read as markup.
+ *  Any image form is set aside the same way, as the escaped text it is, so the link rule cannot
+ *  turn `![x](https://...)` into a bang and a link. */
 function inline(text) {
   const codes = [];
+  const images = [];
   return esc(text)
     .replace(/`([^`]+)`/g, (_, c) => `\u0000${codes.push(c) - 1}\u0000`)
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, (m) => `\u0001${images.push(m) - 1}\u0001`)
     .replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>')
     .replace(/\*\*([^*]+?)\*\*/g, '<strong>$1</strong>')
     .replace(/(^|[^\w*])\*([^*\s][^*]*?)\*(?![\w*])/g, '$1<em>$2</em>')
     .replace(/(^|[^\w])_([^_\s][^_]*?)_(?!\w)/g, '$1<em>$2</em>')
+    .replace(/\u0001(\d+)\u0001/g, (_, n) => images[n])
     .replace(/\u0000(\d+)\u0000/g, (_, n) => `<code>${codes[n]}</code>`);
 }
 
@@ -78,6 +89,10 @@ function blocks(lines, breaks = false) {
       for (i++; i < lines.length && !lines[i].trim().startsWith(mark); i++) body.push(lines[i]);
       i++;
       out.push(`<pre><code>${esc(body.join('\n'))}</code></pre>`);
+    } else if (IMAGE.test(line)) {
+      const [, alt, src] = IMAGE.exec(line);
+      out.push(`<div class="figure"><img src="${src}" alt="${esc(alt)}"></div>`);
+      i++;
     } else if (HEADING.test(line)) {
       out.push(`<h4>${inline(HEADING.exec(line)[1])}</h4>`);
       i++;

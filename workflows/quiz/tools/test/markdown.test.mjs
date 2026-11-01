@@ -76,6 +76,55 @@ test("a heading", () => {
   assert.equal(markdown("### Your agent's plan"), "<h4>Your agent&#39;s plan</h4>");
 });
 
+const HASH = "a".repeat(64);
+const FIGURE = `<div class="figure"><img src="/api/images/${HASH}.png" alt="d"></div>`;
+
+test("renders an image line as a figure", () => {
+  assert.equal(
+    markdown("![The Camunda Modeler diagram for x](/api/images/" + HASH + ".png)"),
+    '<div class="figure"><img src="/api/images/' + HASH + '.png" alt="The Camunda Modeler diagram for x"></div>'
+  );
+});
+
+test("an image between paragraphs is its own block", () => {
+  assert.equal(
+    markdown(`Before.\n\n![d](/api/images/${HASH}.png)\n\nAfter.`),
+    `<p>Before.</p>${FIGURE}<p>After.</p>`
+  );
+});
+
+test("an image straight after a paragraph line stops the paragraph", () => {
+  assert.equal(markdown(`Before.\n![d](/api/images/${HASH}.png)`), `<p>Before.</p>${FIGURE}`);
+});
+
+test("refuses every other image form", () => {
+  for (const url of [
+    "https://example.com/a.png",
+    "javascript:alert(1)",
+    "data:image/png;base64,AAAA",
+    "bootstrap-top.png",
+    "/api/images/ABC.png",
+    "/api/images/" + "a".repeat(63) + ".png",
+  ]) {
+    const out = markdown(`![x](${url})`);
+    assert.ok(!out.includes("<img"), url);
+    assert.ok(!out.includes("<a "), url);
+    assert.ok(out.includes("![x]("), url);
+  }
+});
+
+test("escapes alt text", () => {
+  const out = markdown(`![<b>"x"</b>](/api/images/${HASH}.png)`);
+  assert.ok(out.includes('alt="&lt;b&gt;&quot;x&quot;&lt;/b&gt;"'), out);
+  assert.ok(!out.includes("<b>"), out);
+});
+
+test("an image inside a sentence is text", () => {
+  const out = markdown(`See ![d](/api/images/${HASH}.png) here.`);
+  assert.ok(!out.includes("<img"), out);
+  assert.ok(!out.includes("<a "), out);
+});
+
 test("nothing in, nothing out", () => {
   assert.equal(markdown(""), "");
   assert.equal(markdown(null), "");
