@@ -320,10 +320,18 @@ with the learner.
       answer:      what a complete answer says
       credit:      what full and half credit mean. A question naming two or more goals lists
                    one statement per goal, each starting `<goal-id>`: with the id in backticks
-      type:        free (the default) or mcq; an mcq's question ends in a numbered list and
-                   `answer` is the 1-based choice
+      type:        free (the default), mcq or compound; an mcq's question ends in a numbered
+                   list and `answer` is the 1-based choice
       move:        for a word's question, its move
       tutor note:  optional; follow-ups for this one question, for the tutor only
+
+  A COMPOUND is one question asked in lettered parts that share its stem and are judged
+  separately. Under the `###` question in both files, each part is a `#### a`, `#### b` heading
+  (a single lowercase letter, in order, at least two). The `###` task body is the stem and
+  carries any image; a part's own text follows its heading, with its numbered choices if it is an
+  mcq. The `###` rubric entry holds the question's `goal` (exactly one) and `cases`, with
+  `type: compound`. Each `####` rubric part takes `type` (mcq or free, free by default), `answer`,
+  `credit` (a free part), and an optional `tutor note`, and never a `goal` or `cases`.
 
   What holds for every question stays in the entry here. A note about one scenario goes in its
   key, and a note about one question in its `tutor note`.
