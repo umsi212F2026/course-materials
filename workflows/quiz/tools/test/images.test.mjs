@@ -66,6 +66,26 @@ for (const [name, target] of [
   });
 }
 
+test("a PNG one byte over 2 MB is a problem and drops the item", () => {
+  const { src } = fixture();
+  writeFileSync(join(src, "tasks", "a-x", "big.png"), Buffer.concat([SIG, Buffer.alloc(2 * 1024 * 1024 + 1 - SIG.length)]));
+  const out = resolveImages([item("![d](big.png)", "the-id")], () => src);
+  assert.equal(out.items.length, 0);
+  assert.deepEqual(out.images, {});
+  assert.equal(out.problems.length, 1);
+  assert.ok(out.problems[0].includes("the-id (t/a-x)"), out.problems[0]);
+  assert.ok(out.problems[0].includes("big.png"), out.problems[0]);
+  assert.ok(out.problems[0].includes("is over 2 MB"), out.problems[0]);
+});
+
+test("a PNG of exactly 2 MB passes", () => {
+  const { src } = fixture();
+  writeFileSync(join(src, "tasks", "a-x", "edge.png"), Buffer.concat([SIG, Buffer.alloc(2 * 1024 * 1024 - SIG.length)]));
+  const out = resolveImages([item("![d](edge.png)")], () => src);
+  assert.deepEqual(out.problems, []);
+  assert.equal(out.items.length, 1);
+});
+
 test("a directory is reported as cannot be read", () => {
   const { src } = fixture();
   const out = resolveImages([item("![d](.)", "the-id")], () => src);
