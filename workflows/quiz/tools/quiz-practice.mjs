@@ -70,8 +70,25 @@ function goalsFor(items) {
 const tagsOf = (it) =>
   it?.tags ? (it.tags.length ? it.tags.join(",") : null) : it?.move ? MOVE_TAGS[it.move] ?? null : null;
 
+/**
+ * An image of this draw, or a 404. THE URL ONLY EVER SELECTS A KEY: the name must be 64
+ * lowercase hex characters and present in the draw's own map, and the file read is the map's
+ * path, never anything built from the URL, so no request can reach a file the draw did not
+ * name. A mapped file that has since vanished is a 404 too, not a crash.
+ */
+export function imageResponse(images, url) {
+  const notFound = { status: 404, type: "text/plain", body: "not found" };
+  const m = /^\/api\/images\/([0-9a-f]{64})\.png$/.exec(String(url).split("?")[0]);
+  if (!m || !Object.hasOwn(images ?? {}, m[1])) return notFound;
+  try {
+    return { status: 200, type: "image/png", body: readFileSync(images[m[1]]) };
+  } catch {
+    return notFound;
+  }
+}
+
 /** The page. Every item on one screen, answered cold, submitted once. */
-function page(items, source) {
+export function page(items, source) {
   const body = items
     .map((it, i) => {
       const field =
@@ -113,6 +130,10 @@ function page(items, source) {
  .prompt th,.prompt td{border:1px solid #dcdcd8;padding:5px 9px;text-align:left;vertical-align:top}
  .prompt th{background:#f6f6f3}
  .prompt blockquote{border-left:3px solid #c9d6e6;padding:2px 0 2px 14px;color:#333}
+ /* A diagram is read at natural size: shrinking it to the column would make its labels
+    unreadable, so a wide one scrolls sideways instead. */
+ .figure{overflow-x:auto}
+ .figure img{display:block;max-width:none}
  ul.choices code{font:.9em ui-monospace,Menlo,monospace;background:#f1f0ea;padding:1px 4px;border-radius:3px}
  textarea{width:100%;box-sizing:border-box;padding:10px;border:1px solid #dcdcd8;border-radius:5px;font:inherit}
  /* A locked answer still has to be readable: WebKit greys disabled text out, and the whole
@@ -425,7 +446,7 @@ function main() {
   }
   const source = `session ${pool.session}, the quiz of ${pool.date}`;
 
-  const { items, strata, problems } = drawPractice(pool, ROOT, {
+  const { items, strata, problems, images } = drawPractice(pool, ROOT, {
     seed: process.argv.includes("--seed") ? process.argv[process.argv.indexOf("--seed") + 1] : undefined,
   });
   if (problems.length) {
@@ -477,6 +498,11 @@ function main() {
         setTimeout(() => server.close(() => process.exit(0)), 250);
       });
       return;
+    }
+    if (req.url.startsWith("/api/images/")) {
+      const r = imageResponse(images, req.url);
+      res.writeHead(r.status, { "content-type": r.type });
+      return res.end(r.body);
     }
     res.writeHead(404, { "content-type": "text/plain" });
     res.end("not found");
