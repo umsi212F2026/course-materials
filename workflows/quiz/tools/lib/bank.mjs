@@ -42,6 +42,14 @@
 // too, with no items and no problems: authored topics kept study material in folders like that
 // before folder banks existed, and calling every file in one a broken bank would bury the real
 // problems under dozens of phantom ones.
+//
+// A SCENARIO'S FRAMING NEVER REACHES A PROMPT. A tasks/ top part may end in a `## Framing` line
+// and the text under it, which introduces the run of questions ("each question is a different
+// change"). An item's `setup` is the scenario above the marker, its `framing` the text below it,
+// and its `prompt` is the setup and the question, never the framing: a draw shows one question,
+// and words about a run read as broken above it. Study prints the framing itself, before the
+// first question it serves from a scenario (next-item.mjs). A file without the marker reads as
+// before, with `framing` empty.
 
 import { readFileSync, readdirSync, existsSync, statSync } from 'node:fs';
 import { join } from 'node:path';
@@ -344,6 +352,94 @@ function topPart(text) {
   return out.join('\n').trim();
 }
 
+// THE MARKER IS EXACT, trailing whitespace aside (a CRLF file's `\r` included). Any other `##` line
+// in a scenario's top part is a near miss, reported rather than guessed at, because a guess wrong
+// either way puts text in front of a learner that was not meant for them.
+const FRAMING_MARKER = /^## Framing\s*$/;
+
+// A tasks/ file's top part, split at its `## Framing` line: the scenario above it, which every
+// question is shown with, and the framing below it, which introduces the run and is shown in study
+// before the first question only. Same title rule as topPart. A second marker stays in the framing
+// as text and is counted, so the caller can report it.
+function scenarioParts(text) {
+  const setup = [];
+  const framing = [];
+  const nearMisses = [];
+  let markers = 0;
+  let titled = false;
+  for (const line of text.split('\n')) {
+    if (/^###\s/.test(line)) break;
+    if (!titled && /^#\s/.test(line)) {
+      titled = true;
+      continue;
+    }
+    if (FRAMING_MARKER.test(line)) {
+      markers++;
+      if (markers === 1) continue;
+    } else if (/^##(?!#)/.test(line)) {
+      nearMisses.push(line.trimEnd());
+    }
+    (markers ? framing : setup).push(line);
+  }
+  return { setup: setup.join('\n').trim(), framing: framing.join('\n').trim(), markers, nearMisses };
+}
+
+// WHAT THE FRAMING RULE CATCHES BY WORDING. A run phrase speaks of the questions as a set, so it
+// belongs in the framing and is a fault only in the scenario part, which every draw shows. How to
+// answer belongs in each question, so it is a fault in the scenario part and in the framing alike.
+// These are the phrase-level cases; bank-check judges the rest. Every framing problem ends in
+// FRAMING_RULE, so a reader can tell the new rule's findings from older ones.
+export const FRAMING_RULE = ' (framing rule)';
+const RUN_PHRASES = [/\beach question\b/i, /\bquestions below\b/i, /\bthe questions follow\b/i, /\banswer each\b/i, /\bwhere a question asks\b/i];
+const ANSWERING = [/\banswer in\b/i, /\bin (a|one|two|three|four|five)\b[^.?!\n]*\bsentences?\b/i];
+
+function firstMatch(text, patterns) {
+  for (const re of patterns) {
+    const m = text.match(re);
+    if (m) return m[0];
+  }
+  return null;
+}
+
+// "Some show an exchange ... Others show a message" introduces a mix of question kinds. Two words
+// that common are a run phrase only together, in one paragraph.
+function runPhrase(text) {
+  const found = firstMatch(text, RUN_PHRASES);
+  if (found) return found;
+  return text.split(/\n\s*\n/).some((p) => /\bsome\b/i.test(p) && /\bothers\b/i.test(p)) ? 'some ... others' : null;
+}
+
+/** The framing rule's findings for one scenario's top parts. `scn` is <activity>/<scenario>. */
+function framingProblems(scn, scenario, parts, rubricText, rubricWhere) {
+  const out = [];
+  const run = runPhrase(parts.setup);
+  if (run) out.push(`${scn}: the scenario part says "${run}", which speaks of a run of questions; move it under ## Framing`);
+  const inSetup = firstMatch(parts.setup, ANSWERING);
+  if (inSetup) out.push(`${scn}: the scenario part says "${inSetup}", which says how to answer; put it in each question`);
+  const inFraming = firstMatch(parts.framing, ANSWERING);
+  if (inFraming) out.push(`${scn}: the framing says "${inFraming}", which says how to answer; put it in each question`);
+  if (parts.markers && !parts.framing) out.push(`${scn}: ## Framing has nothing under it`);
+  if (parts.markers > 1) out.push(`${scn}: ## Framing appears ${parts.markers} times; only the first is the marker`);
+  for (const line of parts.nearMisses) out.push(`${scn}: "${line}" is not the marker; write it exactly as ## Framing`);
+  if (scenario === 'main-bank' && parts.markers) out.push(`${scn}: main-bank has no framing`);
+  if (rubricText.split('\n').some((l) => FRAMING_MARKER.test(l))) {
+    out.push(`${scn}: ${rubricWhere} has a ## Framing line; a key has no framing`);
+  }
+  return out.map((p) => p + FRAMING_RULE);
+}
+
+/** The framing rule's findings for one question body. */
+function questionFramingProblems(label, body) {
+  const out = [];
+  if (body.split('\n').some((l) => FRAMING_MARKER.test(l))) {
+    out.push(`${label}: ## Framing in a question is not a marker; it belongs in the top part`);
+  }
+  if (/\banswer only\b/i.test(body)) {
+    out.push(`${label}: says "answer only", which overrides how to answer; say it in this question alone`);
+  }
+  return out.map((p) => p + FRAMING_RULE);
+}
+
 /** Read every folder bank in one source: tasks/<activity>/<scenario>.md against
  *  rubrics/<activity>/<scenario>.md. Returns { items, problems } like readBank, and readBank
  *  calls it, so every caller sees both kinds. Problems are collected, never thrown. */
@@ -380,7 +476,9 @@ export function readFolderBanks(dir, label = '') {
       }
 
       const taskText = readFileSync(join(tasksDir, activity, file), 'utf8');
-      const setup = topPart(taskText);
+      const parts = scenarioParts(taskText);
+      const { setup, framing } = parts;
+      problems.push(...framingProblems(`${activity}/${scenario}`, scenario, parts, rubricText, `rubrics/${activity}/${file}`));
       const seen = new Set();
       for (const s of sections(taskText)) {
         const label3 = `${activity}/${scenario}/${s.id}`;
@@ -389,6 +487,7 @@ export function readFolderBanks(dir, label = '') {
           continue;
         }
         seen.add(s.id);
+        problems.push(...questionFramingProblems(label3, s.body));
 
         const r = rubrics.get(s.id);
         if (!r) {
@@ -407,7 +506,7 @@ export function readFolderBanks(dir, label = '') {
           ...(goals.length === 1 ? { goal: goals[0] } : {}),
           ...(r.move ? { move: r.move } : {}),
           tags: tagsForMove(r.move),
-          type, prompt, setup, key,
+          type, prompt, setup, framing, key,
           ...(r.answer ? { expected: r.answer } : {}),
           ...(r['tutor note'] ? { tutorNote: r['tutor note'] } : {}),
         };

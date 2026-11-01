@@ -9,6 +9,9 @@
 // THE LEARNER'S VIEW AND THE KEY ARE SEPARATE SECTIONS, and the key is printed only on --key,
 // so an agent that wants the question can read the output without also reading the answer.
 //
+// A SCENARIO'S FRAMING HEADS THE LEARNER'S VIEW only above the first question served from it; see
+// below.
+//
 // EXIT 2 MEANS THE BANK HAS NOTHING FOR THIS, which is not a failure of the call: the activity
 // has no stored questions, or in study none still needed while something is left to show, and
 // the tutor falls back to generating one live. Exit 1 is a misuse
@@ -107,6 +110,14 @@ if (!result) {
 }
 
 const { item, repeat, lastServed, keepsOrder } = result;
+// A SCENARIO'S FRAMING IS PRINTED HERE, ABOVE THE FIRST QUESTION SERVED FROM IT, and this script
+// decides that rather than the tutor: it holds the label and --after, so the rule lives in one
+// place. --after in the same scenario means the run has been introduced already. A review sitting
+// re-attempts one question cold, as a draw does, so it never gets framing. learnerText leaves it
+// out, which is what keeps it from judge-input.mjs: the framing carries no fact an answer needs.
+const [afterActivity, afterScenario] = (flags.after ?? '').split('/');
+const continuing = afterActivity === item.activity && afterScenario === item.scenario;
+const framing = item.framing && !flags.review && !continuing ? [item.framing, ''] : [];
 const lines = [
   `label: ${item.label}`,
   `goals: ${item.goals.join(', ')}`,
@@ -120,6 +131,7 @@ const lines = [
   // another goal, and the tutor records an attempt per goal it names, as for any question.
   ...(keepsOrder ? [`served first: keeps ${keepsOrder} in order`] : []),
   '--- learner sees ---',
+  ...framing,
   learnerText(item),
 ];
 if (flags.key) lines.push('--- key ---', keyText(item));
