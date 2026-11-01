@@ -376,7 +376,7 @@ function scenarioParts(text) {
     if (FRAMING_MARKER.test(line)) {
       markers++;
       if (markers === 1) continue;
-    } else if (/^##/.test(line)) {
+    } else if (/^##(?!#)/.test(line)) {
       nearMisses.push(line.trimEnd());
     }
     (markers ? framing : setup).push(line);

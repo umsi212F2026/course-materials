@@ -213,6 +213,13 @@ test("## framing in lower case is a near miss", () => {
   assert.deepEqual(framed("The app: Crumbs.\n\n## framing\n\nEach decision stands alone."), [
     'a-x/crumbs: "## framing" is not the marker; write it exactly as ## Framing (framing rule)',
   ]);
+  assert.deepEqual(framed("The app: Crumbs.\n\n## Framing:\n\nEach decision stands alone."), [
+    'a-x/crumbs: "## Framing:" is not the marker; write it exactly as ## Framing (framing rule)',
+  ]);
+});
+
+test("a #### heading in the scenario part is not a near miss", () => {
+  assert.deepEqual(framed("The app: Crumbs.\n\n#### The log\n\nIt started."), []);
 });
 
 test("main-bank has no framing", () => {

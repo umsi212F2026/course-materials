@@ -72,6 +72,12 @@ and say you did. **An id is different: it is permanent**, because the log alread
 A duplicate or a rename is not yours to repair by editing `goals.md`; put it in front of the
 learner with what it means, and let them decide whether the goal is one thing or two.
 
+**A problem ending `(framing rule)` in a course topic is not yours to fix**, where a course topic
+is one whose `goals.md` says `**origin:** course`. Its banks are the instructor's, the fix reaches
+the learner through an update, and an edit made here would only conflict with it. Leave the files
+alone and don't raise these with the learner. In a topic the learner made, fix it like any other
+defect in a file.
+
 Everything derives from these. There's no cross-topic state file, and adding one would create a
 second source of truth about things the folders already know — which is exactly why the survey
 is a program that recomputes rather than a file that remembers.
