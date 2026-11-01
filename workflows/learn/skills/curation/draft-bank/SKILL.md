@@ -277,6 +277,8 @@ when the parts genuinely share one stem and each needs its own ruling. The layou
 - Parts are scored together as one question, so **one compound per case**: a pass passes every
   case it lists, so cases a learner could get one right and another wrong on stay separate
   questions, never parts of one compound.
+- A part needs text before its choices; a part that is only a numbered list is reported as
+  having no text.
 - No part gives another's answer away, since a learner sees them all at once.
 
 Write no em dash or en dash anywhere in a bank: these files ship to students in the course's
