@@ -270,7 +270,9 @@ when the parts genuinely share one stem and each needs its own ruling. The layou
   a part.
 - The `###` rubric entry holds `goal`, `cases` and `type: compound`, and names exactly one goal.
   A part takes `type` (`mcq` or `free`, free by default), `answer`, `credit` for a free part,
-  and an optional `tutor note`, never a `goal` or `cases`.
+  and an optional `tutor note`, never a `goal` or `cases`. The entry itself may carry a
+  `tutor note` about the whole question, but never an `answer` or `credit`, which belong to the
+  parts and are reported as a bank problem on the entry.
 - Each part follows the rules above for its type: an mcq part has one right choice, each wrong
   one wrong for a reason the setup supplies, choices of balanced length and the right one's
   position varied; a free part says how to answer.

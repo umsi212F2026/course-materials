@@ -61,7 +61,8 @@ fault survey reports: run it, record nothing.
 **A compound question is served whole.** Its learner's section is a stem and then parts lettered
 `(a)`, `(b)`, some with numbered choices. Show all of it in one message, as printed, and ask for
 an answer to each part in one reply. Its key gives each part's key under the same letter, and
-its `--- tutor note ---` lines are lettered too; a part's note is for you, as any tutor note is.
+its `--- tutor note ---` lines are lettered too, except a note on the whole question, which comes
+first and has no letter; every note is for you, as any tutor note is.
 **Settle each multiple-choice part yourself** against its key: the choice they gave, and whether
 it is the key's. The judge is still called once, for the whole question, and the record you send
 it carries their answers and a line per multiple-choice part, such as

@@ -331,7 +331,9 @@ with the learner.
   carries any image; a part's own text follows its heading, with its numbered choices if it is an
   mcq. The `###` rubric entry holds the question's `goal` (exactly one) and `cases`, with
   `type: compound`. Each `####` rubric part takes `type` (mcq or free, free by default), `answer`,
-  `credit` (a free part), and an optional `tutor note`, and never a `goal` or `cases`.
+  `credit` (a free part), and an optional `tutor note`, and never a `goal` or `cases`. The entry
+  itself may carry a `tutor note` about the whole question, but an `answer` or `credit` on it is
+  a bank problem, since each part carries its own.
 
   What holds for every question stays in the entry here. A note about one scenario goes in its
   key, and a note about one question in its `tutor note`.
