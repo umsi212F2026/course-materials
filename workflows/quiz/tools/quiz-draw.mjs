@@ -155,13 +155,13 @@ export function drawPractice(pool, root, { seed, preferUnseen = true } = {}) {
   // One call per item, because the step returns new objects with no record of which input each
   // came from, and a dropped item has to be told apart from a kept one by identity.
   const twin = new Map();
-  const images = {};
+  const found = {};
   const imageProblems = [];
   for (const it of course.items) {
     if (twin.has(it)) continue;
     const got = resolveImages([it], (x) => sourceDir(pool, x, root));
     twin.set(it, got.items[0] ?? null);
-    Object.assign(images, got.images);
+    Object.assign(found, got.images);
     imageProblems.push(...got.problems);
   }
   // An item sitting in two strata would be reported twice; once says it.
@@ -216,6 +216,9 @@ export function drawPractice(pool, root, { seed, preferUnseen = true } = {}) {
     if (got < take) problems.push(`${name} drew ${got} of the ${take} asked for`);
   }
 
+  // ONLY THE DRAWN ITEMS' IMAGES, because the map tells the page what to serve and an image
+  // belonging to an item that was not drawn would be served for nothing.
+  const images = Object.fromEntries(Object.entries(found).filter(([hash]) => items.some((it) => String(it.prompt).includes(`/api/images/${hash}.png`))));
   return { items, strata: shape, problems, images };
 }
 

@@ -105,7 +105,8 @@ export function resolveImages(items, sourceOf) {
       continue;
     }
     for (const [hash, path] of Object.entries(found)) images[hash] ??= path;
-    out.push({ ...item, prompt: lines.join("\n") });
+    // An item with no prompt has nothing to rewrite, and gains no empty one.
+    out.push(item.prompt == null ? { ...item } : { ...item, prompt: lines.join("\n") });
   }
   return { items: out, images, problems };
 }

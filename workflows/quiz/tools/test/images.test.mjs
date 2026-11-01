@@ -106,6 +106,14 @@ test("an item without images passes through unchanged", () => {
   assert.deepEqual(out.problems, []);
 });
 
+test("an item with no prompt keeps no prompt", () => {
+  const { src } = fixture();
+  const { prompt, ...bare } = item("x");
+  const out = resolveImages([bare], () => src);
+  assert.deepEqual(out.items, [bare]);
+  assert.ok(!("prompt" in out.items[0]));
+});
+
 test("the input items are not mutated", () => {
   const { src } = fixture();
   const it = item("![d](pic.png)");
