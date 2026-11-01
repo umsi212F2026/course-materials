@@ -253,6 +253,41 @@ test("a correction naming a part the compound does not have is a problem", () =>
   assert.deepEqual(out.problems, ["correction for me c1#z matches no graded item"]);
 });
 
+test("a per_goal verdict on a part is a problem naming the part, and the compound is unscored", () => {
+  const v = vb(undefined, { per_goal: { g1: { credit: "full" } } });
+  const out = mergeGrades([crow(c1, { a: "0", b: "text" })], [v], opts);
+  assert.equal(out.problems.length, 1);
+  assert.match(out.problems[0], /^me c1#b: .*per_goal.*exactly one goal/);
+  assert.deepEqual(out.students[0].items, []);
+});
+
+test("verdicts on a compound's bare id, a blank part or an mcq part match no answered item", () => {
+  const stray = [
+    { item: "c1", uniqname: "me", credit: "full" },
+    { item: "c1#a", uniqname: "me", credit: "full" },
+    { item: "c1#b", uniqname: "me", credit: "full" },
+  ];
+  const out = mergeGrades([crow(c1, { a: "0", b: " " })], stray, opts);
+  assert.deepEqual(out.problems, [
+    "verdict for me c1 matches no answered item",
+    "verdict for me c1#a matches no answered item",
+    "verdict for me c1#b matches no answered item",
+  ]);
+  assert.equal(out.students[0].items[0].value, 0.5);
+});
+
+test("unaided is the worst any part reports, so no beats unclear", () => {
+  const c3 = { ...c1, id: "c3", parts: [{ ...partB, label: "a" }, partB] };
+  const vs = [
+    { item: "c3#a", uniqname: "me", credit: "full", axes: { unaided: "no" } },
+    { item: "c3#b", uniqname: "me", credit: "full", axes: { unaided: "unclear" } },
+  ];
+  const unaided = (verdicts) => mergeGrades([crow(c3, { a: "x", b: "y" })], verdicts, opts).students[0].items[0].axes.unaided;
+  assert.equal(unaided(vs), "no");
+  // Whichever part says it: `unclear` on the first part and `no` on the second is still `no`.
+  assert.equal(unaided([{ ...vs[0], axes: { unaided: "unclear" } }, { ...vs[1], axes: { unaided: "no" } }]), "no");
+});
+
 test("score counts a compound by its value and out_of counts it once", () => {
   const out = mergeGrades([crow(c1, { a: "0", b: "text" }), row(mcq, "2")], [vb("half")], opts);
   assert.equal(out.students[0].score, 1.75);

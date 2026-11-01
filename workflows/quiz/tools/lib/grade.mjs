@@ -207,6 +207,35 @@ export function mergeGrades(rows, verdicts, { date, session, corrections = [] })
     return raw && String(raw.at ?? "") >= verdictAt ? raw : null;
   };
 
+  // ONE ANSWER'S VERDICT AND ONE ANSWER'S CORRECTION, read the same way for a question and for a
+  // part of one, so the two cannot drift. `id` is the answer key: an item id or a part key.
+  const verdictFor = (uniqname, id) => {
+    const key = `${uniqname}\u0000${id}`;
+    const v = byKey.get(key);
+    if (v) used.add(key);
+    return v ?? null;
+  };
+  const noVerdict = (uniqname, id) => `${uniqname} ${id}: answered, but no verdict came back`;
+  const notACredit = (uniqname, id, credit) => `${uniqname} ${id}: credit "${credit}" is not full, half or none`;
+  // WHY IT IS FLAGGED IS NOT WHAT THE STUDENT IS TOLD. `missed` is written to the student and is
+  // empty on full credit, so a flag on a correct answer had nowhere to put its reason and three
+  // of them came out silent: flagged, with nobody able to reconstruct what for. `flagReason` is
+  // the reviewer's.
+  const verdictNotes = (v) => ({ missed: v.missed ?? "", flag: Boolean(v.flag), flagReason: v.flag_reason ?? "" });
+  // The correction that applies to an answer, or null. One whose credit is not a credit is a
+  // problem and is not applied.
+  const correctionFor = (uniqname, id, verdictAt) => {
+    const key = `${uniqname}\u0000${id}`;
+    const fix = fixFor(key, verdictAt);
+    if (!fix) return null;
+    if (!Object.hasOwn(CREDIT_VALUE, fix.credit)) {
+      problems.push(`correction for ${uniqname} ${id}: credit "${fix.credit}" is not full, half or none`);
+      return null;
+    }
+    fixesUsed.add(key);
+    return fix;
+  };
+
   // EACH PART SETTLED AS A QUESTION OF ITS TYPE IS SETTLED, its correction applied by the same
   // rule, and the parts then averaged. An answered part with no verdict, or a verdict that is not
   // a credit, leaves the whole compound unscored, as it would a question: averaging over the
@@ -231,39 +260,37 @@ export function mergeGrades(rows, verdicts, { date, session, corrections = [] })
       } else if (text === null || text.trim() === "") {
         credit = "none";
       } else {
-        const v = byKey.get(key);
+        const v = verdictFor(r.uniqname, u.key);
         if (!v) {
-          why.push(`${u.key}: answered, but no verdict came back`);
+          why.push(noVerdict(r.uniqname, u.key));
           continue;
         }
-        used.add(key);
+        // A PART IS RULED AS ONE MARK. A compound credits exactly one goal, so a per-goal
+        // ruling of a part is a grading run that misread the question, not a mark to drop.
+        if (v.per_goal) {
+          why.push(`${r.uniqname} ${u.key}: per_goal given for a part; a compound credits exactly one goal`);
+          continue;
+        }
         if (!Object.hasOwn(CREDIT_VALUE, v.credit)) {
-          why.push(`${u.key}: credit "${v.credit}" is not full, half or none`);
+          why.push(notACredit(r.uniqname, u.key, v.credit));
           continue;
         }
         credit = v.credit;
-        missed = v.missed ?? "";
-        flag = Boolean(v.flag);
-        flagReason = v.flag_reason ?? "";
+        ({ missed, flag, flagReason } = verdictNotes(v));
         // THE WORST ANY PART REPORTS, because an answer talked through for one part was not
         // written unaided as a whole.
         if (v.axes?.unaided === "no" || (v.axes?.unaided === "unclear" && unaided === "yes")) unaided = v.axes.unaided;
         if (v.axes?.criterion === "unchecked") unchecked = true;
         if (verdictTimes.has(key) && verdictTimes.get(key) > latest) latest = verdictTimes.get(key);
       }
-      const fix = fixFor(key, verdictTimes.get(key) ?? "");
+      const fix = correctionFor(r.uniqname, u.key, verdictTimes.get(key) ?? "");
       let corrected = false;
       let graderCredit = null;
       if (fix) {
-        if (!Object.hasOwn(CREDIT_VALUE, fix.credit)) {
-          problems.push(`correction for ${r.uniqname} ${u.key}: credit "${fix.credit}" is not full, half or none`);
-        } else {
-          fixesUsed.add(key);
-          corrected = true;
-          graderCredit = credit;
-          credit = fix.credit;
-          if (typeof fix.comment === "string") missed = fix.comment;
-        }
+        corrected = true;
+        graderCredit = credit;
+        credit = fix.credit;
+        if (typeof fix.comment === "string") missed = fix.comment;
       }
       parts.push({ label: u.label, type: u.type, credit, missed, flag, flag_reason: flagReason, corrected, grader_credit: graderCredit });
     }
@@ -316,7 +343,7 @@ export function mergeGrades(rows, verdicts, { date, session, corrections = [] })
     if (r.item.type === "compound") {
       const settled = settleCompound(r);
       if (Array.isArray(settled)) {
-        for (const w of settled) problems.push(`${r.uniqname} ${w}`);
+        problems.push(...settled);
         continue;
       }
       ({ credit, value, criterion, unaided, flag, flagReason, parts, latest: compoundAt } = settled);
@@ -328,20 +355,12 @@ export function mergeGrades(rows, verdicts, { date, session, corrections = [] })
       credit = "none";
       criterion = "not met";
     } else {
-      const key = `${r.uniqname}\u0000${r.item.id}`;
-      const v = byKey.get(key);
+      const v = verdictFor(r.uniqname, r.item.id);
       if (!v) {
-        problems.push(`${r.uniqname} ${r.item.id}: answered, but no verdict came back`);
+        problems.push(noVerdict(r.uniqname, r.item.id));
         continue;
       }
-      used.add(key);
-      missed = v.missed ?? "";
-      flag = Boolean(v.flag);
-      // WHY IT IS FLAGGED IS NOT WHAT THE STUDENT IS TOLD. `missed` is written to the student
-      // and is empty on full credit, so a flag on a correct answer had nowhere to put its
-      // reason and three of them came out silent: flagged, with nobody able to reconstruct
-      // what for. This field is the reviewer's.
-      flagReason = v.flag_reason ?? "";
+      ({ missed, flag, flagReason } = verdictNotes(v));
       if (v.axes?.unaided === "no" || v.axes?.unaided === "unclear") unaided = v.axes.unaided;
       if (v.per_goal) {
         const settled = settlePerGoal(r.item, v.per_goal, unaided);
@@ -366,7 +385,7 @@ export function mergeGrades(rows, verdicts, { date, session, corrections = [] })
       // and no review date moves on it.
       if (v.axes?.criterion === "unchecked") criterion = "unchecked";
       if (!perGoal && !Object.hasOwn(CREDIT_VALUE, credit)) {
-        problems.push(`${r.uniqname} ${r.item.id}: credit "${credit}" is not full, half or none`);
+        problems.push(notACredit(r.uniqname, r.item.id, credit));
         continue;
       }
     }
@@ -379,28 +398,23 @@ export function mergeGrades(rows, verdicts, { date, session, corrections = [] })
     // A correction on a compound's bare id is one mark on the whole question, made knowing the
     // parts' rulings, so it is weighed against the newest of them: a regrade of any part
     // supersedes it, as a regrade of a question supersedes a correction on that question.
-    const fixKey = `${r.uniqname}\u0000${r.item.id}`;
-    const fix = fixFor(fixKey, parts ? compoundAt : verdictTimes.get(fixKey) ?? "");
+    const verdictAt = parts ? compoundAt : verdictTimes.get(`${r.uniqname}\u0000${r.item.id}`) ?? "";
+    const fix = correctionFor(r.uniqname, r.item.id, verdictAt);
     let corrected = false;
     let graderCredit = null;
     if (fix) {
-      if (!Object.hasOwn(CREDIT_VALUE, fix.credit)) {
-        problems.push(`correction for ${r.uniqname} ${r.item.id}: credit "${fix.credit}" is not full, half or none`);
-      } else {
-        fixesUsed.add(fixKey);
-        corrected = true;
-        graderCredit = credit;
-        credit = fix.credit;
-        // A CORRECTION REPLACES THE AVERAGE, because it is one mark on the whole question and
-        // the instructor gave it knowing what the per-goal rulings were. Those stay beside it
-        // in `per_goal`, as the grader's, for the same reason `grader_credit` does.
-        value = null;
-        if (typeof fix.comment === "string") missed = fix.comment;
-        // A CORRECTION CHANGES THE MARK, NOT WHETHER ANYBODY WATCHED. `unchecked` on a
-        // capability item says nobody established the capability, and a second opinion on how
-        // well the question was answered does not establish it either.
-        if (criterion !== "unchecked") criterion = credit === "full" ? "met" : "not met";
-      }
+      corrected = true;
+      graderCredit = credit;
+      credit = fix.credit;
+      // A CORRECTION REPLACES THE AVERAGE, because it is one mark on the whole question and
+      // the instructor gave it knowing what the per-goal rulings were. Those stay beside it
+      // in `per_goal`, as the grader's, for the same reason `grader_credit` does.
+      value = null;
+      if (typeof fix.comment === "string") missed = fix.comment;
+      // A CORRECTION CHANGES THE MARK, NOT WHETHER ANYBODY WATCHED. `unchecked` on a
+      // capability item says nobody established the capability, and a second opinion on how
+      // well the question was answered does not establish it either.
+      if (criterion !== "unchecked") criterion = credit === "full" ? "met" : "not met";
     }
 
     student.items.push({
