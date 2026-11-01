@@ -439,3 +439,155 @@ test("each bullet keeps its line, and a wrapped bullet joins onto its own line",
     "It behaves like this:\n\n- **Pinecart** hosts a built frontend.\n- Its CDN caches files.\n\nWhat do you expect?"
   );
 });
+
+// --- compound questions ------------------------------------------------------------------
+const CQ_TASK = `# Review
+
+The agent wrote a plan for the change.
+
+### q1
+
+The agent's summary says these things about the "Review plan" task.
+
+#### a
+
+"It runs only after the plan is written."
+
+1. True
+2. False
+
+#### b
+
+Name the element that sends its output back to the author.
+`;
+
+const CQ_RUBRIC = `# Review key
+
+The plan has a Revise step.
+
+### q1
+
+- **goal:** \`c-review\`
+- **type:** compound
+
+#### a
+
+- **type:** mcq
+- **answer:** 1
+- **tutor note:** Ask when it runs.
+
+#### b
+
+- **answer:** the Revise step
+- **credit:** full for naming Revise; half for describing it without its name.
+- **tutor note:** Ask what the author gets back.
+`;
+
+const CQ_PARTS = (rubricB) => [
+  { label: "a", type: "mcq", prompt: "\"It runs only after the plan is written.\"", choices: ["True", "False"], answer: 0, tutorNote: "Ask when it runs." },
+  {
+    label: "b", type: "free", prompt: "Name the element that sends its output back to the author.",
+    rubric: rubricB, expected: "the Revise step",
+    credit: "full for naming Revise; half for describing it without its name.", tutorNote: "Ask what the author gets back.",
+  },
+];
+const CQ_JUDGED = "the Revise step Full for naming Revise; half for describing it without its name.";
+
+test("a question with #### parts reads as one compound item", () => {
+  const dir = source({ "tasks/a-x/review.md": CQ_TASK, "rubrics/a-x/review.md": CQ_RUBRIC });
+  const { items, problems } = readFolderBanks(dir);
+  assert.deepEqual(problems, []);
+  assert.equal(items.length, 1);
+  const [item] = items;
+  assert.equal(item.type, "compound");
+  assert.equal(item.label, "a-x/review/q1");
+  assert.equal(item.goal, "c-review");
+  assert.deepEqual(item.goals, ["c-review"]);
+  assert.equal(item.prompt, "The agent wrote a plan for the change.\n\nThe agent's summary says these things about the \"Review plan\" task.");
+  assert.equal(item.credit, "");
+  assert.equal("rubric" in item, false);
+  assert.deepEqual(item.parts, CQ_PARTS(`The plan has a Revise step.\n\n${CQ_JUDGED}`));
+});
+
+test("a single-file bank reads a compound in the single-file shape", () => {
+  const dir = source({
+    "tasks/review.md": CQ_TASK.replace("`c-review`", "c-review"),
+    "rubrics/review.md": CQ_RUBRIC.replace("`c-review`", "c-review"),
+  });
+  const { items, problems } = readBank(dir);
+  assert.deepEqual(problems, []);
+  assert.deepEqual(items, [{
+    bank: "review", goal: "c-review", cases: {}, id: "q1", type: "compound",
+    prompt: "The agent's summary says these things about the \"Review plan\" task.",
+    parts: CQ_PARTS(CQ_JUDGED),
+  }]);
+});
+
+// A malformed compound is left out, and a problem names it and says why.
+function compoundFault(task, rubric, says) {
+  const dir = source({ "tasks/a-x/review.md": task, "rubrics/a-x/review.md": rubric });
+  const { items, problems } = readFolderBanks(dir);
+  assert.deepEqual(items, [], `${says}: the question is dropped`);
+  assert.ok(problems.some((p) => p.includes("a-x/review/q1") && p.includes(says)), `${says} -> ${problems.join(" | ")}`);
+}
+const onlyA = (text) => text.slice(0, text.indexOf("#### b"));
+const swapAB = (text) => text.replace("#### a", "#### X").replace("#### b", "#### a").replace("#### X", "#### b");
+
+test("a compound with one part is a problem", () => {
+  compoundFault(onlyA(CQ_TASK), onlyA(CQ_RUBRIC), "at least two");
+});
+
+test("a part on one side only is a problem", () => {
+  compoundFault(CQ_TASK, onlyA(CQ_RUBRIC), "no rubric part");
+  compoundFault(onlyA(CQ_TASK), CQ_RUBRIC, "no part in the task");
+});
+
+test("parts out of letter order are a problem", () => {
+  const ac = (text) => text.replace("#### b", "#### c");
+  compoundFault(ac(CQ_TASK), ac(CQ_RUBRIC), "a, b, c in order");
+  compoundFault(swapAB(CQ_TASK), swapAB(CQ_RUBRIC), "a, b, c in order");
+});
+
+test("an mcq part with no choices, or an answer not among them, is a problem", () => {
+  compoundFault(CQ_TASK.replace("1. True\n2. False\n", ""), CQ_RUBRIC, "no numbered choices");
+  compoundFault(CQ_TASK, CQ_RUBRIC.replace("- **answer:** 1", "- **answer:** 3"), "not one of its 2 choices");
+});
+
+test("a free part with no answer is a problem", () => {
+  compoundFault(CQ_TASK, CQ_RUBRIC.replace("- **answer:** the Revise step\n", ""), "no answer");
+});
+
+test("parts under a question whose rubric does not say type: compound are a problem", () => {
+  compoundFault(CQ_TASK, CQ_RUBRIC.replace("- **type:** compound\n", ""), "does not say type: compound");
+});
+
+test("type: compound with no parts is a problem", () => {
+  compoundFault("### q1\n\nQ.\n", "### q1\n\n- **goal:** c-review\n- **type:** compound\n", "has no #### parts");
+});
+
+test("an image in a part is a problem", () => {
+  compoundFault(CQ_TASK.replace("Name the element", "![d](x.png)\n\nName the element"), CQ_RUBRIC, "images go in the stem");
+});
+
+test("a compound naming two goals is a problem", () => {
+  compoundFault(CQ_TASK, CQ_RUBRIC.replace("`c-review`", "`c-review`, `c-other`"), "credits exactly one goal");
+});
+
+test("a goal or cases on a part is a problem", () => {
+  compoundFault(CQ_TASK, CQ_RUBRIC.replace("- **type:** mcq\n", "- **type:** mcq\n- **goal:** c-review\n"), "belong to the question");
+  compoundFault(CQ_TASK, CQ_RUBRIC.replace("- **type:** mcq\n", "- **type:** mcq\n- **cases:** x\n"), "belong to the question");
+});
+
+test("a part with no text before its choices is a problem", () => {
+  compoundFault(CQ_TASK.replace("\"It runs only after the plan is written.\"\n", ""), CQ_RUBRIC, "has no text");
+});
+
+test("#### headings that are not part headings leave a free question as it reads today", () => {
+  const body = "Look at this.\n\n#### a1\n\nThe first.\n\n#### Notes\n\nSome notes.\n\n```\n#### a\nmore\n```\n\nWhat now?";
+  const dir = source({ "tasks/a-x/s.md": `### q1\n\n${body}\n`, "rubrics/a-x/s.md": "### q1\n\n- **answer:** X.\n" });
+  const { items, problems } = readFolderBanks(dir);
+  assert.deepEqual(problems, []);
+  assert.equal(items[0].type, "free");
+  assert.equal(items[0].prompt, body);
+  assert.equal("parts" in items[0], false);
+});

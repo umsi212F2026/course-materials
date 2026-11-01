@@ -173,3 +173,24 @@ test("a surplus item fills the slot of a broken-image item, with no shortfall", 
     assert.ok(!problems.some((m) => m.includes("drew")));
   }
 });
+
+test("a compound is one item in a stratum and arrives whole", () => {
+  const root = fixture();
+  const dir = (side) => join(root, `learning-topics/t1/${side}/a-x`);
+  writeFileSync(join(dir("tasks"), "s1.md"), "### q1\n\nStem.\n\n#### a\n\nPick.\n\n1. Yes\n2. No\n\n#### b\n\nSay why.\n\n### q2\n\nQ.\n");
+  writeFileSync(join(dir("rubrics"), "s1.md"),
+    "### q1\n\n- **type:** compound\n\n#### a\n\n- **type:** mcq\n- **answer:** 2\n\n#### b\n\n- **answer:** Because.\n\n### q2\n\n- **answer:** A.\n");
+  const picked = {};
+  for (const seed of ["a", "b", "c", "d", "e", "f", "g", "h"]) {
+    const { items, problems } = drawPractice(pool(1), root, { seed });
+    assert.deepEqual(problems, []);
+    assert.equal(items.length, 1);
+    picked[items[0].label] ??= { seed, item: items[0] };
+  }
+  assert.deepEqual(Object.keys(picked).sort(), ["a-x/s1/q1", "a-x/s1/q2"], "the seeds pick each question");
+  const { item } = picked["a-x/s1/q1"];
+  assert.equal(item.type, "compound");
+  assert.deepEqual(item.parts.map((p) => [p.label, p.type]), [["a", "mcq"], ["b", "free"]]);
+  assert.equal(item.parts[0].answer, 1);
+  assert.equal(picked["a-x/s1/q2"].item.type, "free");
+});
