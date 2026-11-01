@@ -105,6 +105,8 @@ grader, the instructor's bake and seed tools, `learnerText`) is unchanged and no
 - `## Framing` in a question body, a second time in one top part, or in a `rubrics/` file. The
   text stays where it is.
 - `## Framing` with nothing under it.
+- Any other `##` line in a folder top part (`## framing`, `## Framing:`), which would otherwise
+  show in every draw.
 - `## Framing` in `main-bank`.
 - In the scenario part, a **run phrase**: "each question", "questions below", "the questions
   follow", "answer each", "where a question asks", or both "some" and "others" as words in the
@@ -113,6 +115,11 @@ grader, the instructor's bake and seed tools, `learnerText`) is unchanged and no
   same sentence by a count word (a, one, two, three, four, five) and "sentence" or "sentences"
   ("in two or three sentences", "in a sentence").
 - In a question body, "answer only".
+
+Every one of these problems ends `(framing rule)`. The real-pool compatibility test in
+`workflows/quiz/tools/test/pool.test.mjs` compares problems against a fixed baseline, and it
+ignores problems with that ending, so unmigrated banks do not fail it; the draws themselves are
+still compared exactly.
 
 The phrases are matched case-insensitively. The framing itself is not scanned for run phrases,
 which belong there; it is scanned for answering instructions, which do not.
@@ -237,6 +244,10 @@ top part paragraph by paragraph, and sentence by sentence where one sentence mix
 - `database-hosting-2026-10/a-judge-described-plan/pantry-board/q1`: the question is rewritten to
   admit the key's answer (name the step, or say that none does and what is missing). The key is
   unchanged, so a regrade of a past exam applies the key that was applied.
+- `a-words` files: about 65 open with "Answer in two or three sentences[, in your own words]."
+  A script moves that line, verbatim, to the end of each free question in the file, skipping a
+  question that already says how to answer. An mcq question gets nothing: the line was already
+  wrong above a drawn mcq.
 - Rubric files are not changed.
 - An activity's generator in `activities.md` that tells live drafting to put run framing or a
   shared answering instruction in the setup is reworded to the new rule.
