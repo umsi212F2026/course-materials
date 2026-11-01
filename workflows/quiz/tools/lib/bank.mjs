@@ -18,7 +18,12 @@
 //
 // OUTPUT IS THE SHAPE quiz-bake ALREADY EXPECTS: { items: [...] }, each item
 // { id, type, prompt } plus `rubric` on a free item, or `choices` and `answer` on an mcq.
-// Nothing downstream changes.
+// A COMPOUND, a question whose body has `#### a`, `#### b` parts and whose rubric says
+// `type: compound`, is one item of type `compound` whose `prompt` is its stem and whose `parts`
+// are [{ label, type, prompt, ... }], each part carrying what an item of its type carries
+// (`choices` and `answer`, or `rubric`, `expected` and `credit`) and an optional `tutorNote`.
+// It is one question to a pool, worth one question's credit. Every other item reads exactly as it
+// did before compounds existed.
 //
 // WHAT THE PRIVATE TOOLS CAN RELY ON. A pool written against single-file banks draws exactly
 // what it always drew, and a single-file item keeps its exact shape, bare `id` included. That
@@ -187,6 +192,138 @@ function splitChoices(body, type) {
   return { prompt: unwrap(lines.slice(0, first).join('\n')), choices };
 }
 
+// A COMPOUND'S PARTS ARE `#### <letter>` HEADINGS under its `###`, in the task body and the rubric
+// body alike. The heading is exact, so `#### a1` or `#### Notes` stays text in a question, and a
+// heading inside a fenced block is part of a log or a file. `head` is everything before the first
+// part heading, so a body with none comes back whole as `head`, and a reader of it runs as before.
+const PART_HEADING = /^####\s+([a-z])\s*$/;
+
+function splitParts(body) {
+  const head = [];
+  const parts = [];
+  let fence = null;
+  for (const line of body.split('\n')) {
+    const t = line.trim();
+    const m = fence ? null : PART_HEADING.exec(line);
+    if (m) {
+      parts.push({ label: m[1], lines: [] });
+      continue;
+    }
+    if (fence) {
+      if (t.startsWith(fence)) fence = null;
+    } else {
+      const f = FENCE.exec(t);
+      if (f) fence = f[1];
+    }
+    (parts.length ? parts[parts.length - 1].lines : head).push(line);
+  }
+  return {
+    head: head.join('\n'),
+    parts: parts.map((p) => ({ label: p.label, body: p.lines.join('\n').trim() })),
+  };
+}
+
+// The judge's string for a short answer: the model answer, then the credit line capitalised.
+function judgedText(r) {
+  const credit = r.credit ? r.credit.charAt(0).toUpperCase() + r.credit.slice(1) : '';
+  return credit ? `${r.answer} ${credit}` : r.answer;
+}
+
+/** Read a compound's stem and parts from its task body and rubric body, for either layout.
+ *  `where` labels the problems; `key` is a folder scenario's key, prepended to a free part's
+ *  rubric as it is to a free item's, and '' for a single-file bank. Returns { stem, parts,
+ *  problems }, and the caller leaves the question out when there are any problems.
+ *
+ *  A PART CARRIES NO GOAL. The question names its one goal and its cases, and a part only what
+ *  answering it needs, so grading, curation's per-goal checks and study recording all stay on one
+ *  goal per question, as they are for every other item. */
+function readCompound(taskBody, rubricBody, where, key) {
+  const problems = [];
+  const task = splitParts(taskBody);
+  const rubric = splitParts(rubricBody);
+  const r = fields(rubric.head);
+
+  if (r.type !== 'compound') {
+    problems.push(`${where} has #### parts but its rubric does not say type: compound`);
+  }
+  if (!task.parts.length && !rubric.parts.length) {
+    problems.push(`${where} is type compound but has no #### parts`);
+  }
+  const goals = (r.goal ?? '').split(',').map((g) => g.replace(/`/g, '').trim()).filter(Boolean);
+  if (goals.length > 1) {
+    problems.push(`${where} names goals ${goals.join(', ')}; a compound credits exactly one goal`);
+  }
+
+  // `in`, as for a part's goal: an empty line is still an answer written on the question. A
+  // question-level `tutor note` is allowed, since study prints it first, unlettered.
+  if ('answer' in r || 'credit' in r) {
+    problems.push(`${where} has an answer or credit on the question itself; each part carries its own`);
+  }
+
+  for (const [side, list] of [['task', task.parts], ['rubric', rubric.parts]]) {
+    const letters = list.map((p) => p.label);
+    if (letters.some((l, i) => l !== String.fromCharCode(97 + i))) {
+      problems.push(`${where} has ${side} parts ${letters.join(', ')}; parts are lettered a, b, c in order`);
+    }
+  }
+  const keyed = new Map(rubric.parts.map((p) => [p.label, p.body]));
+  const asked = new Set(task.parts.map((p) => p.label));
+  for (const p of task.parts) {
+    if (!keyed.has(p.label)) problems.push(`${where} part ${p.label} has no rubric part`);
+  }
+  for (const p of rubric.parts) {
+    if (!asked.has(p.label)) problems.push(`${where} part ${p.label} has a rubric part but no part in the task`);
+  }
+  if (task.parts.length && task.parts.length < 2) {
+    problems.push(`${where} has ${task.parts.length} part; a compound needs at least two`);
+  }
+
+  const parts = [];
+  for (const p of task.parts) {
+    if (!keyed.has(p.label)) continue;
+    const at = `${where} part ${p.label}`;
+    const pf = fields(keyed.get(p.label));
+    const type = pf.type || 'free';
+    if (type !== 'mcq' && type !== 'free') {
+      problems.push(`${at} has type: ${type}; a part is mcq or free`);
+      continue;
+    }
+    // `in`, not truthiness: an empty `- **goal:**` line is still a goal written on a part.
+    if ('goal' in pf || 'cases' in pf) problems.push(`${at} names a goal or cases; those belong to the question`);
+    // The images step rewrites only `prompt`, so an image in a part would never be served.
+    if (/!\[[^\]]*\]\(/.test(p.body)) problems.push(`${at} has an image; images go in the stem`);
+    const { prompt, choices } = splitChoices(p.body, type);
+    if (!prompt) {
+      problems.push(`${at} has no text`);
+      continue;
+    }
+    const note = pf['tutor note'] ? { tutorNote: pf['tutor note'] } : {};
+    if (type === 'mcq') {
+      if (!choices) {
+        problems.push(`${at} is type mcq but carries no numbered choices`);
+        continue;
+      }
+      const n = Number(pf.answer);
+      if (!Number.isInteger(n) || n < 1 || n > choices.length) {
+        problems.push(`${at} has answer: ${pf.answer}, which is not one of its ${choices.length} choices`);
+        continue;
+      }
+      parts.push({ label: p.label, type, prompt, choices, answer: n - 1, ...note });
+    } else {
+      if (!pf.answer) {
+        problems.push(`${at} has no answer in its rubric`);
+        continue;
+      }
+      const j = judgedText(pf);
+      parts.push({
+        label: p.label, type, prompt, rubric: key ? `${key}\n\n${j}` : j,
+        expected: pf.answer, credit: pf.credit ?? '', ...note,
+      });
+    }
+  }
+  return { stem: unwrap(task.head), parts, problems };
+}
+
 // A RUBRIC `cases:` LINE says which of a goal's cases a question exercises, so a pass can be
 // recorded against them. Two forms. `x, y` is for a question naming exactly one goal. `c-a: x, y;
 // c-b: z` is per goal, for a question naming several. Returns { cases: { [goal]: string[] },
@@ -235,7 +372,9 @@ export function readBank(dir, label = '') {
     for (const name of readdirSync(rubricsDir).filter((n) => n.endsWith('.md'))) {
       for (const s of sections(readFileSync(join(rubricsDir, name), 'utf8'))) {
         if (rubrics.has(s.id)) problems.push(`${s.id} has two rubric entries`);
-        rubrics.set(s.id, fields(s.body));
+        // The fields come from the part before any `####` part, which fields would otherwise fold
+        // into the field above it; the raw body is kept for a compound's parts.
+        rubrics.set(s.id, { fields: fields(splitParts(s.body).head), body: s.body });
       }
     }
   }
@@ -257,11 +396,12 @@ export function readBank(dir, label = '') {
       }
       seen.add(s.id);
 
-      const r = rubrics.get(s.id);
-      if (!r) {
+      const entry = rubrics.get(s.id);
+      if (!entry) {
         problems.push(`${s.id} is in tasks/${name} with no rubric entry, so nothing could grade it`);
         continue;
       }
+      const r = entry.fields;
 
       const type = r.type || 'free';
       const { prompt, choices } = splitChoices(s.body, type);
@@ -289,6 +429,13 @@ export function readBank(dir, label = '') {
       // model answer travels separately too, and nothing has to split the joined string back up.
       if (r.answer) recording.expected = r.answer;
 
+      if (type === 'compound' || splitParts(s.body).parts.length || splitParts(entry.body).parts.length) {
+        const c = readCompound(s.body, entry.body, s.id, '');
+        problems.push(...c.problems);
+        if (!c.problems.length) items.push({ bank, ...recording, id: s.id, type: 'compound', prompt: c.stem, parts: c.parts });
+        continue;
+      }
+
       if (type === 'mcq') {
         if (!choices) {
           problems.push(`${s.id} is type mcq but its question carries no numbered choices`);
@@ -306,8 +453,7 @@ export function readBank(dir, label = '') {
           continue;
         }
         // One string, because that is what the draw contract and the grader already take.
-        const credit = r.credit ? r.credit.charAt(0).toUpperCase() + r.credit.slice(1) : '';
-        const rubric = credit ? `${r.answer} ${credit}` : r.answer;
+        const rubric = judgedText(r);
         items.push({ bank, ...recording, id: s.id, type, prompt, rubric });
       }
     }
@@ -472,7 +618,7 @@ export function readFolderBanks(dir, label = '') {
       const rubrics = new Map();
       for (const s of sections(rubricText)) {
         if (rubrics.has(s.id)) problems.push(`${activity}/${scenario}/${s.id} has two rubric entries`);
-        else rubrics.set(s.id, fields(s.body));
+        else rubrics.set(s.id, { fields: fields(splitParts(s.body).head), body: s.body });
       }
 
       const taskText = readFileSync(join(tasksDir, activity, file), 'utf8');
@@ -489,11 +635,12 @@ export function readFolderBanks(dir, label = '') {
         seen.add(s.id);
         problems.push(...questionFramingProblems(label3, s.body));
 
-        const r = rubrics.get(s.id);
-        if (!r) {
+        const entry = rubrics.get(s.id);
+        if (!entry) {
           problems.push(`${label3} is in ${where} with no rubric entry, so nothing could grade it`);
           continue;
         }
+        const r = entry.fields;
 
         const type = r.type || 'free';
         const { prompt: body, choices } = splitChoices(s.body, type);
@@ -510,6 +657,17 @@ export function readFolderBanks(dir, label = '') {
           ...(r.answer ? { expected: r.answer } : {}),
           ...(r['tutor note'] ? { tutorNote: r['tutor note'] } : {}),
         };
+
+        // A compound's prompt is the setup and its stem; an empty stem adds no trailing break.
+        if (type === 'compound' || splitParts(s.body).parts.length || splitParts(entry.body).parts.length) {
+          const c = readCompound(s.body, entry.body, label3, key);
+          problems.push(...c.problems);
+          if (!c.problems.length) {
+            const stemmed = [setup, c.stem].filter(Boolean).join('\n\n');
+            items.push({ ...common, type: 'compound', prompt: stemmed, credit: '', parts: c.parts });
+          }
+          continue;
+        }
 
         if (type === 'mcq') {
           if (!choices) {
@@ -528,8 +686,7 @@ export function readFolderBanks(dir, label = '') {
             continue;
           }
           // A multi-goal credit written as an indented list keeps one line per goal (see fields).
-          const credit = r.credit ? r.credit.charAt(0).toUpperCase() + r.credit.slice(1) : '';
-          const judged = credit ? `${r.answer} ${credit}` : r.answer;
+          const judged = judgedText(r);
           // `credit` is the raw credit text alone, for checks that must not be satisfied by the
           // key or the answer happening to mention a goal (idProblems' per-goal statement check).
           items.push({ ...common, rubric: key ? `${key}\n\n${judged}` : judged, credit: r.credit ?? '' });

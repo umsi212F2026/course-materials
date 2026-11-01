@@ -29,7 +29,7 @@ import { createServer } from "node:http";
 import { resolve, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { drawPractice, loadPool, listPools } from "./quiz-draw.mjs";
-import { collectAnswers, buildQueue, mergeGrades, itemGoals, CREDIT_VALUE } from "./lib/grade.mjs";
+import { collectAnswers, buildQueue, mergeGrades, itemGoals, gradedParts, parsePartKey, partKey, CREDIT_VALUE } from "./lib/grade.mjs";
 import { recordLabel } from "./lib/bank.mjs";
 // THE QUIZ APP'S RENDERER, so a question looks here as it will on the day.
 import { markdown, markdownInline } from "./lib/markdown.mjs";
@@ -87,24 +87,42 @@ export function imageResponse(images, url) {
   }
 }
 
+/** The answer field of one question or one part: radios for a multiple choice, a text box for
+ *  anything else, named by `name`, which is the item id for a question and the part key for a part. */
+function fieldFor(name, u) {
+  // NO NUMBERS ON THE CHOICES, because the real quiz has none: its ItemMcq renders a
+  // radio and the text, and nothing else. Numbering them here would teach a student to
+  // think of "option 3" and then not offer them one on the day. It also put two markers
+  // on every row, a list number and a radio, which is what made this look wrong.
+  return u.type === "mcq"
+    ? `<ul class=choices>${(u.choices ?? [])
+        .map(
+          (c, j) =>
+            `<li><label><input type=radio name="${esc(name)}" value="${j}"><span>${markdownInline(c)}</span></label></li>`,
+        )
+        .join("")}</ul>`
+    : `<textarea name="${esc(name)}" rows=5 placeholder="Your answer, in your own words"></textarea>`;
+}
+
 /** The page. Every item on one screen, answered cold, submitted once. */
 export function page(items, source) {
   const body = items
     .map((it, i) => {
-      const field =
-        // NO NUMBERS ON THE CHOICES, because the real quiz has none: its ItemMcq renders a
-        // radio and the text, and nothing else. Numbering them here would teach a student to
-        // think of "option 3" and then not offer them one on the day. It also put two markers
-        // on every row, a list number and a radio, which is what made this look wrong.
-        it.type === "mcq"
-          ? `<ul class=choices>${(it.choices ?? [])
-              .map(
-                (c, j) =>
-                  `<li><label><input type=radio name="${esc(it.id)}" value="${j}"><span>${markdownInline(c)}</span></label></li>`,
-              )
-              .join("")}</ul>`
-          : `<textarea name="${esc(it.id)}" rows=5 placeholder="Your answer, in your own words"></textarea>`;
-      return `<section><h2>Question ${i + 1} of ${items.length}</h2><div class=prompt>${markdown(it.prompt)}</div>${field}</section>`;
+      const head = `<h2>Question ${i + 1} of ${items.length}</h2>`;
+      // A COMPOUND IS ONE SECTION, the stem once and then each part under its label (`1a`), with
+      // the field a whole question of that type would have. Each part is named by its part key, so
+      // the submission carries one answer per part, as the real quiz stores them.
+      if (it.type === "compound") {
+        const stem = it.prompt?.trim() ? `<div class=prompt>${markdown(it.prompt)}</div>` : "";
+        const parts = it.parts
+          .map(
+            (p) =>
+              `<div class=part><h2>${i + 1}${esc(p.label)}</h2><div class=prompt>${markdown(p.prompt)}</div>${fieldFor(partKey(it.id, p.label), p)}</div>`,
+          )
+          .join("");
+        return `<section class=compound>${head}${stem}${parts}</section>`;
+      }
+      return `<section>${head}<div class=prompt>${markdown(it.prompt)}</div>${fieldFor(it.id, it)}</section>`;
     })
     .join("");
 
@@ -118,6 +136,10 @@ export function page(items, source) {
  .cold{background:#fff6e0;border:1px solid #e0c98a;color:#5d4508;padding:11px 14px;font-size:14px;margin:0 0 26px}
  section{background:#fff;border:1px solid #dcdcd8;border-radius:6px;padding:18px 20px;margin:0 0 18px}
  h2{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#6b6b6b;margin:0 0 10px}
+ /* A compound sits between a rule above and a rule below, as it does in the quiz app, and its
+    parts are told apart by their labels and a gap rather than by boxes of their own. */
+ section.compound{border-left:0;border-right:0;border-radius:0;border-top:2px solid #1a1a1a;border-bottom:2px solid #1a1a1a}
+ .part{margin:22px 0 0}
  .prompt{margin:0 0 14px}
  .prompt p,.prompt ul,.prompt ol,.prompt pre,.prompt table,.prompt blockquote{margin:0 0 .8em}
  .prompt>:last-child{margin-bottom:0}
@@ -188,7 +210,7 @@ export function page(items, source) {
 /** Write the draw, the answers and the work left for the agent, all in the shapes the real
  *  quiz uses. Multiple choice is counted here and written nowhere: scoring settles it again
  *  from the draw. */
-function record(dir, source, items, answers) {
+export function record(dir, source, items, answers) {
   mkdirSync(dir, { recursive: true });
   const now = new Date().toISOString();
   const date = now.slice(0, 10);
@@ -226,7 +248,7 @@ function record(dir, source, items, answers) {
   // Here both are at hand, so they go in rather than being looked up twice, once by the grade
   // skill and again by the practice skill.
   const queue = buildQueue(rows).map(({ goals: named, ...g }) => {
-    const it = byId.get(g.item);
+    const it = byId.get(parsePartKey(g.item).id);
     const goal = it?.goal ? goals.get(it.goal) : null;
     return {
       ...g,
@@ -288,7 +310,8 @@ function record(dir, source, items, answers) {
   // path that consumes a verdict, which multiple choice is not, so every mcq verdict came back
   // as "matches no answered item" and the run refused to score. The instructor's runner never
   // hit it because its verdicts file only ever holds the skill's rulings.
-  const mcq = rows.filter((r) => r.item.type === "mcq");
+  // COUNTED PER GRADED UNIT, so a compound's multiple-choice parts are counted as a plain mcq is.
+  const mcq = rows.flatMap((r) => gradedParts(r.item)).filter((u) => u.type === "mcq");
   return { queue, mcq: mcq.length, date };
 }
 
@@ -386,6 +409,23 @@ function score(dir) {
             : it?.expected ?? null,
         axes: i.axes,
         flag: i.flag,
+        // A COMPOUND'S ANSWER, CHOICES AND KEY LIVE ON ITS PARTS, so the row's own are null and each
+        // part carries what a question of its type does, an mcq's resolved to the choice text.
+        ...(i.parts
+          ? {
+              parts: gradedParts(it).map((u, k) => ({
+                label: u.label,
+                type: u.type,
+                // The part's own text: the skill gives the stem once, then each part.
+                prompt: it.parts[k].prompt,
+                answer: said({ id: u.key, type: u.type, choices: u.choices }),
+                choices: u.choices ?? null,
+                credit: i.parts[k].credit,
+                missed: i.parts[k].missed,
+                expected: u.type === "mcq" ? u.choices?.[u.answer] ?? u.expected ?? null : u.expected ?? null,
+              })),
+            }
+          : {}),
         // ONE ENTRY PER GOAL A MULTI-GOAL QUESTION NAMES, each its own record-attempt call. The
         // verdict's per-goal ruling where there was one; where there was none (multiple choice,
         // or nothing written) the one mark is the mark on every goal. The capability call is

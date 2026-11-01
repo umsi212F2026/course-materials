@@ -379,6 +379,15 @@ the goals agree too: a row that is half on both goals reads "Half credit" and st
 goal's `missed`, since each says something different. A row that is full on every goal has
 nothing to quote.
 
+**A row with `parts` is a compound, one question made of parts.** Give the stem once (it is the
+row's `prompt`), then each part under its label (`1a`, `1b`): the part's own `prompt`, its
+`answer`, its credit, and what was expected, exactly as for a question of that type, so an mcq
+part lists its `choices` and a part below full credit quotes its `missed` and `expected`. The
+row's own `answer`, `choices` and `expected` are null. It is still one row and one
+`record-attempt` call like any other. In the queue, an item ending `#<letter>` is one part of a
+compound, ruled on its own; its verdict goes to `verdicts.jsonl` under that item, with the
+`#<letter>`.
+
 **Say the correction sentence every time, including on a perfect score.** A learner who does
 not know they can argue will not argue, and a student overruling the grader is the one place in
 this course where they are the human in the loop rather than the subject of it.

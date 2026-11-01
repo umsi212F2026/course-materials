@@ -1,6 +1,6 @@
 ---
 name: curation-bank-check
-description: Check a course topic's question banks question by question, in a fresh context. Each answer must be true of its scenario, each question answerable from the setup alone without giving its answer away, each goal's credit statement faithful to that goal's criterion, each mcq unambiguous, and each listed case really exercised and not bundled with one a learner could split from it, each question complete when drawn alone without its scenario's framing, and each worded to admit the answer its key gives; it also reports which cases each bank exercises and which it never does. Returns findings per label, each marked question, scenario or generator; writes nothing. Called by the curation orchestrator on the course path, after the banks are drafted.
+description: Check a course topic's question banks question by question, in a fresh context. Each answer must be true of its scenario, each question answerable from the setup alone without giving its answer away, each goal's credit statement faithful to that goal's criterion, each mcq unambiguous, and each listed case really exercised and not bundled with one a learner could split from it, each question complete when drawn alone without its scenario's framing, and each worded to admit the answer its key gives, with a compound's parts each checked as questions and held together; it also reports which cases each bank exercises and which it never does. Returns findings per label, each marked question, scenario or generator; writes nothing. Called by the curation orchestrator on the course path, after the banks are drafted.
 ---
 
 # Curation: bank check
@@ -59,7 +59,7 @@ finding: the drafter keeps one only when it comes out good. Across the topic's m
 right choice that is the longest on most of them, or that sits in one position on most. In a released topic's older bank, list its DEFINE and INTERPRET
 questions instead, for the instructor to decide at the course path's recuration.
 
-## Every question, eight checks
+## Every question, nine checks
 
 For each `### <question-id>` in each `tasks/<activity-id>/<scenario-id>.md`, read the
 scenario's setup (its top part above any `## Framing` line), its framing if it has one, the
@@ -105,6 +105,16 @@ it has them, from `goals.md`, resolving a reference criterion through
 8. **Its wording fits the answer its key gives.** The question does not presuppose an answer of
    a shape the key rejects: asking which step decides something when the key says no step does
    and the omission is the answer, or asking for one cause when the key names two.
+9. **A compound holds together.** A compound is one question in lettered `####` parts under a
+   `###` stem. Apply checks 1 to 8 to each part, then ask: is each part's answer true of the
+   scenario, worked yourself before reading its key; is each mcq part unambiguous with its
+   choices balanced; does any part give another's answer away, since a learner sees all the
+   parts at once; does the stem frame every part, so none needs a sibling to make sense; does
+   it name exactly one goal, with every case its `cases:` line lists exercised by the parts
+   together, and none a learner could get right while missing another. Survey reports the
+   mechanical slips (parts out of order, a part with no rubric part, fewer than two parts, a
+   goal or cases on a part, an image in a part); this check is for the rest. Mark a part's
+   fault `question`.
 
 ## Marking each finding
 

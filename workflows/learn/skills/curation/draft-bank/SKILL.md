@@ -129,6 +129,46 @@ maintain software, so anything needing upkeep counts against a plan.
 - **credit:** full for 2 only.
 ```
 
+A compound question in the same two files, `q3` after `q2`. The `###` body is the stem, then a
+`#### a` and `#### b` part each:
+
+```
+### q3
+
+Crumbs is deciding whether to run its own server for the order form.
+
+#### a
+
+Which describes the load the form would carry?
+
+1. Small, and mostly on Friday evenings.
+2. Large and steady all week.
+3. Too low to need any hosting.
+
+#### b
+
+Name one job that running its own server would add. Answer in a sentence.
+```
+
+```
+### q3
+
+- **goal:** `c-name-upkeep-costs`
+- **type:** compound
+
+#### a
+
+- **type:** mcq
+- **answer:** 1
+
+#### b
+
+- **answer:** Keeping the server patched, or backed up, or restarted when it fails.
+- **credit:** full for naming one upkeep job; half for saying a server needs looking after
+  without naming a job.
+- **tutor note:** if they name a cost, ask what someone would actually have to do.
+```
+
 The rules behind that example:
 
 - **Scenario ids are named for their content** (`crumbs`, `tally`, a word's goal id for
@@ -168,8 +208,8 @@ The rules behind that example:
   - `credit:` what full and half credit mean. A single-goal question has one statement. **A
     question naming two or more goals lists one statement per goal**, as an indented list, each
     starting with the goal id in backticks and a colon; one missing is a problem survey reports.
-  - `type:` `free`, the default, which you may omit, or `mcq`. An mcq's question body ends in a
-    numbered list of choices.
+  - `type:` `free`, the default, which you may omit, `mcq`, or `compound`. An mcq's question body
+    ends in a numbered list of choices. A compound's layout is under "A compound" below.
   - `move:` for an `a-words` question only, the move from vocabulary-moves.md that it makes.
   - `tutor note:` optional; follow-ups for this one question, for the tutor only: a known trap,
     what to ask when the answer is wrong in a particular way. What holds for every question is
@@ -218,6 +258,30 @@ right choice away**: keep the choices within a few words of each other, and acro
 mcqs make the right one the shortest on some and the longest on few, since left alone it drifts
 longest on nearly every one. Vary its position too: choices reach the learner in the order
 written.
+
+**A compound** is one question asked in lettered parts that share its stem and are judged
+separately. **Most questions should stay a single mcq or free question**: use a compound only
+when the parts genuinely share one stem and each needs its own ruling. The layout, as in the
+`q3` example above:
+
+- Under the question's `###`, in both files, each part is a `#### a`, `#### b` heading: a single
+  lowercase letter, in order, at least two. A heading like `#### a1` is not a part to the reader.
+- The `###` body in `tasks/` is the stem, and frames every part. An image goes there, never in
+  a part.
+- The `###` rubric entry holds `goal`, `cases` and `type: compound`, and names exactly one goal.
+  A part takes `type` (`mcq` or `free`, free by default), `answer`, `credit` for a free part,
+  and an optional `tutor note`, never a `goal` or `cases`. The entry itself may carry a
+  `tutor note` about the whole question, but never an `answer` or `credit`, which belong to the
+  parts and are reported as a bank problem on the entry.
+- Each part follows the rules above for its type: an mcq part has one right choice, each wrong
+  one wrong for a reason the setup supplies, choices of balanced length and the right one's
+  position varied; a free part says how to answer.
+- Parts are scored together as one question, so **one compound per case**: a pass passes every
+  case it lists, so cases a learner could get one right and another wrong on stay separate
+  questions, never parts of one compound.
+- A part needs text before its choices; a part that is only a numbered list is reported as
+  having no text.
+- No part gives another's answer away, since a learner sees them all at once.
 
 Write no em dash or en dash anywhere in a bank: these files ship to students in the course's
 own voice.

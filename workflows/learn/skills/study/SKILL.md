@@ -164,6 +164,12 @@ ask differently rather than repeating it.
    question itself, since the judge's inputs print it. For a question set live, the record
    starts with the question as you set it, because nothing else shows the judge what was asked.
 
+   **A compound question, one with lettered parts, is one judge call**, never one per part. Its
+   record carries the learner's answer to every part and the outcome of each multiple-choice
+   part, which you settled; see
+   [`references/running-an-activity.md`](references/running-an-activity.md). It is `met` only
+   when every part is fully right.
+
    `<label>` is the one `next-item.mjs` printed. A question set live adds `--goal <goal-id>`,
    and the judge returns one ruling. A bank question names its own goals, and when there are
    several the judge returns one ruling per goal, as a JSON array. A question that names goals

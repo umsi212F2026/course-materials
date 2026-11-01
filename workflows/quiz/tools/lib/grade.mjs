@@ -13,12 +13,49 @@
 // Anything that turns a credit into points must read `value` first, since `partial` has no
 // entry in CREDIT_VALUE.
 //
+// A COMPOUND IS ONE QUESTION WHOSE PARTS ARE RULED ON THEIR OWN AND AVERAGED. It is the
+// multi-goal shape over parts instead of goals: `credit` is the parts' shared credit or
+// `partial`, and `value` is their mean. Each part has its own answer key, `<item id>#<letter>`,
+// so a short-answer part is queued, ruled and corrected exactly as a short-answer question is,
+// and a multiple-choice part is settled as one is. A blank part earns `none` and still counts
+// in the mean, because the question was worth one mark whether or not every part was tried,
+// and leaving it out would score half an answer as a whole one. `gradedParts` is the one place
+// that turns an item into its graded units; everything that works part by part walks it.
+//
 // NOTHING HERE READS A FILE OR A NETWORK. Each front end brings its own already-parsed draw
 // and submissions, which is what makes all of this testable without a database or a cluster.
 
 /** What each credit is worth. Exported because both front ends score with it, and two
  *  copies of this object is how a practice quiz and a real one start to disagree. */
 export const CREDIT_VALUE = { full: 1, half: 0.5, none: 0 };
+
+/** The answer key of one part of a compound. An item id never contains `#`, so this is
+ *  unambiguous. */
+export const partKey = (itemId, label) => `${itemId}#${label}`;
+
+/** An answer key split back into its item id and part label; a plain item's key has no label. */
+export function parsePartKey(key) {
+  const at = key.lastIndexOf("#");
+  return at < 0 ? { id: key, label: null } : { id: key.slice(0, at), label: key.slice(at + 1) };
+}
+
+/** What one part asks, read on its own: the stem, a blank line, then the part. This is what the
+ *  judge rules on and what a comment or a review quotes, so the stem is never lost from a part. */
+export const partPrompt = (item, part) => (item.prompt?.trim() ? `${item.prompt}\n\n${part.prompt}` : part.prompt);
+
+const UNIT_FIELDS = ["type", "prompt", "choices", "answer", "rubric", "expected"];
+const pickUnit = (src, key, label, prompt) => {
+  const unit = { key, label };
+  for (const f of UNIT_FIELDS) if (src[f] !== undefined) unit[f] = f === "prompt" ? prompt : src[f];
+  return unit;
+};
+
+/** An item as the units it is graded in: itself, keyed by its id, for a plain item, and one per
+ *  part, keyed by its part key and asking its `partPrompt`, for a compound. */
+export function gradedParts(item) {
+  if (item.type !== "compound") return [pickUnit(item, item.id, null, item.prompt)];
+  return item.parts.map((p) => pickUnit(p, partKey(item.id, p.label), p.label, partPrompt(item, p)));
+}
 
 /** One row per (student, item) for every student who was assigned a draw.
  *
@@ -37,14 +74,19 @@ export function collectAnswers(drawFile, submissionsFile) {
     const byItem = new Map((sub ?? draft)?.answers?.map((a) => [a.item_id, a.text]) ?? []);
 
     for (const item of draw.items) {
-      const text = byItem.get(item.id) ?? null;
-      rows.push({
+      const row = {
         uniqname: draw.uniqname,
         canvas_id: draw.canvas_id ?? sub?.canvas_id ?? draft?.canvas_id ?? null,
         source,
         item,
-        text,
-      });
+        text: item.type === "compound" ? null : byItem.get(item.id) ?? null,
+      };
+      // A COMPOUND IS ONE ROW, its answers stored one per part, because it is one question and
+      // is scored as one. Nothing is answered to its bare id, so `text` stays null.
+      if (item.type === "compound") {
+        row.parts = Object.fromEntries(item.parts.map((p) => [p.label, byItem.get(partKey(item.id, p.label)) ?? null]));
+      }
+      rows.push(row);
     }
   }
   return rows;
@@ -65,24 +107,38 @@ export const itemGoals = (item) => item.goals ?? (item.goal ? [item.goal] : []);
  *  to do. */
 export function buildQueue(rows) {
   const groups = new Map();
-  for (const r of rows) {
-    if (r.item.type === "mcq") continue;
-    if (r.text === null || r.text.trim() === "") continue;
-    if (!groups.has(r.item.id)) {
-      groups.set(r.item.id, {
-        item: r.item.id,
+  const add = (key, r, prompt, rubric, text) => {
+    if (!groups.has(key)) {
+      groups.set(key, {
+        item: key,
         bank: r.item.bank ?? null,
         goal: r.item.goal ?? null,
         // EVERY GOAL THE QUESTION NAMES, ALWAYS AN ARRAY. A folder question may name several,
         // and then `goal` above is null and this is the only place the grader learns what it
         // is ruling on per goal. A single-file item names one or none, and gets `[goal]` or `[]`.
         goals: itemGoals(r.item),
-        prompt: r.item.prompt,
-        rubric: r.item.rubric,
+        prompt,
+        rubric,
         answers: [],
       });
     }
-    groups.get(r.item.id).answers.push({ uniqname: r.uniqname, answer: r.text });
+    groups.get(key).answers.push({ uniqname: r.uniqname, answer: text });
+  };
+  for (const r of rows) {
+    if (r.item.type === "mcq") continue;
+    // EACH SHORT-ANSWER PART IS ITS OWN QUESTION TO THE JUDGE, asked with the stem in front of
+    // it and ruled against its own rubric. A blank part is not queued, for the reason a blank
+    // answer is not, and a compound of multiple-choice parts queues nothing at all.
+    if (r.item.type === "compound") {
+      for (const p of r.item.parts) {
+        const text = r.parts?.[p.label] ?? null;
+        if (p.type === "mcq" || text === null || text.trim() === "") continue;
+        add(partKey(r.item.id, p.label), r, partPrompt(r.item, p), p.rubric, text);
+      }
+      continue;
+    }
+    if (r.text === null || r.text.trim() === "") continue;
+    add(r.item.id, r, r.item.prompt, r.item.rubric, r.text);
   }
   return [...groups.values()];
 }
@@ -140,6 +196,119 @@ export function mergeGrades(rows, verdicts, { date, session, corrections = [] })
   for (const v of verdicts) if (v.at) verdictTimes.set(`${v.uniqname}\u0000${v.item}`, String(v.at));
   const byKey = new Map(verdicts.map((v) => [`${v.uniqname}\u0000${v.item}`, v]));
   const used = new Set();
+  // A CORRECTION APPLIES ONLY IF IT IS NEWER THAN THE VERDICT IT CORRECTS. That one rule is
+  // what lets a regrade supersede an earlier hand correction without anything rewriting an
+  // append-only file: the regrade appends fresher verdicts, and corrections made against the
+  // old criteria simply stop being the latest word. A verdict with no timestamp predates the
+  // rule and a correction always wins over it, which is the behaviour everything graded so
+  // far already has.
+  const fixFor = (key, verdictAt) => {
+    const raw = fixes.get(key);
+    return raw && String(raw.at ?? "") >= verdictAt ? raw : null;
+  };
+
+  // ONE ANSWER'S VERDICT AND ONE ANSWER'S CORRECTION, read the same way for a question and for a
+  // part of one, so the two cannot drift. `id` is the answer key: an item id or a part key.
+  const verdictFor = (uniqname, id) => {
+    const key = `${uniqname}\u0000${id}`;
+    const v = byKey.get(key);
+    if (v) used.add(key);
+    return v ?? null;
+  };
+  const noVerdict = (uniqname, id) => `${uniqname} ${id}: answered, but no verdict came back`;
+  const notACredit = (uniqname, id, credit) => `${uniqname} ${id}: credit "${credit}" is not full, half or none`;
+  // WHY IT IS FLAGGED IS NOT WHAT THE STUDENT IS TOLD. `missed` is written to the student and is
+  // empty on full credit, so a flag on a correct answer had nowhere to put its reason and three
+  // of them came out silent: flagged, with nobody able to reconstruct what for. `flagReason` is
+  // the reviewer's.
+  const verdictNotes = (v) => ({ missed: v.missed ?? "", flag: Boolean(v.flag), flagReason: v.flag_reason ?? "" });
+  // The correction that applies to an answer, or null. One whose credit is not a credit is a
+  // problem and is not applied.
+  const correctionFor = (uniqname, id, verdictAt) => {
+    const key = `${uniqname}\u0000${id}`;
+    const fix = fixFor(key, verdictAt);
+    if (!fix) return null;
+    if (!Object.hasOwn(CREDIT_VALUE, fix.credit)) {
+      problems.push(`correction for ${uniqname} ${id}: credit "${fix.credit}" is not full, half or none`);
+      return null;
+    }
+    fixesUsed.add(key);
+    return fix;
+  };
+
+  // EACH PART SETTLED AS A QUESTION OF ITS TYPE IS SETTLED, its correction applied by the same
+  // rule, and the parts then averaged. An answered part with no verdict, a verdict that is not
+  // a credit, or a verdict that gives a part a per_goal, leaves the whole compound unscored, as
+  // it would a question: averaging over the parts that were ruled would score the question as if
+  // the missing part had not been asked.
+  // Every part's verdict is marked used either way, so one part's problem is not also reported
+  // as another part's stray verdict.
+  const settleCompound = (r) => {
+    const parts = [];
+    const why = [];
+    let unaided = "yes";
+    let unchecked = false;
+    let latest = "";
+    for (const u of gradedParts(r.item)) {
+      const key = `${r.uniqname}\u0000${u.key}`;
+      const text = r.parts?.[u.label] ?? null;
+      let credit;
+      let missed = "";
+      let flag = false;
+      let flagReason = "";
+      if (u.type === "mcq") {
+        credit = settleMcq(u, text);
+      } else if (text === null || text.trim() === "") {
+        credit = "none";
+      } else {
+        const v = verdictFor(r.uniqname, u.key);
+        if (!v) {
+          why.push(noVerdict(r.uniqname, u.key));
+          continue;
+        }
+        // A PART IS RULED AS ONE MARK. A compound credits exactly one goal, so a per-goal
+        // ruling of a part is a grading run that misread the question, not a mark to drop.
+        if (v.per_goal) {
+          why.push(`${r.uniqname} ${u.key}: per_goal given for a part; a compound credits exactly one goal`);
+          continue;
+        }
+        if (!Object.hasOwn(CREDIT_VALUE, v.credit)) {
+          why.push(notACredit(r.uniqname, u.key, v.credit));
+          continue;
+        }
+        credit = v.credit;
+        ({ missed, flag, flagReason } = verdictNotes(v));
+        // THE WORST ANY PART REPORTS, because an answer talked through for one part was not
+        // written unaided as a whole.
+        if (v.axes?.unaided === "no" || (v.axes?.unaided === "unclear" && unaided === "yes")) unaided = v.axes.unaided;
+        if (v.axes?.criterion === "unchecked") unchecked = true;
+        if (verdictTimes.has(key) && verdictTimes.get(key) > latest) latest = verdictTimes.get(key);
+      }
+      const fix = correctionFor(r.uniqname, u.key, verdictTimes.get(key) ?? "");
+      let corrected = false;
+      let graderCredit = null;
+      if (fix) {
+        corrected = true;
+        graderCredit = credit;
+        credit = fix.credit;
+        if (typeof fix.comment === "string") missed = fix.comment;
+      }
+      parts.push({ label: u.label, type: u.type, credit, missed, flag, flag_reason: flagReason, corrected, grader_credit: graderCredit });
+    }
+    if (why.length) return why;
+    const credits = parts.map((p) => p.credit);
+    return {
+      credit: credits.every((c) => c === credits[0]) ? credits[0] : "partial",
+      value: credits.reduce((t, c) => t + CREDIT_VALUE[c], 0) / credits.length,
+      // MET ONLY WHEN EVERY PART IS FULLY RIGHT, by the rule that half credit is `not met`.
+      criterion: unchecked ? "unchecked" : credits.every((c) => c === "full") ? "met" : "not met",
+      unaided,
+      flag: parts.some((p) => p.flag),
+      flagReason: parts.filter((p) => p.flag_reason).map((p) => `${p.label}: ${p.flag_reason}`).join("; "),
+      parts,
+      latest,
+    };
+  };
 
   const students = new Map();
   for (const r of rows) {
@@ -168,8 +337,18 @@ export function mergeGrades(rows, verdicts, { date, session, corrections = [] })
     // a verdict without `per_goal` merging to exactly the object it always has.
     let value = null;
     let perGoal = null;
+    // SET ONLY FOR A COMPOUND, likewise absent from every other item's output.
+    let parts = null;
+    let compoundAt = "";
 
-    if (r.item.type === "mcq") {
+    if (r.item.type === "compound") {
+      const settled = settleCompound(r);
+      if (Array.isArray(settled)) {
+        problems.push(...settled);
+        continue;
+      }
+      ({ credit, value, criterion, unaided, flag, flagReason, parts, latest: compoundAt } = settled);
+    } else if (r.item.type === "mcq") {
       credit = settleMcq(r.item, r.text);
       criterion = credit === "full" ? "met" : "not met";
     } else if (r.text === null || r.text.trim() === "") {
@@ -177,20 +356,12 @@ export function mergeGrades(rows, verdicts, { date, session, corrections = [] })
       credit = "none";
       criterion = "not met";
     } else {
-      const key = `${r.uniqname}\u0000${r.item.id}`;
-      const v = byKey.get(key);
+      const v = verdictFor(r.uniqname, r.item.id);
       if (!v) {
-        problems.push(`${r.uniqname} ${r.item.id}: answered, but no verdict came back`);
+        problems.push(noVerdict(r.uniqname, r.item.id));
         continue;
       }
-      used.add(key);
-      missed = v.missed ?? "";
-      flag = Boolean(v.flag);
-      // WHY IT IS FLAGGED IS NOT WHAT THE STUDENT IS TOLD. `missed` is written to the student
-      // and is empty on full credit, so a flag on a correct answer had nowhere to put its
-      // reason and three of them came out silent: flagged, with nobody able to reconstruct
-      // what for. This field is the reviewer's.
-      flagReason = v.flag_reason ?? "";
+      ({ missed, flag, flagReason } = verdictNotes(v));
       if (v.axes?.unaided === "no" || v.axes?.unaided === "unclear") unaided = v.axes.unaided;
       if (v.per_goal) {
         const settled = settlePerGoal(r.item, v.per_goal, unaided);
@@ -215,7 +386,7 @@ export function mergeGrades(rows, verdicts, { date, session, corrections = [] })
       // and no review date moves on it.
       if (v.axes?.criterion === "unchecked") criterion = "unchecked";
       if (!perGoal && !Object.hasOwn(CREDIT_VALUE, credit)) {
-        problems.push(`${r.uniqname} ${r.item.id}: credit "${credit}" is not full, half or none`);
+        problems.push(notACredit(r.uniqname, r.item.id, credit));
         continue;
       }
     }
@@ -224,36 +395,27 @@ export function mergeGrades(rows, verdicts, { date, session, corrections = [] })
     // `grader_credit`, because comparing the grader's flags against what the instructor actually
     // overrode is how anyone learns whether the flag is catching what it should. Overwriting the
     // original would destroy the only evidence that comparison runs on.
-    const fixKey = `${r.uniqname}\u0000${r.item.id}`;
-    const rawFix = fixes.get(fixKey);
-    // A CORRECTION APPLIES ONLY IF IT IS NEWER THAN THE VERDICT IT CORRECTS. That one rule is
-    // what lets a regrade supersede an earlier hand correction without anything rewriting an
-    // append-only file: the regrade appends fresher verdicts, and corrections made against the
-    // old criteria simply stop being the latest word. A verdict with no timestamp predates the
-    // rule and a correction always wins over it, which is the behaviour everything graded so
-    // far already has.
-    const verdictAt = verdictTimes.get(fixKey) ?? "";
-    const fix = rawFix && String(rawFix.at ?? "") >= verdictAt ? rawFix : null;
+    //
+    // A correction on a compound's bare id is one mark on the whole question, made knowing the
+    // parts' rulings, so it is weighed against the newest of them: a regrade of any part
+    // supersedes it, as a regrade of a question supersedes a correction on that question.
+    const verdictAt = parts ? compoundAt : verdictTimes.get(`${r.uniqname}\u0000${r.item.id}`) ?? "";
+    const fix = correctionFor(r.uniqname, r.item.id, verdictAt);
     let corrected = false;
     let graderCredit = null;
     if (fix) {
-      if (!Object.hasOwn(CREDIT_VALUE, fix.credit)) {
-        problems.push(`correction for ${r.uniqname} ${r.item.id}: credit "${fix.credit}" is not full, half or none`);
-      } else {
-        fixesUsed.add(fixKey);
-        corrected = true;
-        graderCredit = credit;
-        credit = fix.credit;
-        // A CORRECTION REPLACES THE AVERAGE, because it is one mark on the whole question and
-        // the instructor gave it knowing what the per-goal rulings were. Those stay beside it
-        // in `per_goal`, as the grader's, for the same reason `grader_credit` does.
-        value = null;
-        if (typeof fix.comment === "string") missed = fix.comment;
-        // A CORRECTION CHANGES THE MARK, NOT WHETHER ANYBODY WATCHED. `unchecked` on a
-        // capability item says nobody established the capability, and a second opinion on how
-        // well the question was answered does not establish it either.
-        if (criterion !== "unchecked") criterion = credit === "full" ? "met" : "not met";
-      }
+      corrected = true;
+      graderCredit = credit;
+      credit = fix.credit;
+      // A CORRECTION REPLACES THE AVERAGE, because it is one mark on the whole question and
+      // the instructor gave it knowing what the per-goal rulings were. Those stay beside it
+      // in `per_goal`, as the grader's, for the same reason `grader_credit` does.
+      value = null;
+      if (typeof fix.comment === "string") missed = fix.comment;
+      // A CORRECTION CHANGES THE MARK, NOT WHETHER ANYBODY WATCHED. `unchecked` on a
+      // capability item says nobody established the capability, and a second opinion on how
+      // well the question was answered does not establish it either.
+      if (criterion !== "unchecked") criterion = credit === "full" ? "met" : "not met";
     }
 
     student.items.push({
@@ -269,6 +431,7 @@ export function mergeGrades(rows, verdicts, { date, session, corrections = [] })
       axes: { unaided, criterion },
       ...(value !== null ? { value } : {}),
       ...(perGoal ? { per_goal: perGoal } : {}),
+      ...(parts ? { parts } : {}),
     });
   }
 
@@ -277,7 +440,9 @@ export function mergeGrades(rows, verdicts, { date, session, corrections = [] })
       problems.push(`verdict for ${v.uniqname} ${v.item} matches no answered item`);
     }
   }
-  const graded = new Set(rows.map((r) => `${r.uniqname}\u0000${r.item.id}`));
+  // A compound is graded under its bare id and under each of its part keys.
+  const graded = new Set(rows.flatMap((r) =>
+    [r.item.id, ...(r.item.type === "compound" ? gradedParts(r.item).map((u) => u.key) : [])].map((k) => `${r.uniqname}\u0000${k}`)));
   for (const c of corrections) {
     const key = `${c.uniqname}\u0000${c.item}`;
     if (!fixesUsed.has(key) && !graded.has(key)) {
