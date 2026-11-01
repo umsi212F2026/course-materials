@@ -7,7 +7,8 @@
 // IT COVERS WHAT THE BANKS USE, not all of Markdown: paragraphs, fenced blocks, bullets and
 // numbered lists (nested by indentation), tables, blockquotes, headings, code spans, bold,
 // italic, http(s) links, and an image on a line of its own (only the quiz app's /api/images/
-// route, shown as a figure; every other image form stays text). Anything else shows as the text it is, which is readable.
+// route, shown as a figure; every other image form stays text). Anything else shows as the text
+// it is, which is readable.
 //
 // ESCAPING COMES FIRST, so nothing a bank says can become markup it did not ask for, and no
 // dependency: the quiz tools ship to students with nothing to install.
@@ -35,7 +36,9 @@ const startsBlock = (line) =>
 function inline(text) {
   const codes = [];
   const images = [];
-  return esc(text)
+  // The two placeholder characters are stripped from the input first, so text carrying one cannot
+  // be read back as a placeholder for something that was never set aside.
+  return esc(String(text).replace(/[\u0000\u0001]/g, ''))
     .replace(/`([^`]+)`/g, (_, c) => `\u0000${codes.push(c) - 1}\u0000`)
     .replace(/!\[[^\]]*\]\([^)]*\)/g, (m) => `\u0001${images.push(m) - 1}\u0001`)
     .replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>')
