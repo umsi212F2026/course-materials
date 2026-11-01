@@ -92,6 +92,15 @@ is `not met`. The criterion for each goal is still the one the inputs printed, a
 question's credit never touched is `unclear`, as for any part the attempt never reached. The
 rubric is the question's key, not the learner's answer: the transcript is still what you rule on.
 
+**A compound question is one attempt on its one goal.** Its question is a stem and parts
+lettered `(a)`, `(b)`, and its rubric gives each part's key under the same letter. Rule the goal
+once, on the whole question: `criterion: met` only when every part is fully right, so a part
+missed or earning half credit makes it `not met`, by the rule above. The caller settles the
+multiple-choice parts and reports each outcome in the record, such as
+`(a) settled: answered 2, key 1, wrong`. Those are settled facts: take them as given and do not
+rule them again. The short-answer parts are yours to rule against their keys. A lettered tutor
+note is context about its part, like any tutor note.
+
 **A goal may name cases**, parts of its criterion that must each be shown, and a question
 exercises some of them. Then that goal arrives with `cases` beside its `criterion`: the ones
 this question exercises, each as its id and the line saying what it is. That is the same place
