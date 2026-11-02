@@ -27,6 +27,12 @@
 // URL the quiz app serves, and `images` says which file each hash stands for. An item whose image
 // is missing is dropped before picking and reported, like one that names a non-course goal.
 //
+// A RETIRED GOAL IS NEVER DRAWN, and only the practice draw checks. A class quiz is guarded
+// upstream, where publish-topic refuses a course topic with a retired event, so the bake never sees
+// one. Practice runs in the student's own clone, where they can retire a word, a goal or a whole
+// topic with record-status, and a quiz that asked about what they gave up would ignore their
+// decision. Retired means what the study tutor means, read through the same status fold.
+//
 // THE RUBRICS COME WITH THE DRAW, and that is not a leak. They live in the topic, which
 // students already have, and the whole design is that studying the material and studying for
 // the quiz are the same act. Not showing them until the answer is given is a discipline the
@@ -38,6 +44,7 @@ import { fileURLToPath } from "node:url";
 import { readPoolSources, applyPool, recordLabel } from "./lib/bank.mjs";
 import { resolveItem, sourceDir } from "./lib/images.mjs";
 import { readLog, readGoals } from "../../learn/tools/lib/topic.mjs";
+import { readStatus, foldStatus } from "../../learn/tools/lib/status.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 // The workspace root: the folder holding course-materials, learning-topics and assignments.
@@ -125,6 +132,33 @@ export function courseOnly(items) {
   return { items: kept, problems };
 }
 
+/** Drop every item whose goal, or whose whole topic, the student has retired.
+ *
+ *  THE TUTOR'S OWN FOLD DECIDES, not a second reading of status.jsonl. foldStatus already says
+ *  that a goal is retired until a goal-level revive and a topic is retired until a topic-level
+ *  revive, and that the two scopes are separate decisions, so reusing it keeps "retired" meaning
+ *  one thing here and in the tutor. A topic retired at topic scope retires every item in it,
+ *  including one that names no goal. A question naming several goals is dropped if any is retired,
+ *  as courseOnly does for a goal that is not course.
+ *
+ *  A TOPIC WITH NO STATUS FILE, OR NO TOPIC AT ALL, IS UNAFFECTED. readStatus gives an empty log
+ *  for a missing file, which folds to nothing retired. This draws no randomness, so a pool with
+ *  no retirements draws exactly as it did. */
+export function notRetired(items) {
+  const folds = new Map();
+  const foldOf = (topic) => {
+    if (!folds.has(topic)) folds.set(topic, foldStatus(readStatus(topic)));
+    return folds.get(topic);
+  };
+  return items.filter((it) => {
+    if (!it.topic) return true;
+    const { retired, retiredGoals } = foldOf(it.topic);
+    if (retired !== null) return false;
+    const named = it.goals ?? (it.goal ? [it.goal] : []);
+    return !named.some((g) => retiredGoals.has(g));
+  });
+}
+
 /** One practice quiz from one session's pool: each stratum contributes what the pool asks for.
  *
  *  This is the instructor's bake with the roster taken out and the seed left random. The strata
@@ -157,7 +191,9 @@ export function drawPractice(pool, root, { seed, preferUnseen = true } = {}) {
   const twin = new Map();
   const found = {};
   const imageProblems = [];
-  for (const it of course.items) {
+  // RETIREMENT IS DROPPED AT THE SAME POINT, so a retired item never fills a slot and the shortfall
+  // check below reports any gap, in the words it already uses.
+  for (const it of notRetired(course.items)) {
     if (twin.has(it)) continue;
     const got = resolveItem(it, sourceDir(pool, it, root));
     twin.set(it, got.item);

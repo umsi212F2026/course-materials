@@ -194,3 +194,58 @@ test("a compound is one item in a stratum and arrives whole", () => {
   assert.equal(item.parts[0].answer, 1);
   assert.equal(picked["a-x/s1/q2"].item.type, "free");
 });
+
+// Retirement is the student's own decision, recorded in the topic's status.jsonl by record-status.
+// A line is `{ kind, goal? }`; the goal-less form retires or revives the whole topic.
+function setStatus(root, events) {
+  writeFileSync(join(root, "learning-topics/t1/status.jsonl"), events.map((e) => JSON.stringify({ at: "2026-09-01T00:00:00Z", reason: "me", ...e })).join("\n") + "\n");
+}
+const SEEDS = ["a", "b", "c", "d", "e", "f", "g", "h"];
+const labelsFor = (root, take, seed) => drawPractice(pool(take), root, { seed, preferUnseen: false }).items.map((i) => i.label);
+
+test("a goal retired at goal scope is never drawn; its sibling goal's items are", () => {
+  const root = fixture({ n: 2, goalOf: { q1: "g1", q2: "g2" } });
+  assert.ok(SEEDS.some((s) => labelsFor(root, 1, s)[0] === "a-x/s1/q1"), "control: q1 is drawn when nothing is retired");
+  setStatus(root, [{ kind: "retired", goal: "g1" }]);
+  for (const seed of SEEDS) assert.deepEqual(labelsFor(root, 1, seed), ["a-x/s1/q2"]);
+});
+
+test("a goal retired and then revived at goal scope is drawn again", () => {
+  const root = fixture({ n: 2, goalOf: { q1: "g1", q2: "g2" } });
+  setStatus(root, [{ kind: "retired", goal: "g1" }, { kind: "revived", goal: "g1" }]);
+  assert.ok(SEEDS.some((s) => labelsFor(root, 1, s)[0] === "a-x/s1/q1"));
+});
+
+test("a topic retired at topic scope draws nothing; revived at topic scope it draws again", () => {
+  const root = fixture({ n: 2, goalOf: { q1: "g1", q2: "g2" } });
+  setStatus(root, [{ kind: "retired" }]);
+  for (const seed of SEEDS) assert.deepEqual(labelsFor(root, 2, seed), []);
+  setStatus(root, [{ kind: "retired" }, { kind: "revived" }]);
+  assert.deepEqual(labelsFor(root, 2, "a").sort(), ["a-x/s1/q1", "a-x/s1/q2"]);
+});
+
+test("a topic with no status file draws exactly as before", () => {
+  const root = fixture({ n: 4, goalOf: { q1: "g1", q2: "g2" } });
+  const blank = fixture({ n: 4, goalOf: { q1: "g1", q2: "g2" } });
+  setStatus(blank, [{ kind: "created" }]);
+  for (const seed of SEEDS) assert.deepEqual(labelsFor(root, 2, seed), labelsFor(blank, 2, seed));
+});
+
+test("a retired goal leaves a short stratum reported, and a surplus item fills the slot when there is one", () => {
+  const root = fixture({ n: 3, goalOf: { q1: "g1", q2: "g1", q3: "g2" } });
+  setStatus(root, [{ kind: "retired", goal: "g1" }]);
+  for (const seed of SEEDS) {
+    const { items, problems } = drawPractice(pool(2), root, { seed, preferUnseen: false });
+    assert.deepEqual(items.map((i) => i.label), ["a-x/s1/q3"]);
+    assert.deepEqual(problems, ["learning-topics/t1/a-x/s1 drew 1 of the 2 asked for"]);
+  }
+
+  const spare = fixture({ n: 3, goalOf: { q1: "g1", q2: "g2", q3: "g2" } });
+  assert.ok(SEEDS.some((s) => labelsFor(spare, 2, s).includes("a-x/s1/q1")), "control: q1 is drawn when nothing is retired");
+  setStatus(spare, [{ kind: "retired", goal: "g1" }]);
+  for (const seed of SEEDS) {
+    const { items, problems } = drawPractice(pool(2), spare, { seed, preferUnseen: false });
+    assert.deepEqual(items.map((i) => i.label).sort(), ["a-x/s1/q2", "a-x/s1/q3"]);
+    assert.deepEqual(problems, []);
+  }
+});
