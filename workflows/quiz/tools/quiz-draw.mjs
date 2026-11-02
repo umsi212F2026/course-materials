@@ -31,7 +31,9 @@
 // upstream, where publish-topic refuses a course topic with a retired event, so the bake never sees
 // one. Practice runs in the student's own clone, where they can retire a word, a goal or a whole
 // topic with record-status, and a quiz that asked about what they gave up would ignore their
-// decision. Retired means what the study tutor means, read through the same status fold.
+// decision. Retired means what the study tutor means, read through the same status fold. A status
+// file that is not valid JSONL stops the practice draw with readStatus's own message, as it stops
+// the tutor: guessing past a corrupt log could serve a question the student retired.
 //
 // THE RUBRICS COME WITH THE DRAW, and that is not a leak. They live in the topic, which
 // students already have, and the whole design is that studying the material and studying for
