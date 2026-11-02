@@ -249,3 +249,12 @@ test("a retired goal leaves a short stratum reported, and a surplus item fills t
     assert.deepEqual(problems, []);
   }
 });
+
+test("a status.jsonl that is not valid JSONL stops the draw with readStatus's message", () => {
+  const root = fixture({ n: 2, goalOf: { q1: "g1", q2: "g2" } });
+  writeFileSync(join(root, "learning-topics/t1/status.jsonl"), '{"kind":"created"}\nnot json\n');
+  assert.throws(
+    () => drawPractice(pool(1), root, { seed: "a" }),
+    /status\.jsonl line 2 is not JSON\. Nothing hand-edits this file\./,
+  );
+});
