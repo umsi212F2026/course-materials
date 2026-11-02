@@ -1,0 +1,12 @@
+{
+  "_note": "The per-session selection: how many questions to draw from each bank on one date. Published, because a practice quiz is generated from this same file by the same library, so students practise the shape they will actually face. It says how many from where and nothing about which questions: the draw is random per student, and the questions themselves live in the sources named below, which students already have.",
+  "session": 18,
+  "date": "2026-11-03",
+  "draw": {
+    "learning-topics/understanding-workflows-2026-10/a-words/w-workflow | learning-topics/understanding-workflows-2026-10/a-words/w-run | learning-topics/understanding-workflows-2026-10/a-words/w-workflow-outcome | learning-topics/workflow-steps-design-2026-10/a-words/w-design-pattern": 1,
+    "learning-topics/understanding-workflows-2026-10/a-words/w-workflow-step | learning-topics/understanding-workflows-2026-10/a-words/w-subprocess": 1,
+    "learning-topics/understanding-workflows-2026-10/a-words/w-gateway | learning-topics/understanding-workflows-2026-10/a-words/w-control-flow | learning-topics/understanding-workflows-2026-10/a-words/w-data-flow": 1,
+    "learning-topics/understanding-workflows-2026-10/a-words/w-lane | learning-topics/understanding-workflows-2026-10/a-words/w-handoff | learning-topics/understanding-workflows-2026-10/a-words/w-executor": 1,
+    "learning-topics/understanding-workflows-2026-10/a-words/w-ai-agent | learning-topics/understanding-workflows-2026-10/a-words/w-script | learning-topics/understanding-workflows-2026-10/a-words/w-skill": 1
+  }
+}
