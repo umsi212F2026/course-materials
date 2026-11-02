@@ -159,6 +159,13 @@ together; add a second reference when they don't.
 Colour-code per file **(ours)**, so a repeat reads as the same file — which only works if the
 repeats really are one object.
 
+**A file's state goes in two places (ours).** Where a step sets a status field, say a notes file
+going from `error` to `rerun`, the reference carries a `bpmn:dataState`, and the label ends in
+the same state in brackets: `extraction-notes [rerun]`. The dataState is the model; the bracket
+is there because bpmn-js parses data states and never draws them. `check-di` strips the bracket
+before comparing names, so this is still one file, and fails if the two disagree. Draw a state
+wherever a later step branches on it: a queue held as status fields is invisible otherwise.
+
 ## Signalling an outcome to the caller
 
 **A subprocess's outgoing flow carries no outcome.** However many end events are inside, it

@@ -264,15 +264,41 @@ for (const plane of xml.matchAll(/<bpmndi:BPMNPlane\b[^>]*>([\s\S]*?)<\/bpmndi:B
 // the canvas distinguishes that from a real repeat — same icon, same name, same colour,
 // a different file as far as the model is concerned.
 
-const dataRefs = [...xml.matchAll(/<bpmn:dataObjectReference\b[^>]*>/g)]
-  .map((m) => ({
-    id: (m[0].match(/ id="([^"]+)"/) || [])[1],
-    name: (m[0].match(/ name="([^"]+)"/) || [])[1],
-    ref: (m[0].match(/ dataObjectRef="([^"]+)"/) || [])[1],
-  }))
+//
+// A file in a particular state carries it twice: a bpmn:dataState, which is the model, and
+// a trailing `[state]` on the label, because bpmn-js parses data states and never draws
+// them. The bracket is not part of the file's name, so it is stripped before comparing.
+
+const dataRefs = [
+  ...xml.matchAll(
+    /<bpmn:dataObjectReference\b([^>]*?)(?:\/>|>([\s\S]*?)<\/bpmn:dataObjectReference>)/g
+  ),
+]
+  .map((m) => {
+    const label = (m[1].match(/ name="([^"]+)"/) || [])[1];
+    const bracket = label && label.match(/^([\s\S]*?)(?:\s|&#10;)*\[([^\]]*)\]$/);
+    return {
+      id: (m[1].match(/ id="([^"]+)"/) || [])[1],
+      name: bracket ? bracket[1] : label,
+      shown: bracket ? bracket[2] : undefined,
+      state: ((m[2] || '').match(/<bpmn:dataState\b[^>]*name="([^"]*)"/) || [])[1],
+      ref: (m[1].match(/ dataObjectRef="([^"]+)"/) || [])[1],
+    };
+  })
   .filter((r) => r.id);
 
-const flat = (t) => (t || '').replace(/\n/g, ' ');
+for (const r of dataRefs) {
+  if (r.state === r.shown) continue;
+  if (r.shown === undefined) {
+    problems.push(`${r.id}: dataState "${r.state}" is not on the label, and bpmn-js does not draw it; add [${r.state}]`);
+  } else if (r.state === undefined) {
+    problems.push(`${r.id}: label shows [${r.shown}] but there is no bpmn:dataState; add one`);
+  } else {
+    problems.push(`${r.id}: label shows [${r.shown}] but dataState is "${r.state}"`);
+  }
+}
+
+const flat = (t) => (t || '').replace(/\n|&#10;/g, ' ');
 const group = (key, value) => {
   const out = new Map();
   for (const r of dataRefs) {
