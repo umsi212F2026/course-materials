@@ -956,8 +956,8 @@
           <bpmn:outgoing>s7</bpmn:outgoing>
           <bpmn:outgoing>s8</bpmn:outgoing>
         </bpmn:exclusiveGateway>
-        <bpmn:serviceTask id="S_judge" name="Rule on unaided, and on the criterion&#10;the goal&#39;s adjudicator">
-          <bpmn:documentation>Whichever implementation the goal's adjudicator slot names: workflows/learn/skills/study/judge/SKILL.md, a fresh judge in a fresh context, or the tutor ruling in session with no extra call. One contract either way — given the goal, its criterion and the record, rule on each question separately.</bpmn:documentation>
+        <bpmn:serviceTask id="S_judge" name="Rule on unaided, and on the criterion&#10;the tutor, or a program for multiple choice">
+          <bpmn:documentation>A program rules multiple choice against the bank's key, in workflows/learn/tools/answer.mjs. The tutor rules everything else in session, against the key and criterion that next-item.mjs --key prints, and states unaided on every attempt. No separate judge and no extra call.</bpmn:documentation>
           <bpmn:incoming>s7</bpmn:incoming>
           <bpmn:outgoing>s9</bpmn:outgoing>
         </bpmn:serviceTask>
@@ -1297,8 +1297,8 @@
         <bpmn:incoming>Flow_0zf28qi</bpmn:incoming>
         <bpmn:outgoing>r4</bpmn:outgoing>
       </bpmn:userTask>
-      <bpmn:serviceTask id="R_judge" name="Rule on unaided, and on the criterion&#10;the goal&#39;s adjudicator">
-        <bpmn:documentation>Whichever implementation the goal's adjudicator slot names — the same one the first pass used. Nearly always workflows/learn/skills/study/judge/SKILL.md here: a goal whose adjudicator is the tutor usually carries recurrence: never and does not come back at all.</bpmn:documentation>
+      <bpmn:serviceTask id="R_judge" name="Rule on unaided, and on the criterion&#10;the tutor, or a program for multiple choice">
+        <bpmn:documentation>The same ruling as the first pass. A program rules multiple choice against the bank's key, recorded with answer.mjs --review. The tutor rules everything else in session, against the key and criterion that next-item.mjs --key prints, and states unaided on every attempt.</bpmn:documentation>
         <bpmn:incoming>r4</bpmn:incoming>
         <bpmn:outgoing>r5</bpmn:outgoing>
       </bpmn:serviceTask>
