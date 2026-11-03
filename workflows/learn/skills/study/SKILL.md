@@ -165,8 +165,8 @@ ask differently rather than repeating it.
      the learner's block printed, and you run the activity's generator live. It serves nothing
      after a `not met`, so the three choices end the block; see choice 1, below. Nor does it
      serve once the answer meets the goal you passed as `--goal`: the block ends on the
-     congratulation, and you go back to step 1. A `next:` line above `--- learner sees ---` says
-     which of these happened.
+     congratulation and the progress block, and you go back to step 1. A `next:` line above
+     `--- learner sees ---` says which of these happened.
    - **`--concern "<why>"`** when no answer to this question could establish the criterion. It
      puts the question on curation's queue for every goal it credits.
 
