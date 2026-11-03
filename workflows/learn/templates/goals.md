@@ -123,12 +123,12 @@
   orientation are the same kind of thing here and reach every tool through one code path;
   what differs between them is which SLOTS they carry.
 
-  THE EIGHT SLOTS, what each one asks, and every value in use, are in
+  THE SEVEN SLOTS, what each one asks, and every value in use, are in
   workflows/learn/skills/goal-setting/references/slots.md. Read it before writing a slot you haven't written
   before; a value nothing implements is refused at read time, by name. Every slot takes exactly
   one value.
 
-  EVERY SLOT DEFAULTS, and an ordinary capability carries none of them (the eighth, `capability`,
+  EVERY SLOT DEFAULTS, and an ordinary capability carries none of them (the seventh, `capability`,
   has no default value: it is simply absent unless you write it):
 
       ### `c-read-unseen-diagram`
@@ -230,7 +230,7 @@
   separate skills, each worth reviewing on its own. survey.mjs reports a malformed or
   duplicate id and a slot left empty.
 
-  THE ORIENTATION ENTRY is shipped below, filled in, in every topic. It carries six slots and
+  THE ORIENTATION ENTRY is shipped below, filled in, in every topic. It carries five slots and
   they are not yours to change. Delete it only if `what I already have` says this learner has
   seen the area laid out before; then say so there and let curation write
   `n/a: already oriented`.
@@ -257,7 +257,6 @@
 
 - **goal:** get the shape of this area before working on any particular part of it
 - **criterion:** orientation
-- **adjudicator:** tutor
 - **bar:** did it once
 - **recurrence:** never
 - **is_required:** no

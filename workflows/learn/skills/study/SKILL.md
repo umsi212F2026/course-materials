@@ -1,6 +1,6 @@
 ---
 name: study
-description: Tutor a learner through the activities that serve their goals: run them, keep the side conversation going, get attempts adjudicated, and keep the record. Use once activities.md exists, for every study session thereafter until the goals are met.
+description: Tutor a learner through the activities that serve their goals: run them, keep the side conversation going, rule on attempts, and keep the record. Use once activities.md exists, for every study session thereafter until the goals are met.
 ---
 
 # Study
@@ -29,7 +29,8 @@ that's what happens next, because one day it will.
 | `notes.md`      | their current understanding, in their words. They write; you prompt.                                                                |
 
 **You write to two logs and never to a prose file.** `evidence/attempts.jsonl` takes what
-happened, through `record-attempt.mjs`. `status.jsonl` takes what still needs doing,
+happened, through `answer.mjs` for a bank question and `record-attempt.mjs` for anything
+else. `status.jsonl` takes what still needs doing,
 through `record-status.mjs`. Both append, so a review sitting can be inside this topic at the
 same time as you and neither of you can lose the other's line.
 
@@ -44,17 +45,13 @@ that produces evidence for it.** A capability, a vocabulary word and the orienta
 goals, they are all entries in `goals.md`, and you reach all of them the same way. **A word is
 a goal in group `vocabulary`**; that is the whole definition, here and in every other skill.
 
-What differs is the **slots** each one carries: who rules on an attempt, and what accumulation
-of rulings makes the claim true. Read them off the entry; don't
-work out what kind of thing you're looking at, because nothing in the system does.
+What differs is the **slots** each one carries, such as what accumulation of rulings makes the
+claim true. Read them off the entry; don't work out what kind of thing you're looking at,
+because nothing in the system does.
 
 [`../goal-setting/references/slots.md`](../goal-setting/references/slots.md) is the reference:
-the eight slots, the three contracts, and every value in use. Two of them decide what you do:
-
-| slot          | what it changes for you                                                                                                        |
-| ------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| `adjudicator` | who rules. `study/judge` — a fresh judge, in a fresh context. `tutor` — you, in session, no extra call                         |
-| `bar`         | what makes the claim true. You never evaluate this; `record-attempt.mjs` does                                                  |
+the seven slots, the contracts, and every value in use. The `bar`, what makes the claim true,
+is one you never evaluate: the tool that records the attempt does.
 
 ## The session
 
@@ -140,100 +137,105 @@ ask differently rather than repeating it.
    the side conversation, help and how to notice it, when to prompt for a note, when to
    abandon.
 
-3. **Get it adjudicated, if it might have established something.** The goal's `adjudicator`
-   slot says who rules.
+3. **Rule it, if it might have established something.** It is ruled in session, on two axes,
+   each on its own: `unaided` (did anything you said change what they did?) and `criterion`
+   (against the criterion as written, not a better one you can see). You state `unaided` every
+   time. You rule the criterion of everything except a multiple-choice answer, which a program
+   rules against the key. Help does not make an answer wrong, and a right answer does not make
+   it unaided. Don't round a near miss up, and keep `unclear` for a genuine tie, either way.
 
-   **`study/judge`** — the default, and the one to use when the claim is strong enough that
-   being the interested party matters. Spawn it in a fresh context with this message, and
-   nothing more, every path absolute:
+   **A bank question is ruled and recorded in one call**, keyed by the label `next-item.mjs`
+   printed:
 
    ```
-   Follow /…/workflows/learn/skills/study/judge/SKILL.md.
-   sent by: study
-   inputs: node /…/workflows/learn/tools/judge-input.mjs /…/<topic-folder> <label>
-   --- record ---
-   …every turn from the question on, the learner's and yours, verbatim…
+   node workflows/learn/tools/answer.mjs <topic-folder> <label> --unaided yes --choice 3 --next --goal <goal-id>
+   node workflows/learn/tools/answer.mjs <topic-folder> <label> --unaided yes --choice a=2,c=1 --criterion met --next --activity <activity-id>
+   node workflows/learn/tools/answer.mjs <topic-folder> <label> --unaided no --criterion "not met" --next --goal <goal-id>
    ```
 
-   **Don't read the judge's skill yourself, and don't copy the criterion, cases, question or
-   rubric into the message.** The judge reads its skill, and `judge-input.mjs` prints the rest
-   from the topic folder. The learner waits while you write this message, so the record is the
-   only part you type.
+   - **`--unaided` on every call**, `yes`, `no` or `unclear`. It has no default.
+   - **`--choice`** for a multiple-choice question, or `<letter>=<n>` for each multiple-choice
+     part of a compound. The program rules those against the key; you don't.
+   - **`--criterion`** for an open question, or for the open parts of a compound taken together:
+     your ruling, against the key, the `--- criterion ---` and the `--- ruling ---` lines that
+     `next-item.mjs --key` printed. A compound is `met` only when every multiple-choice part is
+     right as well, and the tool works that out.
+   - **`--next`**, with the same `--goal` or `--activity` you served from, serves the next
+     question in the same call. Exit 2 means nothing banked is left: the attempt is recorded and
+     the learner's block printed, and you run the activity's generator live.
+   - **`--concern "<why>"`** when no answer to this question could establish the criterion. It
+     puts the question on curation's queue for every goal it credits.
 
-   **The record starts where the question was put to them.** For a bank question, leave out the
-   question itself, since the judge's inputs print it. For a question set live, the record
-   starts with the question as you set it, because nothing else shows the judge what was asked.
+   **A bank question that names a goal with cases but lists none for it** is refused, and nothing
+   is written. Record each goal it credits through `record-attempt.mjs` instead, as _The record_
+   says, and serve the next question with `next-item.mjs --after <label> --key`.
 
-   **A compound question, one with lettered parts, is one judge call**, never one per part. Its
-   record carries the learner's answer to every part and the outcome of each multiple-choice
-   part, which you settled; see
-   [`references/running-an-activity.md`](references/running-an-activity.md). It is `met` only
-   when every part is fully right.
+   **A question set live is ruled against its pass condition**: the move's, in
+   [`../goal-setting/references/vocabulary-moves.md`](../goal-setting/references/vocabulary-moves.md),
+   or the one the entry's generator states. Record it with `record-attempt.mjs`; see _The record_.
 
-   `<label>` is the one `next-item.mjs` printed. A question set live adds `--goal <goal-id>`,
-   and the judge returns one ruling. A bank question names its own goals, and when there are
-   several the judge returns one ruling per goal, as a JSON array. A question that names goals
-   with different `adjudicator` slots goes to `study/judge` for all of them.
-
-   **A goal with cases needs to know which this question exercises.** A bank question's
-   `cases:` lines already say. Where they don't, add `--cases <goal-id>:<case>,<case>`: for a
-   question set live, the cases its generator says it carries; for a bank question printing no
-   `cases:` line for such a goal, the ones you judged it to exercise (see _The record_).
-   `judge-input.mjs` refuses a goal with cases and none named, and the judge returns that
-   refusal rather than a ruling. Add the flag and send it again.
+   **A helped attempt is still ruled** whenever it can be: record it with `unaided: no` and the
+   criterion it earned. No bar counts it as a pass. `criterion: unchecked` is only for an attempt
+   that could not have settled anything; see _When nobody ruled_.
 
    **Every banked question names a goal**, and survey reports one that doesn't. If the picker
    ever prints an empty `goals:` line, the question is a fault: run it and discuss it, but record
    nothing.
 
-   **`tutor`** — you rule, in session, no extra call. Same contract, same two axes, and the
-   ruling gets recorded exactly like the judge's. It is on a goal because its question is
-   narrow enough to be answered by the party who watched it happen; it is not permission to
-   rule on the ones that aren't.
+   **Then reply.** What follows `--- learner sees ---`, up to `--- next ---`, is for the learner:
+   the verdict, where that leaves them, after a `not met` the three choices, and with `--next`
+   the next question. **For a multiple-choice question your reply is that block, verbatim, and
+   nothing else**, and it ends the turn. For a compound or open question, write your feedback on
+   the parts you ruled, then the block. Everything from `--- next ---` on is yours: the next
+   question's header and key, for ruling the next answer.
 
-   Tell them the result afterwards. No need to inform them beforehand that you've sent it for
-   checking.
+   **For a question set live, nothing prints the three choices.** Give your feedback and the
+   progress block, and after a `not met` end the reply with these:
 
-   **After every `not met`, give the feedback and then offer three choices**, in one short
-   block, every time:
+   ```
+   What next?
+   1. Try again now, with another question.
+   2. Come back to it later.
+   3. Mark it as learned.
+   ```
 
-   1. **Try again now.** Another item from the same activity's bank, or a fresh instance of the
-      vocabulary move. Where the activity has no bank, offer another live activity for the same
-      goal.
+   **What each choice means for you:**
+
+   1. **Try again now.** Serve another: the next banked question, already in the block when you
+      passed `--next`, or a fresh instance of the vocabulary move. Where the activity has no bank,
+      offer another live activity for the same goal.
    2. **Come back to it later.** Something else, or stop. Nothing more to record; the miss is
       already in the log. Add the goal to this sitting's skip list, so `next-goal.mjs` does not
       offer it again until the next session.
    3. **Mark it as learned.** See _When the learner marks it learned_, below.
 
-   **On a goal with cases, the third choice is instead: count this one as right and go on to
-   the next question in this scenario.** "Mark it as learned" there would pass every case on one
-   ruling, including those they have never been asked, and a learner choosing it after one
-   question means that question. See _When the learner marks it learned_.
+   **On a goal with cases, the third choice reads `3. Count this one as right and go on to the
+   next question.`**, in the tool's block and in yours. "Mark it as learned" there would pass
+   every case on one ruling, including those they have never been asked, and a learner choosing
+   it after one question means that question: record it declared with this question's cases, and
+   serve the next with `--after <label>`. See _When the learner marks it learned_.
 
-   Judges are deliberately tough, and a learner who has had the feedback is the best placed to
-   say whether another round would teach them anything. Don't argue with the choice, and don't
-   ask for a reason.
+   A learner who has had the feedback is the best placed to say whether another round would
+   teach them anything. Don't argue with the choice, and don't ask for a reason.
 
-   **Not every attempt goes to an adjudicator, and the record says so.** See _When nobody
-   ruled_ below.
+   **Not every attempt is ruled, and the record says so.** See _When nobody ruled_ below.
 
-4. **Record it.** Run `record-attempt.mjs` — see _The record_ — every time, before moving on.
+4. **Record it, every time, before moving on.** A bank question is recorded by the `answer.mjs`
+   call in step 3: one attempt for each goal it credits, with the tags and cases the bank gives
+   it. `record-attempt.mjs` records the rest: a question set live, an `--outcome` call, and
+   `criterion: unchecked`. See _The record_.
 
-   **A question ruled against several goals is one `record-attempt.mjs` call per goal**, each
-   with that ruling's `--axes`, and all with the question's label and its `--tags`.
+   **A goal with cases needs `--cases` on every ruled attempt** you record through
+   `record-attempt.mjs`, naming the cases the question exercised; see _The record_.
 
-   **A goal with cases needs `--cases` on every ruled attempt**, naming the cases the question
-   exercised; see _The record_.
-
-   **Then show where that leaves them.** Pass `--progress` on every `record-attempt.mjs` call
-   you make, and paste what it prints under `--- progress ---`. After recording a deferral or a
-   retirement, run `node workflows/learn/tools/progress.mjs <topic-folder> --after <goal-id>`
-   for the same view. It is the one line for the goal's set, or the full view when that
-   finished the set, so the next set is seen opening up; the tool works out which. For a
-   question ruled against several goals, paste the last call's. Review and the quiz do not
-   show it. A goal with some of its cases passed shows `~`, which the legend reads `in
-   progress`, and the tool adds a line such as `c-judge-secret-request: 2 of 3 cases
-   demonstrated`.
+   **Then show where that leaves them.** `answer.mjs` puts the progress block in the learner's
+   block. Pass `--progress` on every `record-attempt.mjs` call you make, and paste what it prints
+   under `--- progress ---`. After recording a deferral or a retirement, run
+   `node workflows/learn/tools/progress.mjs <topic-folder> --after <goal-id>` for the same view.
+   It is the one line for the goal's set, or the full view when that finished the set, so the
+   next set is seen opening up; the tool works out which. Review and the quiz do not show it.
+   A goal with some of its cases passed shows `~`, which the legend reads `in progress`, and the
+   tool adds a line such as `c-judge-secret-request: 2 of 3 cases demonstrated`.
 
    **Never tell the learner which cases remain.** The progress tool gives counts only, and so
    do you: naming the case still to show names the hard part of the criterion, and the next
@@ -281,8 +283,8 @@ often true and is itself worth knowing.
 
 ## The record
 
-**You don't work out where anything stands.** After every attempt, whatever kind of goal it
-was, run
+**You don't work out where anything stands.** A bank question is recorded by `answer.mjs`, in
+step 3. After every other attempt, whatever kind of goal it was, run
 
 ```
 node workflows/learn/tools/record-attempt.mjs <topic-folder> <goal-id> <label> --axes '<json>' --progress
@@ -304,25 +306,27 @@ the same one back, and there is nowhere else it gets written down.
 **`--tags` is what the activity returned**, from a closed system-wide set: `production`,
 `reception`. It is the one structured thing about what was served, and it exists because a
 `bar` has to know whether a move was a production one and cannot read the label. A vocabulary
-CATCH set live is `--tags production`; a DEFINE is `--tags reception`. **For a bank question,
-pass the `tags:` line the picker printed**, unless it says `none`, in which case omit the flag.
-Any other activity run live returns no tags, so omit the flag there too.
+CATCH set live is `--tags production`; a DEFINE is `--tags reception`. **For a bank question
+recorded here** (see below), pass the `tags:` line the picker printed, unless it says `none`, in
+which case omit the flag. Any other activity run live returns no tags, so omit the flag there
+too.
 
 **`--cases` says which of the goal's cases the question exercised**, and a goal whose entry has a
 `cases` slot needs it on every call with `--axes`; `record-attempt.mjs` refuses the call without
-it, and refuses a case the goal does not declare or `--cases` on a goal with none. **For a bank
-question, pass the `cases: <goal>: x, y` line the picker printed for that goal**, as
-`--cases x,y`. A bank question that names a goal with cases but prints no `cases:` line for it
-was written before the cases were. Judge from the case texts in `goals.md` which of them it
-actually exercises, and name only those, to the judge as `cases` and here as `--cases`. If it
-exercises none, nothing can be ruled for that goal: call no judge for it and record
-`{"unaided":"yes","criterion":"unchecked"}` (`"no"` if you helped) with no `--cases`, which
-counts toward nothing. Survey already reports the stale bank. For a question set live, the
-generator says which cases each question shape carries; state the ones this question exercised.
-An `--outcome` call (`declared`, `elsewhere`, `abandoned`) needs none. One ruling covers every
-case the question lists: a pass passes them all, a miss passes none.
+it, and refuses a case the goal does not declare or `--cases` on a goal with none. For a
+question set live, the generator says which cases each question shape carries; state the ones
+this question exercised. An `--outcome` call (`declared`, `elsewhere`, `abandoned`) needs none.
+One ruling covers every case the question lists: a pass passes them all, a miss passes none.
 
-**The two axes go in raw**, as the adjudicator returned them:
+**A bank question that names a goal with cases but lists none for it** was written before the
+cases were, and `answer.mjs` refuses it. Record each goal it credits here, with its label and
+the `tags:` line the picker printed. For the goal with cases, judge from the case texts in
+`goals.md` which of them it actually exercises, rule it, and name only those as `--cases`. If it
+exercises none, nothing can be ruled for that goal: record
+`{"unaided":"yes","criterion":"unchecked"}` (`"no"` if you helped) with no `--cases`, which
+counts toward nothing. Survey already reports the stale bank.
+
+**The two axes go in raw**, as you ruled them:
 
 ```
 --axes '{"unaided":"yes|no|unclear","criterion":"met|not met|unclear|unchecked"}'
@@ -338,20 +342,18 @@ asks.
 
 ### When nobody ruled
 
-**`criterion: unchecked` means the adjudicator was not invoked.** Not that it looked and
-couldn't tell — that's `unclear`. Two cases, and both are ordinary:
+**`criterion: unchecked` means nobody ruled.** Not that you looked and couldn't tell: that's
+`unclear`. It is for one ordinary case: **the attempt couldn't have settled anything**, because
+it was cut short before the part the criterion examines, say. Record
+`{"unaided":"yes","criterion":"unchecked"}`, or `"no"` if you helped. It moves no date and
+establishes nothing, which is exactly right.
 
-- **You know you gave help.** Record `{"unaided":"no","criterion":"unchecked"}` and call
-  nobody. There was nothing for an adjudicator to settle, and review already counts this as a
-  lapse.
-- **The attempt couldn't have settled anything**, however unaided: it was cut short before the
-  part the criterion examines, say. Record `{"unaided":"yes","criterion":"unchecked"}`. It moves
-  no date and establishes nothing, which is exactly right.
+**Help alone is not that case.** An attempt you helped with is still ruled, and recorded with
+`unaided: no` and the criterion it earned: through `answer.mjs --unaided no` for a bank
+question. No bar counts it as a pass, and review counts it as a lapse.
 
-Both carry `--axes`, so on a goal with cases both need `--cases` as well.
-
-So **whether to invoke an adjudicator is your judgement, not a rule.** Invoke one when the
-attempt might establish something. `unchecked` is the honest record of the times it wouldn't.
+So **whether to rule is your judgement, not a rule.** Rule when the attempt might establish
+something. `unchecked` is the honest record of the times it wouldn't.
 
 ### When a bar is met
 
@@ -533,8 +535,11 @@ lose each other's writes, so this one ends first.
   that's the point — the thing you were going to do next time takes a minute now.
 - **Deciding for them.** Offering is the job; choosing isn't.
 - **Talking them out of stopping.** Even gently. Even by asking twice.
-- **Ruling on a goal whose adjudicator isn't you.** `adjudicator: study/judge` is on that goal
-  because your being there is the reason you're the wrong party.
+- **Rounding a near miss up.** You have been helping and want them to have got there. Half
+  credit is `not met`, and so is an answer that passes only once you read in what they probably
+  meant.
+- **Collapsing the two axes.** Ruling a helped answer wrong because you helped, or a right
+  answer unaided because it was right. Each axis is its own question.
 - **Recording `criterion: met` because it clearly went well.** If nobody ruled, the honest
   record is `unchecked`, and the difference between "they clearly understand this" and "met the
   criterion unaided, adjudicated" is the entire point of keeping a record.
@@ -544,7 +549,7 @@ lose each other's writes, so this one ends first.
 - [`curation`](workflows/learn/skills/curation/SKILL.md) — skill
 - [`goal-setting`](workflows/learn/skills/goal-setting/SKILL.md) — skill
 - [`learn`](workflows/learn/skills/learn/SKILL.md) — skill
-- [`judge-input.mjs`](workflows/learn/tools/judge-input.mjs) - tool
+- [`answer.mjs`](workflows/learn/tools/answer.mjs) - tool
 - [`next-goal.mjs`](workflows/learn/tools/next-goal.mjs) - tool
 - [`next-item.mjs`](workflows/learn/tools/next-item.mjs) - tool
 - [`progress.mjs`](workflows/learn/tools/progress.mjs) - tool

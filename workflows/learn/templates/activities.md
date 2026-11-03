@@ -152,7 +152,7 @@ with the learner.
   That's a defect in goals.md rather than here, and it needs the learner to resolve.
 
   THE ORIENTATION GOAL is an ordinary row and always first, because it is first in goals.md.
-  It is a goal like any other, with a criterion, an adjudicator and a bar. A row naming no
+  It is a goal like any other, with a criterion and a bar. A row naming no
   goal could never finish. Its `checks` cell is filled like any other, with the activity whose
   `checks` names it: the one that gives the learner the shape of the thing before any
   particular part is in play.
@@ -203,7 +203,7 @@ with the learner.
                 activity rather than a reading list
   tutor role    the stance to take while this runs: explainer, socratic questioner,
                 critique target, critic, role-play partner, examiner (sets a question cold and
-                leaves the judging to the adjudicator), or none (the learner works
+                rules on the answer afterwards), or none (the learner works
                 alone and you wait)
   tutor does    during, and afterward
   done when     the criterion of a goal in `checks` met with no help. For the orientation,

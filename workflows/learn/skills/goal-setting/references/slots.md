@@ -1,4 +1,4 @@
-# Goal slots: the eight questions, and the three contracts
+# Goal slots: the seven questions, and the two contracts
 
 This file carries the rules and the contracts, and no argument — the reasoning behind them is
 recorded outside this repository.
@@ -9,17 +9,16 @@ ordinary capability, a vocabulary word, an orientation — and the slots below a
 system asks of any of them.
 
 **Every slot defaults.** An ordinary capability carries no slot values at all. A word carries
-the three that differ from the default; an orientation carries six. There are no named types:
+the three that differ from the default; an orientation carries five. There are no named types:
 nothing in the system says "this is a word", only that this goal is in group `vocabulary`
 (which is also where its `criterion` of `vocabulary` puts it by default).
 `capability` is the one slot with no default: it is simply absent on a goal that isn't a part.
 
-## The eight slots
+## The seven slots
 
 | slot          | question                                           | consumer                                         | default                  |
 | ------------- | -------------------------------------------------- | ------------------------------------------------ | ------------------------ |
-| `criterion`   | where does the statement of _met_ come from?       | the adjudicator                                  | _(the entry's own text)_ |
-| `adjudicator` | who rules on one attempt?                          | the tutor, after an attempt                      | `study/judge`            |
+| `criterion`   | where does the statement of _met_ come from?       | whoever rules on an attempt                      | _(the entry's own text)_ |
 | `bar`         | what accumulation of rulings makes the claim true? | `met()`, in `workflows/learn/tools/lib/bars.mjs` | `one unaided pass`       |
 | `recurrence`  | does it come back once met?                        | the scheduler                                    | `spaced`                 |
 | `is_required` | must this be met for the topic to be finished?     | _nothing pending_, in `derivePhase`              | `yes`                    |
@@ -29,14 +28,14 @@ nothing in the system says "this is a word", only that this goal is in group `vo
 
 Offering is not a slot: it falls out of the activity. Questions from a shared generator, such
 as `a-words`, are set rather than offered, since offering them individually is already wrong.
-Where a goal's activities come from was once a ninth slot, `supply`; it is retired, below.
+Two slots are retired, below: `supply`, where a goal's activities come from, and `adjudicator`,
+who rules on an attempt.
 
 The three shapes in use:
 
 |               | ordinary capability  | vocabulary word       | orientation   |
 | ------------- | -------------------- | --------------------- | ------------- |
 | `criterion`   | _(learner-authored)_ | `vocabulary`          | `orientation` |
-| `adjudicator` | `study/judge`        | `study/judge`         | `tutor`       |
 | `bar`         | `one unaided pass`   | `one production pass` | `did it once` |
 | `recurrence`  | `spaced`             | `spaced`              | `never`       |
 | `is_required` | `yes`                | `yes`                 | `no`          |
@@ -51,8 +50,8 @@ the pattern; read the row.
 
 | kind                  | slots                          | what a value is                                                                                                  |
 | --------------------- | ------------------------------ | ---------------------------------------------------------------------------------------------------------------- |
-| **data or reference** | `criterion`, `group`, `capability` | literal text, or a pointer to shared text. Nothing invokes it; something reads it and hands it to an adjudicator |
-| **strategy**          | `adjudicator`, `bar`           | always an implementation, always invoked                                                                         |
+| **data or reference** | `criterion`, `group`, `capability` | literal text, or a pointer to shared text. Nothing invokes it; something reads it and hands it to whoever rules |
+| **strategy**          | `bar`                          | always an implementation, always invoked                                                                         |
 | **flag**              | `recurrence`, `is_required`, `origin` | read as data by one consumer                                                                                     |
 
 `recurrence` is a flag rather than a strategy because it only says whether the scheduler runs.
@@ -61,7 +60,7 @@ The intervals are system-wide, in `workflows/learn/tools/lib/schedule.mjs`, not 
 **Flag and keyword sets are closed, and `workflows/learn/tools/lib/slots.mjs` refuses what
 isn't in them, by name.** An open-ended slot is where an agent invents `recurrence: sometimes`.
 
-## The three contracts
+## The two contracts
 
 Written before the implementations, and binding on every implementation that follows. A
 contract written after the first implementation is a description of that implementation. The
@@ -105,24 +104,6 @@ vocabulary move set live writes `<MOVE>: <instance>`, which only the moves read.
 activity did not write is ignored, never parsed. A goal that needs a genuinely new source of
 evidence gets a new activity, not a new slot.
 
-### `adjudicator`
-
-> **Given the goal, its criterion, and the record of one attempt, return a ruling on each
-> question separately** — was this unaided, and does it meet the criterion.
-
-Two axes, returned raw and never collapsed:
-
-- `unaided` — `yes` | `no` | `unclear`
-- `criterion` — `met` | `not met` | `unclear`
-
-**No keyword values, only implementations.** What looks like the trivial case isn't: "the
-learner judged it done" means something reading the record and deciding whether they indicated
-it, not a prompt with a yes/no in it.
-
-**An adjudicator is invoked when an attempt might establish something, not always.** When
-nobody ruled, the tutor records `criterion: unchecked` — see below. Whether to invoke is the
-tutor's judgement, not a rule.
-
 ### `bar`
 
 > **Given the goal's whole attempt history, return a boolean.**
@@ -131,14 +112,14 @@ Five things consume "has this been met", and every one of them uses it as a bina
 returns one. No bar declares a scale and nothing compares across scales.
 
 **A bar is always a program, never a skill.** It cannot need judgement, because judgement
-already happened upstream: in the adjudicator, which ruled, or in the activity, which tagged.
+already happened upstream: in the ruling, or in the activity, which tagged.
 **It reads only structured fields**: timestamps, the two axes, `tags`, `outcome`, `source`.
 Never the criterion text, never the instruction, never the opaque label.
 
 **A bar, once true, stays true.** That is the invariant that replaced "the level only ever
 rises", and it is checkable: every bar is an existence test over the history.
 
-**The program/skill seam falls exactly between `adjudicator` and `bar`.** Everything upstream
+**The program/skill seam falls exactly between the ruling and `bar`.** Everything upstream
 may require judgement; the bar and everything after it is arithmetic.
 
 ## Every value in use today
@@ -153,7 +134,7 @@ may require judgement; the bar and everything after it is arithmetic.
 
 A value that exactly matches a reference name is a reference; anything else is the learner's
 own text. The reference names are closed — `workflows/learn/tools/lib/slots.mjs` carries them
-and where each is defined, so an adjudicator can be handed the text rather than the name.
+and where each is defined, so whoever rules can be handed the text rather than the name.
 
 **`orientation`, in full:** _the learner has indicated they could now attempt the real thing
 with the artifact still beside them._ Weak evidence deliberately. It is adjudicated and
@@ -162,7 +143,7 @@ the self-certifying rung it replaced.
 
 ### `cases`: data, beside `criterion`
 
-Optional, and not one of the eight: it qualifies the criterion rather than answering a question
+Optional, and not one of the seven: it qualifies the criterion rather than answering a question
 of its own. Written right after `criterion`, one sub-bullet per case, a backticked id and one
 line saying what the case is:
 
@@ -226,29 +207,24 @@ against a criterion it wasn't written for. A word is the exception, because its 
 fixed: with nothing banked for it, or no `a-words` entry yet, set one move live from
 [`vocabulary-moves.md`](vocabulary-moves.md).
 
-### `adjudicator` — strategy
+### `adjudicator`: retired
 
-| value                     | means                                              | defined where                                              |
-| ------------------------- | -------------------------------------------------- | ---------------------------------------------------------- |
-| `study/judge` _(default)_ | a fresh judge, two axes, in a fresh context        | [`../../study/judge/SKILL.md`](../../study/judge/SKILL.md) |
-| `tutor`                   | the running agent rules, in session, no extra call | this file, below                                           |
+**Who rules is the same for every goal**: the tutor, in session, and for a multiple-choice
+answer a program, `workflows/learn/tools/answer.mjs`, against the bank's key. A quiz's answers
+are marked by `quiz/grade`. There is nothing left for a goal to choose, so **an `adjudicator:`
+line in an older `goals.md` is read without complaint**, and the field lands nowhere.
 
-The two differ in cost and in independence, not in contract. `study/judge` is worth its call
-when a claim needs a party who wasn't there; `tutor` is right when the question is what the
-tutor watched happen.
+**A ruling is two axes**, recorded raw and never collapsed:
 
-**`tutor`, in full.** You were there. Rule on the two axes from what you saw, and record it in
-the same call as any other attempt.
+- `unaided`: `yes` | `no` | `unclear`. Anything that changed what they did is help.
+- `criterion`: `met` | `not met` | `unclear`, against the criterion as written. For
+  `criterion: orientation` the question is narrow and answerable: _did they indicate they could
+  now attempt the real thing with the artifact still beside them?_ Not whether the tutor thinks
+  they could.
 
-- `unaided` — was any of what they did changed by you? Anything that changed what they did is
-  help.
-- `criterion` — against the criterion as written. For `criterion: orientation`, the question is
-  narrow and answerable: _did they indicate they could now attempt the real thing with the
-  artifact still beside them?_ Not whether you think they could.
-
-Rule `unclear` where it genuinely is. You are a cheap adjudicator, not a lenient one — and
-where the claim is strong enough that being the interested party matters, the goal will carry
-`adjudicator: study/judge` and this doesn't apply.
+**An attempt is ruled when it might establish something, not always.** One that could not have
+settled anything is recorded `criterion: unchecked`. Whether to rule is the tutor's judgement,
+not a rule.
 
 ### `bar` — strategy
 

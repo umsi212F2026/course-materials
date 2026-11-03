@@ -1,6 +1,6 @@
 ---
 name: review
-description: Run everything that has come due for review, across all topics: the learner re-attempts each goal's check cold, it gets adjudicated, and a program sets the next interval. Use when anything is due; it works out what that is itself rather than being told. Not the same as study, which works the other side of the line: goals not yet met.
+description: Run everything that has come due for review, across all topics: the learner re-attempts each goal's check cold, you rule it (a program rules multiple choice), and a program sets the next interval. Use when anything is due; it works out what that is itself rather than being told. Not the same as study, which works the other side of the line: goals not yet met.
 ---
 
 # Review
@@ -18,8 +18,8 @@ may have more than one, and re-deciding is how a sitting ends up split across tw
 
 A goal was met, days or weeks ago. This session asks one question: **is it still there?**
 
-You are not teaching. You set up the check, stay out of the way while they attempt it, get the
-attempt adjudicated, and let a program set the next date. That is the whole job, and most of it
+You are not teaching. You set up the check, stay out of the way while they attempt it, rule
+the attempt, and let a program set the next date. That is the whole job, and most of it
 is restraint.
 
 ## What you're given
@@ -37,14 +37,13 @@ whose date has passed:
 | ------------- | -------------------------------------------------------------------------------------------------- |
 | `topic`       | the folder. Every file the sequence names is in this one, and it changes as you work down the list |
 | `goal`        | the id, to look up in that topic's `goals.md`                                                      |
-| `adjudicator` | who rules on it — see step 3                                                                       |
 | `served`      | the labels this goal has already been given, most recent first, exactly as the activity wrote them |
 | `due`         | the date it came due                                                                               |
 
 **ONE PATH, WHATEVER KIND OF GOAL IT IS.** There is no `is_word` in that record and nothing
 here branches on one. A capability, a word and an orientation are all goals with entries in
 `goals.md` and are served by entries in `activities.md`; what differs between them is their
-slots, and one of those comes to you in the record above.
+slots, which you read off the entry.
 
 **`served` carries one instruction: don't serve what's near the front of it.** A label is
 whatever the activity that wrote it chose to write: a bank question's path, an activity id, a
@@ -136,9 +135,9 @@ argument.
    the learner only what follows `--- learner sees ---`. It prefers a question they have never
    been served, then the one served longest ago, so you need not filter by `served`. For a goal
    with cases it prefers first a question on the case passed longest ago, so successive reviews
-   rotate through them; keep its `cases:` lines for step 4. Run it with `--key` to read the
-   grading text, and keep that from them. A question may credit other goals as well; that is
-   fine, and step 3 says how it is ruled.
+   rotate through them. Run it with `--key` to read the grading text, and keep that from them.
+   A question may credit other goals as well; that is fine, and step 4 says how each is
+   recorded.
 
    **Exit code 2 means no bank question names this goal**, and then the task comes from the
    goal's activity, run live:
@@ -169,97 +168,74 @@ argument.
    don't ask them to try first, and don't make them ask twice: refusing a learner who wants to
    talk is the record coming before the learner. The first time they ask in a sitting, add one
    short sentence as you help: this attempt will count as helped. That is the whole
-   consequence. The judge reads the transcript and rules it `unaided: no`, and a helped review
-   counts as a lapse, so the goal comes back sooner, which is right: needing help on a review
-   is the evidence that it is fading.
+   consequence. You rule it `unaided: no`, and a helped review counts as a lapse, so the goal
+   comes back sooner, which is right: needing help on a review is the evidence that it is
+   fading.
 
    The constraint is on this goal only. It has nothing to say about the one you just finished
    or the one after it — those are separate attempts with their own verdicts.
 
-3. **Get it adjudicated.** The goal's `adjudicator` slot says who rules, and it is the same
-   adjudicator the first pass used.
+3. **Rule it.** It is ruled in session, on two axes, each on its own: `unaided`, which you
+   state every time, and `criterion`. A program rules a multiple-choice answer against its key. An open answer is
+   yours, against the key, the `--- criterion ---` and the `--- ruling ---` lines that
+   `next-item.mjs --key` printed, and against the criterion as written. Don't round a near miss
+   up, and keep `unclear` for a genuine tie, either way. A question set live is ruled against
+   its pass condition: the move's, in
+   [`../goal-setting/references/vocabulary-moves.md`](../goal-setting/references/vocabulary-moves.md),
+   or the one the entry's generator states.
 
-   **`study/judge`**, the default. Spawn it in a fresh context with this message, and nothing
-   more, every path absolute:
-
-   ```
-   Follow /…/workflows/learn/skills/study/judge/SKILL.md.
-   sent by: review
-   inputs: node /…/workflows/learn/tools/judge-input.mjs /…/<topic-folder> <label>
-   --- record ---
-   …every turn from the question on, the learner's and yours, verbatim…
-   ```
-
-   **Don't read the judge's skill yourself, and don't copy the criterion, cases, question or
-   rubric into the message**: the learner waits while you write it, and `judge-input.mjs`
-   prints them from the topic folder. For a bank question the record leaves the question out,
-   since the inputs print it; for a question set live it starts with the question as you set
-   it, and the `inputs` line adds `--goal <goal-id>`. A goal with cases that the question's
-   `cases:` lines don't cover gets `--cases <goal-id>:<case>,<case>`, exactly as study sends
-   it. A question that names goals with different `adjudicator` slots goes to `study/judge`
-   for all of them, and the judge returns one ruling per goal. Every goal the judge rules on is
-   an attempt and step 4 records each. A goal that was due is recorded as a review.
-   Another named goal is recorded as a review only if it was missed; one that passed counts as
-   evidence without moving it along its intervals, and so does one the judge could not decide.
-
-   Both questions still matter here. _Unaided_ looks near-certain because you offered nothing,
-   but they may have looked something up, and the judge is the party to decide that rather than
-   you.
-
-   **`adjudicator: tutor`** — you rule, same two axes, no extra call. Rare in review: a goal
-   whose adjudicator is you usually carries `recurrence: never` and never comes back at all.
-
-   Tell them the verdict when it comes.
+   Both axes still matter here. _Unaided_ looks near-certain because you offered nothing, but
+   they may have looked something up, and that is yours to rule on what you saw.
 
    **The constraint lifts the moment the verdict is in**, whichever way it went. This attempt
    is over and nothing you say can contaminate it, so this is where the teaching happens if any
    is wanted.
 
-4. **Record the attempt, before anything else.** Run
+4. **Record the attempt, before anything else.** A bank question is ruled and recorded in one
+   call, keyed by the `<activity>/<scenario>/<question>` label the picker printed:
+
+   ```
+   node workflows/learn/tools/answer.mjs <topic-folder> <label> --unaided yes --choice 3 --review <goal-id>
+   node workflows/learn/tools/answer.mjs <topic-folder> <label> --unaided yes --criterion "not met" --review <goal-id>
+   ```
+
+   `--unaided` on every call, `--choice` for a multiple-choice question or part, and
+   `--criterion` for anything open, exactly as study uses them; `--concern "<why>"` when no
+   answer to the question could establish the criterion. **`--review` names the goals that
+   were due**, comma separated. The tool records an attempt for every goal the question
+   credits, with the bank's tags and cases, and decides which of them count as a review.
+
+   **Then give the verdict.** For a multiple-choice question it is what follows
+   `--- learner sees ---`: relay it verbatim, with nothing added to it. For an open question,
+   say it yourself. Either way it goes in the same reply as what comes next, the post-mortem
+   offer on a lapse or the next goal's task, with the work for that done first.
+
+   **Everything else is `record-attempt.mjs`**: a question set live, and a bank question that
+   names a goal with cases but lists none for it, which `answer.mjs` refuses.
 
    ```
    node workflows/learn/tools/record-attempt.mjs <topic-folder> <goal-id> <label> --tags <tags> --axes '<json>' --source review
    ```
 
-   Same call the study phase makes, with `--source review` added. `<label>` is what the
-   activity served, in its own words: for a bank question the `<activity>/<scenario>/<question>`
-   label the picker printed, otherwise the entry id or the move and a note on the instance.
-   That's what keeps it from being served back in three months, and there's nowhere else it gets
-   recorded. `--tags` is what the activity returned: the picker's `tags:` line unless it says
+   Same call the study phase makes, with `--source review` on the goal that was due. `<label>`
+   is what the activity served, in its own words: the bank label, or the entry id, or the move
+   and a note on the instance. That's what keeps it from being served back in three months, and
+   there's nowhere else it gets recorded. `--tags` is the picker's `tags:` line unless it says
    `none`, or `production` or `reception` for a vocabulary move set live, and nothing otherwise.
-   **A goal with cases also takes `--cases`**, the picker's `cases: <goal>: x, y` line for that
-   goal as `--cases x,y`, or for a question set live the cases its generator says it carries.
-   A bank question printing no `cases:` line for such a goal predates its cases: name only the
-   cases it actually exercises, judged against their texts in `goals.md`, to the judge and here.
-   If it exercises none, call no judge for that goal, and record it with no `--cases` as
-   `{"unaided":"yes","criterion":"unchecked"}`, which counts toward nothing. `record-attempt.mjs`
-   refuses any other ruled attempt on such a goal without `--cases`.
-
-   **A question ruled against several goals is one call per goal**, each with its own `--axes`
-   and all with the same label and `--tags`. Which of them carry `--source review`:
-
-   - **A goal that was due:** `--source review`, pass or miss.
-   - **Any other named goal that was missed** (criterion `not met`, or `unaided: no`): also
-     `--source review`.
-   - **Any other named goal that passed:** omit `--source`.
-   - **An inconclusive ruling on a goal that was not due** (criterion `unclear`, or
-     `unaided: unclear`): omit `--source`.
-
-   `--source review` is what moves a goal along its intervals, so the asymmetry is deliberate.
-   A miss on a goal that was not due is as trustworthy as any, because the attempt was cold,
-   and recording it as a review moves the goal one step shorter so it comes back sooner. A
-   pass on one is not worth the same: recorded as a review it would promote the goal a step
-   it was not yet due to earn, whereas a pass without the flag only re-dates it from today at
-   the step it is already on. An inconclusive ruling is no evidence either way, so it leaves
-   that goal's schedule where it was.
+   **A goal with cases also takes `--cases`**: for a question set live, the cases its generator
+   says it carries; for a bank question with no `cases:` line for that goal, only the cases it
+   actually exercises, judged against their texts in `goals.md`. If it exercises none, record
+   it with no `--cases` as `{"unaided":"yes","criterion":"unchecked"}`, which counts toward
+   nothing. Another goal the question credits is one call of its own, with `--source review`
+   only if it was missed.
 
    A review attempt is an attempt, and the log is what the interval rule is read from. It
    cannot unmake what was shown — nothing can — but a lapse belongs in the record of what
    happened.
 
    **That one call is also what sets the next date**, and there is nothing to forget, because
-   there is no second write. The schedule is a fold over this log: `--source review` is what
-   makes this attempt one the fold moves along the intervals, out on a pass, in on a lapse, and
+   there is no second write. The schedule is a fold over this log: being recorded as a review is
+   what makes this attempt one the fold moves along the intervals, out on a pass, in on a lapse, and
    a full interval along on anything inconclusive. A pass from anywhere else, practice or a
    quiz, re-dates the goal from the day it happened but leaves it on the interval it was
    already on, so a goal that keeps being met keeps an honest clock without ever earning a
@@ -315,8 +291,6 @@ had earned, and the record deliberately doesn't work that way.
   due, and the next session has no idea this one happened.
 - **Skipping the post-mortem** because the verdict was bad and the moment feels awkward. That's
   the moment.
-- **Ruling it yourself** when the goal's adjudicator is `study/judge`. You watched it, which is
-  the reason you're the wrong party.
 - **Treating a lapse as a demotion.** Nothing in the record moves down. If you say otherwise
   you've told them something false about their own progress.
 
@@ -324,7 +298,7 @@ had earned, and the record deliberately doesn't work that way.
 
 - [`learn`](workflows/learn/skills/learn/SKILL.md) — skill
 - [`topic`](workflows/learn/skills/topic/SKILL.md) — skill
-- [`judge-input.mjs`](workflows/learn/tools/judge-input.mjs) - tool
+- [`answer.mjs`](workflows/learn/tools/answer.mjs) - tool
 - [`next-item.mjs`](workflows/learn/tools/next-item.mjs) - tool
 - [`record-attempt.mjs`](workflows/learn/tools/record-attempt.mjs) — tool
 - [`record-status.mjs`](workflows/learn/tools/record-status.mjs) — tool

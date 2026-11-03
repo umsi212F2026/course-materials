@@ -142,8 +142,8 @@ Don't restate it in a text annotation. Two related lines have proper homes:
 - **done when** → a named **end event**, or `completionCondition` on an ad-hoc subprocess.
 - **governed by** → a named **start event** carrying the skill path, plus `bpmn:documentation`.
 
-The one thing geometry cannot do is **assert a negative**. Where a step has no adjudicator at
-all and that matters, a text annotation is the only place to say so, because nothing will draw
+The one thing geometry cannot do is **assert a negative**. Where a step has nobody ruling on
+it at all and that matters, a text annotation is the only place to say so, because nothing will draw
 an absence.
 
 ## Files as data objects

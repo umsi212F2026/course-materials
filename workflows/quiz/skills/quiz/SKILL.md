@@ -188,8 +188,8 @@ somebody can commit and restore.
 ### 5. Rule every answer in the queue
 
 **Read `queue.json`'s items and follow
-[`quiz/grade`](workflows/quiz/skills/quiz/grade/SKILL.md) on each one**, in a fresh context,
-the way `study/judge` is run. That skill is the same one that marked the real quiz, which is
+[`quiz/grade`](workflows/quiz/skills/quiz/grade/SKILL.md) on each one**, in a fresh context, as
+a subagent. That skill is the same one that marked the real quiz, which is
 the whole claim this workflow makes, and running your own judgement instead of it quietly makes
 the claim false.
 

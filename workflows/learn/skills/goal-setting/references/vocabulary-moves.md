@@ -68,8 +68,8 @@ And the labels already served, from
 | **CATCH**       | given a sentence that misuses the word, says what's wrong; or, as a multiple choice, picks the one statement of several that doesn't misuse it | the actual error is named, not a different quibble; for a multiple choice, the right choice is picked | production |
 | **APPLY**       | uses the word about something that really happened in their own work             | the instance is genuinely one of these, and is theirs                         | production |
 
-The **pass condition** is what an adjudicator rules against — the criterion above, one
-indirection away. Send it with the attempt.
+The **pass condition** is what the tutor rules an attempt against: the criterion above, one
+indirection away.
 
 **The `kind` is what's left doing the work.** DEFINE and INTERPRET can both be passed from
 having just been told the word, so a word met only by those has been recited rather than

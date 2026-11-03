@@ -46,15 +46,14 @@ message, and can't scroll back to a setup you showed once. The one exception is 
 framing, which introduces a run of questions: `next-item` prints it above the first question it
 serves from a scenario and not above the rest, and you show it where it is printed and nowhere
 else, never carrying it into a later question. One run with `--key` is enough, since it prints the learner's section
-too: everything from `--- key ---` on is the grading text, for the judge and never for the
-learner, and any `--- tutor note ---` is for you. A learner who carries on gets
-`--after <last label>`, which keeps them in the same scenario where there is more of it. Keep
-the label, the `tags:` line and any `cases:` lines: they go to `record-attempt.mjs` as they are,
-each goal's cases as its `--cases`. The judge reads the cases and the key for itself, through
-`judge-input.mjs`. A goal with cases that has no `cases:` line is named by a question written
-before its cases were: name only the cases it actually exercises, judged against their texts in
-`goals.md`, to the judge's inputs as `--cases <goal>:<case>,<case>`. If it exercises none,
-record `criterion: unchecked` for that goal with no judge call; see the study skill. Study
+too: everything from `--- key ---` on is the grading text, for you and never for the learner.
+For a question with an open part it ends with `--- criterion ---` and `--- ruling ---`, which
+are what you rule the answer against, and any `--- tutor note ---` is for you. A learner who
+carries on gets `--after <last label>`, which keeps them in the same scenario where there is
+more of it; `answer.mjs --next` does that for you. Keep the label: `answer.mjs` takes it, and
+reads the question's goals, tags and cases from the bank. A goal with cases that has no
+`cases:` line is named by a question written before its cases were, and `answer.mjs` refuses
+it: record it through `record-attempt.mjs`, as the study skill's _The record_ says. Study
 serves such a question once. Every banked question names a goal, so an empty `goals:` line is a
 fault survey reports: run it, record nothing.
 
@@ -63,11 +62,11 @@ fault survey reports: run it, record nothing.
 an answer to each part in one reply. Its key gives each part's key under the same letter, and
 its `--- tutor note ---` lines are lettered too, except a note on the whole question, which comes
 first and has no letter; every note is for you, as any tutor note is.
-**Settle each multiple-choice part yourself** against its key: the choice they gave, and whether
-it is the key's. The judge is still called once, for the whole question, and the record you send
-it carries their answers and a line per multiple-choice part, such as
-`(a) settled: answered 2, key 1, wrong`. It names one goal, so it is one attempt, recorded as any
-other. Give the feedback part by part.
+**`answer.mjs` settles the multiple-choice parts** from the choice they gave for each
+(`--choice a=2,c=1`), and prints a verdict line per part in the learner's block. **You rule the
+open parts**, together, as its `--criterion`, against their keys and the criterion. It is one
+call for the whole question, never one per part. Your feedback on the open parts goes above the
+tool's block.
 
 **Within a scenario, questions come in order**, and the picker skips one that is no longer
 needed, because every goal it names is met or has already passed the cases it lists. While the
@@ -91,8 +90,7 @@ live is shown the same way as a banked one: its setup in full above every questi
 needs framing, give it once, before the first question, and put how to answer in each question,
 never in the setup. Where the goal has
 cases, the generator says which cases each of its question shapes carries; note the ones the
-question you set exercises, since they go to the judge's inputs as
-`--cases <goal>:<case>,<case>` and to `record-attempt.mjs` as `--cases`.
+question you set exercises, since they go to `record-attempt.mjs` as `--cases`.
 
 **Never quietly run something else.** If you think a different activity would serve them
 better, say so and offer it — the entries are candidates and the learner may choose among them.
@@ -152,23 +150,22 @@ That's the honest version of the rule: don't credit it silently, do notice it ou
 
 If the activity uses a bank, `next-item.mjs` takes an item they haven't had, and says when it is
 a repeat. You don't track it separately, and there's nowhere to write it down: putting the label
-it printed in the call to `record-attempt.mjs` _is_ recording it.
+it printed in the call to `answer.mjs` _is_ recording it.
 
 ## At the end of an attempt
 
-Say, to yourself, whether it might have been unaided — that's what the session loop needs from
-you, and it's the last thing this file is for. **When unsure, say it might have been.** The
-loop sends it to be adjudicated; that costs one call and a missed pass costs a day.
+Say, to yourself, whether it was unaided: every call that records it states `--unaided`, and
+only you watched. Anything that changed what they did makes it `no`. **Keep `unclear` for a
+genuine tie.**
 
-For a goal whose `adjudicator` is `study/judge` — nearly all of them — **you aren't ruling on
-it.** A fresh judge decides whether it was really unaided _and_ whether it met the criterion,
-because you're the wrong party for both: you've been helping for an hour and want them to have
-got there.
+**Then rule the criterion, unless a program does.** `answer.mjs` rules every multiple-choice
+answer against its key. An open answer is yours, against the criterion as written and on what
+they wrote, not on how the session went: you have been helping for an hour and want them to
+have got there, which is the pull to rule against.
 
-**When you know you gave help, don't send it anywhere.** Record
-`{"unaided":"no","criterion":"unchecked"}` — nobody ruled, and that is the honest thing to
-write. Same when the attempt couldn't have settled anything, however unaided:
-`{"unaided":"yes","criterion":"unchecked"}`.
+**When you know you gave help, rule it anyway**, and record `unaided: no` with the criterion it
+earned; no bar counts it as a pass. `criterion: unchecked` is only for an attempt that couldn't
+have settled anything, however unaided.
 
 ## Prompting for a note
 
