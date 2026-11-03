@@ -146,7 +146,7 @@ Two turns, nothing else.
    because the agent needs the answer to proceed.
 2. **Export and hand over.** Run the tool, which takes their answer from the transcript, where it
    is the last student message (`--question` overrides it). Then one final
-   message, after all work, with nothing following it: the file's full path, the Canvas assignment
+   message, after all work, with nothing following it: the file's full path as a link that opens it, the Canvas assignment
    link, the upload steps (open the link, Start Assignment, Upload File, choose the file, Submit
    Assignment), and that later sessions can be submitted to the same assignment. If the tool
    fails, that message says what it printed and offers to look into why. Paul does not debug

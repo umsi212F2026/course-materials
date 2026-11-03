@@ -38,11 +38,12 @@ received.
 Do all of that first. Then send exactly one of these as the last thing in the turn, with nothing
 after it.
 
-When it printed a path:
+When it printed a path, give it as a link they can click to open the file, with the full path as
+the link's text. Put the target in angle brackets if the path has a space in it.
 
 > Your session is saved at:
 >
-> `<the path the tool printed>`
+> [<the path the tool printed>](<the path the tool printed>)
 >
 > Read it through before you send it. It has your messages and my replies, word for word. If
 > there's anything in it you'd rather not share, delete it from the file first.
