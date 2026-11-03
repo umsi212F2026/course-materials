@@ -162,7 +162,11 @@ ask differently rather than repeating it.
      right as well, and the tool works that out.
    - **`--next`**, with the same `--goal` or `--activity` you served from, serves the next
      question in the same call. Exit 2 means nothing banked is left: the attempt is recorded and
-     the learner's block printed, and you run the activity's generator live.
+     the learner's block printed, and you run the activity's generator live. It serves nothing
+     after a `not met`, so the three choices end the block; see choice 1, below. Nor does it
+     serve once the answer meets the goal you passed as `--goal`: the block ends on the
+     congratulation, and you go back to step 1. A `next:` line above `--- learner sees ---` says
+     which of these happened.
    - **`--concern "<why>"`** when no answer to this question could establish the criterion. It
      puts the question on curation's queue for every goal it credits.
 
@@ -184,13 +188,17 @@ ask differently rather than repeating it.
 
    **Then reply.** What follows `--- learner sees ---`, up to `--- next ---`, is for the learner:
    the verdict, where that leaves them, after a `not met` the three choices, and with `--next`
-   the next question. **For a multiple-choice question your reply is that block, verbatim, and
-   nothing else**, and it ends the turn. For a compound or open question, write your feedback on
-   the parts you ruled, then the block. Everything from `--- next ---` on is yours: the next
-   question's header and key, for ruling the next answer.
+   the next question when it served one. **For a multiple-choice question your reply is that
+   block, verbatim, and nothing else**, and it ends the turn. When `--next` exited 2 on one, the
+   reply is the block, verbatim, then the question you set live, and that ends the turn. For a
+   compound or open question, write your feedback on the parts you ruled, then the block.
+   Everything from `--- next ---` on is yours: the next question's header and key, for ruling
+   the next answer.
 
-   **For a question set live, nothing prints the three choices.** Give your feedback and the
-   progress block, and after a `not met` end the reply with these:
+   **For anything recorded through `record-attempt.mjs`, nothing prints the three choices**: a
+   question set live, and a bank question `answer.mjs` refused because a goal with cases had
+   none listed for it. Give your feedback and the progress block, and after a `not met` end the
+   reply with these:
 
    ```
    What next?
@@ -201,9 +209,12 @@ ask differently rather than repeating it.
 
    **What each choice means for you:**
 
-   1. **Try again now.** Serve another: the next banked question, already in the block when you
-      passed `--next`, or a fresh instance of the vocabulary move. Where the activity has no bank,
-      offer another live activity for the same goal.
+   1. **Try again now.** Serve another. For a bank question it is not in the block, since nothing
+      is served after a miss: run
+      `node workflows/learn/tools/next-item.mjs <topic-folder> (--goal|--activity) <id> --after <label> --key`,
+      as the `next:` line spells out, and serve what it prints. For a word set live, set a fresh
+      instance of the vocabulary move. Where the activity has no bank, offer another live
+      activity for the same goal.
    2. **Come back to it later.** Something else, or stop. Nothing more to record; the miss is
       already in the log. Add the goal to this sitting's skip list, so `next-goal.mjs` does not
       offer it again until the next session.
@@ -212,8 +223,9 @@ ask differently rather than repeating it.
    **On a goal with cases, the third choice reads `3. Count this one as right and go on to the
    next question.`**, in the tool's block and in yours. "Mark it as learned" there would pass
    every case on one ruling, including those they have never been asked, and a learner choosing
-   it after one question means that question: record it declared with this question's cases, and
-   serve the next with `--after <label>`. See _When the learner marks it learned_.
+   it after one question means that question: record it declared with this question's cases,
+   then run the same `next-item.mjs ... --after <label> --key` as choice 1 and serve what it
+   prints. See _When the learner marks it learned_.
 
    A learner who has had the feedback is the best placed to say whether another round would
    teach them anything. Don't argue with the choice, and don't ask for a reason.

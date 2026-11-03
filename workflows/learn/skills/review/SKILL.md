@@ -206,8 +206,8 @@ argument.
    credits, with the bank's tags and cases, and decides which of them count as a review.
 
    **Then give the verdict.** For a multiple-choice question it is what follows
-   `--- learner sees ---`: relay it verbatim, with nothing added to it. For an open question,
-   say it yourself. Either way it goes in the same reply as what comes next, the post-mortem
+   `--- learner sees ---`: relay it verbatim, with nothing added to it. For a compound, write
+   your verdict on the open parts, then the block. For an open question, say it yourself. Either way it goes in the same reply as what comes next, the post-mortem
    offer on a lapse or the next goal's task, with the work for that done first.
 
    **Everything else is `record-attempt.mjs`**: a question set live, and a bank question that
@@ -227,7 +227,7 @@ argument.
    actually exercises, judged against their texts in `goals.md`. If it exercises none, record
    it with no `--cases` as `{"unaided":"yes","criterion":"unchecked"}`, which counts toward
    nothing. Another goal the question credits is one call of its own, with `--source review`
-   only if it was missed.
+   only if it was missed (criterion `not met`, or `unaided: no`).
 
    A review attempt is an attempt, and the log is what the interval rule is read from. It
    cannot unmake what was shown — nothing can — but a lapse belongs in the record of what
