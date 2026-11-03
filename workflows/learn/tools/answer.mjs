@@ -25,11 +25,13 @@
 // --NEXT SERVES THE NEXT QUESTION IN THE SAME CALL, exactly as next-item.mjs --after <label> --key
 // would (lib/serve.mjs). Its learner text goes last in the learner block; its header and key follow
 // under `--- next ---` and `--- key ---`, for the tutor. When the bank has nothing left the attempt
-// stays recorded, the learner block is printed, and the exit is 2, as next-item's is.
+// stays recorded, the learner block is printed, and the exit is 2, as next-item's is. Nothing is
+// served after a miss, or with --goal once that goal is met; a `next:` line above the learner
+// block tells the tutor what to do instead, and the exit is 0.
 //
 // --REVIEW NAMES THE GOALS A REVIEW SITTING IS RE-ATTEMPTING, so their attempts are recorded with
 // source `review`. A question may credit another goal as well; that one is `review` only when the
-// answer missed (criterion not met, or not unaided), since that is evidence a review sitting acts
+// answer missed (criterion not met, or unaided: no), since that is evidence a review sitting acts
 // on, and `study` otherwise. A review sitting has no progress block and no three choices.
 //
 // --CONCERN FILES A CURATION CONCERN against each goal the question credits, for the bank's owner.
@@ -185,7 +187,21 @@ if (flags.concern !== undefined) {
   }
 }
 
-const next = flags.next
+// NOTHING IS SERVED AFTER A MISS, so the three choices end the learner block and the learner
+// answers them first. Nor once the goal being served is met: the learner goes back to choosing a
+// goal. In either case the tutor's line above the learner block says what to do instead.
+const tutorLine = (line) => out.splice(out.indexOf('--- learner sees ---'), 0, line);
+let held = false;
+if (flags.next && ruling.criterion === 'not met') {
+  const from = flags.goal ? `--goal ${flags.goal}` : `--activity ${flags.activity}`;
+  tutorLine(`next: not served after a miss; on choice 1, run next-item.mjs ${dir} ${from} --after ${label} --key`);
+  held = true;
+} else if (flags.next && flags.goal && results.some((r, i) => r.newlyMet && records[i].goal === flags.goal)) {
+  tutorLine(`next: not served; ${flags.goal} is met, go back to choosing a goal`);
+  held = true;
+}
+
+const next = flags.next && !held
   ? serveNext(dir, { goal: flags.goal, activity: flags.activity, after: label })
   : null;
 // THE NEXT QUESTION'S TEXT GOES LAST in the learner block, one blank line after whatever precedes it.
@@ -194,7 +210,8 @@ if (next) sections.push(next.learner);
 const lines = [...out, ...(sections.length ? [sections.join('\n\n')] : [])];
 if (next) lines.push('--- next ---', ...next.header, '--- key ---', next.key);
 console.log(lines.join('\n'));
-if (flags.next && !next) {
+// exitCode, not exit(): exit() can cut stdout off when it is a pipe.
+if (flags.next && !held && !next) {
   console.error(`no bank questions for ${flags.goal ?? flags.activity}; run the activity's generator live`);
-  process.exit(2);
+  process.exitCode = 2;
 }

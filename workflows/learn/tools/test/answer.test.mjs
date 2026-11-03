@@ -408,14 +408,60 @@ test('--next serves the same header, learner text and key as next-item --after <
   assert.ok(!learner.includes('--- key ---'), 'the key is not in the learner block');
 });
 
-test('--next after a wrong answer puts the next question after the three choices', () => {
+test('--next after a wrong answer serves nothing: the choices come last and the tutor is told how to serve', () => {
   const dir = topic();
   const r = answer(dir, 'a-x/s1/q1', '--unaided', 'yes', '--choice', '1', '--next', '--goal', 'c-a');
   assert.equal(r.code, 0, r.stderr);
-  const learner = afterNext(r.stdout).split('--- next ---')[0];
-  const at = learner.indexOf(NEXT.join('\n'));
-  assert.ok(at > 0, learner);
-  assert.ok(learner.indexOf('\n\n', at) > at && learner.slice(at + NEXT.join('\n').length).startsWith('\n\n'), learner);
+  assert.equal(attempts(dir).length, 1);
+  assert.equal(attempts(dir)[0].criterion, 'not met');
+  assert.ok(!r.stdout.includes('--- next ---'), r.stdout);
+  assert.ok(!r.stdout.includes('--- key ---'), r.stdout);
+  const [tutor, learner] = r.stdout.split('--- learner sees ---\n');
+  assert.ok(
+    tutor.endsWith(`next: not served after a miss; on choice 1, run next-item.mjs ${dir} --goal c-a --after a-x/s1/q1 --key\n`),
+    tutor
+  );
+  assert.ok(learner.endsWith(NEXT.join('\n') + '\n'), learner);
+});
+
+test('--next --activity after a wrong answer names the activity in the tutor line', () => {
+  const dir = topic();
+  const r = answer(dir, 'a-x/s1/q1', '--unaided', 'yes', '--choice', '1', '--next', '--activity', 'a-x');
+  assert.equal(r.code, 0, r.stderr);
+  assert.ok(!r.stdout.includes('--- next ---'), r.stdout);
+  assert.ok(r.stdout.includes(`next: not served after a miss; on choice 1, run next-item.mjs ${dir} --activity a-x --after a-x/s1/q1 --key\n--- learner sees ---`), r.stdout);
+});
+
+test('--next --goal serves nothing once this answer meets that goal: the congratulation comes last', () => {
+  const dir = framedTopic();
+  const r = answer(dir, 'a-x/s1/q1', '--unaided', 'yes', '--choice', '1', '--next', '--goal', 'c-a');
+  assert.equal(r.code, 0, r.stderr);
+  assert.equal(attempts(dir).length, 1);
+  assert.ok(!r.stdout.includes('--- next ---'), r.stdout);
+  const [tutor, learner] = r.stdout.split('--- learner sees ---\n');
+  assert.ok(tutor.endsWith('next: not served; c-a is met, go back to choosing a goal\n'), tutor);
+  assert.ok(!learner.includes('Pick 2.'), learner);
+  assert.ok(learner.endsWith('```\n'), learner);
+  assert.ok(learner.includes(MET_LINE), learner);
+});
+
+test('--next --activity still serves when this answer meets a goal', () => {
+  const dir = framedTopic();
+  const r = answer(dir, 'a-x/s1/q1', '--unaided', 'yes', '--choice', '1', '--next', '--activity', 'a-x');
+  assert.equal(r.code, 0, r.stderr);
+  assert.ok(afterNext(r.stdout).includes(MET_LINE), r.stdout);
+  assert.match(r.stdout, /^label: a-x\/s1\/q2$/m);
+  assert.ok(!r.stdout.includes('next: not served'), r.stdout);
+});
+
+test('--next --goal still serves after a right answer that does not meet the bar', () => {
+  const dir = framedTopic();
+  const r = answer(dir, 'a-x/s1/q1', '--unaided', 'no', '--choice', '1', '--next', '--goal', 'c-a');
+  assert.equal(r.code, 0, r.stderr);
+  assert.match(r.stdout, /bar not met/);
+  assert.match(r.stdout, /^label: a-x\/s1\/q2$/m);
+  assert.ok(afterNext(r.stdout).split('--- next ---')[0].includes('Pick 2.'), r.stdout);
+  assert.ok(!r.stdout.includes('next: not served'), r.stdout);
 });
 
 test('--next across a scenario boundary carries the new scenario\'s framing, and within one it does not', () => {
