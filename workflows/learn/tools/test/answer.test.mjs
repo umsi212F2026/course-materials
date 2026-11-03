@@ -232,7 +232,7 @@ test('a compound with every mcq part right and --criterion met is met', () => {
   assert.equal(attempts(dir)[0].criterion, 'met');
   const [tutor, learner] = r.stdout.split('--- learner sees ---\n');
   assert.ok(tutor.includes('(a) answered 1, key 1, right\n(b) answered 2, key 2, right\n'), tutor);
-  assert.ok(learner.startsWith('(a) Correct: **1**, "True"\n(b) Correct: **2**, "Review"'), learner);
+  assert.ok(learner.startsWith('(a) Correct: **1**, "True".\n(b) Correct: **2**, "Review".'), learner);
 });
 
 test("a compound with one mcq part wrong and --criterion met is not met, with that part's lines", () => {
@@ -242,7 +242,7 @@ test("a compound with one mcq part wrong and --criterion met is not met, with th
   assert.equal(attempts(dir)[0].criterion, 'not met');
   const [tutor, learner] = r.stdout.split('--- learner sees ---\n');
   assert.ok(tutor.includes('(b) answered 3, key 2, wrong\n'), tutor);
-  assert.ok(learner.includes('(b) Not this time. You chose **3**, "Publish" The answer is **2**, "Review"'), learner);
+  assert.ok(learner.includes('(b) Not this time. You chose **3**, "Publish". The answer is **2**, "Review".'), learner);
   assert.ok(learner.includes(NEXT.join('\n')), learner);
 });
 
@@ -354,4 +354,14 @@ test('a refusal on the second goal writes no attempt for the first', () => {
   writeFileSync(join(dir, 'tasks/a-x/s1.md'), '### q1\n\nPick.\n\n1. Yes.\n2. No.\n');
   writeFileSync(join(dir, 'rubrics/a-x/s1.md'), '### q1\n\n- **goal:** c-a, c-k\n- **type:** mcq\n- **answer:** 1\n');
   refused(answer(dir, 'a-x/s1/q1', '--unaided', 'yes', '--choice', '1'), dir, /c-k has cases/);
+});
+
+test('a full stop follows the closing quote unless the choice text already ends a sentence', () => {
+  const dir = topic();
+  // q1's choices end in "."; q4's ("False") do not.
+  const stopped = answer(dir, 'a-x/s1/q1', '--unaided', 'yes', '--choice', '3');
+  assert.ok(stopped.stdout.includes('its trigger."\n'), stopped.stdout);
+  assert.ok(!stopped.stdout.includes('trigger.".'), stopped.stdout);
+  const added = answer(dir, 'a-x/s1/q4', '--unaided', 'yes', '--choice', '2');
+  assert.ok(added.stdout.includes('You chose **2**, "False". The answer is **1**, "True".\n'), added.stdout);
 });

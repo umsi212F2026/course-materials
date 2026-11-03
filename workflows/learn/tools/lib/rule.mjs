@@ -36,7 +36,8 @@ export function parseChoice(value) {
 // The learner's line for one multiple choice answer, `n` and `answer` 1-based and 0-based as the
 // bank holds them. The scenario key is never printed here: it is grading text.
 function verdictLine(prefix, choices, chose, answer) {
-  const text = (i) => `**${i + 1}**, "${choices[i]}"`;
+  // A full stop after the closing quote, unless the choice text already ends a sentence.
+  const text = (i) => `**${i + 1}**, "${choices[i]}"${/[.?!]$/.test(choices[i]) ? '' : '.'}`;
   return chose === answer
     ? `${prefix}Correct: ${text(answer)}`
     : `${prefix}Not this time. You chose ${text(chose)} The answer is ${text(answer)}`;
