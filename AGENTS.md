@@ -57,6 +57,10 @@ of these is found from there. Only the entry points are listed here.
   examined, so a practice run moves review dates. Not the same as review, which serves what is
   due; this serves what one session's quiz would.
   `workflows/quiz/skills/quiz/SKILL.md`
+- **submit-for-feedback** - Save the session you are in as a file to upload to Canvas for
+  coaching on your prompting. Use when someone asks to submit a session or get feedback on how
+  they prompted.
+  `workflows/feedback/skills/submit-for-feedback/SKILL.md`
 
 - **update** - Bring one of the course repositories up to date with the instructor's copy,
   committing the student's own work first and helping them through any conflict. Use whenever
