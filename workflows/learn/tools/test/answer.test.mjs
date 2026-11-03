@@ -365,3 +365,146 @@ test('a full stop follows the closing quote unless the choice text already ends 
   const added = answer(dir, 'a-x/s1/q4', '--unaided', 'yes', '--choice', '2');
   assert.ok(added.stdout.includes('You chose **2**, "False". The answer is **1**, "True".\n'), added.stdout);
 });
+
+// --- --next, --review, --concern ------------------------------------------------
+
+const FRAMING = 'Each question is a separate decision.';
+
+// Two framed scenarios of two mcq questions each, one activity, one goal.
+function framedTopic() {
+  const dir = makeTopic({ goals: CAP_GOAL('c-a'), activities: '### a-x\n- **checks:** c-a\n' });
+  const mcq = (n) => `### q${n}\n\nPick ${n}.\n\n1. Yes.\n2. No.\n\n`;
+  const rub = (n) => `### q${n}\n\n- **goal:** c-a\n- **type:** mcq\n- **answer:** 1\n\n`;
+  const files = {
+    'tasks/a-x/s1.md': `The app: Crumbs.\n\n## Framing\n\n${FRAMING}\n\n${mcq(1)}${mcq(2)}`,
+    'rubrics/a-x/s1.md': `Key.\n\n${rub(1)}${rub(2)}`,
+    'tasks/a-x/s2.md': `The app: Tally.\n\n## Framing\n\nSecond framing.\n\n${mcq(1)}`,
+    'rubrics/a-x/s2.md': `Key.\n\n${rub(1)}`,
+  };
+  for (const [path, text] of Object.entries(files)) {
+    mkdirSync(dirname(join(dir, path)), { recursive: true });
+    writeFileSync(join(dir, path), text);
+  }
+  return dir;
+}
+
+const afterNext = (stdout) => stdout.split('--- learner sees ---\n')[1];
+
+test('--next serves the same header, learner text and key as next-item --after <label> --key', () => {
+  const dir = topic();
+  const r = answer(dir, 'a-x/s1/q1', '--unaided', 'yes', '--choice', '3', '--next', '--activity', 'a-x');
+  assert.equal(r.code, 0, r.stderr);
+  const n = run('next-item.mjs', [dir, '--activity', 'a-x', '--after', 'a-x/s1/q1', '--key']);
+  assert.equal(n.code, 0, n.stderr);
+  const [nHead, nRest] = n.stdout.split('--- learner sees ---\n');
+  const [nLearner, nKey] = nRest.split('--- key ---\n');
+  const [before, nextPart] = r.stdout.split('--- next ---\n');
+  assert.equal(nextPart, nHead + '--- key ---\n' + nKey);
+  const learner = before.split('--- learner sees ---\n')[1];
+  assert.ok(learner.startsWith(RIGHT), learner);
+  assert.ok(learner.endsWith('\n\n' + nLearner), learner);
+  assert.ok(!learner.includes('--- key ---'), 'the key is not in the learner block');
+});
+
+test('--next after a wrong answer puts the next question after the three choices', () => {
+  const dir = topic();
+  const r = answer(dir, 'a-x/s1/q1', '--unaided', 'yes', '--choice', '1', '--next', '--goal', 'c-a');
+  assert.equal(r.code, 0, r.stderr);
+  const learner = afterNext(r.stdout).split('--- next ---')[0];
+  const at = learner.indexOf(NEXT.join('\n'));
+  assert.ok(at > 0, learner);
+  assert.ok(learner.indexOf('\n\n', at) > at && learner.slice(at + NEXT.join('\n').length).startsWith('\n\n'), learner);
+});
+
+test('--next across a scenario boundary carries the new scenario\'s framing, and within one it does not', () => {
+  const dir = framedTopic();
+  const first = answer(dir, 'a-x/s1/q1', '--unaided', 'yes', '--choice', '1', '--next', '--activity', 'a-x');
+  assert.equal(first.code, 0, first.stderr);
+  assert.match(first.stdout, /^label: a-x\/s1\/q2$/m);
+  assert.ok(!afterNext(first.stdout).includes(FRAMING), first.stdout);
+  const second = answer(dir, 'a-x/s1/q2', '--unaided', 'yes', '--choice', '1', '--next', '--activity', 'a-x');
+  assert.equal(second.code, 0, second.stderr);
+  assert.match(second.stdout, /^label: a-x\/s2\/q1$/m);
+  assert.ok(afterNext(second.stdout).includes('Second framing.'), second.stdout);
+});
+
+test('--next with nothing left records the attempt, prints the learner block and exits 2', () => {
+  const dir = framedTopic();
+  // An activity with no banked questions leaves the picker nothing to serve.
+  const r = answer(dir, 'a-x/s2/q1', '--unaided', 'yes', '--choice', '1', '--next', '--activity', 'a-none');
+  assert.equal(r.code, 2, r.stderr);
+  assert.match(r.stderr, /no bank questions for a-none; run the activity's generator live/);
+  assert.equal(attempts(dir).length, 1);
+  assert.ok(afterNext(r.stdout).startsWith('Correct: **1**'), r.stdout);
+  assert.ok(!r.stdout.includes('--- next ---'), r.stdout);
+});
+
+test('--next without --goal or --activity, or with both, is refused; --goal without --next is refused', () => {
+  const dir = topic();
+  refused(answer(dir, 'a-x/s1/q1', '--unaided', 'yes', '--choice', '3', '--next'), dir, /exactly one of --goal and --activity/);
+  refused(answer(dir, 'a-x/s1/q1', '--unaided', 'yes', '--choice', '3', '--next', '--goal', 'c-a', '--activity', 'a-x'), dir, /exactly one/);
+  refused(answer(dir, 'a-x/s1/q1', '--unaided', 'yes', '--choice', '3', '--goal', 'c-a'), dir, /only go with --next/);
+  refused(answer(dir, 'a-x/s1/q1', '--unaided', 'yes', '--choice', '3', '--activity', 'a-x'), dir, /only go with --next/);
+});
+
+// q1 credits c-a and c-b and is open, so the ruling is the tutor's.
+function twoGoalTopic() {
+  const dir = makeTopic({
+    goals: [CAP_GOAL('c-a'), CAP_GOAL('c-b')].join('\n'),
+    activities: '### a-x\n- **checks:** c-a, c-b\n',
+  });
+  mkdirSync(join(dir, 'tasks', 'a-x'), { recursive: true });
+  mkdirSync(join(dir, 'rubrics', 'a-x'), { recursive: true });
+  writeFileSync(join(dir, 'tasks/a-x/s1.md'), '### q1\n\nName it.\n');
+  writeFileSync(join(dir, 'rubrics/a-x/s1.md'), '### q1\n\n- **goal:** c-a, c-b\n- **answer:** It.\n');
+  return dir;
+}
+const sources = (dir) => Object.fromEntries(attempts(dir).map((a) => [a.goal, a.source]));
+
+test('--review on a two-goal question: the named goal is review on a pass and a miss; the other only on a miss', () => {
+  const pass = twoGoalTopic();
+  assert.equal(answer(pass, 'a-x/s1/q1', '--unaided', 'yes', '--criterion', 'met', '--review', 'c-a').code, 0);
+  assert.deepEqual(sources(pass), { 'c-a': 'review', 'c-b': 'study' });
+  const miss = twoGoalTopic();
+  assert.equal(answer(miss, 'a-x/s1/q1', '--unaided', 'yes', '--criterion', 'not met', '--review', 'c-a').code, 0);
+  assert.deepEqual(sources(miss), { 'c-a': 'review', 'c-b': 'review' });
+  const helped = twoGoalTopic();
+  assert.equal(answer(helped, 'a-x/s1/q1', '--unaided', 'no', '--criterion', 'met', '--review', 'c-a').code, 0);
+  assert.deepEqual(sources(helped), { 'c-a': 'review', 'c-b': 'review' });
+});
+
+test('--review with an unclear ruling leaves the other goal as study', () => {
+  const dir = twoGoalTopic();
+  assert.equal(answer(dir, 'a-x/s1/q1', '--unaided', 'yes', '--criterion', 'unclear', '--review', 'c-a').code, 0);
+  assert.deepEqual(sources(dir), { 'c-a': 'review', 'c-b': 'study' });
+});
+
+test('--review naming a goal the question does not credit is refused; with --next is refused', () => {
+  const dir = topic();
+  refused(answer(dir, 'a-x/s1/q1', '--unaided', 'yes', '--choice', '3', '--review', 'c-b'), dir, /does not credit/);
+  refused(answer(dir, 'a-x/s1/q1', '--unaided', 'yes', '--choice', '3', '--review', 'c-a', '--next', '--activity', 'a-x'), dir, /--review and --next/);
+  refused(answer(dir, 'a-x/s1/q4', '--unaided', 'yes', '--choice', '1', '--review', 'c-a,c-z'), dir, /c-z/);
+});
+
+test('--review prints no progress block and no three choices', () => {
+  const dir = topic();
+  const r = answer(dir, 'a-x/s1/q1', '--unaided', 'yes', '--choice', '1', '--review', 'c-a');
+  assert.equal(r.code, 0, r.stderr);
+  assert.equal(attempts(dir)[0].source, 'review');
+  const learner = afterNext(r.stdout);
+  assert.equal(learner, WRONG + '\n');
+});
+
+test('--concern writes one blocked line per goal to status.jsonl', () => {
+  const dir = topic();
+  const r = answer(dir, 'a-x/s1/q4', '--unaided', 'yes', '--choice', '1', '--concern', 'the key looks wrong');
+  assert.equal(r.code, 0, r.stderr);
+  const lines = readFileSync(join(dir, 'status.jsonl'), 'utf8').trim().split('\n').map((l) => JSON.parse(l)).filter((e) => e.kind === 'blocked');
+  assert.deepEqual(lines.map((e) => [e.goal, e.needs, e.why]), [
+    ['c-a', 'curation', 'the key looks wrong'],
+    ['c-b', 'curation', 'the key looks wrong'],
+  ]);
+  const tutor = r.stdout.split('--- learner sees ---')[0];
+  assert.ok(tutor.includes('queued: blocked c-a --needs curation\nqueued: blocked c-b --needs curation\n'), tutor);
+  assert.ok(!afterNext(r.stdout).includes('queued'), r.stdout);
+});
