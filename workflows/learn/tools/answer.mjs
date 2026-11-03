@@ -37,7 +37,7 @@
 import { existsSync } from 'node:fs';
 import { readFolderBanks } from '../../quiz/tools/lib/bank.mjs';
 import { readIds } from './lib/topic.mjs';
-import { RecordError, checkAttempt, appendAttempt, progressAfter } from './lib/record.mjs';
+import { RecordError, checkAttempt, appendAttemptResult, progressAfter } from './lib/record.mjs';
 import { appendStatus } from './lib/status.mjs';
 import { serveNext } from './lib/serve.mjs';
 import { RuleError, ruleItem } from './lib/rule.mjs';
@@ -142,7 +142,8 @@ try {
 
 // --- record, then show -------------------------------------------------------
 const out = [];
-for (const record of records) out.push(...appendAttempt(dir, record));
+const results = records.map((record) => appendAttemptResult(dir, record));
+for (const result of results) out.push(...result.lines);
 out.push(...ruling.partLines);
 out.push('--- learner sees ---');
 
@@ -150,6 +151,19 @@ const ids = readIds(dir);
 const hasCases = item.goals.some((g) => (ids.get(g)?.cases ?? []).length);
 const sections = [];
 if (ruling.verdict.length) sections.push(ruling.verdict.join('\n'));
+// A BAR MET FOR THE FIRST TIME IS SAID ONCE, in the bank's voice like the verdict, so the tutor
+// adds nothing to a multiple choice answer. Its review interval comes from the schedule the
+// attempt just set; a goal that does not recur, or is retired, does not come back. Review shows
+// no such line: a goal there is met already.
+const firstMet = reviewed.length ? [] : results.filter((r) => r.newlyMet);
+if (firstMet.length) {
+  const recurring = firstMet.find((r) => r.scheduled && !r.retired);
+  sections.push(
+    recurring
+      ? `Well done: that meets this goal. It comes back for review in about ${recurring.scheduled.days} days.`
+      : 'Well done: that meets this goal, and it does not come back for review.'
+  );
+}
 const progress = reviewed.length ? null : progressAfter(dir, item.goals.at(-1));
 if (progress !== null) sections.push('```text\n' + progress + '\n```');
 if (ruling.criterion === 'not met' && !reviewed.length) {

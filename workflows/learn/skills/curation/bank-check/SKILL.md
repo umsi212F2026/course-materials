@@ -17,7 +17,7 @@ whatever invoked you established it already.
 **You are given the folder and nothing else**: not the drafters' reasoning, not the session
 that produced the banks. That is the point of you. A drafter knows what it meant, and a question
 that only works if you know what was meant is the question this pass exists to catch. You read
-it as the learner and the judge will, with only what is written.
+it as the learner, the tutor and the grader will, with only what is written.
 
 **Write nothing.** You return a report; the orchestrator puts it in front of the instructor, who
 decides what is kept or cut.
@@ -70,7 +70,7 @@ it has them, from `goals.md`, resolving a reference criterion through
 
 1. **The answer is true of the scenario.** Work the question from the setup yourself **before**
    reading the `answer` line; an answer read first tends to look right. Then compare. A wrong
-   key is the worst defect available here, because the judge and the grader will both apply it.
+   key is the worst defect available here, because the tutor and the grader will both apply it.
 2. **It is answerable from the setup alone.** Every fact about this scenario that the answer
    depends on is in the setup or the question. The learner brings the capability the goal names;
    they cannot bring what only the key says.

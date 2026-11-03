@@ -102,7 +102,7 @@ Which of these is the strongest reason for Crumbs to avoid running its own serve
 3. Its traffic is too low to justify any hosting.
 ```
 
-`rubrics/a-judge-plan-weighings/crumbs.md`, what the judge, grader and tutor see:
+`rubrics/a-judge-plan-weighings/crumbs.md`, what the tutor and grader see:
 
 ```
 Forty orders a week, peaking on Friday evening, is a small and spiky load. Neither owner can

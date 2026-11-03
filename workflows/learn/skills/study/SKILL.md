@@ -357,15 +357,21 @@ something. `unchecked` is the honest record of the times it wouldn't.
 
 ### When a bar is met
 
+**For a bank question the congratulation is in the learner's block**: `answer.mjs` prints a
+`Well done:` line, with when the goal comes back for review, the first time a bar is met. Add
+nothing to it. What follows governs only the replies you write yourself: a question set live,
+and your feedback above the block on an open or compound question.
+
 **Congratulate the first time a goal's bar is met**, and say what happens next: this one starts
 coming back for review, the first time in about three days, and it comes back on its own
-schedule whatever the rest of the topic is doing. Nothing to start and nobody to tell —
-`record-attempt.mjs` set the date in the call you just made. (Unless the goal carries
-`recurrence: never`, in which case it is simply done. The orientation is the one that does.)
+schedule whatever the rest of the topic is doing. Nothing to start and nobody to tell: recording
+the attempt set the date. (Unless the goal carries `recurrence: never`, in which case it is
+simply done. The orientation is the one that does.)
 
 **Met is a floor.** The bar for calling something learned isn't the point past which more is
-wasted. When a goal lands you may offer to keep going — **once, with something specific, and
-never as a standing invitation.**
+wasted. When a goal lands you may offer to keep going, **once, with something specific, and
+never as a standing invitation.** Not after a multiple-choice question, whose reply is the
+tool's block and nothing else.
 
 Specific means naming the gap the record shows, and the record shows one either way. For a word
 it's the moves it hasn't had, of the five: read each earlier move from the served question's key

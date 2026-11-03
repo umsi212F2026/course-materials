@@ -113,6 +113,13 @@ export function checkAttempt(
 //
 // Returns the lines to say what happened.
 export function appendAttempt(dir, record) {
+  return appendAttemptResult(dir, record).lines;
+}
+
+// The same, and also what a caller writing the learner's feedback needs: whether this attempt
+// met the bar for the first time, the review it scheduled (null when the goal does not recur),
+// and whether the goal is retired.
+export function appendAttemptResult(dir, record) {
   const goalId = record.goal;
   const goal = readIds(dir).get(goalId);
   const before = met(goal, attemptsFor(dir, goalId));
@@ -150,7 +157,7 @@ export function appendAttempt(dir, record) {
   else lines.push(`  bar ${after ? 'already met' : 'not met'} (${goal.bar})`);
   if (retired) lines.push(`  this goal was retired — recorded anyway. Say so if you want it back in review.`);
   else if (scheduled) lines.push(`  next review ${scheduled.due} (${scheduled.days} days)`);
-  return lines;
+  return { lines, newlyMet: after && !before, scheduled, retired };
 }
 
 // --- where that leaves them --------------------------------------------------

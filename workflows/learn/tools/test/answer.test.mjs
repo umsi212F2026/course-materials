@@ -148,6 +148,8 @@ const RIGHT = 'Correct: **3**, "It marks what starts a run of the workflow, its 
 const WRONG =
   'Not this time. You chose **1**, "It is the first step: the human opens the Day 1 page." ' +
   'The answer is **3**, "It marks what starts a run of the workflow, its trigger."';
+const MET_LINE = 'Well done: that meets this goal. It comes back for review in about 3 days.';
+const MET_NEVER = 'Well done: that meets this goal, and it does not come back for review.';
 const NEXT = ['What next?', '1. Try again now, with another question.', '2. Come back to it later.', '3. Mark it as learned.'];
 
 test('a right mcq records met and prints the Correct line', () => {
@@ -340,7 +342,7 @@ test('the progress block is fenced and matches record-attempt --progress for the
   const text = s.stdout.split('--- progress ---\n')[1];
   assert.ok(text, s.stdout);
   const learner = r.stdout.split('--- learner sees ---\n')[1];
-  assert.equal(learner, `${RIGHT}\n\n\`\`\`text\n${text.replace(/\n$/, '')}\n\`\`\`\n`);
+  assert.equal(learner, `${RIGHT}\n\n${MET_LINE}\n\n\`\`\`text\n${text.replace(/\n$/, '')}\n\`\`\`\n`);
 });
 
 test('a refusal on the second goal writes no attempt for the first', () => {
@@ -507,4 +509,52 @@ test('--concern writes one blocked line per goal to status.jsonl', () => {
   const tutor = r.stdout.split('--- learner sees ---')[0];
   assert.ok(tutor.includes('queued: blocked c-a --needs curation\nqueued: blocked c-b --needs curation\n'), tutor);
   assert.ok(!afterNext(r.stdout).includes('queued'), r.stdout);
+});
+
+// --- a bar met for the first time -----------------------------------------------
+
+const metLines = (stdout) => afterNext(stdout).split('\n').filter((l) => l.startsWith('Well done:'));
+
+test('a bar met for the first time adds the well done line after the verdict, before the progress block', () => {
+  const dir = topic();
+  const r = answer(dir, 'a-x/s1/q1', '--unaided', 'yes', '--choice', '3');
+  assert.equal(r.code, 0, r.stderr);
+  assert.ok(afterNext(r.stdout).startsWith(`${RIGHT}\n\n${MET_LINE}\n\n\`\`\`text\n`), r.stdout);
+});
+
+test('no well done line on a miss, on a helped pass, or on a second pass', () => {
+  const dir = topic();
+  assert.deepEqual(metLines(answer(dir, 'a-x/s1/q1', '--unaided', 'yes', '--choice', '1').stdout), []);
+  assert.deepEqual(metLines(answer(dir, 'a-x/s1/q1', '--unaided', 'no', '--choice', '3').stdout), []);
+  assert.deepEqual(metLines(answer(dir, 'a-x/s1/q1', '--unaided', 'yes', '--choice', '3').stdout), [MET_LINE]);
+  assert.deepEqual(metLines(answer(dir, 'a-x/s1/q1', '--unaided', 'yes', '--choice', '3').stdout), []);
+});
+
+test('no well done line with --review', () => {
+  const dir = topic();
+  const r = answer(dir, 'a-x/s1/q1', '--unaided', 'yes', '--choice', '3', '--review', 'c-a');
+  assert.equal(r.code, 0, r.stderr);
+  assert.equal(afterNext(r.stdout), RIGHT + '\n');
+});
+
+test('two goals met at once print the line once', () => {
+  const dir = topic();
+  const r = answer(dir, 'a-x/s1/q4', '--unaided', 'yes', '--choice', '1');
+  assert.equal(r.code, 0, r.stderr);
+  assert.equal(attempts(dir).length, 2);
+  assert.deepEqual(metLines(r.stdout), [MET_LINE]);
+});
+
+test('a goal that does not recur says it does not come back', () => {
+  const dir = makeTopic({
+    goals: CAP_GOAL('c-n', '- **recurrence:** never\n'),
+    activities: '### a-x\n- **checks:** c-n\n',
+  });
+  mkdirSync(join(dir, 'tasks', 'a-x'), { recursive: true });
+  mkdirSync(join(dir, 'rubrics', 'a-x'), { recursive: true });
+  writeFileSync(join(dir, 'tasks/a-x/s1.md'), '### q1\n\nPick.\n\n1. Yes.\n2. No.\n');
+  writeFileSync(join(dir, 'rubrics/a-x/s1.md'), '### q1\n\n- **goal:** c-n\n- **type:** mcq\n- **answer:** 1\n');
+  const r = answer(dir, 'a-x/s1/q1', '--unaided', 'yes', '--choice', '1');
+  assert.equal(r.code, 0, r.stderr);
+  assert.deepEqual(metLines(r.stdout), [MET_NEVER]);
 });
