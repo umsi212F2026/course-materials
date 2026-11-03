@@ -50,7 +50,8 @@ too: everything from `--- key ---` on is the grading text, for you and never for
 For a question with an open part it ends with `--- criterion ---` and `--- ruling ---`, which
 are what you rule the answer against, and any `--- tutor note ---` is for you. A learner who
 carries on gets `--after <last label>`, which keeps them in the same scenario where there is
-more of it; `answer.mjs --next` does that for you. Keep the label: `answer.mjs` takes it, and
+more of it. `answer.mjs --next` does that for you after a right answer, but not after a miss
+or once the goal it serves from is met; the study skill's step 3 says what to run then. Keep the label: `answer.mjs` takes it, and
 reads the question's goals, tags and cases from the bank. A goal with cases that has no
 `cases:` line is named by a question written before its cases were, and `answer.mjs` refuses
 it: record it through `record-attempt.mjs`, as the study skill's _The record_ says. Study
