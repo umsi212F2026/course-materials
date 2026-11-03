@@ -432,7 +432,7 @@ test('--next --activity after a wrong answer names the activity in the tutor lin
   assert.ok(r.stdout.includes(`next: not served after a miss; on choice 1, run next-item.mjs ${dir} --activity a-x --after a-x/s1/q1 --key\n--- learner sees ---`), r.stdout);
 });
 
-test('--next --goal serves nothing once this answer meets that goal: the congratulation comes last', () => {
+test('--next --goal serves nothing once this answer meets that goal: the block ends on what next', () => {
   const dir = framedTopic();
   const r = answer(dir, 'a-x/s1/q1', '--unaided', 'yes', '--choice', '1', '--next', '--goal', 'c-a');
   assert.equal(r.code, 0, r.stderr);
@@ -441,8 +441,14 @@ test('--next --goal serves nothing once this answer meets that goal: the congrat
   const [tutor, learner] = r.stdout.split('--- learner sees ---\n');
   assert.ok(tutor.endsWith('next: not served; c-a is met, go back to choosing a goal\n'), tutor);
   assert.ok(!learner.includes('Pick 2.'), learner);
-  assert.ok(learner.endsWith('```\n'), learner);
+  assert.ok(learner.endsWith('```\n\nReady for the next goal? Say yes, or name something else you want to work on.\n'), learner);
   assert.ok(learner.includes(MET_LINE), learner);
+});
+
+test('--next --activity prints no what-next prompt when this answer meets a goal', () => {
+  const dir = framedTopic();
+  const r = answer(dir, 'a-x/s1/q1', '--unaided', 'yes', '--choice', '1', '--next', '--activity', 'a-x');
+  assert.ok(!r.stdout.includes('Ready for the next goal?'), r.stdout);
 });
 
 test('--next --activity still serves when this answer meets a goal', () => {

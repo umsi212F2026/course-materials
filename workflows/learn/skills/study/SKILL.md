@@ -164,9 +164,9 @@ ask differently rather than repeating it.
      question in the same call. Exit 2 means nothing banked is left: the attempt is recorded and
      the learner's block printed, and you run the activity's generator live. It serves nothing
      after a `not met`, so the three choices end the block; see choice 1, below. Nor does it
-     serve once the answer meets the goal you passed as `--goal`: the block ends on the
-     congratulation and the progress block, and you go back to step 1. A `next:` line above
-     `--- learner sees ---` says which of these happened.
+     serve once the answer meets the goal you passed as `--goal`: the block ends by asking
+     whether they are ready for the next goal. A yes is step 1; anything else they name, they
+     get. A `next:` line above `--- learner sees ---` says which of these happened.
    - **`--concern "<why>"`** when no answer to this question could establish the criterion. It
      puts the question on curation's queue for every goal it credits.
 

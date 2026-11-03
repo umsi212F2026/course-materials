@@ -189,7 +189,8 @@ if (flags.concern !== undefined) {
 
 // NOTHING IS SERVED AFTER A MISS, so the three choices end the learner block and the learner
 // answers them first. Nor once the goal being served is met: the learner goes back to choosing a
-// goal. In either case the tutor's line above the learner block says what to do instead.
+// goal, and the block ends on a question asking them to, so the turn never stops on a statement.
+// In either case the tutor's line above the learner block says what to do instead.
 const tutorLine = (line) => out.splice(out.indexOf('--- learner sees ---'), 0, line);
 let held = false;
 if (flags.next && ruling.criterion === 'not met') {
@@ -198,6 +199,7 @@ if (flags.next && ruling.criterion === 'not met') {
   held = true;
 } else if (flags.next && flags.goal && results.some((r, i) => r.newlyMet && records[i].goal === flags.goal)) {
   tutorLine(`next: not served; ${flags.goal} is met, go back to choosing a goal`);
+  sections.push('Ready for the next goal? Say yes, or name something else you want to work on.');
   held = true;
 }
 
