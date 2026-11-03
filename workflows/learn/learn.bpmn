@@ -1298,7 +1298,7 @@
         <bpmn:outgoing>r4</bpmn:outgoing>
       </bpmn:userTask>
       <bpmn:serviceTask id="R_judge" name="Rule on unaided, and on the criterion&#10;the tutor, or a program for multiple choice">
-        <bpmn:documentation>The same ruling as the first pass. A program rules multiple choice against the bank's key, recorded with answer.mjs --review. The tutor rules everything else in session, against the key and criterion that next-item.mjs --key prints, and states unaided on every attempt.</bpmn:documentation>
+        <bpmn:documentation>The same ruling as the first pass. A program rules multiple choice against the bank's key, in workflows/learn/tools/answer.mjs, and every bank question is recorded with workflows/learn/tools/answer.mjs --review. The tutor rules everything else in session, against the key and criterion that next-item.mjs --key prints, and states unaided on every attempt.</bpmn:documentation>
         <bpmn:incoming>r4</bpmn:incoming>
         <bpmn:outgoing>r5</bpmn:outgoing>
       </bpmn:serviceTask>
@@ -1360,7 +1360,7 @@
       <bpmn:sequenceFlow id="r4" sourceRef="R_attempt" targetRef="R_judge" />
       <bpmn:sequenceFlow id="r5" sourceRef="R_judge" targetRef="R_record" />
       <bpmn:sequenceFlow id="r6" name="no" sourceRef="R_stuck" targetRef="R_post">
-        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">the judge did not find the criterion met</bpmn:conditionExpression>
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">the ruling was not met, or helped (unaided: no)</bpmn:conditionExpression>
       </bpmn:sequenceFlow>
       <bpmn:sequenceFlow id="r7" sourceRef="R_post" targetRef="R_merge2" />
       <bpmn:sequenceFlow id="r8" name="yes" sourceRef="R_stuck" targetRef="R_merge2" />
