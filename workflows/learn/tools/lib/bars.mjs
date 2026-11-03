@@ -27,7 +27,7 @@ import { BARS as BAR_NAMES } from './slots.mjs';
 //   unaided     yes | no | unclear
 //   criterion   met | not met | unclear | unchecked
 //
-// `unchecked` means NOBODY RULED — the adjudicator was not invoked. Distinct from `unclear`,
+// `unchecked` means NOBODY RULED: the adjudicator was not invoked. Distinct from `unclear`,
 // which means an adjudicator looked and could not tell. A tutor who knows it gave aid records
 // `unaided: no, criterion: unchecked` and calls nobody; an attempt at an activity that could
 // not have settled anything is `unaided: yes, criterion: unchecked`, which moves no date and
@@ -59,12 +59,12 @@ const hasTag = (r, tag) => Array.isArray(r.tags) && r.tags.includes(tag);
 
 // --- the three bars ----------------------------------------------------------
 // EVERY ONE IS AN EXISTENCE TEST over the history, which is what makes the invariant checkable:
-// a bar, once true, stays true. That replaced "the level only ever rises" — a property of a
+// a bar, once true, stays true. That replaced "the level only ever rises", a property of a
 // predicate rather than a convention about a four-valued field.
 
 export const BARS = {
   // The tutor has already ruled it against a criterion someone wrote, and a second pass is what
-  // review is for — this goal starts coming back in three days.
+  // review is for: this goal starts coming back in three days.
   'one unaided pass': (attempts) => attempts.some(isPass),
 
   // Production is the whole bar. A reception move can be passed from having just been told the
@@ -89,7 +89,7 @@ for (const name of Object.keys(BARS)) {
 }
 
 // --- the predicate everything asks -------------------------------------------
-// Replaces the old four-rung level rule. One goal, its attempts, a boolean — and NO BRANCH ON
+// Replaces the old four-rung level rule. One goal, its attempts, a boolean, and NO BRANCH ON
 // WHAT KIND OF GOAL IT IS. The dispatch is on the goal's own `bar` slot, which is the ordinary
 // mechanism rather than a special case in the shape of one.
 
@@ -153,10 +153,10 @@ export function casePasses(goal, attempts) {
 
 // --- what to print about one goal --------------------------------------------
 // NOTHING BRANCHES ON THIS. The four rungs are gone; what survives is a display, and a display
-// has to be generic across any bar because the rungs weren't — a word passed unaided at DEFINE
+// has to be generic across any bar because the rungs weren't: a word passed unaided at DEFINE
 // used to report *met with help*, a label asserting help nobody gave.
 //
-// So: how many attempts, and the most recent ruling. Not the best ruling — "best" needs an
+// So: how many attempts, and the most recent ruling. Not the best ruling: "best" needs an
 // ordering over rulings, which is the ladder again in hiding.
 
 export function describeAttempts(attempts) {
@@ -182,6 +182,6 @@ export function describeRuling(r) {
   if (r.criterion === 'met') return (r.unaided === 'yes' ? 'passed' : `met${help}`) + tags;
   if (r.criterion === 'not met') return `not met${help}${tags}`;
   if (r.criterion === 'unclear') return `unclear${help}${tags}`;
-  // `unchecked` — nobody ruled. Rendering the help axis is the whole of what is known.
+  // `unchecked`: nobody ruled. Rendering the help axis is the whole of what is known.
   return `attempted, not checked${help}${tags}`;
 }

@@ -2,7 +2,7 @@
 //
 //   node workflows/learn/tools/new-topic.mjs --dir <d> <area-slug>
 //
-// <d> is the directory holding the topic folders — see lib/workdir.mjs for why it
+// <d> is the directory holding the topic folders. See lib/workdir.mjs for why it
 // is an argument and not derived from where this file happens to live.
 //
 // Makes <d>/<area-slug>-<yyyy>-<mm>/ from everything in workflows/learn/templates/,
@@ -22,7 +22,7 @@
 // IT OPENS THE LIFECYCLE QUEUE, which is the one thing here that isn't a file copy. A `created`
 // event is what makes the folder a topic, and one `goal-added` per goal the template ships is
 // what puts them in front of curation. A topic with goals and no `goal-added` events is a queue
-// that will never run, and survey reports it as a problem — so this writes them at the one
+// that will never run, and survey reports it as a problem, so this writes them at the one
 // moment that can't be forgotten.
 //
 // There is no progress.md and no review.json. Where a topic stands is derived from
@@ -105,4 +105,4 @@ console.log(dir);
 for (const name of TEMPLATES) console.log(`  ${name}`);
 for (const sub of SUBDIRS) console.log(`  ${sub}/`);
 console.log('  evidence/attempts.jsonl');
-console.log(`  status.jsonl  — created${shipped.length ? `, ${shipped.map((g) => g.id).join(', ')} awaiting curation` : ''}`);
+console.log(`  status.jsonl: created${shipped.length ? `, ${shipped.map((g) => g.id).join(', ')} awaiting curation` : ''}`);

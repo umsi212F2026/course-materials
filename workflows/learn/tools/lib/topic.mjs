@@ -20,7 +20,7 @@ import { readFolderBanks } from '../../../quiz/tools/lib/bank.mjs';
 // One JSON object per line in evidence/attempts.jsonl, appended and never rewritten.
 //
 //   at          ISO timestamp
-//   goal        the id from goals.md — a capability, a word, an orientation, all the same here
+//   goal        the id from goals.md: a capability, a word, an orientation, all the same here
 //   label       what the activity served, in its own words. OPAQUE: nothing but the activity
 //               that wrote it may parse it, which is what makes free-form safe. For a banked
 //               question it is the question's path, which the picker matches; for an activity
@@ -35,8 +35,8 @@ import { readFolderBanks } from '../../../quiz/tools/lib/bank.mjs';
 //               the two axes
 //   note        optional free text, e.g. why they stopped
 //
-// THE AXES ARE STORED RAW AND NEVER COLLAPSED ON THE WAY IN. What reads a verdict back out —
-// the bars and the scheduler, both in bars.mjs — reads the axes directly. A collapsed word
+// THE AXES ARE STORED RAW AND NEVER COLLAPSED ON THE WAY IN. What reads a verdict back out
+// (the bars and the scheduler, both in bars.mjs) reads the axes directly. A collapsed word
 // written at record time would be a cached derivation, which is the thing this workflow keeps
 // taking back out.
 
@@ -57,7 +57,7 @@ export function readLog(dir) {
 
 // --- reading entries ---------------------------------------------------------
 // goals.md and activities.md have one shape for one kind of thing: `### <id>`, then a bullet
-// per field. Two tables became one list when orientation became a goal — a third kind would
+// per field. Two tables became one list when orientation became a goal: a third kind would
 // have needed a third table, which settled it.
 //
 // A `|` inside a value is now just a character, and a header row can't desynchronize from its
@@ -76,7 +76,7 @@ function section(text, heading) {
 }
 
 // A bullet may wrap. A continuation is an indented line with no bullet marker; a blank line
-// ends the field. Anything not matching either is left alone — an entry may carry prose.
+// ends the field. Anything not matching either is left alone: an entry may carry prose.
 function bulletFields(body) {
   const fields = {};
   let current = null;
@@ -101,7 +101,7 @@ function bulletFields(body) {
 }
 
 // Every `### <id>` block in the given text, as { id, fields }. The template's placeholder
-// headings — `<activity-id>` and friends — are skipped: they are layout, not content.
+// headings (`<activity-id>` and friends) are skipped: they are layout, not content.
 function entries(text) {
   const clean = text.replace(/<!--[\s\S]*?-->/g, '');
   const found = [];
@@ -120,7 +120,7 @@ const listField = (value) =>
     .filter(Boolean);
 
 // --- goals.md ----------------------------------------------------------------
-// The only place an id is assigned. ONE LIST, whatever kind of goal it is — a capability, a
+// The only place an id is assigned. ONE LIST, whatever kind of goal it is: a capability, a
 // word and an orientation reach everything downstream through one code path, and what differs
 // between them is which slots they carry.
 //
@@ -287,7 +287,7 @@ export function readIds(dir) {
 // serves or checks, and which are legacy stamps rather than entries curation wrote. Everything
 // else about an entry is for a tutor to read, not a program.
 //
-// A dropped entry stays in the file — that field is the only feedback curation ever gets — so
+// A dropped entry stays in the file (that field is the only feedback curation ever gets), so
 // "live" means present and not dropped, never merely present.
 //
 // `origin: generated` marks a LEGACY stamp, written when a goal's supply produced its own
@@ -344,7 +344,7 @@ export const liveActivities = (dir) =>
 
 export const statusOf = (dir) => foldStatus(readStatus(dir));
 
-// Retiring is the one fact about where a topic stands that no fold over evidence can produce —
+// Retiring is the one fact about where a topic stands that no fold over evidence can produce:
 // nobody can compute a decision to stop. Reviving is a second event, not a deletion.
 export const isRetired = (dir) => statusOf(dir).retired;
 
@@ -354,7 +354,7 @@ export const isRetired = (dir) => statusOf(dir).retired;
 //
 // Both halves, because a consumer that consulted the goal map alone would see live goals
 // inside a retired topic and have nothing to tell it that was wrong. TOPIC RETIREMENT IS NOT
-// STAMPED ONTO GOALS to get the same effect — `review-due.mjs` already skips the whole folder,
+// STAMPED ONTO GOALS to get the same effect: `review-due.mjs` already skips the whole folder,
 // so the promise holds without it, and stamping would leave a revival guessing about words the
 // learner had separately given up.
 export const isGoalRetired = (dir, goalId) => {
@@ -368,7 +368,7 @@ export const isGoalRetired = (dir, goalId) => {
 // A label is a private channel between an activity and its future self: it wrote the string, it
 // is the only thing that reads it, and the worst case if it repeats itself is "repeats
 // sometimes" rather than a wrong claim about learning. So this returns them and does nothing
-// else — no parsing, no grouping, no interpretation.
+// else: no parsing, no grouping, no interpretation.
 //
 // Recomputed rather than cached. A generator's labels grow for as long as the goal keeps coming
 // back in review, which is not a thing that fits in a cell.
@@ -393,15 +393,15 @@ export function attemptsFor(dir, goal) {
 export function derivePhase({ retired, goals, live, rows, wordsOnly = false }) {
   if (retired) return 'retired';
 
-  // GOAL SETTING HASN'T HAPPENED. The absence of any goal in the default group is what says so
-  // — it is the state add-topic leaves, with a word list and nothing else. The orientation
+  // GOAL SETTING HASN'T HAPPENED. The absence of any goal in the default group is what says so:
+  // it is the state add-topic leaves, with a word list and nothing else. The orientation
   // entry the template ships is in its own group and doesn't count towards this. A topic whose
   // header says `capabilities: none` has had goal setting, which decided there would be none.
   if (!wordsOnly && !goals.some((g) => g.group === DEFAULT_GROUP)) return 'not started';
 
   // Before asking whether curation has anything to offer, ask whether anything still needs
   // offering. A topic that is finished but whose entries were all dropped is done, not waiting
-  // on curation — and curation would have nothing to generate for it.
+  // on curation, and curation would have nothing to generate for it.
   //
   // REQUIRED goals only. An orientation nobody bothered with doesn't hold a topic open.
   //
@@ -425,7 +425,7 @@ export function derivePhase({ retired, goals, live, rows, wordsOnly = false }) {
 
 const CAPABILITY_SLUG = /^[a-z0-9]+(-[a-z0-9]+){1,3}$/;
 
-// Groups exist because goals name them. No declaration, no properties, no report strategy —
+// Groups exist because goals name them. No declaration, no properties, no report strategy:
 // the name is the label and the report is always count-then-list. Default group first, then
 // others in order of first appearance.
 function groupRows(rows) {
@@ -497,7 +497,7 @@ export function surveyTopic(dir) {
       group: goal.group,
       capability: goal.capability,
       is_required: goal.is_required,
-      // The learner's own words, or null. GOAL-SCOPED ONLY — a retired topic keeps its goals'
+      // The learner's own words, or null. GOAL-SCOPED ONLY: a retired topic keeps its goals'
       // rows intact, so `retired with everything met` and `retired with nothing attempted` stay
       // different facts about a person. `isGoalRetired` is where the two scopes are ORed, for
       // consumers deciding whether to offer something.
@@ -558,7 +558,7 @@ export function surveyTopic(dir) {
 }
 
 // D12: nothing checks an id at the moment an agent writes it, so a duplicate or a misfiled
-// prefix would otherwise surface only when someone recorded an attempt against it — weeks
+// prefix would otherwise surface only when someone recorded an attempt against it, weeks
 // later, mid-session. Survey already walks every topic, so it reports them where someone is
 // already looking.
 //
@@ -597,7 +597,7 @@ export function idProblems(dir, status = statusOf(dir)) {
     if (goal.id.startsWith('a-'))
       found.push(`goal ${goal.id} starts with a-, which is activities.md's namespace`);
     if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(goal.id))
-      found.push(`goal ${goal.id} isn't an id — lower case, single hyphens between words`);
+      found.push(`goal ${goal.id} isn't an id: lower case, single hyphens between words`);
 
     if (goal.capability && !CAPABILITY_SLUG.test(goal.capability))
       found.push(
@@ -672,23 +672,23 @@ export function idProblems(dir, status = statusOf(dir)) {
 
   // The content files and the lifecycle queue can diverge, and the mitigation is that the
   // disagreement is reportable rather than silent. Hand-add a goal to goals.md, no `goal-added`
-  // event fires, and the work never queues — nothing would ever curate it and nothing would say
+  // event fires, and the work never queues: nothing would ever curate it and nothing would say
   // why. See lib/status.mjs.
   if (!status.created) {
-    found.push(`no status.jsonl — this folder was never recorded as a topic`);
+    found.push(`no status.jsonl: this folder was never recorded as a topic`);
   } else {
     for (const goal of goals)
       if (goal.id && !status.announced.has(goal.id))
-        found.push(`${goal.id} is in goals.md with no goal-added event — nothing will curate it`);
+        found.push(`${goal.id} is in goals.md with no goal-added event, so nothing will curate it`);
   }
 
   // The log points at goals; goals.md is where they are. A line naming an id that isn't there
   // means an id was renamed and took a learner's evidence with it, which the goal then
   // re-derives as not started. Nothing enforces permanence at write time, so it is reported
-  // here — where survey is already walking every topic.
+  // here, where survey is already walking every topic.
   const orphans = new Set(readLog(dir).map((r) => r.goal).filter((id) => id && !seen.has(id)));
   for (const id of orphans)
-    found.push(`attempts.jsonl records ${id}, which is not in goals.md — a renamed or deleted id`);
+    found.push(`attempts.jsonl records ${id}, which is not in goals.md: a renamed or deleted id`);
 
   return found;
 }

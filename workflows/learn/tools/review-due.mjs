@@ -3,10 +3,10 @@
 //   node workflows/learn/tools/review-due.mjs --dir <d>            JSON, one per due goal
 //   node workflows/learn/tools/review-due.mjs --dir <d> --report   printed for a person
 //
-// <d> is the directory holding the topic folders — see lib/workdir.mjs.
+// <d> is the directory holding the topic folders. See lib/workdir.mjs.
 //
 // No arguments, because A REVIEW SESSION IS NOT PER TOPIC. What's due is whatever the dates say
-// is due, and the dates don't respect topic boundaries — three words from one topic and a
+// is due, and the dates don't respect topic boundaries: three words from one topic and a
 // capability from another is an ordinary list. Each record carries its own folder.
 //
 // ONE PATH, WHATEVER KIND OF GOAL IT IS. There is no `is_word` here and nothing that branches

@@ -15,13 +15,13 @@
 // that is already met is allowed, with a warning on stderr: the learner may know something the
 // log does not, and refusing would only send them round the tool.
 //
-// RETIRING TAKES AN OPTIONAL GOAL. With one, the learner gave that goal up — a word they
+// RETIRING TAKES AN OPTIONAL GOAL. With one, the learner gave that goal up: a word they
 // decided wasn't worth the interval. Without one, they gave the whole topic up. Same decision,
 // two scopes, and `--reason` is required either way: it is the only part of a retirement a
 // fold cannot reconstruct.
 //
 // THIS IS A WORK QUEUE, NOT A DIARY. Every line either puts something on it or takes something
-// off. There is nothing here for "how the session went" or "what we were in the middle of" —
+// off. There is nothing here for "how the session went" or "what we were in the middle of":
 // the first is colour and the second is the last attempt and its ruling, which
 // workflows/learn/tools/survey.mjs prints from the attempt log.
 //

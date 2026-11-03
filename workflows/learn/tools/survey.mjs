@@ -4,11 +4,11 @@
 //   node workflows/learn/tools/survey.mjs --dir <d> <topic-folder>   one topic, as JSON
 //   node workflows/learn/tools/survey.mjs --dir <d> --report         every topic, for a person
 //
-// <d> is the directory holding the topic folders — see lib/workdir.mjs for why it
+// <d> is the directory holding the topic folders. See lib/workdir.mjs for why it
 // is an argument and not derived from where this file happens to live.
 //
 // NOTHING STORES ANY OF THIS. The phase, what is met, the group fractions and when a topic was
-// last touched are all derived — from goals.md's entries, activities.md's live entries, and
+// last touched are all derived: from goals.md's entries, activities.md's live entries, and
 // evidence/attempts.jsonl. There is no table to disagree with, and no cache to go stale. Ask
 // this instead of looking for a number in a file.
 //
@@ -17,11 +17,11 @@
 // topic up, or a judgement that a criterion can't be checked by anything constructible.
 //
 // THIS IS ALSO WHERE A LEARNER READS WHERE THEY STAND. progress.md is gone, so `--report` is
-// the answer to "show me where I am" — and it is a better answer than a file, because it
+// the answer to "show me where I am", and it is a better answer than a file, because it
 // cannot be stale.
 //
 // IT NAMES NO RUNG. What a goal has done is how many attempts it has had and how the most
-// recent one was ruled — generic across any bar, which the four rungs were not. Within each
+// recent one was ruled. That is generic across any bar, which the four rungs were not. Within each
 // group, what is left comes first.
 
 import { readdirSync, existsSync, statSync } from 'node:fs';
@@ -70,8 +70,8 @@ if (!report) {
 }
 
 // --- the printed form --------------------------------------------------------
-// For a person reading it, not an agent parsing it. Ordered so the thing you most often want —
-// what is waiting on somebody — is nearest.
+// For a person reading it, not an agent parsing it. Ordered so the thing you most often want
+// (what is waiting on somebody) is nearest.
 
 if (!surveys.length) {
   console.log('No topics yet. learning/ is empty.');
@@ -81,10 +81,10 @@ if (!surveys.length) {
 const name = (dir) => dir.split('/').pop();
 
 for (const s of surveys) {
-  console.log(`\n${name(s.dir)}  —  ${s.phase}`);
+  console.log(`\n${name(s.dir)}: ${s.phase}`);
 
-  // A retired topic is compressed to why and how far. Its outstanding goals aren't outstanding
-  // — they were given up, and listing them as work invites someone to offer it. How far it got
+  // A retired topic is compressed to why and how far. Its outstanding goals aren't outstanding:
+  // they were given up, and listing them as work invites someone to offer it. How far it got
   // still shows: retired with everything met and retired with nothing attempted are different
   // facts about a person.
   if (s.retired) {
@@ -99,7 +99,7 @@ for (const s of surveys) {
   console.log(`  last touched: ${s.lastTouched ?? 'never'}`);
   if (!s.sequence.decided) console.log('  sequence: not decided yet');
 
-  // One width across the whole topic, so the columns line up between groups — both the id
+  // One width across the whole topic, so the columns line up between groups, both the id
   // column and the tick, which is why the lines are built before any of them is printed.
   //
   // PARTS OF A CAPABILITY SIT TWO COLUMNS IN, so the widths are taken from the lines as they
@@ -116,7 +116,7 @@ for (const s of surveys) {
   const tick = Math.max(0, ...s.groups.flatMap((g) => g.goals.map((x) => render(x, indentOf(g, x)).length))) + 2;
 
   // A RETIRED GOAL IS NEITHER OUTSTANDING NOR AN ACHIEVEMENT. It prints last within its group,
-  // marked with the learner's own reason, and it is in neither half of the group's fraction —
+  // marked with the learner's own reason, and it is in neither half of the group's fraction:
   // a goal you abandoned is not a goal you failed. How far it got still shows, because the
   // attempt log is untouched and the row is derived from it like any other.
   const printGoal = (group, goal) => {
@@ -142,7 +142,7 @@ for (const s of surveys) {
   const printWaiting = (heading, items) => {
     if (!items.length) return;
     console.log(`\n  ${heading}`);
-    for (const o of items) console.log(`    ${o.goal}${o.why ? ` — ${o.why}` : ''}  (${o.since})`);
+    for (const o of items) console.log(`    ${o.goal}${o.why ? `: ${o.why}` : ''}  (${o.since})`);
   };
   printWaiting('waiting on curation:', waiting('curation'));
   printWaiting('waiting on you:', waiting('goal-setting'));

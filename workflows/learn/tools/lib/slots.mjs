@@ -1,4 +1,4 @@
-// The eight slots, their defaults, and the closed sets they are refused against.
+// The seven slots, their defaults, and the closed sets they are refused against.
 //
 // One module because this is the definition site. A second copy of "what values does `bar`
 // take" is a second answer to what the system can be asked to do, and the gap between them is
@@ -14,7 +14,7 @@
 // A slot's value set is closed unless it is data. Data slots (`criterion`, `group` and `capability`) take
 // arbitrary text, which is why neither of them dispatches to anything.
 
-// The bars themselves are in bars.mjs — a predicate each, over an attempt history. Named here
+// The bars themselves are in bars.mjs: a predicate each, over an attempt history. Named here
 // because this is where a value gets refused, and there is where it gets run.
 export const BARS = {
   'one unaided pass': 'any attempt with unaided: yes and criterion: met',
@@ -34,7 +34,7 @@ export const REQUIREDNESS = {
 
 // WHO SET THE GOAL, and it exists for one consumer outside this workflow: the quiz generator.
 // The course's rule is that what it set is what may be examined, so something has to say which
-// goals those are — including the words, which are examinable like anything else.
+// goals those are, including the words, which are examinable like anything else.
 //
 // A COURSE-SEEDED TOPIC IS OTHERWISE INDISTINGUISHABLE from one a learner built, deliberately:
 // the course runs goal setting and curation itself and ships the same files, so nothing in the
@@ -60,7 +60,7 @@ export const ORIGINS = {
 export const CRITERION_REFS = {
   vocabulary: {
     text:
-      'Uses the word well — correctly, and in a way that shows it is not being read off a ' +
+      'Uses the word well: correctly, and in a way that shows it is not being read off a ' +
       'definition. What counts as showing it is the pass condition of the move that was set.',
     where: 'workflows/learn/skills/goal-setting/references/vocabulary-moves.md',
   },
@@ -76,7 +76,7 @@ export const CRITERION_REFS = {
 // one activity and one bar would be the pairing this design refuses; see slots.md.
 export const TAGS = {
   production:
-    'the learner brought something — a distinction, an error spotted, their own work, ' +
+    'the learner brought something: a distinction, an error spotted, their own work, ' +
     'their own situation, the real artifact',
   reception: 'the learner recognised or recalled something they were given',
 };

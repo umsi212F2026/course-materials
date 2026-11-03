@@ -1,4 +1,4 @@
-// status.jsonl — a topic's lifecycle, as a work queue.
+// status.jsonl: a topic's lifecycle, as a work queue.
 //
 // The second append-only log per topic, beside attempts.jsonl. It replaces progress.md, and it
 // is A WORK QUEUE, NOT A DIARY: every line says something needs doing, or says that something
@@ -7,7 +7,7 @@
 // THE LINE BETWEEN THIS AND THE CONTENT FILES: the files say what things ARE, the log says what
 // needs DOING. `status: dropped` stays on its activities.md entry, because it is a durable
 // property of that activity and its reason is prose that only means anything next to the entry
-// it is about. Everything that was "this needs doing" moves here — it was never a property of a
+// it is about. Everything that was "this needs doing" moves here. It was never a property of a
 // file, which is precisely why it kept ending up in a cell nobody read.
 //
 // NON-DERIVABLE EVENTS ONLY. "Started studying" is *any attempt exists*; "first met" is a fold
@@ -23,8 +23,8 @@
 //             that retire and revive
 //   where     free prose, on `deferred`, where the goal will be learned
 //   needs     curation | goal-setting, on the two that queue work
-//   why       free prose, on `blocked` — what would have to change
-//   reason    free prose, on `retired` — the learner's own words
+//   why       free prose, on `blocked`: what would have to change
+//   reason    free prose, on `retired`: the learner's own words
 //
 //   { kind: created }                                    this folder is a topic
 //   { kind: goal-added,  goal, needs: curation }         a goal exists with nothing built for it
@@ -44,8 +44,8 @@
 // smaller scale, and it would be a second mechanism if it were a second kind.
 //
 // THE LOOP CLOSES BY CONSTRUCTION. Curation either writes `curated` or writes `blocked`; there
-// is no third outcome where it produces nothing and gets re-invited forever. That dead end —
-// a goal re-entering curation with nobody present to fix it — is what this log was built for.
+// is no third outcome where it produces nothing and gets re-invited forever. That dead end
+// (a goal re-entering curation with nobody present to fix it) is what this log was built for.
 //
 // TWO DESTINATIONS, AND THE ASYMMETRY IS THE POINT. `needs: curation` is agent-only work, which
 // `learn` spawns in the background; `needs: goal-setting` needs the learner, and goes on the
@@ -56,11 +56,11 @@
 // Who has to act. Not a free field: `learn` splits on it, so a third value invented in passing
 // would be work nobody sweeps for.
 export const NEEDS = {
-  curation: 'an agent can fix this alone — `learn` spawns it in the background',
-  'goal-setting': 'the learner has to be there — `learn` puts it on the menu',
+  curation: 'an agent can fix this alone, and `learn` spawns it in the background',
+  'goal-setting': 'the learner has to be there, and `learn` puts it on the menu',
 };
 
-// `goal` says whether the kind is about one goal — `true`, `false`, or `'optional'`, which is
+// `goal` says whether the kind is about one goal: `true`, `false`, or `'optional'`, which is
 // the two scopes of retirement and nothing else. `needs` says whether it puts work on the
 // queue; `clears` says whether it takes work off. A kind that does neither is topic-scoped.
 export const KINDS = {
@@ -75,7 +75,7 @@ export const KINDS = {
   resumed: { goal: true },
 };
 
-// `goal-added` always means `needs: curation` — a goal is added in goal setting, so goal setting
+// `goal-added` always means `needs: curation`: a goal is added in goal setting, so goal setting
 // is not what it is waiting for. The field is written anyway rather than left to be inferred,
 // so that every queueing line carries its destination and the fold has no special case.
 
@@ -86,10 +86,10 @@ import { join } from 'node:path';
 
 // AT THE TOPIC ROOT, NOT UNDER evidence/. This is a work queue about the topic's structure, and
 // it has to agree with goals.md; evidence/ is the record of learning, which is attempts.jsonl and
-// nothing else — the learning-topics README describes that directory to students in exactly those
+// nothing else. The learning-topics README describes that directory to students in exactly those
 // words. The two are also shipped differently: a course-seeded topic ships its status log and
 // ships attempts.jsonl blank, so a layout that filed them together made the obvious publishing
-// rule — "everything except their evidence" — quietly wrong about the one file that must ship.
+// rule ("everything except their evidence") quietly wrong about the one file that must ship.
 export const statusFile = (dir) => join(dir, 'status.jsonl');
 
 // WHERE IT USED TO LIVE, AND WHY THAT PATH IS STILL READ.
@@ -107,7 +107,7 @@ const legacyStatusFile = (dir) => join(dir, 'evidence', 'status.jsonl');
 // WRITING GOES WHERE THE LOG ALREADY IS. This is the half that matters. Appending to the root
 // of an un-migrated topic would leave the real history sitting in evidence/ and start a second
 // one beside it, and when the move then arrived from upstream git would meet two unrelated
-// files claiming the same path — an add/add conflict in a machine-written log, landing on a
+// files claiming the same path: an add/add conflict in a machine-written log, landing on a
 // student who has never been told the file exists. Verified against a simulated pull, 2026-09-10.
 //
 // Written this way the move is a pure rename with no local edit, which git replays onto the
@@ -141,7 +141,7 @@ export function appendStatus(dir, kindName, { goal, needs, why, reason, where } 
     if (!goal) throw new Error(`${kindName} is about one goal, and no goal id was given.`);
     event.goal = goal;
   } else if (goal) {
-    throw new Error(`${kindName} is about the whole topic, not one goal — drop "${goal}".`);
+    throw new Error(`${kindName} is about the whole topic, not one goal. Drop "${goal}".`);
   }
 
   // `needs` says who has to act, and `learn` splits on it. `goal-added` fixes its own, because
@@ -149,7 +149,7 @@ export function appendStatus(dir, kindName, { goal, needs, why, reason, where } 
   if (kind.needs === 'given') {
     if (!needs) throw new Error(`${kindName} has to say who it needs: --needs ${Object.keys(NEEDS).join(' | ')}`);
     if (!Object.hasOwn(NEEDS, needs))
-      throw new Error(`--needs is one of: ${Object.keys(NEEDS).join(', ')} — not "${needs}".`);
+      throw new Error(`--needs is one of: ${Object.keys(NEEDS).join(', ')}, not "${needs}".`);
     event.needs = needs;
   } else if (kind.needs) {
     event.needs = kind.needs;
@@ -159,12 +159,12 @@ export function appendStatus(dir, kindName, { goal, needs, why, reason, where } 
   // that says a goal is blocked and not what would unblock it gets looked at twice and
   // understood neither time.
   if (kindName === 'blocked') {
-    if (!why) throw new Error(`blocked has to say why — what would have to change.`);
+    if (!why) throw new Error(`blocked has to say why: what would have to change.`);
     event.why = why;
   }
 
   // Retiring is a decision, and the reason is the learner's own words. Don't ask them for one;
-  // write down what they said. Nothing here records how far they got — survey derives that from
+  // write down what they said. Nothing here records how far they got. Survey derives that from
   // the attempt log and it stays derivable after retirement.
   //
   // REQUIRED AT EITHER SCOPE. The reason is the only part of a retirement no fold can
@@ -221,7 +221,7 @@ export function readStatus(dir) {
 // sets the topic-level value. `revived` undoes whichever of those its own scope names. THE MAP
 // IS NOT A SUBSET OF THE TOPIC VALUE and neither implies the other: reviving a topic restores
 // the topic, not the separate decisions made about goals inside it. A word dropped on its own
-// stays dropped, which is right — nobody said otherwise.
+// stays dropped, which is right: nobody said otherwise.
 //
 // ORDER DECIDES, same as the outstanding map. Retire, revive, retire again is three events and
 // the last one wins.
@@ -229,7 +229,7 @@ export function readStatus(dir) {
 // `announced` is what makes the divergence visible. The queue is authoritative for what needs
 // doing and the content files for what exists, so hand-adding a goal to goals.md with no
 // `goal-added` event means the work never queues. Survey cross-checks the two and reports it in
-// the same PROBLEMS line as a duplicate id — a disagreement becomes a finding rather than
+// the same PROBLEMS line as a duplicate id, so a disagreement becomes a finding rather than
 // silence.
 //
 // ONE OUTSTANDING ITEM PER GOAL, AND THE LAST EVENT WINS. A goal added and then curated is
@@ -237,7 +237,7 @@ export function readStatus(dir) {
 // unblocked is clear. Two simultaneous claims on one goal would be a queue nobody could work
 // off in an order, so there is only ever one.
 //
-// IN ORDER, like the attempt log — this file is appended as things happen and nothing sorts it.
+// IN ORDER, like the attempt log: this file is appended as things happen and nothing sorts it.
 export function foldStatus(events) {
   let created = false;
   let retired = null;

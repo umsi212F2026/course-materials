@@ -1,10 +1,10 @@
 // Record one attempt. The only thing that writes evidence/attempts.jsonl.
 //
-//   Adjudicated — the usual path. Give it what the adjudicator returned, untouched:
+//   Ruled: the usual path. Give it your ruling on the two axes, unaided and criterion:
 //     node workflows/learn/tools/record-attempt.mjs <topic> <goal-id> <label> --axes '<json>'
 //     node workflows/learn/tools/record-attempt.mjs <topic> <goal-id> <label> --axes '<json>' --tags production
 //
-//   Unadjudicated — when there was no attempt to rule on, or the learner asserted it:
+//   Unruled: when there was no attempt to rule on, or the learner asserted it:
 //     node workflows/learn/tools/record-attempt.mjs <topic> <goal-id> <label> --outcome abandoned
 //     ... --outcome declared    the learner saying they've got it
 //     ... --outcome elsewhere   the learner did it in class or on a problem set (put where in --note)
@@ -27,7 +27,7 @@
 //
 // INCLUDING A RETIRED ONE, which is recorded like any other and says so in the output. A
 // learner who changed their mind mid-session shouldn't meet an error and have to know the word
-// `revive` — see the note beside the printing at the bottom.
+// `revive`. See the note beside the printing at the bottom.
 //
 // <label> IS WHAT THE ACTIVITY SERVED, in its own words, and it goes in opaque. For a banked
 // question it is the question's path, `a-words/w-schema/q1`, which the picker in lib/pick.mjs
@@ -37,7 +37,7 @@
 //
 // THE TWO AXES GO IN RAW. `{"unaided":"yes|no|unclear","criterion":"met|not met|unclear|
 // unchecked"}` is stored as given and never collapsed on the way in. What reads a verdict back
-// out — the bars and the scheduler — reads the axes directly.
+// out (the bars and the scheduler) reads the axes directly.
 //
 // `criterion: unchecked` MEANS NOBODY RULED, and it is the honest record of the times an
 // adjudicator wasn't invoked. A tutor who knows it gave aid records `unaided: no, criterion:
@@ -76,7 +76,7 @@ const die = (msg) => {
 // three-way rule exists to make impossible, with a success message on it.
 //
 // The same for an extra positional. The call this file taught for months had a fourth one, and
-// it went into the void — which is worse than being refused, because nothing said so.
+// it went into the void, which is worse than being refused, because nothing said so.
 const FLAGS = ['axes', 'outcome', 'tags', 'cases', 'source', 'note'];
 
 const argv = process.argv.slice(2);
@@ -110,7 +110,7 @@ if (!dir || !goalId || !label) die(USAGE);
 if (extra.length) {
   die(
     `Too many arguments: ${extra.map((a) => `"${a}"`).join(' ')}\n` +
-      `The ruling is not a positional — it goes in --axes, or --outcome.\n\n${USAGE}`
+      `The ruling is not a positional: it goes in --axes, or --outcome.\n\n${USAGE}`
   );
 }
 if (!existsSync(dir)) die(`${dir} does not exist.`);
@@ -134,7 +134,7 @@ if (flags.axes) {
   try {
     axes = JSON.parse(flags.axes);
   } catch {
-    die(`--axes is not JSON. Pass the adjudicator's object through unchanged.\n\n${USAGE}`);
+    die(`--axes is not JSON. Pass the two axes as JSON.\n\n${USAGE}`);
   }
 }
 

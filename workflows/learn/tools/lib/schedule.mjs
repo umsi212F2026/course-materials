@@ -1,4 +1,4 @@
-// When each goal comes back — folded out of the attempt log, stored nowhere.
+// When each goal comes back, folded out of the attempt log, stored nowhere.
 //
 // THERE IS NO review.json, and that is the point. The schedule used to be a file a program read,
 // mutated a field of, and wrote back whole. It was the only read-modify-write anywhere in the
@@ -6,7 +6,7 @@
 // and could not demonstrate a race anywhere else. Deleting it yields an invariant rather than a
 // fix: NO PROGRAM IN THIS SYSTEM DOES READ-MODIFY-WRITE. Everything appends or only reads.
 //
-// What survives is the arithmetic, unchanged — the intervals, the three-way direction rule, and
+// What survives is the arithmetic, unchanged: the intervals, the three-way direction rule, and
 // *every review branch reschedules*. What went is the persistence.
 //
 // IN REVIEW IS A PROPERTY OF A GOAL, NOT OF A TOPIC. A goal enters the schedule the moment its
@@ -24,7 +24,7 @@ import { recurs } from './slots.mjs';
 
 // Intervals in days. A pass moves one step along; a lapse moves one back, never below the
 // first; anything inconclusive repeats the current one. Deliberately not configurable per
-// topic — a schedule someone can tune is a schedule someone will tune to make the number go up.
+// topic: a schedule someone can tune is a schedule someone will tune to make the number go up.
 export const INTERVALS = [3, 7, 16, 35, 75, 160];
 
 // `at` is an ISO timestamp; a due date is a day. Adding to the timestamp and then taking the day
@@ -34,12 +34,12 @@ const plus = (at, days) => new Date(Date.parse(at) + days * 86400000).toISOStrin
 
 // Where one goal's schedule stands, given its whole attempt history in order.
 //
-//   null                              never met, or `recurrence: never` — it doesn't come back
+//   null                              never met, or `recurrence: never`, so it doesn't come back
 //   { step, due, days }               step into INTERVALS, the date it next comes due, and the
 //                                     length of the interval that produced it
 //
 // EVERY REVIEW ATTEMPT MOVES THE DATE. There is no branch here that leaves it where it was,
-// which is what would strand a goal as due forever — it would head the overdue list every
+// which is what would strand a goal as due forever: it would head the overdue list every
 // sitting, and being asked the same unanswerable question first every time is how a learner
 // learns to stop sitting down.
 //
@@ -58,7 +58,7 @@ export function reviewSchedule(goal, attempts) {
     const attempt = attempts[i];
 
     // Not yet in the schedule. It enters at the attempt that first makes the bar true, whatever
-    // that attempt's source was — the first pass opens the entry, which is what the stored
+    // that attempt's source was: the first pass opens the entry, which is what the stored
     // version did in the same call that recorded it.
     if (step === null) {
       if (!met(goal, attempts.slice(0, i + 1))) continue;

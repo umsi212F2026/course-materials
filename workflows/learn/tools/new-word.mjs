@@ -2,7 +2,7 @@
 //
 //   node workflows/learn/tools/new-word.mjs --dir <d> <area-slug> <word> <id>
 //
-// <d> is the directory holding the topic folders — see lib/workdir.mjs.
+// <d> is the directory holding the topic folders. See lib/workdir.mjs.
 //
 // THIS SCRIPT IS THE SHORTHAND FOR "IT'S A WORD", and it is the only one. There are no named
 // goal types: a word is a goal carrying three particular slot values, and this fills them in.
@@ -13,7 +13,7 @@
 // Goal setting calls this rather than typing the entry, for the same reason. A convention
 // living in two places has two implementations.
 //
-// THE ID IS REQUIRED AND THIS SCRIPT NEVER INVENTS ONE. The calling agent names it — there is
+// THE ID IS REQUIRED AND THIS SCRIPT NEVER INVENTS ONE. The calling agent names it, and there is
 // always one, since a word gets added mid-session. A derived slug would be worse than it looks:
 // a threshold catches only the names that come out long, so `state and persistence` would
 // become `w-state-and-persistence` silently, when `w-persistence` is what a person would pick.
@@ -21,7 +21,7 @@
 //
 // Quote the word. Unquoted, a phrase arrives as several arguments and the count won't match.
 //
-// Adding to a word list is not a revision of a topic's goals — one entry, no folder, no
+// Adding to a word list is not a revision of a topic's goals: one entry, no folder, no
 // commitment. That's why it's this cheap.
 
 import { readFileSync, writeFileSync, existsSync, readdirSync, statSync } from 'node:fs';
@@ -89,7 +89,7 @@ const taken = readIds(dir);
 if (taken.has(id)) {
   const goal = taken.get(id);
   die(
-    `${id} is already in ${matches[0]} — "${goal.text}".\n` +
+    `${id} is already in ${matches[0]}: "${goal.text}".\n` +
       `If that's the same word, it's already here and there's nothing to add.\n` +
       `If it's a different one, give it a different id rather than a variant of this one:\n` +
       `one word with two entries splits its attempts between them.`

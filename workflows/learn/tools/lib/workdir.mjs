@@ -1,11 +1,11 @@
 // Where a tool's data lives, taken as an argument rather than derived.
 //
 // Every tool that works across topics takes `--dir <path>`, pointing at the
-// directory that holds the topic folders — normally a clone of
+// directory that holds the topic folders, normally a clone of
 // learning-topics.
 //
 // WHY THIS IS AN ARGUMENT AND NOT A DERIVATION. These tools used to compute
-// `resolve(import.meta.url, '../../..')` and then `join(root, 'learning')` —
+// `resolve(import.meta.url, '../../..')` and then `join(root, 'learning')`,
 // finding their data by walking up from their own source file. That silently
 // assumed code and data live in one repository. They do not: definitions are in
 // course-materials, a student's work is in their own repositories, and a
@@ -39,7 +39,7 @@ export function takeDir(argv, usage) {
     die(
       `This tool needs to be told which directory to work in.\n\n` +
         `  ${usage}\n\n` +
-        `--dir is the folder holding the topic folders — your clone of\n` +
+        `--dir is the folder holding the topic folders: your clone of\n` +
         `learning-topics. There is no default: a tool that guessed could\n` +
         `write your work somewhere you would not find it.`,
     );

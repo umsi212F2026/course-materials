@@ -96,8 +96,8 @@ export function checkAttempt(
     record.unaided = axes.unaided;
     record.criterion = axes.criterion;
   } else {
-    // `aided` used to live here and is gone. It is now an ordinary attempt with ordinary axes —
-    // `unaided: no, criterion: unchecked` — which says more than the outcome word did.
+    // `aided` used to live here and is gone. It is now an ordinary attempt with ordinary axes
+    // (`unaided: no, criterion: unchecked`), which says more than the outcome word did.
     const OUTCOMES = ['abandoned', 'declared', 'elsewhere'];
     if (!OUTCOMES.includes(outcome)) die(`--outcome must be one of: ${OUTCOMES.join(', ')}`);
     record.outcome = outcome;
@@ -155,7 +155,7 @@ export function appendAttemptResult(dir, record) {
   const lines = [`${goalId}: ${describeRuling(record)}`];
   if (after !== before) lines.push(`  bar met (${goal.bar})`);
   else lines.push(`  bar ${after ? 'already met' : 'not met'} (${goal.bar})`);
-  if (retired) lines.push(`  this goal was retired — recorded anyway. Say so if you want it back in review.`);
+  if (retired) lines.push(`  this goal was retired: recorded anyway. Say so if you want it back in review.`);
   else if (scheduled) lines.push(`  next review ${scheduled.due} (${scheduled.days} days)`);
   return { lines, newlyMet: after && !before, scheduled, retired };
 }
