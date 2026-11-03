@@ -1,0 +1,2801 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:color="http://www.omg.org/spec/BPMN/non-normative/color/1.0" id="Definitions_ftm" targetNamespace="http://si212.umich.edu/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.50.1">
+  <bpmn:collaboration id="C_1">
+    <bpmn:participant id="P_county" name="FollowTheMoney: one county, from the queue to the public site" processRef="Proc_county">
+      <bpmn:documentation>presnick/mi-spending:README.md. One run is one county, across as many nights as its two reporter gates take. Michigan has 83 counties; each is its own run.</bpmn:documentation>
+      <bpmn:participantMultiplicity minimum="1" maximum="83" />
+    </bpmn:participant>
+    <bpmn:participant id="P_night" name="One nightly batch" processRef="Proc_night">
+      <bpmn:documentation>presnick/mi-spending:.claude/skills/nightly-batch and presnick/mi-spending:docs/operations.md. One run is one night.</bpmn:documentation>
+    </bpmn:participant>
+    <bpmn:messageFlow id="mf_start" sourceRef="T_advance" targetRef="Start_county" />
+    <bpmn:messageFlow id="mf_w1" sourceRef="T_advance" targetRef="Catch_1" />
+    <bpmn:messageFlow id="mf_w2" sourceRef="T_advance" targetRef="Catch_2" />
+  </bpmn:collaboration>
+  <bpmn:dataStore id="DS_progress" name="pipeline_progress.json" />
+  <bpmn:process id="Proc_county" name="One county" isExecutable="false">
+    <bpmn:laneSet id="LS_Proc_county">
+      <bpmn:lane id="L_c_p" name="PROGRAM">
+        <bpmn:flowNodeRef>T_auto1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_notes</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_xrev</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_push1b</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_ci1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_cov</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_flag</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_push2</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_push2b</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_ci2</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>G_c_pub</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_deploy</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="L_c_a" name="AI AGENT">
+        <bpmn:flowNodeRef>Start_county</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>G_c_ext</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_push1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>G_f1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>G_c_w1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Catch_1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_read1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>G_d1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>G_c_rep</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>G_f2</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_auto2</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>G_c_w2</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Catch_2</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_read2</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>G_d2</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_done</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_county</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Sub_extract</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Sub_reports</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>G_cov</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="L_c_h" name="HUMAN operator">
+        <bpmn:flowNodeRef>G_c_g1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>G_ci1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>G_c_g2</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>G_ci2</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Sub_gate1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Sub_gate2</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Start_county" name="reached in&#10;the queue">
+      <bpmn:documentation>A county starts when a nightly run reaches it in county_queue (presnick/mi-spending:.claude/skills/nightly-batch, Step 2). The queue lives in presnick/mi-spending:data/state/pipeline_progress.json; a person adds a county by appending its code.</bpmn:documentation>
+      <bpmn:outgoing>f_1</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MED_Start_county" />
+    </bpmn:startEvent>
+    <bpmn:exclusiveGateway id="G_c_ext">
+      <bpmn:incoming>f_1</bpmn:incoming>
+      <bpmn:incoming>f_d1_rerun</bpmn:incoming>
+      <bpmn:incoming>f_cov_no</bpmn:incoming>
+      <bpmn:outgoing>f_2</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:scriptTask id="T_push1" name="Push for review&#10;git push">
+      <bpmn:documentation>presnick/mi-spending:.claude/skills/nightly-batch, Step 4c: commit review/ and extraction-notes/ and push to origin/main, where reporters work in the GitHub web UI. Nothing notifies them; they find waiting counties in presnick/mi-spending:review/pipeline-status.md.</bpmn:documentation>
+      <bpmn:incoming>f_f1_yes</bpmn:incoming>
+      <bpmn:outgoing>f_6</bpmn:outgoing>
+    </bpmn:scriptTask>
+    <bpmn:serviceTask id="T_auto1" name="Approve it automatically&#10;nightly-batch">
+      <bpmn:documentation>presnick/mi-spending:.claude/skills/nightly-batch, Step 4b: if nothing is flagged and nothing has warnings, the orchestrator sets the review file to approved itself.</bpmn:documentation>
+      <bpmn:incoming>f_f1_no</bpmn:incoming>
+      <bpmn:outgoing>f_10</bpmn:outgoing>
+      <bpmn:dataOutputAssociation id="do_132">
+        <bpmn:targetRef>DOR_xr_36</bpmn:targetRef>
+      </bpmn:dataOutputAssociation>
+    </bpmn:serviceTask>
+    <bpmn:subProcess id="Sub_extract" name="Extract documents">
+      <bpmn:documentation>presnick/mi-spending:.claude/skills/nightly-batch, Step 3, phase not_started or extracting, and Step 6 for reruns. One subagent per document; the plane below has the detail.</bpmn:documentation>
+      <bpmn:incoming>f_2</bpmn:incoming>
+      <bpmn:outgoing>f_3</bpmn:outgoing>
+      <bpmn:property id="Property_Sub_extract" name="__targetRef_placeholder" />
+      <bpmn:dataInputAssociation id="di_125">
+        <bpmn:sourceRef>DOR_pdf_31</bpmn:sourceRef>
+        <bpmn:targetRef>Property_Sub_extract</bpmn:targetRef>
+      </bpmn:dataInputAssociation>
+      <bpmn:dataInputAssociation id="di_126">
+        <bpmn:sourceRef>DOR_en_32</bpmn:sourceRef>
+        <bpmn:targetRef>Property_Sub_extract</bpmn:targetRef>
+      </bpmn:dataInputAssociation>
+      <bpmn:dataOutputAssociation id="do_127">
+        <bpmn:targetRef>DOR_json_33</bpmn:targetRef>
+      </bpmn:dataOutputAssociation>
+      <bpmn:laneSet id="LS_Sub_extract">
+        <bpmn:lane id="L_x_p" name="PROGRAM">
+          <bpmn:flowNodeRef>T_xcov</bpmn:flowNodeRef>
+        </bpmn:lane>
+        <bpmn:lane id="L_x_a" name="AI AGENT">
+          <bpmn:flowNodeRef>T_clear</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>G_x_m</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>T_queue</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>T_extract</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Start_x</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>G_q</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>End_x</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>G_xcov</bpmn:flowNodeRef>
+        </bpmn:lane>
+      </bpmn:laneSet>
+      <bpmn:startEvent id="Start_x" name="county&#39;s turn&#10;to extract">
+        <bpmn:outgoing>f_56</bpmn:outgoing>
+      </bpmn:startEvent>
+      <bpmn:serviceTask id="T_clear" name="Delete JSONs marked rerun&#10;nightly-batch">
+        <bpmn:documentation>presnick/mi-spending:.claude/skills/nightly-batch, Step 6: for each extraction-notes file marked rerun, delete that document's JSON so the queue picks it up again. The notes file stays, carrying the reporter's note into the prompt.</bpmn:documentation>
+        <bpmn:incoming>f_56</bpmn:incoming>
+        <bpmn:outgoing>f_57</bpmn:outgoing>
+        <bpmn:property id="Property_T_clear" name="__targetRef_placeholder" />
+        <bpmn:dataInputAssociation id="di_156">
+          <bpmn:sourceRef>DOR_en_62</bpmn:sourceRef>
+          <bpmn:targetRef>Property_T_clear</bpmn:targetRef>
+        </bpmn:dataInputAssociation>
+      </bpmn:serviceTask>
+      <bpmn:exclusiveGateway id="G_x_m">
+        <bpmn:incoming>f_57</bpmn:incoming>
+        <bpmn:incoming>f_q_yes</bpmn:incoming>
+        <bpmn:incoming>f_xcov_yes</bpmn:incoming>
+        <bpmn:outgoing>f_58</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:serviceTask id="T_queue" name="Build the extraction queue&#10;nightly-batch">
+        <bpmn:documentation>presnick/mi-spending:.claude/skills/nightly-batch, Step 3, Build queue: every extractable PDF for the county's active entity types, newest two fiscal years, minus those that already have a JSON. Prints a count per document type.</bpmn:documentation>
+        <bpmn:incoming>f_58</bpmn:incoming>
+        <bpmn:outgoing>f_59</bpmn:outgoing>
+        <bpmn:property id="Property_T_queue" name="__targetRef_placeholder" />
+        <bpmn:dataInputAssociation id="di_q1">
+          <bpmn:sourceRef>DOR_pdf_q</bpmn:sourceRef>
+          <bpmn:targetRef>Property_T_queue</bpmn:targetRef>
+        </bpmn:dataInputAssociation>
+        <bpmn:dataInputAssociation id="di_q2">
+          <bpmn:sourceRef>DOR_json_q</bpmn:sourceRef>
+          <bpmn:targetRef>Property_T_queue</bpmn:targetRef>
+        </bpmn:dataInputAssociation>
+        <bpmn:dataOutputAssociation id="do_q">
+          <bpmn:targetRef>DOR_queue</bpmn:targetRef>
+        </bpmn:dataOutputAssociation>
+      </bpmn:serviceTask>
+      <bpmn:exclusiveGateway id="G_q" name="a type left out&#10;of the queue?" default="f_q_no">
+        <bpmn:incoming>f_59</bpmn:incoming>
+        <bpmn:outgoing>f_q_yes</bpmn:outgoing>
+        <bpmn:outgoing>f_q_no</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:serviceTask id="T_extract" name="Extract each queued document&#10;extract-document">
+        <bpmn:documentation>A fresh Sonnet subagent per document, run one at a time, from the inline prompt in presnick/mi-spending:.claude/skills/nightly-batch, Step 3, which follows presnick/mi-spending:.claude/skills/extract-document. The orchestrator pastes the schema and the editor notes into the prompt rather than passing paths. On something the schema does not cover, it halts: writes what it could, with halted: true, plus a review request with a suggested schema addition. Stops when the session budget runs low; the next night skips every document that already has a JSON.</bpmn:documentation>
+        <bpmn:incoming>f_q_no</bpmn:incoming>
+        <bpmn:outgoing>f_60</bpmn:outgoing>
+        <bpmn:property id="Property_T_extract" name="__targetRef_placeholder" />
+        <bpmn:dataInputAssociation id="di_q3">
+          <bpmn:sourceRef>DOR_queue</bpmn:sourceRef>
+          <bpmn:targetRef>Property_T_extract</bpmn:targetRef>
+        </bpmn:dataInputAssociation>
+        <bpmn:dataInputAssociation id="di_157">
+          <bpmn:sourceRef>DOR_pdf_63</bpmn:sourceRef>
+          <bpmn:targetRef>Property_T_extract</bpmn:targetRef>
+        </bpmn:dataInputAssociation>
+        <bpmn:dataInputAssociation id="di_158">
+          <bpmn:sourceRef>DOR_schema_64</bpmn:sourceRef>
+          <bpmn:targetRef>Property_T_extract</bpmn:targetRef>
+        </bpmn:dataInputAssociation>
+        <bpmn:dataInputAssociation id="di_159">
+          <bpmn:sourceRef>DOR_en_65</bpmn:sourceRef>
+          <bpmn:targetRef>Property_T_extract</bpmn:targetRef>
+        </bpmn:dataInputAssociation>
+        <bpmn:dataOutputAssociation id="do_160">
+          <bpmn:targetRef>DOR_json_66</bpmn:targetRef>
+        </bpmn:dataOutputAssociation>
+        <bpmn:dataOutputAssociation id="do_161">
+          <bpmn:targetRef>DOR_rq_67</bpmn:targetRef>
+        </bpmn:dataOutputAssociation>
+        <bpmn:multiInstanceLoopCharacteristics isSequential="true" />
+      </bpmn:serviceTask>
+      <bpmn:scriptTask id="T_xcov" name="Check coverage&#10;check_extraction_coverage.py">
+        <bpmn:documentation>presnick/mi-spending:scripts/check_extraction_coverage.py (presnick/mi-spending:.claude/skills/nightly-batch, Step 4-pre). Exits 1 if a whole document type has no extractions although its PDFs are on disk.</bpmn:documentation>
+        <bpmn:incoming>f_60</bpmn:incoming>
+        <bpmn:outgoing>f_61</bpmn:outgoing>
+        <bpmn:property id="Property_T_xcov" name="__targetRef_placeholder" />
+        <bpmn:dataInputAssociation id="di_162">
+          <bpmn:sourceRef>DOR_json_68</bpmn:sourceRef>
+          <bpmn:targetRef>Property_T_xcov</bpmn:targetRef>
+        </bpmn:dataInputAssociation>
+      </bpmn:scriptTask>
+      <bpmn:exclusiveGateway id="G_xcov" name="a type with no&#10;JSONs at all?" default="f_xcov_no">
+        <bpmn:incoming>f_61</bpmn:incoming>
+        <bpmn:outgoing>f_xcov_yes</bpmn:outgoing>
+        <bpmn:outgoing>f_xcov_no</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:endEvent id="End_x" name="every eligible&#10;PDF has a JSON">
+        <bpmn:incoming>f_xcov_no</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:dataObject id="DO_queue" isCollection="true" />
+      <bpmn:dataObjectReference id="DOR_pdf_q" name="Treasury PDFs" dataObjectRef="DO_pdf" />
+      <bpmn:dataObjectReference id="DOR_json_q" name="extraction JSONs" dataObjectRef="DO_json" />
+      <bpmn:dataObjectReference id="DOR_queue" name="extraction queue" dataObjectRef="DO_queue" />
+      <bpmn:dataObjectReference id="DOR_en_62" name="extraction-notes&#10;[rerun]" dataObjectRef="DO_en">
+        <bpmn:dataState id="State_DOR_en_62" name="rerun" />
+      </bpmn:dataObjectReference>
+      <bpmn:dataObjectReference id="DOR_pdf_63" name="Treasury PDFs" dataObjectRef="DO_pdf" />
+      <bpmn:dataObjectReference id="DOR_schema_64" name="extraction schema" dataObjectRef="DO_schema" />
+      <bpmn:dataObjectReference id="DOR_en_65" name="extraction-notes" dataObjectRef="DO_en" />
+      <bpmn:dataObjectReference id="DOR_json_66" name="extraction JSONs" dataObjectRef="DO_json" />
+      <bpmn:dataObjectReference id="DOR_rq_67" name="halt review request" dataObjectRef="DO_rq" />
+      <bpmn:dataObjectReference id="DOR_json_68" name="extraction JSONs" dataObjectRef="DO_json" />
+      <bpmn:sequenceFlow id="f_56" sourceRef="Start_x" targetRef="T_clear" />
+      <bpmn:sequenceFlow id="f_57" sourceRef="T_clear" targetRef="G_x_m" />
+      <bpmn:sequenceFlow id="f_58" sourceRef="G_x_m" targetRef="T_queue" />
+      <bpmn:sequenceFlow id="f_59" sourceRef="T_queue" targetRef="G_q" />
+      <bpmn:sequenceFlow id="f_q_yes" name="yes" sourceRef="G_q" targetRef="G_x_m">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">a type has PDFs on disk without a JSON, and a count of 0</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="f_q_no" name="no" sourceRef="G_q" targetRef="T_extract" />
+      <bpmn:sequenceFlow id="f_60" sourceRef="T_extract" targetRef="T_xcov" />
+      <bpmn:sequenceFlow id="f_61" sourceRef="T_xcov" targetRef="G_xcov" />
+      <bpmn:sequenceFlow id="f_xcov_yes" name="yes" sourceRef="G_xcov" targetRef="G_x_m">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">check_extraction_coverage.py exited 1</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="f_xcov_no" name="no" sourceRef="G_xcov" targetRef="End_x" />
+      <bpmn:dataObject id="DO_pdf" isCollection="true" />
+      <bpmn:dataObject id="DO_en" isCollection="true" />
+      <bpmn:dataObject id="DO_schema" />
+      <bpmn:dataObject id="DO_rq" />
+    </bpmn:subProcess>
+    <bpmn:scriptTask id="T_notes" name="Validate every extraction&#10;write_extraction_notes.py">
+      <bpmn:documentation>presnick/mi-spending:scripts/write_extraction_notes.py (presnick/mi-spending:.claude/skills/nightly-batch, Step 4a). Re-validates every extraction JSON and writes its extraction-notes file, status ok or error. Archives the previous notes file by copying it to .v{n}.md first.</bpmn:documentation>
+      <bpmn:incoming>f_3</bpmn:incoming>
+      <bpmn:outgoing>f_4</bpmn:outgoing>
+      <bpmn:property id="Property_T_notes" name="__targetRef_placeholder" />
+      <bpmn:dataInputAssociation id="di_128">
+        <bpmn:sourceRef>DOR_json_33</bpmn:sourceRef>
+        <bpmn:targetRef>Property_T_notes</bpmn:targetRef>
+      </bpmn:dataInputAssociation>
+      <bpmn:dataOutputAssociation id="do_129">
+        <bpmn:targetRef>DOR_en_34</bpmn:targetRef>
+      </bpmn:dataOutputAssociation>
+    </bpmn:scriptTask>
+    <bpmn:scriptTask id="T_xrev" name="Summarize for the reporter&#10;write_extraction_review.py">
+      <bpmn:documentation>presnick/mi-spending:scripts/write_extraction_review.py (presnick/mi-spending:.claude/skills/nightly-batch, Step 4b). Reads every extraction-notes file and writes review/{County}/extraction-review.md: Flagged, Warnings only, Clean, with status: pending.</bpmn:documentation>
+      <bpmn:incoming>f_4</bpmn:incoming>
+      <bpmn:outgoing>f_5</bpmn:outgoing>
+      <bpmn:property id="Property_T_xrev" name="__targetRef_placeholder" />
+      <bpmn:dataInputAssociation id="di_130">
+        <bpmn:sourceRef>DOR_en_34</bpmn:sourceRef>
+        <bpmn:targetRef>Property_T_xrev</bpmn:targetRef>
+      </bpmn:dataInputAssociation>
+      <bpmn:dataOutputAssociation id="do_131">
+        <bpmn:targetRef>DOR_xr_35</bpmn:targetRef>
+      </bpmn:dataOutputAssociation>
+    </bpmn:scriptTask>
+    <bpmn:exclusiveGateway id="G_f1" name="anything&#10;flagged?">
+      <bpmn:incoming>f_5</bpmn:incoming>
+      <bpmn:outgoing>f_f1_yes</bpmn:outgoing>
+      <bpmn:outgoing>f_f1_no</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:scriptTask id="T_push1b" name="Push for review&#10;git push">
+      <bpmn:documentation>presnick/mi-spending:.claude/skills/nightly-batch, Step 4c: the same commit and push as on the flagged path.</bpmn:documentation>
+      <bpmn:incoming>f_10</bpmn:incoming>
+      <bpmn:outgoing>f_11</bpmn:outgoing>
+    </bpmn:scriptTask>
+    <bpmn:exclusiveGateway id="G_c_g1">
+      <bpmn:incoming>f_6</bpmn:incoming>
+      <bpmn:incoming>f_ci1_no</bpmn:incoming>
+      <bpmn:outgoing>f_7</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:subProcess id="Sub_gate1" name="Review extractions&#10;(Gate 1)">
+      <bpmn:documentation>presnick/mi-spending:docs/reporter-guide.md, Gate 1. Done entirely in the GitHub web UI.</bpmn:documentation>
+      <bpmn:incoming>f_7</bpmn:incoming>
+      <bpmn:outgoing>f_8</bpmn:outgoing>
+      <bpmn:property id="Property_Sub_gate1" name="__targetRef_placeholder" />
+      <bpmn:dataInputAssociation id="di_133">
+        <bpmn:sourceRef>DOR_json_37</bpmn:sourceRef>
+        <bpmn:targetRef>Property_Sub_gate1</bpmn:targetRef>
+      </bpmn:dataInputAssociation>
+      <bpmn:dataOutputAssociation id="do_134">
+        <bpmn:targetRef>DOR_en_38</bpmn:targetRef>
+      </bpmn:dataOutputAssociation>
+      <bpmn:dataOutputAssociation id="do_135">
+        <bpmn:targetRef>DOR_xr_39</bpmn:targetRef>
+      </bpmn:dataOutputAssociation>
+      <bpmn:laneSet id="LS_Sub_gate1">
+        <bpmn:lane id="L_g1_h" name="HUMAN operator">
+          <bpmn:flowNodeRef>Start_g1</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>T_g1_skim</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>G_g1_m</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>T_g1_inv</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>G_g1_what</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>T_g1_rerun</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>T_g1_accept</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>T_g1_esc</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>G_g1_j</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>G_g1_more</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>G_g1_any</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>T_g1_appr</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>G_g1_k</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>T_g1_commit</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>End_g1</bpmn:flowNodeRef>
+        </bpmn:lane>
+      </bpmn:laneSet>
+      <bpmn:startEvent id="Start_g1" name="extraction&#10;review pushed">
+        <bpmn:outgoing>f_83</bpmn:outgoing>
+      </bpmn:startEvent>
+      <bpmn:userTask id="T_g1_skim" name="Skim the review file">
+        <bpmn:documentation>presnick/mi-spending:docs/reporter-guide.md, Gate 1: Extraction review. Step 1.</bpmn:documentation>
+        <bpmn:incoming>f_83</bpmn:incoming>
+        <bpmn:outgoing>f_84</bpmn:outgoing>
+        <bpmn:property id="Property_T_g1_skim" name="__targetRef_placeholder" />
+        <bpmn:dataInputAssociation id="di_163">
+          <bpmn:sourceRef>DOR_xr_94</bpmn:sourceRef>
+          <bpmn:targetRef>Property_T_g1_skim</bpmn:targetRef>
+        </bpmn:dataInputAssociation>
+      </bpmn:userTask>
+      <bpmn:exclusiveGateway id="G_g1_m">
+        <bpmn:incoming>f_84</bpmn:incoming>
+        <bpmn:incoming>f_g1_more_yes</bpmn:incoming>
+        <bpmn:outgoing>f_85</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:userTask id="T_g1_inv" name="Investigate a flagged document">
+        <bpmn:documentation>presnick/mi-spending:docs/reporter-guide.md, Gate 1: Extraction review. Step 2.</bpmn:documentation>
+        <bpmn:incoming>f_85</bpmn:incoming>
+        <bpmn:outgoing>f_86</bpmn:outgoing>
+        <bpmn:property id="Property_T_g1_inv" name="__targetRef_placeholder" />
+        <bpmn:dataInputAssociation id="di_164">
+          <bpmn:sourceRef>DOR_en_95</bpmn:sourceRef>
+          <bpmn:targetRef>Property_T_g1_inv</bpmn:targetRef>
+        </bpmn:dataInputAssociation>
+        <bpmn:dataInputAssociation id="di_165">
+          <bpmn:sourceRef>DOR_json_96</bpmn:sourceRef>
+          <bpmn:targetRef>Property_T_g1_inv</bpmn:targetRef>
+        </bpmn:dataInputAssociation>
+        <bpmn:dataInputAssociation id="di_166">
+          <bpmn:sourceRef>DOR_pdf_97</bpmn:sourceRef>
+          <bpmn:targetRef>Property_T_g1_inv</bpmn:targetRef>
+        </bpmn:dataInputAssociation>
+      </bpmn:userTask>
+      <bpmn:exclusiveGateway id="G_g1_what" name="what should&#10;happen to it?" default="f_g1_esc">
+        <bpmn:incoming>f_86</bpmn:incoming>
+        <bpmn:outgoing>f_g1_rerun</bpmn:outgoing>
+        <bpmn:outgoing>f_g1_accept</bpmn:outgoing>
+        <bpmn:outgoing>f_g1_esc</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:userTask id="T_g1_rerun" name="Mark it rerun, with a note">
+        <bpmn:documentation>presnick/mi-spending:docs/reporter-guide.md, Gate 1: Extraction review. Step 3, Re-extract.</bpmn:documentation>
+        <bpmn:incoming>f_g1_rerun</bpmn:incoming>
+        <bpmn:outgoing>f_87</bpmn:outgoing>
+        <bpmn:dataOutputAssociation id="do_167">
+          <bpmn:targetRef>DOR_en_98</bpmn:targetRef>
+        </bpmn:dataOutputAssociation>
+      </bpmn:userTask>
+      <bpmn:userTask id="T_g1_accept" name="Accept the flag, with a note">
+        <bpmn:documentation>presnick/mi-spending:docs/reporter-guide.md, Gate 1: Extraction review. Step 3, Accept the flag.</bpmn:documentation>
+        <bpmn:incoming>f_g1_accept</bpmn:incoming>
+        <bpmn:outgoing>f_88</bpmn:outgoing>
+        <bpmn:dataOutputAssociation id="do_168">
+          <bpmn:targetRef>DOR_en_99</bpmn:targetRef>
+        </bpmn:dataOutputAssociation>
+      </bpmn:userTask>
+      <bpmn:userTask id="T_g1_esc" name="Note what you checked, escalate">
+        <bpmn:documentation>presnick/mi-spending:docs/reporter-guide.md, Gate 1: Extraction review. Step 3, Escalate. A halted extraction always lands here: the schema needs a fix first.</bpmn:documentation>
+        <bpmn:incoming>f_g1_esc</bpmn:incoming>
+        <bpmn:outgoing>f_89</bpmn:outgoing>
+        <bpmn:dataOutputAssociation id="do_169">
+          <bpmn:targetRef>DOR_en_99</bpmn:targetRef>
+        </bpmn:dataOutputAssociation>
+      </bpmn:userTask>
+      <bpmn:exclusiveGateway id="G_g1_j">
+        <bpmn:incoming>f_87</bpmn:incoming>
+        <bpmn:incoming>f_88</bpmn:incoming>
+        <bpmn:incoming>f_89</bpmn:incoming>
+        <bpmn:outgoing>f_90</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:exclusiveGateway id="G_g1_more" name="more flagged&#10;documents?" default="f_g1_more_no">
+        <bpmn:incoming>f_90</bpmn:incoming>
+        <bpmn:outgoing>f_g1_more_yes</bpmn:outgoing>
+        <bpmn:outgoing>f_g1_more_no</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:exclusiveGateway id="G_g1_any" name="any marked&#10;rerun?" default="f_g1_any_no">
+        <bpmn:incoming>f_g1_more_no</bpmn:incoming>
+        <bpmn:outgoing>f_g1_any_yes</bpmn:outgoing>
+        <bpmn:outgoing>f_g1_any_no</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:userTask id="T_g1_appr" name="Set the review approved">
+        <bpmn:documentation>presnick/mi-spending:docs/reporter-guide.md, Gate 1: Extraction review. The approval step: only when nothing is marked rerun.</bpmn:documentation>
+        <bpmn:incoming>f_g1_any_no</bpmn:incoming>
+        <bpmn:outgoing>f_91</bpmn:outgoing>
+        <bpmn:dataOutputAssociation id="do_170">
+          <bpmn:targetRef>DOR_xr_100</bpmn:targetRef>
+        </bpmn:dataOutputAssociation>
+      </bpmn:userTask>
+      <bpmn:exclusiveGateway id="G_g1_k">
+        <bpmn:incoming>f_g1_any_yes</bpmn:incoming>
+        <bpmn:incoming>f_91</bpmn:incoming>
+        <bpmn:outgoing>f_92</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:userTask id="T_g1_commit" name="Commit on GitHub">
+        <bpmn:documentation>presnick/mi-spending:docs/reporter-guide.md, Gate 1: Extraction review. Edits are made and committed in the GitHub web UI, straight to main.</bpmn:documentation>
+        <bpmn:incoming>f_92</bpmn:incoming>
+        <bpmn:outgoing>f_93</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:endEvent id="End_g1" name="decision&#10;committed">
+        <bpmn:incoming>f_93</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:dataObjectReference id="DOR_xr_94" name="extraction-review.md&#10;[pending]" dataObjectRef="DO_xr">
+        <bpmn:dataState id="State_DOR_xr_94" name="pending" />
+      </bpmn:dataObjectReference>
+      <bpmn:dataObjectReference id="DOR_en_95" name="extraction-notes&#10;[error]" dataObjectRef="DO_en">
+        <bpmn:dataState id="State_DOR_en_95" name="error" />
+      </bpmn:dataObjectReference>
+      <bpmn:dataObjectReference id="DOR_json_96" name="extraction JSONs" dataObjectRef="DO_json" />
+      <bpmn:dataObjectReference id="DOR_pdf_97" name="Treasury PDFs" dataObjectRef="DO_pdf" />
+      <bpmn:dataObjectReference id="DOR_en_98" name="extraction-notes&#10;[rerun]" dataObjectRef="DO_en">
+        <bpmn:dataState id="State_DOR_en_98" name="rerun" />
+      </bpmn:dataObjectReference>
+      <bpmn:dataObjectReference id="DOR_en_99" name="extraction-notes&#10;[error]" dataObjectRef="DO_en">
+        <bpmn:dataState id="State_DOR_en_99" name="error" />
+      </bpmn:dataObjectReference>
+      <bpmn:dataObjectReference id="DOR_xr_100" name="extraction-review.md&#10;[approved]" dataObjectRef="DO_xr">
+        <bpmn:dataState id="State_DOR_xr_100" name="approved" />
+      </bpmn:dataObjectReference>
+      <bpmn:sequenceFlow id="f_83" sourceRef="Start_g1" targetRef="T_g1_skim" />
+      <bpmn:sequenceFlow id="f_84" sourceRef="T_g1_skim" targetRef="G_g1_m" />
+      <bpmn:sequenceFlow id="f_85" sourceRef="G_g1_m" targetRef="T_g1_inv" />
+      <bpmn:sequenceFlow id="f_86" sourceRef="T_g1_inv" targetRef="G_g1_what" />
+      <bpmn:sequenceFlow id="f_g1_rerun" name="re-extract" sourceRef="G_g1_what" targetRef="T_g1_rerun">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">the extraction is wrong and a note can say how</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="f_87" sourceRef="T_g1_rerun" targetRef="G_g1_j" />
+      <bpmn:sequenceFlow id="f_g1_accept" name="accept" sourceRef="G_g1_what" targetRef="T_g1_accept">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">the flag is explained, e.g. the PDF itself rounds</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="f_88" sourceRef="T_g1_accept" targetRef="G_g1_j" />
+      <bpmn:sequenceFlow id="f_g1_esc" name="can&#39;t tell" sourceRef="G_g1_what" targetRef="T_g1_esc" />
+      <bpmn:sequenceFlow id="f_89" sourceRef="T_g1_esc" targetRef="G_g1_j" />
+      <bpmn:sequenceFlow id="f_90" sourceRef="G_g1_j" targetRef="G_g1_more" />
+      <bpmn:sequenceFlow id="f_g1_more_yes" name="yes" sourceRef="G_g1_more" targetRef="G_g1_m">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">another flagged item is unreviewed</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="f_g1_more_no" name="no" sourceRef="G_g1_more" targetRef="G_g1_any" />
+      <bpmn:sequenceFlow id="f_g1_any_yes" name="yes" sourceRef="G_g1_any" targetRef="G_g1_k">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">some notes file says status: rerun</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="f_g1_any_no" name="no" sourceRef="G_g1_any" targetRef="T_g1_appr" />
+      <bpmn:sequenceFlow id="f_91" sourceRef="T_g1_appr" targetRef="G_g1_k" />
+      <bpmn:sequenceFlow id="f_92" sourceRef="G_g1_k" targetRef="T_g1_commit" />
+      <bpmn:sequenceFlow id="f_93" sourceRef="T_g1_commit" targetRef="End_g1" />
+    </bpmn:subProcess>
+    <bpmn:scriptTask id="T_ci1" name="Check the reporter&#39;s edits&#10;validate_review.py">
+      <bpmn:documentation>presnick/mi-spending:.github/workflows/validate-review.yml runs presnick/mi-spending:scripts/validate_review.py on every push that touches review/ or the notes. It rejects a review file set to approved while any notes file in that county is still marked rerun.</bpmn:documentation>
+      <bpmn:incoming>f_8</bpmn:incoming>
+      <bpmn:outgoing>f_9</bpmn:outgoing>
+      <bpmn:property id="Property_T_ci1" name="__targetRef_placeholder" />
+      <bpmn:dataInputAssociation id="di_136">
+        <bpmn:sourceRef>DOR_xr_40</bpmn:sourceRef>
+        <bpmn:targetRef>Property_T_ci1</bpmn:targetRef>
+      </bpmn:dataInputAssociation>
+    </bpmn:scriptTask>
+    <bpmn:exclusiveGateway id="G_ci1" name="check&#10;passed?" default="f_ci1_no">
+      <bpmn:incoming>f_9</bpmn:incoming>
+      <bpmn:outgoing>f_ci1_no</bpmn:outgoing>
+      <bpmn:outgoing>f_ci1_yes</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:exclusiveGateway id="G_c_w1">
+      <bpmn:incoming>f_ci1_yes</bpmn:incoming>
+      <bpmn:incoming>f_11</bpmn:incoming>
+      <bpmn:incoming>f_d1_pending</bpmn:incoming>
+      <bpmn:outgoing>f_12</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:intermediateCatchEvent id="Catch_1" name="reached by a&#10;nightly run">
+      <bpmn:documentation>Every nightly run re-reads every review file (presnick/mi-spending:.claude/skills/nightly-batch, Step 1c). Until a run gets here the county waits, however long that is.</bpmn:documentation>
+      <bpmn:incoming>f_12</bpmn:incoming>
+      <bpmn:outgoing>f_13</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MED_Catch_1" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:serviceTask id="T_read1" name="Read the reporter&#39;s decision&#10;nightly-batch">
+      <bpmn:documentation>presnick/mi-spending:.claude/skills/nightly-batch, Step 1d: reads extraction-review.md and every extraction-notes file for the county.</bpmn:documentation>
+      <bpmn:incoming>f_13</bpmn:incoming>
+      <bpmn:outgoing>f_14</bpmn:outgoing>
+      <bpmn:property id="Property_T_read1" name="__targetRef_placeholder" />
+      <bpmn:dataInputAssociation id="di_137">
+        <bpmn:sourceRef>DOR_xr_41</bpmn:sourceRef>
+        <bpmn:targetRef>Property_T_read1</bpmn:targetRef>
+      </bpmn:dataInputAssociation>
+      <bpmn:dataInputAssociation id="di_138">
+        <bpmn:sourceRef>DOR_en_42</bpmn:sourceRef>
+        <bpmn:targetRef>Property_T_read1</bpmn:targetRef>
+      </bpmn:dataInputAssociation>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="G_d1" name="what did the&#10;reporter decide?" default="f_d1_pending">
+      <bpmn:incoming>f_14</bpmn:incoming>
+      <bpmn:outgoing>f_d1_pending</bpmn:outgoing>
+      <bpmn:outgoing>f_d1_rerun</bpmn:outgoing>
+      <bpmn:outgoing>f_d1_appr</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:scriptTask id="T_cov" name="Recheck coverage, strictly&#10;check_extraction_coverage.py">
+      <bpmn:documentation>presnick/mi-spending:scripts/check_extraction_coverage.py --strict (presnick/mi-spending:.claude/skills/nightly-batch, Step 1d). Exits 1 if any eligible PDF has no extraction, which means the approval was given on incomplete data.</bpmn:documentation>
+      <bpmn:incoming>f_d1_appr</bpmn:incoming>
+      <bpmn:outgoing>f_15</bpmn:outgoing>
+    </bpmn:scriptTask>
+    <bpmn:exclusiveGateway id="G_c_rep">
+      <bpmn:incoming>f_cov_yes</bpmn:incoming>
+      <bpmn:incoming>f_d2_rerun</bpmn:incoming>
+      <bpmn:outgoing>f_16</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:subProcess id="Sub_reports" name="Generate reports">
+      <bpmn:documentation>presnick/mi-spending:.claude/skills/nightly-batch, Step 3, phase generating_reports, and Step 6 for reruns. One subagent per entity; the plane below has the detail.</bpmn:documentation>
+      <bpmn:incoming>f_16</bpmn:incoming>
+      <bpmn:outgoing>f_17</bpmn:outgoing>
+      <bpmn:property id="Property_Sub_reports" name="__targetRef_placeholder" />
+      <bpmn:dataInputAssociation id="di_139">
+        <bpmn:sourceRef>DOR_json_43</bpmn:sourceRef>
+        <bpmn:targetRef>Property_Sub_reports</bpmn:targetRef>
+      </bpmn:dataInputAssociation>
+      <bpmn:dataInputAssociation id="di_140">
+        <bpmn:sourceRef>DOR_rn_44</bpmn:sourceRef>
+        <bpmn:targetRef>Property_Sub_reports</bpmn:targetRef>
+      </bpmn:dataInputAssociation>
+      <bpmn:dataOutputAssociation id="do_141">
+        <bpmn:targetRef>DOR_rep_45</bpmn:targetRef>
+      </bpmn:dataOutputAssociation>
+      <bpmn:laneSet id="LS_Sub_reports">
+        <bpmn:lane id="L_r_p" name="PROGRAM">
+          <bpmn:flowNodeRef>T_peer</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>T_meth</bpmn:flowNodeRef>
+        </bpmn:lane>
+        <bpmn:lane id="L_r_a" name="AI AGENT">
+          <bpmn:flowNodeRef>T_rclear</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>T_report</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>T_rnotes</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>Start_r</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>End_r</bpmn:flowNodeRef>
+        </bpmn:lane>
+      </bpmn:laneSet>
+      <bpmn:startEvent id="Start_r" name="county&#39;s turn&#10;for reports">
+        <bpmn:outgoing>f_69</bpmn:outgoing>
+      </bpmn:startEvent>
+      <bpmn:serviceTask id="T_rclear" name="Delete reports marked rerun&#10;nightly-batch">
+        <bpmn:documentation>presnick/mi-spending:.claude/skills/nightly-batch, Step 6: for each report-notes file marked rerun, delete that entity's report so it is generated again with the reporter's notes in the prompt.</bpmn:documentation>
+        <bpmn:incoming>f_69</bpmn:incoming>
+        <bpmn:outgoing>f_70</bpmn:outgoing>
+        <bpmn:property id="Property_T_rclear" name="__targetRef_placeholder" />
+        <bpmn:dataInputAssociation id="di_171">
+          <bpmn:sourceRef>DOR_rn_75</bpmn:sourceRef>
+          <bpmn:targetRef>Property_T_rclear</bpmn:targetRef>
+        </bpmn:dataInputAssociation>
+      </bpmn:serviceTask>
+      <bpmn:scriptTask id="T_peer" name="Compute peer statistics&#10;compute_peer_stats.py">
+        <bpmn:documentation>presnick/mi-spending:scripts/compute_peer_stats.py: medians and mix percentages per entity type from the county's F65DATA extractions. Seconds, and no tokens.</bpmn:documentation>
+        <bpmn:incoming>f_70</bpmn:incoming>
+        <bpmn:outgoing>f_71</bpmn:outgoing>
+        <bpmn:property id="Property_T_peer" name="__targetRef_placeholder" />
+        <bpmn:dataInputAssociation id="di_174">
+          <bpmn:sourceRef>DOR_json_77</bpmn:sourceRef>
+          <bpmn:targetRef>Property_T_peer</bpmn:targetRef>
+        </bpmn:dataInputAssociation>
+        <bpmn:dataOutputAssociation id="do_172">
+          <bpmn:targetRef>DOR_peer_76</bpmn:targetRef>
+        </bpmn:dataOutputAssociation>
+      </bpmn:scriptTask>
+      <bpmn:scriptTask id="T_meth" name="Snapshot the methodology&#10;snapshot_methodology.py">
+        <bpmn:documentation>presnick/mi-spending:scripts/snapshot_methodology.py --quiet: prints a 12-character id for the current report rules, archiving them if they changed. Every report is stamped with it.</bpmn:documentation>
+        <bpmn:incoming>f_71</bpmn:incoming>
+        <bpmn:outgoing>f_72</bpmn:outgoing>
+      </bpmn:scriptTask>
+      <bpmn:serviceTask id="T_report" name="Write each entity&#39;s report&#10;generate-report">
+        <bpmn:documentation>A fresh Sonnet subagent per entity without a report, from the inline prompt in presnick/mi-spending:.claude/skills/nightly-batch, Step 3, which follows presnick/mi-spending:.claude/skills/generate-report. The prompt carries the rules, the methodology id, the peer statistics and the reporter's notes as text.</bpmn:documentation>
+        <bpmn:incoming>f_72</bpmn:incoming>
+        <bpmn:outgoing>f_73</bpmn:outgoing>
+        <bpmn:property id="Property_T_report" name="__targetRef_placeholder" />
+        <bpmn:dataInputAssociation id="di_173">
+          <bpmn:sourceRef>DOR_peer_76</bpmn:sourceRef>
+          <bpmn:targetRef>Property_T_report</bpmn:targetRef>
+        </bpmn:dataInputAssociation>
+        <bpmn:dataInputAssociation id="di_175">
+          <bpmn:sourceRef>DOR_json_78</bpmn:sourceRef>
+          <bpmn:targetRef>Property_T_report</bpmn:targetRef>
+        </bpmn:dataInputAssociation>
+        <bpmn:dataInputAssociation id="di_176">
+          <bpmn:sourceRef>DOR_rules_79</bpmn:sourceRef>
+          <bpmn:targetRef>Property_T_report</bpmn:targetRef>
+        </bpmn:dataInputAssociation>
+        <bpmn:dataInputAssociation id="di_177">
+          <bpmn:sourceRef>DOR_rn_80</bpmn:sourceRef>
+          <bpmn:targetRef>Property_T_report</bpmn:targetRef>
+        </bpmn:dataInputAssociation>
+        <bpmn:dataOutputAssociation id="do_178">
+          <bpmn:targetRef>DOR_rep_81</bpmn:targetRef>
+        </bpmn:dataOutputAssociation>
+        <bpmn:multiInstanceLoopCharacteristics isSequential="true" />
+      </bpmn:serviceTask>
+      <bpmn:serviceTask id="T_rnotes" name="Write report-notes files&#10;nightly-batch">
+        <bpmn:documentation>presnick/mi-spending:.claude/skills/nightly-batch, Step 3: one report-notes file per entity, status: ok, from the template there. An existing Reporter Notes section is kept verbatim; the notes are cumulative.</bpmn:documentation>
+        <bpmn:incoming>f_73</bpmn:incoming>
+        <bpmn:outgoing>f_74</bpmn:outgoing>
+        <bpmn:dataOutputAssociation id="do_179">
+          <bpmn:targetRef>DOR_rn_82</bpmn:targetRef>
+        </bpmn:dataOutputAssociation>
+      </bpmn:serviceTask>
+      <bpmn:endEvent id="End_r" name="every entity&#10;has a report">
+        <bpmn:incoming>f_74</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:dataObjectReference id="DOR_rn_75" name="report-notes&#10;[rerun]" dataObjectRef="DO_rn">
+        <bpmn:dataState id="State_DOR_rn_75" name="rerun" />
+      </bpmn:dataObjectReference>
+      <bpmn:dataObjectReference id="DOR_peer_76" name="peer statistics" dataObjectRef="DO_peer" />
+      <bpmn:dataObjectReference id="DOR_json_77" name="extraction JSONs" dataObjectRef="DO_json" />
+      <bpmn:dataObjectReference id="DOR_json_78" name="extraction JSONs" dataObjectRef="DO_json" />
+      <bpmn:dataObjectReference id="DOR_rules_79" name="report-generation rules" dataObjectRef="DO_rules" />
+      <bpmn:dataObjectReference id="DOR_rn_80" name="report-notes" dataObjectRef="DO_rn" />
+      <bpmn:dataObjectReference id="DOR_rep_81" name="reports" dataObjectRef="DO_rep" />
+      <bpmn:dataObjectReference id="DOR_rn_82" name="report-notes&#10;[ok]" dataObjectRef="DO_rn">
+        <bpmn:dataState id="State_DOR_rn_82" name="ok" />
+      </bpmn:dataObjectReference>
+      <bpmn:sequenceFlow id="f_69" sourceRef="Start_r" targetRef="T_rclear" />
+      <bpmn:sequenceFlow id="f_70" sourceRef="T_rclear" targetRef="T_peer" />
+      <bpmn:sequenceFlow id="f_71" sourceRef="T_peer" targetRef="T_meth" />
+      <bpmn:sequenceFlow id="f_72" sourceRef="T_meth" targetRef="T_report" />
+      <bpmn:sequenceFlow id="f_73" sourceRef="T_report" targetRef="T_rnotes" />
+      <bpmn:sequenceFlow id="f_74" sourceRef="T_rnotes" targetRef="End_r" />
+      <bpmn:dataObject id="DO_rn" isCollection="true" />
+      <bpmn:dataObject id="DO_peer" />
+      <bpmn:dataObject id="DO_json" isCollection="true" />
+      <bpmn:dataObject id="DO_rules" />
+      <bpmn:dataObject id="DO_rep" isCollection="true" />
+    </bpmn:subProcess>
+    <bpmn:scriptTask id="T_flag" name="Flag reports for review&#10;write_report_review.py">
+      <bpmn:documentation>presnick/mi-spending:scripts/write_report_review.py (presnick/mi-spending:.claude/skills/nightly-batch, Step 5). Flags a report whose extraction had errors, that has one fiscal year, that lacks AUD or an expected F65DATA, or whose newest data is over two years old. Writes report-review.md with status: pending.</bpmn:documentation>
+      <bpmn:incoming>f_17</bpmn:incoming>
+      <bpmn:outgoing>f_18</bpmn:outgoing>
+      <bpmn:property id="Property_T_flag" name="__targetRef_placeholder" />
+      <bpmn:dataInputAssociation id="di_142">
+        <bpmn:sourceRef>DOR_rep_45</bpmn:sourceRef>
+        <bpmn:targetRef>Property_T_flag</bpmn:targetRef>
+      </bpmn:dataInputAssociation>
+      <bpmn:dataOutputAssociation id="do_143">
+        <bpmn:targetRef>DOR_rr_46</bpmn:targetRef>
+      </bpmn:dataOutputAssociation>
+    </bpmn:scriptTask>
+    <bpmn:exclusiveGateway id="G_f2" name="anything&#10;flagged?">
+      <bpmn:incoming>f_18</bpmn:incoming>
+      <bpmn:outgoing>f_f2_yes</bpmn:outgoing>
+      <bpmn:outgoing>f_f2_no</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:scriptTask id="T_push2" name="Push for review&#10;git push">
+      <bpmn:documentation>presnick/mi-spending:.claude/skills/nightly-batch, Step 3 (generating_reports, when all reports are generated): commit review/, report-notes/ and reports/ and push to origin/main.</bpmn:documentation>
+      <bpmn:incoming>f_f2_yes</bpmn:incoming>
+      <bpmn:outgoing>f_19</bpmn:outgoing>
+    </bpmn:scriptTask>
+    <bpmn:serviceTask id="T_auto2" name="Approve it automatically&#10;nightly-batch">
+      <bpmn:documentation>presnick/mi-spending:.claude/skills/nightly-batch, Step 5: if no entity is flagged, the orchestrator sets report-review.md to approved itself.</bpmn:documentation>
+      <bpmn:incoming>f_f2_no</bpmn:incoming>
+      <bpmn:outgoing>f_23</bpmn:outgoing>
+      <bpmn:dataOutputAssociation id="do_144">
+        <bpmn:targetRef>DOR_rr_47</bpmn:targetRef>
+      </bpmn:dataOutputAssociation>
+    </bpmn:serviceTask>
+    <bpmn:scriptTask id="T_push2b" name="Push for review&#10;git push">
+      <bpmn:documentation>presnick/mi-spending:.claude/skills/nightly-batch, Step 3: the same commit and push as on the flagged path.</bpmn:documentation>
+      <bpmn:incoming>f_23</bpmn:incoming>
+      <bpmn:outgoing>f_24</bpmn:outgoing>
+    </bpmn:scriptTask>
+    <bpmn:exclusiveGateway id="G_c_g2">
+      <bpmn:incoming>f_19</bpmn:incoming>
+      <bpmn:incoming>f_ci2_no</bpmn:incoming>
+      <bpmn:outgoing>f_20</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:subProcess id="Sub_gate2" name="Review reports&#10;(Gate 2)">
+      <bpmn:documentation>presnick/mi-spending:docs/reporter-guide.md, Gate 2. Done entirely in the GitHub web UI.</bpmn:documentation>
+      <bpmn:incoming>f_20</bpmn:incoming>
+      <bpmn:outgoing>f_21</bpmn:outgoing>
+      <bpmn:property id="Property_Sub_gate2" name="__targetRef_placeholder" />
+      <bpmn:dataInputAssociation id="di_145">
+        <bpmn:sourceRef>DOR_rep_48</bpmn:sourceRef>
+        <bpmn:targetRef>Property_Sub_gate2</bpmn:targetRef>
+      </bpmn:dataInputAssociation>
+      <bpmn:dataOutputAssociation id="do_146">
+        <bpmn:targetRef>DOR_rn_49</bpmn:targetRef>
+      </bpmn:dataOutputAssociation>
+      <bpmn:dataOutputAssociation id="do_147">
+        <bpmn:targetRef>DOR_rr_50</bpmn:targetRef>
+      </bpmn:dataOutputAssociation>
+      <bpmn:laneSet id="LS_Sub_gate2">
+        <bpmn:lane id="L_g2_h" name="HUMAN operator">
+          <bpmn:flowNodeRef>Start_g2</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>T_g2_skim</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>G_g2_m</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>T_g2_inv</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>G_g2_what</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>T_g2_rerun</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>T_g2_accept</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>G_g2_j</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>G_g2_more</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>G_g2_any</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>T_g2_appr</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>G_g2_k</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>T_g2_commit</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>End_g2</bpmn:flowNodeRef>
+        </bpmn:lane>
+      </bpmn:laneSet>
+      <bpmn:startEvent id="Start_g2" name="report review&#10;pushed">
+        <bpmn:outgoing>f_101</bpmn:outgoing>
+      </bpmn:startEvent>
+      <bpmn:userTask id="T_g2_skim" name="Skim the report review">
+        <bpmn:documentation>presnick/mi-spending:docs/reporter-guide.md, Gate 2: Report review. Step 1.</bpmn:documentation>
+        <bpmn:incoming>f_101</bpmn:incoming>
+        <bpmn:outgoing>f_102</bpmn:outgoing>
+        <bpmn:property id="Property_T_g2_skim" name="__targetRef_placeholder" />
+        <bpmn:dataInputAssociation id="di_180">
+          <bpmn:sourceRef>DOR_rr_111</bpmn:sourceRef>
+          <bpmn:targetRef>Property_T_g2_skim</bpmn:targetRef>
+        </bpmn:dataInputAssociation>
+      </bpmn:userTask>
+      <bpmn:exclusiveGateway id="G_g2_m">
+        <bpmn:incoming>f_102</bpmn:incoming>
+        <bpmn:incoming>f_g2_more_yes</bpmn:incoming>
+        <bpmn:outgoing>f_103</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:userTask id="T_g2_inv" name="Read a flagged report">
+        <bpmn:documentation>presnick/mi-spending:docs/reporter-guide.md, Gate 2: Report review. Step 2.</bpmn:documentation>
+        <bpmn:incoming>f_103</bpmn:incoming>
+        <bpmn:outgoing>f_104</bpmn:outgoing>
+        <bpmn:property id="Property_T_g2_inv" name="__targetRef_placeholder" />
+        <bpmn:dataInputAssociation id="di_181">
+          <bpmn:sourceRef>DOR_rep_112</bpmn:sourceRef>
+          <bpmn:targetRef>Property_T_g2_inv</bpmn:targetRef>
+        </bpmn:dataInputAssociation>
+        <bpmn:dataInputAssociation id="di_182">
+          <bpmn:sourceRef>DOR_rn_113</bpmn:sourceRef>
+          <bpmn:targetRef>Property_T_g2_inv</bpmn:targetRef>
+        </bpmn:dataInputAssociation>
+      </bpmn:userTask>
+      <bpmn:exclusiveGateway id="G_g2_what" name="does it need&#10;regenerating?" default="f_g2_accept">
+        <bpmn:incoming>f_104</bpmn:incoming>
+        <bpmn:outgoing>f_g2_rerun</bpmn:outgoing>
+        <bpmn:outgoing>f_g2_accept</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:userTask id="T_g2_rerun" name="Add Reporter Notes, mark it rerun">
+        <bpmn:documentation>presnick/mi-spending:docs/reporter-guide.md, Gate 2: Report review. Regenerate the report.</bpmn:documentation>
+        <bpmn:incoming>f_g2_rerun</bpmn:incoming>
+        <bpmn:outgoing>f_105</bpmn:outgoing>
+        <bpmn:dataOutputAssociation id="do_183">
+          <bpmn:targetRef>DOR_rn_114</bpmn:targetRef>
+        </bpmn:dataOutputAssociation>
+      </bpmn:userTask>
+      <bpmn:userTask id="T_g2_accept" name="Add context, accept it as is">
+        <bpmn:documentation>presnick/mi-spending:docs/reporter-guide.md, Gate 2: Report review. Accept as-is; the note stays as context.</bpmn:documentation>
+        <bpmn:incoming>f_g2_accept</bpmn:incoming>
+        <bpmn:outgoing>f_106</bpmn:outgoing>
+        <bpmn:dataOutputAssociation id="do_184">
+          <bpmn:targetRef>DOR_rn_acc</bpmn:targetRef>
+        </bpmn:dataOutputAssociation>
+      </bpmn:userTask>
+      <bpmn:exclusiveGateway id="G_g2_j">
+        <bpmn:incoming>f_105</bpmn:incoming>
+        <bpmn:incoming>f_106</bpmn:incoming>
+        <bpmn:outgoing>f_107</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:exclusiveGateway id="G_g2_more" name="more flagged&#10;reports?" default="f_g2_more_no">
+        <bpmn:incoming>f_107</bpmn:incoming>
+        <bpmn:outgoing>f_g2_more_yes</bpmn:outgoing>
+        <bpmn:outgoing>f_g2_more_no</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:exclusiveGateway id="G_g2_any" name="any marked&#10;rerun?" default="f_g2_any_no">
+        <bpmn:incoming>f_g2_more_no</bpmn:incoming>
+        <bpmn:outgoing>f_g2_any_yes</bpmn:outgoing>
+        <bpmn:outgoing>f_g2_any_no</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:userTask id="T_g2_appr" name="Set the review approved">
+        <bpmn:documentation>presnick/mi-spending:docs/reporter-guide.md, Gate 2: Report review. The approval step: only when nothing is marked rerun.</bpmn:documentation>
+        <bpmn:incoming>f_g2_any_no</bpmn:incoming>
+        <bpmn:outgoing>f_108</bpmn:outgoing>
+        <bpmn:dataOutputAssociation id="do_185">
+          <bpmn:targetRef>DOR_rr_115</bpmn:targetRef>
+        </bpmn:dataOutputAssociation>
+      </bpmn:userTask>
+      <bpmn:exclusiveGateway id="G_g2_k">
+        <bpmn:incoming>f_g2_any_yes</bpmn:incoming>
+        <bpmn:incoming>f_108</bpmn:incoming>
+        <bpmn:outgoing>f_109</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:userTask id="T_g2_commit" name="Commit on GitHub">
+        <bpmn:documentation>presnick/mi-spending:docs/reporter-guide.md, Gate 2: Report review. Edits are made and committed in the GitHub web UI, straight to main.</bpmn:documentation>
+        <bpmn:incoming>f_109</bpmn:incoming>
+        <bpmn:outgoing>f_110</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:endEvent id="End_g2" name="decision&#10;committed">
+        <bpmn:incoming>f_110</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:dataObjectReference id="DOR_rr_111" name="report-review.md&#10;[pending]" dataObjectRef="DO_rr">
+        <bpmn:dataState id="State_DOR_rr_111" name="pending" />
+      </bpmn:dataObjectReference>
+      <bpmn:dataObjectReference id="DOR_rep_112" name="reports" dataObjectRef="DO_rep" />
+      <bpmn:dataObjectReference id="DOR_rn_113" name="report-notes" dataObjectRef="DO_rn" />
+      <bpmn:dataObjectReference id="DOR_rn_114" name="report-notes&#10;[rerun]" dataObjectRef="DO_rn">
+        <bpmn:dataState id="State_DOR_rn_114" name="rerun" />
+      </bpmn:dataObjectReference>
+      <bpmn:dataObjectReference id="DOR_rn_acc" name="report-notes&#10;[ok]" dataObjectRef="DO_rn">
+        <bpmn:dataState id="State_DOR_rn_acc" name="ok" />
+      </bpmn:dataObjectReference>
+      <bpmn:dataObjectReference id="DOR_rr_115" name="report-review.md&#10;[approved]" dataObjectRef="DO_rr">
+        <bpmn:dataState id="State_DOR_rr_115" name="approved" />
+      </bpmn:dataObjectReference>
+      <bpmn:sequenceFlow id="f_101" sourceRef="Start_g2" targetRef="T_g2_skim" />
+      <bpmn:sequenceFlow id="f_102" sourceRef="T_g2_skim" targetRef="G_g2_m" />
+      <bpmn:sequenceFlow id="f_103" sourceRef="G_g2_m" targetRef="T_g2_inv" />
+      <bpmn:sequenceFlow id="f_104" sourceRef="T_g2_inv" targetRef="G_g2_what" />
+      <bpmn:sequenceFlow id="f_g2_rerun" name="regenerate" sourceRef="G_g2_what" targetRef="T_g2_rerun">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">local knowledge or a correction would change the report</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="f_105" sourceRef="T_g2_rerun" targetRef="G_g2_j" />
+      <bpmn:sequenceFlow id="f_g2_accept" name="accept" sourceRef="G_g2_what" targetRef="T_g2_accept" />
+      <bpmn:sequenceFlow id="f_106" sourceRef="T_g2_accept" targetRef="G_g2_j" />
+      <bpmn:sequenceFlow id="f_107" sourceRef="G_g2_j" targetRef="G_g2_more" />
+      <bpmn:sequenceFlow id="f_g2_more_yes" name="yes" sourceRef="G_g2_more" targetRef="G_g2_m">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">another flagged item is unreviewed</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="f_g2_more_no" name="no" sourceRef="G_g2_more" targetRef="G_g2_any" />
+      <bpmn:sequenceFlow id="f_g2_any_yes" name="yes" sourceRef="G_g2_any" targetRef="G_g2_k">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">some notes file says status: rerun</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="f_g2_any_no" name="no" sourceRef="G_g2_any" targetRef="T_g2_appr" />
+      <bpmn:sequenceFlow id="f_108" sourceRef="T_g2_appr" targetRef="G_g2_k" />
+      <bpmn:sequenceFlow id="f_109" sourceRef="G_g2_k" targetRef="T_g2_commit" />
+      <bpmn:sequenceFlow id="f_110" sourceRef="T_g2_commit" targetRef="End_g2" />
+    </bpmn:subProcess>
+    <bpmn:scriptTask id="T_ci2" name="Check the reporter&#39;s edits&#10;validate_review.py">
+      <bpmn:documentation>presnick/mi-spending:.github/workflows/validate-review.yml runs presnick/mi-spending:scripts/validate_review.py on every push that touches review/ or the notes.</bpmn:documentation>
+      <bpmn:incoming>f_21</bpmn:incoming>
+      <bpmn:outgoing>f_22</bpmn:outgoing>
+      <bpmn:property id="Property_T_ci2" name="__targetRef_placeholder" />
+      <bpmn:dataInputAssociation id="di_148">
+        <bpmn:sourceRef>DOR_rr_51</bpmn:sourceRef>
+        <bpmn:targetRef>Property_T_ci2</bpmn:targetRef>
+      </bpmn:dataInputAssociation>
+    </bpmn:scriptTask>
+    <bpmn:exclusiveGateway id="G_ci2" name="check&#10;passed?" default="f_ci2_no">
+      <bpmn:incoming>f_22</bpmn:incoming>
+      <bpmn:outgoing>f_ci2_no</bpmn:outgoing>
+      <bpmn:outgoing>f_ci2_yes</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:exclusiveGateway id="G_c_pub">
+      <bpmn:incoming>f_ci2_yes</bpmn:incoming>
+      <bpmn:incoming>f_24</bpmn:incoming>
+      <bpmn:outgoing>f_25</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:scriptTask id="T_deploy" name="Publish approved counties&#10;deploy.yml">
+      <bpmn:documentation>presnick/mi-spending:.github/workflows/deploy.yml, on every push to main: runs presnick/mi-spending:scripts/filter_approved_reports.py, which drops every county whose report-review.md is not approved, then builds the Astro site and deploys it to GitHub Pages. A county goes live the moment its approval is pushed, not at the next nightly run.</bpmn:documentation>
+      <bpmn:incoming>f_25</bpmn:incoming>
+      <bpmn:outgoing>f_26</bpmn:outgoing>
+      <bpmn:property id="Property_T_deploy" name="__targetRef_placeholder" />
+      <bpmn:dataInputAssociation id="di_149">
+        <bpmn:sourceRef>DOR_rep_52</bpmn:sourceRef>
+        <bpmn:targetRef>Property_T_deploy</bpmn:targetRef>
+      </bpmn:dataInputAssociation>
+      <bpmn:dataInputAssociation id="di_150">
+        <bpmn:sourceRef>DOR_rr_53</bpmn:sourceRef>
+        <bpmn:targetRef>Property_T_deploy</bpmn:targetRef>
+      </bpmn:dataInputAssociation>
+    </bpmn:scriptTask>
+    <bpmn:exclusiveGateway id="G_c_w2">
+      <bpmn:incoming>f_26</bpmn:incoming>
+      <bpmn:incoming>f_d2_pending</bpmn:incoming>
+      <bpmn:outgoing>f_27</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:intermediateCatchEvent id="Catch_2" name="reached by a&#10;nightly run">
+      <bpmn:documentation>Every nightly run re-reads every review file (presnick/mi-spending:.claude/skills/nightly-batch, Step 1c).</bpmn:documentation>
+      <bpmn:incoming>f_27</bpmn:incoming>
+      <bpmn:outgoing>f_28</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MED_Catch_2" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:serviceTask id="T_read2" name="Read the reporter&#39;s decision&#10;nightly-batch">
+      <bpmn:documentation>presnick/mi-spending:.claude/skills/nightly-batch, Step 1d: reads report-review.md and every report-notes file for the county.</bpmn:documentation>
+      <bpmn:incoming>f_28</bpmn:incoming>
+      <bpmn:outgoing>f_29</bpmn:outgoing>
+      <bpmn:property id="Property_T_read2" name="__targetRef_placeholder" />
+      <bpmn:dataInputAssociation id="di_151">
+        <bpmn:sourceRef>DOR_rr_54</bpmn:sourceRef>
+        <bpmn:targetRef>Property_T_read2</bpmn:targetRef>
+      </bpmn:dataInputAssociation>
+      <bpmn:dataInputAssociation id="di_152">
+        <bpmn:sourceRef>DOR_rn_55</bpmn:sourceRef>
+        <bpmn:targetRef>Property_T_read2</bpmn:targetRef>
+      </bpmn:dataInputAssociation>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="G_d2" name="what did the&#10;reporter decide?" default="f_d2_pending">
+      <bpmn:incoming>f_29</bpmn:incoming>
+      <bpmn:outgoing>f_d2_pending</bpmn:outgoing>
+      <bpmn:outgoing>f_d2_rerun</bpmn:outgoing>
+      <bpmn:outgoing>f_d2_appr</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="T_done" name="Mark the county complete&#10;nightly-batch">
+      <bpmn:documentation>presnick/mi-spending:.claude/skills/nightly-batch, Step 3, phase committing: the reports are already committed and deployed, so this only sets the phase to complete.</bpmn:documentation>
+      <bpmn:incoming>f_d2_appr</bpmn:incoming>
+      <bpmn:outgoing>f_30</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="End_county" name="county&#10;published">
+      <bpmn:incoming>f_30</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:dataObjectReference id="DOR_pdf_31" name="Treasury PDFs" dataObjectRef="DO_pdf" />
+    <bpmn:dataObjectReference id="DOR_en_32" name="extraction-notes" dataObjectRef="DO_en" />
+    <bpmn:dataObjectReference id="DOR_json_33" name="extraction JSONs" dataObjectRef="DO_json" />
+    <bpmn:dataObjectReference id="DOR_en_34" name="extraction-notes&#10;[ok or error]" dataObjectRef="DO_en">
+      <bpmn:dataState id="State_DOR_en_34" name="ok or error" />
+    </bpmn:dataObjectReference>
+    <bpmn:dataObjectReference id="DOR_xr_35" name="extraction-review.md&#10;[pending]" dataObjectRef="DO_xr">
+      <bpmn:dataState id="State_DOR_xr_35" name="pending" />
+    </bpmn:dataObjectReference>
+    <bpmn:dataObjectReference id="DOR_xr_36" name="extraction-review.md&#10;[approved]" dataObjectRef="DO_xr">
+      <bpmn:dataState id="State_DOR_xr_36" name="approved" />
+    </bpmn:dataObjectReference>
+    <bpmn:dataObjectReference id="DOR_json_37" name="extraction JSONs" dataObjectRef="DO_json" />
+    <bpmn:dataObjectReference id="DOR_en_38" name="extraction-notes&#10;[rerun or error]" dataObjectRef="DO_en">
+      <bpmn:dataState id="State_DOR_en_38" name="rerun or error" />
+    </bpmn:dataObjectReference>
+    <bpmn:dataObjectReference id="DOR_xr_40" name="extraction-review.md" dataObjectRef="DO_xr" />
+    <bpmn:dataObjectReference id="DOR_xr_41" name="extraction-review.md" dataObjectRef="DO_xr" />
+    <bpmn:dataObjectReference id="DOR_en_42" name="extraction-notes" dataObjectRef="DO_en" />
+    <bpmn:dataObjectReference id="DOR_json_43" name="extraction JSONs" dataObjectRef="DO_json" />
+    <bpmn:dataObjectReference id="DOR_rn_44" name="report-notes" dataObjectRef="DO_rn" />
+    <bpmn:dataObjectReference id="DOR_rep_45" name="reports" dataObjectRef="DO_rep" />
+    <bpmn:dataObjectReference id="DOR_rr_46" name="report-review.md&#10;[pending]" dataObjectRef="DO_rr">
+      <bpmn:dataState id="State_DOR_rr_46" name="pending" />
+    </bpmn:dataObjectReference>
+    <bpmn:dataObjectReference id="DOR_rr_47" name="report-review.md&#10;[approved]" dataObjectRef="DO_rr">
+      <bpmn:dataState id="State_DOR_rr_47" name="approved" />
+    </bpmn:dataObjectReference>
+    <bpmn:dataObjectReference id="DOR_rep_48" name="reports" dataObjectRef="DO_rep" />
+    <bpmn:dataObjectReference id="DOR_rn_49" name="report-notes&#10;[rerun or ok]" dataObjectRef="DO_rn">
+      <bpmn:dataState id="State_DOR_rn_49" name="rerun or ok" />
+    </bpmn:dataObjectReference>
+    <bpmn:dataObjectReference id="DOR_rr_50" name="report-review.md&#10;[pending or approved]" dataObjectRef="DO_rr">
+      <bpmn:dataState id="State_DOR_rr_50" name="pending or approved" />
+    </bpmn:dataObjectReference>
+    <bpmn:dataObjectReference id="DOR_rr_51" name="report-review.md" dataObjectRef="DO_rr" />
+    <bpmn:dataObjectReference id="DOR_rep_52" name="reports" dataObjectRef="DO_rep" />
+    <bpmn:dataObjectReference id="DOR_rr_53" name="report-review.md&#10;[approved]" dataObjectRef="DO_rr">
+      <bpmn:dataState id="State_DOR_rr_53" name="approved" />
+    </bpmn:dataObjectReference>
+    <bpmn:dataObjectReference id="DOR_rr_54" name="report-review.md" dataObjectRef="DO_rr" />
+    <bpmn:dataObject id="DO_rr" />
+    <bpmn:dataObjectReference id="DOR_rn_55" name="report-notes" dataObjectRef="DO_rn" />
+    <bpmn:sequenceFlow id="f_1" sourceRef="Start_county" targetRef="G_c_ext" />
+    <bpmn:sequenceFlow id="f_d1_rerun" name="a document marked rerun" sourceRef="G_d1" targetRef="G_c_ext">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">review pending and an extraction-notes file says status: rerun</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="f_cov_no" name="no" sourceRef="G_cov" targetRef="G_c_ext">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">check_extraction_coverage.py --strict exited 1</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="f_2" sourceRef="G_c_ext" targetRef="Sub_extract" />
+    <bpmn:sequenceFlow id="f_f1_yes" name="yes" sourceRef="G_f1" targetRef="T_push1">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">something is flagged or has warnings</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="f_6" sourceRef="T_push1" targetRef="G_c_g1" />
+    <bpmn:sequenceFlow id="f_f1_no" name="no" sourceRef="G_f1" targetRef="T_auto1">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">nothing flagged and no warnings</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="f_10" sourceRef="T_auto1" targetRef="T_push1b" />
+    <bpmn:sequenceFlow id="f_3" sourceRef="Sub_extract" targetRef="T_notes" />
+    <bpmn:sequenceFlow id="f_4" sourceRef="T_notes" targetRef="T_xrev" />
+    <bpmn:sequenceFlow id="f_5" sourceRef="T_xrev" targetRef="G_f1" />
+    <bpmn:sequenceFlow id="f_11" sourceRef="T_push1b" targetRef="G_c_w1" />
+    <bpmn:sequenceFlow id="f_ci1_no" name="no" sourceRef="G_ci1" targetRef="G_c_g1" />
+    <bpmn:sequenceFlow id="f_7" sourceRef="G_c_g1" targetRef="Sub_gate1" />
+    <bpmn:sequenceFlow id="f_8" sourceRef="Sub_gate1" targetRef="T_ci1" />
+    <bpmn:sequenceFlow id="f_9" sourceRef="T_ci1" targetRef="G_ci1" />
+    <bpmn:sequenceFlow id="f_ci1_yes" name="yes" sourceRef="G_ci1" targetRef="G_c_w1">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">validate_review.py passed</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="f_d1_pending" name="still pending" sourceRef="G_d1" targetRef="G_c_w1" />
+    <bpmn:sequenceFlow id="f_12" sourceRef="G_c_w1" targetRef="Catch_1" />
+    <bpmn:sequenceFlow id="f_13" sourceRef="Catch_1" targetRef="T_read1" />
+    <bpmn:sequenceFlow id="f_14" sourceRef="T_read1" targetRef="G_d1" />
+    <bpmn:sequenceFlow id="f_d1_appr" name="approved" sourceRef="G_d1" targetRef="T_cov">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">extraction-review.md says status: approved</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="f_15" sourceRef="T_cov" targetRef="G_cov" />
+    <bpmn:sequenceFlow id="f_cov_yes" name="yes" sourceRef="G_cov" targetRef="G_c_rep" />
+    <bpmn:sequenceFlow id="f_d2_rerun" name="a report marked rerun" sourceRef="G_d2" targetRef="G_c_rep">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">review pending and a report-notes file says status: rerun</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="f_16" sourceRef="G_c_rep" targetRef="Sub_reports" />
+    <bpmn:sequenceFlow id="f_17" sourceRef="Sub_reports" targetRef="T_flag" />
+    <bpmn:sequenceFlow id="f_18" sourceRef="T_flag" targetRef="G_f2" />
+    <bpmn:sequenceFlow id="f_f2_yes" name="yes" sourceRef="G_f2" targetRef="T_push2">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">some entity is flagged</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="f_f2_no" name="no" sourceRef="G_f2" targetRef="T_auto2">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">no entity flagged</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="f_19" sourceRef="T_push2" targetRef="G_c_g2" />
+    <bpmn:sequenceFlow id="f_23" sourceRef="T_auto2" targetRef="T_push2b" />
+    <bpmn:sequenceFlow id="f_24" sourceRef="T_push2b" targetRef="G_c_pub" />
+    <bpmn:sequenceFlow id="f_ci2_no" name="no" sourceRef="G_ci2" targetRef="G_c_g2" />
+    <bpmn:sequenceFlow id="f_20" sourceRef="G_c_g2" targetRef="Sub_gate2" />
+    <bpmn:sequenceFlow id="f_21" sourceRef="Sub_gate2" targetRef="T_ci2" />
+    <bpmn:sequenceFlow id="f_22" sourceRef="T_ci2" targetRef="G_ci2" />
+    <bpmn:sequenceFlow id="f_ci2_yes" name="yes" sourceRef="G_ci2" targetRef="G_c_pub">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">validate_review.py passed</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="f_25" sourceRef="G_c_pub" targetRef="T_deploy" />
+    <bpmn:sequenceFlow id="f_26" sourceRef="T_deploy" targetRef="G_c_w2" />
+    <bpmn:sequenceFlow id="f_d2_pending" name="still pending" sourceRef="G_d2" targetRef="G_c_w2" />
+    <bpmn:sequenceFlow id="f_27" sourceRef="G_c_w2" targetRef="Catch_2" />
+    <bpmn:sequenceFlow id="f_28" sourceRef="Catch_2" targetRef="T_read2" />
+    <bpmn:sequenceFlow id="f_29" sourceRef="T_read2" targetRef="G_d2" />
+    <bpmn:sequenceFlow id="f_d2_appr" name="approved" sourceRef="G_d2" targetRef="T_done">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">report-review.md says status: approved</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="f_30" sourceRef="T_done" targetRef="End_county" />
+    <bpmn:exclusiveGateway id="G_cov" name="every PDF&#10;extracted?" default="f_cov_yes">
+      <bpmn:incoming>f_15</bpmn:incoming>
+      <bpmn:outgoing>f_cov_no</bpmn:outgoing>
+      <bpmn:outgoing>f_cov_yes</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:dataObjectReference id="DOR_xr_39" name="extraction-review.md&#10;[pending or approved]" dataObjectRef="DO_xr">
+      <bpmn:dataState id="State_DOR_xr_39" name="pending or approved" />
+    </bpmn:dataObjectReference>
+    <bpmn:dataObject id="DO_xr" />
+  </bpmn:process>
+  <bpmn:process id="Proc_night" name="One nightly batch" isExecutable="false">
+    <bpmn:laneSet id="LS_Proc_night">
+      <bpmn:lane id="L_n_p" name="PROGRAM">
+        <bpmn:flowNodeRef>Start_night</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_launch</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>G_clock</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_skip</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_pull</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="L_n_a" name="AI AGENT">
+        <bpmn:flowNodeRef>G_ff</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_conflict</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_reconcile</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>G_n_m</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_pick</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>G_work</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_advance</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_dash</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_night</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Start_night" name="midnight">
+      <bpmn:documentation>presnick/mi-spending:docs/operations.md: a macOS LaunchAgent, com.followthemoney.nightly-batch, with StartCalendarInterval 00:00. It does not wake a sleeping Mac.</bpmn:documentation>
+      <bpmn:outgoing>f_116</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="TED_Start_night">
+        <bpmn:timeCycle xsi:type="bpmn:tFormalExpression">every day at 00:00 local time</bpmn:timeCycle>
+      </bpmn:timerEventDefinition>
+    </bpmn:startEvent>
+    <bpmn:scriptTask id="T_launch" name="Start the batch&#10;run-nightly-batch.sh">
+      <bpmn:documentation>presnick/mi-spending:scripts/run-nightly-batch.sh, machine-local and untracked; reproduced in presnick/mi-spending:docs/operations.md. Runs claude -p "/nightly-batch --session-budget 100", logging to ~/Library/Logs/followthemoney/.</bpmn:documentation>
+      <bpmn:incoming>f_116</bpmn:incoming>
+      <bpmn:outgoing>f_117</bpmn:outgoing>
+    </bpmn:scriptTask>
+    <bpmn:exclusiveGateway id="G_clock" name="within the&#10;midnight hour?" default="f_clock_yes">
+      <bpmn:incoming>f_117</bpmn:incoming>
+      <bpmn:outgoing>f_clock_no</bpmn:outgoing>
+      <bpmn:outgoing>f_clock_yes</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="End_skip" name="night&#10;skipped">
+      <bpmn:incoming>f_clock_no</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:scriptTask id="T_pull" name="Pull the reporters&#39; commits&#10;git pull">
+      <bpmn:documentation>presnick/mi-spending:.claude/skills/nightly-batch, Step 1a: git pull --ff-only. Reporters approve and mark reruns on origin/main through the GitHub web UI; this is the only way their edits reach the pipeline.</bpmn:documentation>
+      <bpmn:incoming>f_clock_yes</bpmn:incoming>
+      <bpmn:outgoing>f_118</bpmn:outgoing>
+    </bpmn:scriptTask>
+    <bpmn:exclusiveGateway id="G_ff" name="fast-&#10;forward?" default="f_ff_yes">
+      <bpmn:incoming>f_118</bpmn:incoming>
+      <bpmn:outgoing>f_ff_no</bpmn:outgoing>
+      <bpmn:outgoing>f_ff_yes</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="End_conflict" name="stopped on&#10;a conflict">
+      <bpmn:incoming>f_ff_no</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:serviceTask id="T_reconcile" name="Reconcile phases with the review files&#10;nightly-batch">
+      <bpmn:documentation>presnick/mi-spending:.claude/skills/nightly-batch, Steps 1b to 1e: for every county, check the phase against the review and notes files, advance it on an approval, move it back on a rerun or on an inconsistency, and save the phases.</bpmn:documentation>
+      <bpmn:incoming>f_ff_yes</bpmn:incoming>
+      <bpmn:outgoing>f_119</bpmn:outgoing>
+      <bpmn:dataOutputAssociation id="do_153">
+        <bpmn:targetRef>DS_progress_ref</bpmn:targetRef>
+      </bpmn:dataOutputAssociation>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="G_n_m">
+      <bpmn:incoming>f_119</bpmn:incoming>
+      <bpmn:incoming>f_122</bpmn:incoming>
+      <bpmn:outgoing>f_120</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="T_pick" name="Pick the next unblocked county&#10;nightly-batch">
+      <bpmn:documentation>presnick/mi-spending:.claude/skills/nightly-batch, Step 2: walk county_queue in order, skipping counties waiting at a gate or complete. Also checks the token budget left in this session.</bpmn:documentation>
+      <bpmn:incoming>f_120</bpmn:incoming>
+      <bpmn:outgoing>f_121</bpmn:outgoing>
+      <bpmn:property id="Property_T_pick" name="__targetRef_placeholder" />
+      <bpmn:dataInputAssociation id="di_154">
+        <bpmn:sourceRef>DS_progress_ref</bpmn:sourceRef>
+        <bpmn:targetRef>Property_T_pick</bpmn:targetRef>
+      </bpmn:dataInputAssociation>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="G_work" name="a county to work on,&#10;and budget left?" default="f_work_no">
+      <bpmn:incoming>f_121</bpmn:incoming>
+      <bpmn:outgoing>f_work_yes</bpmn:outgoing>
+      <bpmn:outgoing>f_work_no</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="T_advance" name="Advance it one phase">
+      <bpmn:documentation>presnick/mi-spending:.claude/skills/nightly-batch, Step 3: does the work of the county's current phase, which is one stretch of the county pool above, then returns to Step 2.</bpmn:documentation>
+      <bpmn:incoming>f_work_yes</bpmn:incoming>
+      <bpmn:outgoing>f_122</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="T_dash" name="Write the pipeline dashboard&#10;nightly-batch">
+      <bpmn:documentation>presnick/mi-spending:.claude/skills/nightly-batch, Step 7: presnick/mi-spending:review/pipeline-status.md, the table reporters check to see which counties wait on them. Also rewritten with every review commit.</bpmn:documentation>
+      <bpmn:incoming>f_work_no</bpmn:incoming>
+      <bpmn:outgoing>f_123</bpmn:outgoing>
+      <bpmn:dataOutputAssociation id="do_155">
+        <bpmn:targetRef>DOR_dash_124</bpmn:targetRef>
+      </bpmn:dataOutputAssociation>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="End_night" name="every county waiting,&#10;done, or out of budget">
+      <bpmn:incoming>f_123</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:dataStoreReference id="DS_progress_ref" name="pipeline_progress.json" dataStoreRef="DS_progress" />
+    <bpmn:dataObjectReference id="DOR_dash_124" name="pipeline-status.md" dataObjectRef="DO_dash" />
+    <bpmn:dataObject id="DO_dash" />
+    <bpmn:sequenceFlow id="f_116" sourceRef="Start_night" targetRef="T_launch" />
+    <bpmn:sequenceFlow id="f_117" sourceRef="T_launch" targetRef="G_clock" />
+    <bpmn:sequenceFlow id="f_clock_no" name="no" sourceRef="G_clock" targetRef="End_skip">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">the run fired outside 00:00 to 00:59, e.g. on waking</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="f_clock_yes" name="yes" sourceRef="G_clock" targetRef="T_pull" />
+    <bpmn:sequenceFlow id="f_118" sourceRef="T_pull" targetRef="G_ff" />
+    <bpmn:sequenceFlow id="f_ff_no" name="no" sourceRef="G_ff" targetRef="End_conflict">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">local state has diverged from origin/main</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="f_ff_yes" name="yes" sourceRef="G_ff" targetRef="T_reconcile" />
+    <bpmn:sequenceFlow id="f_119" sourceRef="T_reconcile" targetRef="G_n_m" />
+    <bpmn:sequenceFlow id="f_122" sourceRef="T_advance" targetRef="G_n_m" />
+    <bpmn:sequenceFlow id="f_120" sourceRef="G_n_m" targetRef="T_pick" />
+    <bpmn:sequenceFlow id="f_121" sourceRef="T_pick" targetRef="G_work" />
+    <bpmn:sequenceFlow id="f_work_yes" name="yes" sourceRef="G_work" targetRef="T_advance">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">an unblocked county is left and at least 30,000 tokens remain</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="f_work_no" name="no" sourceRef="G_work" targetRef="T_dash" />
+    <bpmn:sequenceFlow id="f_123" sourceRef="T_dash" targetRef="End_night" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="D_main">
+    <bpmndi:BPMNPlane id="Pl_main" bpmnElement="C_1">
+      <bpmndi:BPMNShape id="P_county_di" bpmnElement="P_county" isHorizontal="true">
+        <dc:Bounds x="160" y="80" width="5382" height="830" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L_c_h_di" bpmnElement="L_c_h" isHorizontal="true" color:background-color="#fdf3f7" color:border-color="#9c8490">
+        <dc:Bounds x="190" y="80" width="5352" height="230" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L_c_a_di" bpmnElement="L_c_a" isHorizontal="true" color:background-color="#fdf7ee" color:border-color="#9c8d76">
+        <dc:Bounds x="190" y="310" width="5352" height="300" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L_c_p_di" bpmnElement="L_c_p" isHorizontal="true" color:background-color="#eef5f4" color:border-color="#7a918d">
+        <dc:Bounds x="190" y="610" width="5352" height="300" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Start_county_di" bpmnElement="Start_county">
+        <dc:Bounds x="259" y="442" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="245" y="396" width="52" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_c_ext_di" bpmnElement="G_c_ext" isMarkerVisible="true">
+        <dc:Bounds x="356" y="435" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_push1_di" bpmnElement="T_push1">
+        <dc:Bounds x="1196" y="340" width="190" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_auto1_di" bpmnElement="T_auto1">
+        <dc:Bounds x="1216" y="660" width="150" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_xr_39_di" bpmnElement="DOR_xr_39" color:background-color="#fbeee6">
+        <dc:Bounds x="1692" y="250" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1689" y="300" width="71" height="53" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Sub_extract_di" bpmnElement="Sub_extract" isExpanded="false">
+        <dc:Bounds x="475" y="420" width="150" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_notes_di" bpmnElement="T_notes">
+        <dc:Bounds x="650" y="650" width="190" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_xrev_di" bpmnElement="T_xrev">
+        <dc:Bounds x="871" y="650" width="190" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_f1_di" bpmnElement="G_f1" isMarkerVisible="true">
+        <dc:Bounds x="1123" y="435" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1075" y="484" width="43" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_push1b_di" bpmnElement="T_push1b">
+        <dc:Bounds x="1495" y="780" width="190" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_c_g1_di" bpmnElement="G_c_g1" isMarkerVisible="true">
+        <dc:Bounds x="1409" y="170" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Sub_gate1_di" bpmnElement="Sub_gate1" isExpanded="false">
+        <dc:Bounds x="1528" y="155" width="150" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_ci1_di" bpmnElement="T_ci1">
+        <dc:Bounds x="1690" y="650" width="190" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_ci1_di" bpmnElement="G_ci1" isMarkerVisible="true">
+        <dc:Bounds x="1929" y="170" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1987" y="146" width="42" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_c_w1_di" bpmnElement="G_c_w1" isMarkerVisible="true">
+        <dc:Bounds x="2059" y="435" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Catch_1_di" bpmnElement="Catch_1">
+        <dc:Bounds x="2170" y="442" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2156" y="406" width="64" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_read1_di" bpmnElement="T_read1">
+        <dc:Bounds x="2282" y="420" width="150" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_d1_di" bpmnElement="G_d1" isMarkerVisible="true">
+        <dc:Bounds x="2501" y="435" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2449" y="416" width="81" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_cov_di" bpmnElement="T_cov">
+        <dc:Bounds x="2587" y="650" width="190" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_c_rep_di" bpmnElement="G_c_rep" isMarkerVisible="true">
+        <dc:Bounds x="2943" y="435" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Sub_reports_di" bpmnElement="Sub_reports" isExpanded="false">
+        <dc:Bounds x="3062" y="420" width="150" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_flag_di" bpmnElement="T_flag">
+        <dc:Bounds x="3237" y="650" width="190" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_f2_di" bpmnElement="G_f2" isMarkerVisible="true">
+        <dc:Bounds x="3476" y="435" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3428" y="484" width="43" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_push2_di" bpmnElement="T_push2">
+        <dc:Bounds x="3549" y="650" width="190" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_auto2_di" bpmnElement="T_auto2">
+        <dc:Bounds x="3569" y="340" width="150" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_push2b_di" bpmnElement="T_push2b">
+        <dc:Bounds x="3848" y="780" width="190" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_c_g2_di" bpmnElement="G_c_g2" isMarkerVisible="true">
+        <dc:Bounds x="3762" y="170" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Sub_gate2_di" bpmnElement="Sub_gate2" isExpanded="false">
+        <dc:Bounds x="3881" y="155" width="150" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_ci2_di" bpmnElement="T_ci2">
+        <dc:Bounds x="4043" y="650" width="190" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_ci2_di" bpmnElement="G_ci2" isMarkerVisible="true">
+        <dc:Bounds x="4282" y="170" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4340" y="146" width="42" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_c_pub_di" bpmnElement="G_c_pub" isMarkerVisible="true">
+        <dc:Bounds x="4412" y="665" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_deploy_di" bpmnElement="T_deploy">
+        <dc:Bounds x="4498" y="650" width="190" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_c_w2_di" bpmnElement="G_c_w2" isMarkerVisible="true">
+        <dc:Bounds x="4737" y="435" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Catch_2_di" bpmnElement="Catch_2">
+        <dc:Bounds x="4848" y="442" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4830" y="396" width="64" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_read2_di" bpmnElement="T_read2">
+        <dc:Bounds x="4960" y="420" width="150" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_d2_di" bpmnElement="G_d2" isMarkerVisible="true">
+        <dc:Bounds x="5179" y="435" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="5129" y="426" width="81" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_done_di" bpmnElement="T_done">
+        <dc:Bounds x="5285" y="420" width="150" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_county_di" bpmnElement="End_county">
+        <dc:Bounds x="5472" y="442" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="5466" y="478" width="48" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_pdf_31_di" bpmnElement="DOR_pdf_31" color:background-color="#f2f0e6">
+        <dc:Bounds x="467" y="355" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="448" y="405" width="74" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_en_32_di" bpmnElement="DOR_en_32" color:background-color="#fdf2e3">
+        <dc:Bounds x="591" y="355" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="570" y="405" width="79" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_json_33_di" bpmnElement="DOR_json_33" color:background-color="#eaf2fb">
+        <dc:Bounds x="571" y="535" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="546" y="585" width="86" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_en_34_di" bpmnElement="DOR_en_34" color:background-color="#fdf2e3">
+        <dc:Bounds x="838" y="795" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="817" y="845" width="79" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_xr_35_di" bpmnElement="DOR_xr_35" color:background-color="#fbeee6">
+        <dc:Bounds x="1052" y="825" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1051" y="875" width="72" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_xr_36_di" bpmnElement="DOR_xr_36" color:background-color="#fbeee6">
+        <dc:Bounds x="1273" y="525" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1272" y="575" width="68" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_json_37_di" bpmnElement="DOR_json_37" color:background-color="#eaf2fb">
+        <dc:Bounds x="1507" y="250" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1482" y="300" width="78" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_en_38_di" bpmnElement="DOR_en_38" color:background-color="#fdf2e3">
+        <dc:Bounds x="1585" y="250" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1564" y="300" width="79" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_xr_40_di" bpmnElement="DOR_xr_40" color:background-color="#fbeee6">
+        <dc:Bounds x="1871" y="745" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1870" y="795" width="70" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_xr_41_di" bpmnElement="DOR_xr_41" color:background-color="#fbeee6">
+        <dc:Bounds x="2287" y="335" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2284" y="385" width="66" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_en_42_di" bpmnElement="DOR_en_42" color:background-color="#fdf2e3">
+        <dc:Bounds x="2391" y="335" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2370" y="385" width="79" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_json_43_di" bpmnElement="DOR_json_43" color:background-color="#eaf2fb">
+        <dc:Bounds x="3067" y="355" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3042" y="405" width="86" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_rn_44_di" bpmnElement="DOR_rn_44" color:background-color="#f6ecf7">
+        <dc:Bounds x="3184" y="355" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3172" y="405" width="60" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_rep_45_di" bpmnElement="DOR_rep_45" color:background-color="#eef7ec">
+        <dc:Bounds x="3119" y="535" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3120" y="585" width="35" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_rr_46_di" bpmnElement="DOR_rr_46" color:background-color="#f0eef7">
+        <dc:Bounds x="3314" y="795" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3291" y="845" width="82" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_rr_47_di" bpmnElement="DOR_rr_47" color:background-color="#f0eef7">
+        <dc:Bounds x="3626" y="525" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3603" y="575" width="82" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_rep_48_di" bpmnElement="DOR_rep_48" color:background-color="#eef7ec">
+        <dc:Bounds x="3860" y="250" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3861" y="300" width="35" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_rn_49_di" bpmnElement="DOR_rn_49" color:background-color="#f6ecf7">
+        <dc:Bounds x="3938" y="250" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3926" y="300" width="60" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_rr_50_di" bpmnElement="DOR_rr_50" color:background-color="#f0eef7">
+        <dc:Bounds x="4016" y="250" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3993" y="300" width="82" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_rr_51_di" bpmnElement="DOR_rr_51" color:background-color="#f0eef7">
+        <dc:Bounds x="4224" y="745" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4201" y="795" width="82" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_rep_52_di" bpmnElement="DOR_rep_52" color:background-color="#eef7ec">
+        <dc:Bounds x="4510" y="795" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4511" y="845" width="35" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_rr_53_di" bpmnElement="DOR_rr_53" color:background-color="#f0eef7">
+        <dc:Bounds x="4640" y="795" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4617" y="845" width="82" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_rr_54_di" bpmnElement="DOR_rr_54" color:background-color="#f0eef7">
+        <dc:Bounds x="4965" y="335" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4942" y="385" width="82" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_rn_55_di" bpmnElement="DOR_rn_55" color:background-color="#f6ecf7">
+        <dc:Bounds x="5069" y="335" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="5057" y="385" width="60" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_cov_di" bpmnElement="G_cov" isMarkerVisible="true">
+        <dc:Bounds x="2813" y="495" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2764" y="486" width="52" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="f_1_di" bpmnElement="f_1">
+        <di:waypoint x="295" y="460" />
+        <di:waypoint x="356" y="460" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_d1_rerun_di" bpmnElement="f_d1_rerun">
+        <di:waypoint x="2526" y="435" />
+        <di:waypoint x="2526" y="340" />
+        <di:waypoint x="381" y="340" />
+        <di:waypoint x="381" y="435" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2537" y="363" width="126" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_cov_no_di" bpmnElement="f_cov_no">
+        <di:waypoint x="2863" y="520" />
+        <di:waypoint x="2916" y="520" />
+        <di:waypoint x="2916" y="895" />
+        <di:waypoint x="381" y="895" />
+        <di:waypoint x="381" y="485" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2887" y="531" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_2_di" bpmnElement="f_2">
+        <di:waypoint x="406" y="460" />
+        <di:waypoint x="475" y="460" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_f1_yes_di" bpmnElement="f_f1_yes">
+        <di:waypoint x="1148" y="435" />
+        <di:waypoint x="1148" y="380" />
+        <di:waypoint x="1196" y="380" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1118" y="390" width="18" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_6_di" bpmnElement="f_6">
+        <di:waypoint x="1386" y="380" />
+        <di:waypoint x="1434" y="380" />
+        <di:waypoint x="1434" y="220" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_f1_no_di" bpmnElement="f_f1_no">
+        <di:waypoint x="1148" y="485" />
+        <di:waypoint x="1148" y="700" />
+        <di:waypoint x="1216" y="700" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1123" y="603" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_10_di" bpmnElement="f_10">
+        <di:waypoint x="1366" y="700" />
+        <di:waypoint x="1431" y="700" />
+        <di:waypoint x="1431" y="820" />
+        <di:waypoint x="1495" y="820" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_3_di" bpmnElement="f_3">
+        <di:waypoint x="625" y="460" />
+        <di:waypoint x="745" y="460" />
+        <di:waypoint x="745" y="650" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_4_di" bpmnElement="f_4">
+        <di:waypoint x="840" y="690" />
+        <di:waypoint x="871" y="690" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_5_di" bpmnElement="f_5">
+        <di:waypoint x="1061" y="690" />
+        <di:waypoint x="1070" y="690" />
+        <di:waypoint x="1070" y="460" />
+        <di:waypoint x="1123" y="460" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_11_di" bpmnElement="f_11">
+        <di:waypoint x="1685" y="820" />
+        <di:waypoint x="2032" y="820" />
+        <di:waypoint x="2032" y="460" />
+        <di:waypoint x="2059" y="460" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_ci1_no_di" bpmnElement="f_ci1_no">
+        <di:waypoint x="1954" y="170" />
+        <di:waypoint x="1954" y="110" />
+        <di:waypoint x="1434" y="110" />
+        <di:waypoint x="1434" y="170" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1963" y="116" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_7_di" bpmnElement="f_7">
+        <di:waypoint x="1459" y="195" />
+        <di:waypoint x="1528" y="195" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_8_di" bpmnElement="f_8">
+        <di:waypoint x="1678" y="195" />
+        <di:waypoint x="1785" y="195" />
+        <di:waypoint x="1785" y="650" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_9_di" bpmnElement="f_9">
+        <di:waypoint x="1880" y="690" />
+        <di:waypoint x="1954" y="690" />
+        <di:waypoint x="1954" y="220" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_ci1_yes_di" bpmnElement="f_ci1_yes">
+        <di:waypoint x="1979" y="195" />
+        <di:waypoint x="2084" y="195" />
+        <di:waypoint x="2084" y="435" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2007" y="178" width="18" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_d1_pending_di" bpmnElement="f_d1_pending">
+        <di:waypoint x="2526" y="485" />
+        <di:waypoint x="2526" y="590" />
+        <di:waypoint x="2084" y="590" />
+        <di:waypoint x="2084" y="485" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2540" y="533" width="59" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_12_di" bpmnElement="f_12">
+        <di:waypoint x="2109" y="460" />
+        <di:waypoint x="2170" y="460" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_13_di" bpmnElement="f_13">
+        <di:waypoint x="2206" y="460" />
+        <di:waypoint x="2282" y="460" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_14_di" bpmnElement="f_14">
+        <di:waypoint x="2432" y="460" />
+        <di:waypoint x="2501" y="460" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_d1_appr_di" bpmnElement="f_d1_appr">
+        <di:waypoint x="2551" y="460" />
+        <di:waypoint x="2682" y="460" />
+        <di:waypoint x="2682" y="650" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2606" y="442" width="46" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_15_di" bpmnElement="f_15">
+        <di:waypoint x="2777" y="690" />
+        <di:waypoint x="2838" y="690" />
+        <di:waypoint x="2838" y="545" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_cov_yes_di" bpmnElement="f_cov_yes">
+        <di:waypoint x="2838" y="495" />
+        <di:waypoint x="2838" y="460" />
+        <di:waypoint x="2943" y="460" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2881" y="463" width="18" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_d2_rerun_di" bpmnElement="f_d2_rerun">
+        <di:waypoint x="5204" y="435" />
+        <di:waypoint x="5204" y="325" />
+        <di:waypoint x="2968" y="325" />
+        <di:waypoint x="2968" y="435" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="5217" y="343" width="107" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_16_di" bpmnElement="f_16">
+        <di:waypoint x="2993" y="460" />
+        <di:waypoint x="3062" y="460" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_17_di" bpmnElement="f_17">
+        <di:waypoint x="3212" y="460" />
+        <di:waypoint x="3332" y="460" />
+        <di:waypoint x="3332" y="650" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_18_di" bpmnElement="f_18">
+        <di:waypoint x="3427" y="690" />
+        <di:waypoint x="3423" y="690" />
+        <di:waypoint x="3423" y="460" />
+        <di:waypoint x="3476" y="460" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_f2_yes_di" bpmnElement="f_f2_yes">
+        <di:waypoint x="3501" y="485" />
+        <di:waypoint x="3501" y="690" />
+        <di:waypoint x="3549" y="690" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3513" y="620" width="18" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_f2_no_di" bpmnElement="f_f2_no">
+        <di:waypoint x="3501" y="435" />
+        <di:waypoint x="3501" y="380" />
+        <di:waypoint x="3569" y="380" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3512" y="396" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_19_di" bpmnElement="f_19">
+        <di:waypoint x="3739" y="690" />
+        <di:waypoint x="3787" y="690" />
+        <di:waypoint x="3787" y="220" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_23_di" bpmnElement="f_23">
+        <di:waypoint x="3719" y="380" />
+        <di:waypoint x="3943" y="380" />
+        <di:waypoint x="3943" y="780" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_24_di" bpmnElement="f_24">
+        <di:waypoint x="4038" y="820" />
+        <di:waypoint x="4437" y="820" />
+        <di:waypoint x="4437" y="715" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_ci2_no_di" bpmnElement="f_ci2_no">
+        <di:waypoint x="4307" y="170" />
+        <di:waypoint x="4307" y="110" />
+        <di:waypoint x="3787" y="110" />
+        <di:waypoint x="3787" y="170" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4316" y="116" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_20_di" bpmnElement="f_20">
+        <di:waypoint x="3812" y="195" />
+        <di:waypoint x="3881" y="195" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_21_di" bpmnElement="f_21">
+        <di:waypoint x="4031" y="195" />
+        <di:waypoint x="4138" y="195" />
+        <di:waypoint x="4138" y="650" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_22_di" bpmnElement="f_22">
+        <di:waypoint x="4233" y="690" />
+        <di:waypoint x="4307" y="690" />
+        <di:waypoint x="4307" y="220" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_ci2_yes_di" bpmnElement="f_ci2_yes">
+        <di:waypoint x="4332" y="195" />
+        <di:waypoint x="4437" y="195" />
+        <di:waypoint x="4437" y="665" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4360" y="178" width="18" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_25_di" bpmnElement="f_25">
+        <di:waypoint x="4462" y="690" />
+        <di:waypoint x="4498" y="690" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_26_di" bpmnElement="f_26">
+        <di:waypoint x="4688" y="690" />
+        <di:waypoint x="4717" y="690" />
+        <di:waypoint x="4717" y="460" />
+        <di:waypoint x="4737" y="460" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_d2_pending_di" bpmnElement="f_d2_pending">
+        <di:waypoint x="5204" y="485" />
+        <di:waypoint x="5204" y="590" />
+        <di:waypoint x="4762" y="590" />
+        <di:waypoint x="4762" y="485" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="5210" y="563" width="59" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_27_di" bpmnElement="f_27">
+        <di:waypoint x="4787" y="460" />
+        <di:waypoint x="4848" y="460" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_28_di" bpmnElement="f_28">
+        <di:waypoint x="4884" y="460" />
+        <di:waypoint x="4960" y="460" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_29_di" bpmnElement="f_29">
+        <di:waypoint x="5110" y="460" />
+        <di:waypoint x="5179" y="460" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_d2_appr_di" bpmnElement="f_d2_appr">
+        <di:waypoint x="5229" y="460" />
+        <di:waypoint x="5285" y="460" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="5227" y="442" width="46" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_30_di" bpmnElement="f_30">
+        <di:waypoint x="5435" y="460" />
+        <di:waypoint x="5472" y="460" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="P_night_di" bpmnElement="P_night" isHorizontal="true">
+        <dc:Bounds x="160" y="970" width="2210" height="500" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L_n_a_di" bpmnElement="L_n_a" isHorizontal="true" color:background-color="#fdf7ee" color:border-color="#9c8d76">
+        <dc:Bounds x="190" y="970" width="2180" height="260" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L_n_p_di" bpmnElement="L_n_p" isHorizontal="true" color:background-color="#eef5f4" color:border-color="#7a918d">
+        <dc:Bounds x="190" y="1230" width="2180" height="240" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Start_night_di" bpmnElement="Start_night">
+        <dc:Bounds x="259" y="1302" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="256" y="1338" width="42" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_launch_di" bpmnElement="T_launch">
+        <dc:Bounds x="351" y="1280" width="190" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_clock_di" bpmnElement="G_clock" isMarkerVisible="true">
+        <dc:Bounds x="603" y="1295" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="552" y="1270" width="73" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_skip_di" bpmnElement="End_skip">
+        <dc:Bounds x="610" y="1387" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="668" y="1392" width="38" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_pull_di" bpmnElement="T_pull">
+        <dc:Bounds x="702" y="1280" width="190" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_ff_di" bpmnElement="G_ff" isMarkerVisible="true">
+        <dc:Bounds x="954" y="1055" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="916" y="1036" width="43" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_conflict_di" bpmnElement="End_conflict">
+        <dc:Bounds x="1052" y="987" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1101" y="992" width="55" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_reconcile_di" bpmnElement="T_reconcile">
+        <dc:Bounds x="1125" y="1040" width="150" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_n_m_di" bpmnElement="G_n_m" isMarkerVisible="true">
+        <dc:Bounds x="1344" y="1055" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_pick_di" bpmnElement="T_pick">
+        <dc:Bounds x="1463" y="1040" width="150" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_work_di" bpmnElement="G_work" isMarkerVisible="true">
+        <dc:Bounds x="1682" y="1055" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1640" y="1018" width="99" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_advance_di" bpmnElement="T_advance">
+        <dc:Bounds x="1814" y="1040" width="150" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_dash_di" bpmnElement="T_dash">
+        <dc:Bounds x="2009" y="1140" width="150" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_night_di" bpmnElement="End_night">
+        <dc:Bounds x="2248" y="1162" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2231" y="1198" width="71" height="53" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DS_progress_ref_di" bpmnElement="DS_progress_ref" color:background-color="#e8eefb">
+        <dc:Bounds x="1422" y="1295" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1404" y="1345" width="87" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_dash_124_di" bpmnElement="DOR_dash_124" color:background-color="#f3f3f3">
+        <dc:Bounds x="1936" y="1295" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1909" y="1345" width="90" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="f_116_di" bpmnElement="f_116">
+        <di:waypoint x="295" y="1320" />
+        <di:waypoint x="351" y="1320" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_117_di" bpmnElement="f_117">
+        <di:waypoint x="541" y="1320" />
+        <di:waypoint x="603" y="1320" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_clock_no_di" bpmnElement="f_clock_no">
+        <di:waypoint x="628" y="1345" />
+        <di:waypoint x="628" y="1387" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="600" y="1356" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_clock_yes_di" bpmnElement="f_clock_yes">
+        <di:waypoint x="653" y="1320" />
+        <di:waypoint x="702" y="1320" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="671" y="1302" width="18" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_118_di" bpmnElement="f_118">
+        <di:waypoint x="892" y="1320" />
+        <di:waypoint x="979" y="1320" />
+        <di:waypoint x="979" y="1105" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_ff_no_di" bpmnElement="f_ff_no">
+        <di:waypoint x="979" y="1055" />
+        <di:waypoint x="979" y="1005" />
+        <di:waypoint x="1052" y="1005" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="993" y="1013" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_ff_yes_di" bpmnElement="f_ff_yes">
+        <di:waypoint x="1004" y="1080" />
+        <di:waypoint x="1125" y="1080" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1022" y="1062" width="18" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_119_di" bpmnElement="f_119">
+        <di:waypoint x="1275" y="1080" />
+        <di:waypoint x="1344" y="1080" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_122_di" bpmnElement="f_122">
+        <di:waypoint x="1889" y="1040" />
+        <di:waypoint x="1889" y="1010" />
+        <di:waypoint x="1369" y="1010" />
+        <di:waypoint x="1369" y="1055" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_120_di" bpmnElement="f_120">
+        <di:waypoint x="1394" y="1080" />
+        <di:waypoint x="1463" y="1080" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_121_di" bpmnElement="f_121">
+        <di:waypoint x="1613" y="1080" />
+        <di:waypoint x="1682" y="1080" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_work_yes_di" bpmnElement="f_work_yes">
+        <di:waypoint x="1732" y="1080" />
+        <di:waypoint x="1814" y="1080" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1750" y="1062" width="18" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_work_no_di" bpmnElement="f_work_no">
+        <di:waypoint x="1707" y="1105" />
+        <di:waypoint x="1707" y="1180" />
+        <di:waypoint x="2009" y="1180" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1718" y="1140" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_123_di" bpmnElement="f_123">
+        <di:waypoint x="2159" y="1180" />
+        <di:waypoint x="2248" y="1180" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="do_132_di" bpmnElement="do_132">
+        <di:waypoint x="1291" y="650" />
+        <di:waypoint x="1302" y="575" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="di_125_di" bpmnElement="di_125">
+        <di:waypoint x="503" y="388" />
+        <di:waypoint x="566" y="420" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="di_126_di" bpmnElement="di_126">
+        <di:waypoint x="627" y="405" />
+        <di:waypoint x="625" y="429" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="do_127_di" bpmnElement="do_127">
+        <di:waypoint x="617" y="500" />
+        <di:waypoint x="607" y="537" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="di_128_di" bpmnElement="di_128">
+        <di:waypoint x="607" y="567" />
+        <di:waypoint x="737" y="650" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="do_129_di" bpmnElement="do_129">
+        <di:waypoint x="840" y="729" />
+        <di:waypoint x="868" y="795" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="di_130_di" bpmnElement="di_130">
+        <di:waypoint x="874" y="813" />
+        <di:waypoint x="996" y="730" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="do_131_di" bpmnElement="do_131">
+        <di:waypoint x="1060" y="730" />
+        <di:waypoint x="1088" y="829" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="di_133_di" bpmnElement="di_133">
+        <di:waypoint x="1543" y="268" />
+        <di:waypoint x="1595" y="235" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="do_134_di" bpmnElement="do_134">
+        <di:waypoint x="1678" y="209" />
+        <di:waypoint x="1621" y="272" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="do_135_di" bpmnElement="do_135">
+        <di:waypoint x="1678" y="201" />
+        <di:waypoint x="1712" y="250" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="di_136_di" bpmnElement="di_136">
+        <di:waypoint x="1907" y="766" />
+        <di:waypoint x="1880" y="702" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="di_137_di" bpmnElement="di_137">
+        <di:waypoint x="2323" y="363" />
+        <di:waypoint x="2432" y="447" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="di_138_di" bpmnElement="di_138">
+        <di:waypoint x="2427" y="363" />
+        <di:waypoint x="2432" y="450" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="di_139_di" bpmnElement="di_139">
+        <di:waypoint x="3103" y="382" />
+        <di:waypoint x="3212" y="453" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="di_140_di" bpmnElement="di_140">
+        <di:waypoint x="3220" y="382" />
+        <di:waypoint x="3212" y="454" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="do_141_di" bpmnElement="do_141">
+        <di:waypoint x="3212" y="468" />
+        <di:waypoint x="3155" y="558" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="di_142_di" bpmnElement="di_142">
+        <di:waypoint x="3155" y="562" />
+        <di:waypoint x="3427" y="672" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="do_143_di" bpmnElement="do_143">
+        <di:waypoint x="3427" y="703" />
+        <di:waypoint x="3350" y="818" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="do_144_di" bpmnElement="do_144">
+        <di:waypoint x="3719" y="392" />
+        <di:waypoint x="3662" y="547" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="di_145_di" bpmnElement="di_145">
+        <di:waypoint x="3896" y="274" />
+        <di:waypoint x="4031" y="201" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="do_146_di" bpmnElement="do_146">
+        <di:waypoint x="4031" y="200" />
+        <di:waypoint x="3974" y="274" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="do_147_di" bpmnElement="do_147">
+        <di:waypoint x="4031" y="200" />
+        <di:waypoint x="4052" y="274" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="di_148_di" bpmnElement="di_148">
+        <di:waypoint x="4260" y="769" />
+        <di:waypoint x="4233" y="696" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="di_149_di" bpmnElement="di_149">
+        <di:waypoint x="4546" y="818" />
+        <di:waypoint x="4688" y="700" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="di_150_di" bpmnElement="di_150">
+        <di:waypoint x="4676" y="818" />
+        <di:waypoint x="4688" y="699" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="di_151_di" bpmnElement="di_151">
+        <di:waypoint x="5001" y="361" />
+        <di:waypoint x="5110" y="455" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="di_152_di" bpmnElement="di_152">
+        <di:waypoint x="5105" y="361" />
+        <di:waypoint x="5110" y="455" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="do_153_di" bpmnElement="do_153">
+        <di:waypoint x="1275" y="1108" />
+        <di:waypoint x="1454" y="1295" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="di_154_di" bpmnElement="di_154">
+        <di:waypoint x="1472" y="1308" />
+        <di:waypoint x="1587" y="1120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="do_155_di" bpmnElement="do_155">
+        <di:waypoint x="2159" y="1206" />
+        <di:waypoint x="1972" y="1316" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="mf_start_di" bpmnElement="mf_start">
+        <di:waypoint x="1909" y="1040" />
+        <di:waypoint x="1909" y="955" />
+        <di:waypoint x="277" y="955" />
+        <di:waypoint x="277" y="478" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="mf_w1_di" bpmnElement="mf_w1">
+        <di:waypoint x="1929" y="1040" />
+        <di:waypoint x="1929" y="925" />
+        <di:waypoint x="2188" y="925" />
+        <di:waypoint x="2188" y="478" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="mf_w2_di" bpmnElement="mf_w2">
+        <di:waypoint x="1949" y="1040" />
+        <di:waypoint x="1949" y="940" />
+        <di:waypoint x="4866" y="940" />
+        <di:waypoint x="4866" y="478" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+  <bpmndi:BPMNDiagram id="D_Sub_extract">
+    <bpmndi:BPMNPlane id="Pl_Sub_extract" bpmnElement="Sub_extract">
+      <bpmndi:BPMNShape id="L_x_a_di" bpmnElement="L_x_a" isHorizontal="true" color:background-color="#fdf7ee" color:border-color="#9c8d76">
+        <dc:Bounds x="160" y="80" width="1504" height="300" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L_x_p_di" bpmnElement="L_x_p" isHorizontal="true" color:background-color="#eef5f4" color:border-color="#7a918d">
+        <dc:Bounds x="160" y="380" width="1504" height="200" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Start_x_di" bpmnElement="Start_x">
+        <dc:Bounds x="216" y="202" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="203" y="238" width="63" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_clear_di" bpmnElement="T_clear">
+        <dc:Bounds x="315" y="180" width="150" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_x_m_di" bpmnElement="G_x_m" isMarkerVisible="true">
+        <dc:Bounds x="521" y="195" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_queue_di" bpmnElement="T_queue">
+        <dc:Bounds x="627" y="180" width="150" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_q_di" bpmnElement="G_q" isMarkerVisible="true">
+        <dc:Bounds x="846" y="195" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="810" y="168" width="82" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_extract_di" bpmnElement="T_extract">
+        <dc:Bounds x="1017" y="180" width="150" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_xcov_di" bpmnElement="T_xcov">
+        <dc:Bounds x="1179" y="440" width="190" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_xcov_di" bpmnElement="G_xcov" isMarkerVisible="true">
+        <dc:Bounds x="1418" y="195" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1359" y="180" width="62" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_x_di" bpmnElement="End_x">
+        <dc:Bounds x="1568" y="202" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1544" y="238" width="85" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_pdf_q_di" bpmnElement="DOR_pdf_q" color:background-color="#f2f0e6">
+        <dc:Bounds x="635" y="305" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="616" y="355" width="74" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_json_q_di" bpmnElement="DOR_json_q" color:background-color="#eaf2fb">
+        <dc:Bounds x="732" y="305" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="707" y="355" width="86" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_queue_di" bpmnElement="DOR_queue" color:background-color="#e6f4ea">
+        <dc:Bounds x="910" y="305" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="887" y="355" width="82" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_en_62_di" bpmnElement="DOR_en_62" color:background-color="#fdf2e3">
+        <dc:Bounds x="372" y="305" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="351" y="355" width="79" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_pdf_63_di" bpmnElement="DOR_pdf_63" color:background-color="#f2f0e6">
+        <dc:Bounds x="996" y="305" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="977" y="355" width="74" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_schema_64_di" bpmnElement="DOR_schema_64" color:background-color="#fdf6e3">
+        <dc:Bounds x="1074" y="305" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1047" y="355" width="90" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_en_65_di" bpmnElement="DOR_en_65" color:background-color="#fdf2e3">
+        <dc:Bounds x="1152" y="305" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1131" y="355" width="79" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_json_66_di" bpmnElement="DOR_json_66" color:background-color="#eaf2fb">
+        <dc:Bounds x="1100" y="495" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1075" y="545" width="86" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_rq_67_di" bpmnElement="DOR_rq_67" color:background-color="#fde8e8">
+        <dc:Bounds x="944" y="495" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="936" y="545" width="53" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_json_68_di" bpmnElement="DOR_json_68" color:background-color="#eaf2fb">
+        <dc:Bounds x="1412" y="495" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1387" y="545" width="86" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="di_156_di" bpmnElement="di_156">
+        <di:waypoint x="408" y="305" />
+        <di:waypoint x="418" y="260" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="di_q1_di" bpmnElement="di_q1">
+        <di:waypoint x="660" y="305" />
+        <di:waypoint x="675" y="260" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="di_q2_di" bpmnElement="di_q2">
+        <di:waypoint x="746" y="305" />
+        <di:waypoint x="739" y="260" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="do_q_di" bpmnElement="do_q">
+        <di:waypoint x="777" y="250" />
+        <di:waypoint x="910" y="320" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="di_q3_di" bpmnElement="di_q3">
+        <di:waypoint x="946" y="315" />
+        <di:waypoint x="1017" y="250" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="di_157_di" bpmnElement="di_157">
+        <di:waypoint x="1032" y="314" />
+        <di:waypoint x="1080" y="260" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="di_158_di" bpmnElement="di_158">
+        <di:waypoint x="1110" y="323" />
+        <di:waypoint x="1167" y="249" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="di_159_di" bpmnElement="di_159">
+        <di:waypoint x="1188" y="321" />
+        <di:waypoint x="1167" y="241" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="do_160_di" bpmnElement="do_160">
+        <di:waypoint x="1135" y="260" />
+        <di:waypoint x="1136" y="499" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="do_161_di" bpmnElement="do_161">
+        <di:waypoint x="1108" y="260" />
+        <di:waypoint x="980" y="507" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="di_162_di" bpmnElement="di_162">
+        <di:waypoint x="1410" y="520" />
+        <di:waypoint x="1369" y="500" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_56_di" bpmnElement="f_56">
+        <di:waypoint x="252" y="220" />
+        <di:waypoint x="315" y="220" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_57_di" bpmnElement="f_57">
+        <di:waypoint x="465" y="220" />
+        <di:waypoint x="521" y="220" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_58_di" bpmnElement="f_58">
+        <di:waypoint x="571" y="220" />
+        <di:waypoint x="627" y="220" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_59_di" bpmnElement="f_59">
+        <di:waypoint x="777" y="220" />
+        <di:waypoint x="846" y="220" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_q_yes_di" bpmnElement="f_q_yes">
+        <di:waypoint x="871" y="245" />
+        <di:waypoint x="871" y="280" />
+        <di:waypoint x="546" y="280" />
+        <di:waypoint x="546" y="245" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="881" y="253" width="18" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_q_no_di" bpmnElement="f_q_no">
+        <di:waypoint x="896" y="220" />
+        <di:waypoint x="1017" y="220" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="926" y="202" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_60_di" bpmnElement="f_60">
+        <di:waypoint x="1167" y="220" />
+        <di:waypoint x="1274" y="220" />
+        <di:waypoint x="1274" y="440" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_61_di" bpmnElement="f_61">
+        <di:waypoint x="1369" y="480" />
+        <di:waypoint x="1443" y="480" />
+        <di:waypoint x="1443" y="245" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_xcov_yes_di" bpmnElement="f_xcov_yes">
+        <di:waypoint x="1443" y="195" />
+        <di:waypoint x="1443" y="110" />
+        <di:waypoint x="546" y="110" />
+        <di:waypoint x="546" y="195" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1461" y="123" width="18" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_xcov_no_di" bpmnElement="f_xcov_no">
+        <di:waypoint x="1468" y="220" />
+        <di:waypoint x="1568" y="220" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1496" y="202" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+  <bpmndi:BPMNDiagram id="D_Sub_gate1">
+    <bpmndi:BPMNPlane id="Pl_Sub_gate1" bpmnElement="Sub_gate1">
+      <bpmndi:BPMNShape id="L_g1_h_di" bpmnElement="L_g1_h" isHorizontal="true" color:background-color="#fdf3f7" color:border-color="#9c8490">
+        <dc:Bounds x="30" y="0" width="2037" height="460" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Start_g1_di" bpmnElement="Start_g1">
+        <dc:Bounds x="86" y="182" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_g1_skim_di" bpmnElement="T_g1_skim">
+        <dc:Bounds x="185" y="160" width="150" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_g1_m_di" bpmnElement="G_g1_m" isMarkerVisible="true">
+        <dc:Bounds x="391" y="175" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_g1_inv_di" bpmnElement="T_g1_inv">
+        <dc:Bounds x="497" y="160" width="150" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_g1_what_di" bpmnElement="G_g1_what" isMarkerVisible="true">
+        <dc:Bounds x="716" y="175" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="650" y="150" width="90" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_g1_rerun_di" bpmnElement="T_g1_rerun">
+        <dc:Bounds x="822" y="20" width="150" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_g1_accept_di" bpmnElement="T_g1_accept">
+        <dc:Bounds x="822" y="160" width="150" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_g1_esc_di" bpmnElement="T_g1_esc">
+        <dc:Bounds x="822" y="300" width="150" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_g1_j_di" bpmnElement="G_g1_j" isMarkerVisible="true">
+        <dc:Bounds x="1119" y="175" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_g1_more_di" bpmnElement="G_g1_more" isMarkerVisible="true">
+        <dc:Bounds x="1249" y="175" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1235" y="150" width="90" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_g1_any_di" bpmnElement="G_g1_any" isMarkerVisible="true">
+        <dc:Bounds x="1392" y="175" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1443" y="150" width="60" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_g1_appr_di" bpmnElement="T_g1_appr">
+        <dc:Bounds x="1498" y="300" width="150" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_g1_k_di" bpmnElement="G_g1_k" isMarkerVisible="true">
+        <dc:Bounds x="1717" y="175" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_g1_commit_di" bpmnElement="T_g1_commit">
+        <dc:Bounds x="1810" y="160" width="150" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_g1_di" bpmnElement="End_g1">
+        <dc:Bounds x="1997" y="182" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_xr_94_di" bpmnElement="DOR_xr_94" color:background-color="#fbeee6">
+        <dc:Bounds x="242" y="35" width="36" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_en_95_di" bpmnElement="DOR_en_95" color:background-color="#fdf2e3">
+        <dc:Bounds x="476" y="35" width="36" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_json_96_di" bpmnElement="DOR_json_96" color:background-color="#eaf2fb">
+        <dc:Bounds x="554" y="35" width="36" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_pdf_97_di" bpmnElement="DOR_pdf_97" color:background-color="#f2f0e6">
+        <dc:Bounds x="632" y="35" width="36" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_en_98_di" bpmnElement="DOR_en_98" color:background-color="#fdf2e3">
+        <dc:Bounds x="1022" y="105" width="36" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_en_99_di" bpmnElement="DOR_en_99" color:background-color="#fdf2e3">
+        <dc:Bounds x="1022" y="245" width="36" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_xr_100_di" bpmnElement="DOR_xr_100" color:background-color="#fbeee6">
+        <dc:Bounds x="1659" y="385" width="36" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="di_163_di" bpmnElement="di_163">
+        <di:waypoint x="274" y="85" />
+        <di:waypoint x="282" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="di_164_di" bpmnElement="di_164">
+        <di:waypoint x="512" y="70" />
+        <di:waypoint x="592" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="di_165_di" bpmnElement="di_165">
+        <di:waypoint x="590" y="75" />
+        <di:waypoint x="621" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="di_166_di" bpmnElement="di_166">
+        <di:waypoint x="667" y="85" />
+        <di:waypoint x="647" y="162" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="do_167_di" bpmnElement="do_167">
+        <di:waypoint x="972" y="72" />
+        <di:waypoint x="1058" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="do_168_di" bpmnElement="do_168">
+        <di:waypoint x="972" y="230" />
+        <di:waypoint x="1022" y="262" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="do_169_di" bpmnElement="do_169">
+        <di:waypoint x="972" y="328" />
+        <di:waypoint x="1058" y="280" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="do_170_di" bpmnElement="do_170">
+        <di:waypoint x="1648" y="349" />
+        <di:waypoint x="1695" y="407" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_83_di" bpmnElement="f_83">
+        <di:waypoint x="122" y="200" />
+        <di:waypoint x="185" y="200" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_84_di" bpmnElement="f_84">
+        <di:waypoint x="335" y="200" />
+        <di:waypoint x="391" y="200" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_85_di" bpmnElement="f_85">
+        <di:waypoint x="441" y="200" />
+        <di:waypoint x="497" y="200" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_86_di" bpmnElement="f_86">
+        <di:waypoint x="647" y="200" />
+        <di:waypoint x="716" y="200" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_g1_rerun_di" bpmnElement="f_g1_rerun">
+        <di:waypoint x="741" y="175" />
+        <di:waypoint x="741" y="60" />
+        <di:waypoint x="822" y="60" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_87_di" bpmnElement="f_87">
+        <di:waypoint x="972" y="60" />
+        <di:waypoint x="1144" y="60" />
+        <di:waypoint x="1144" y="175" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_g1_accept_di" bpmnElement="f_g1_accept">
+        <di:waypoint x="766" y="200" />
+        <di:waypoint x="822" y="200" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_88_di" bpmnElement="f_88">
+        <di:waypoint x="972" y="200" />
+        <di:waypoint x="1119" y="200" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_g1_esc_di" bpmnElement="f_g1_esc">
+        <di:waypoint x="741" y="225" />
+        <di:waypoint x="741" y="340" />
+        <di:waypoint x="822" y="340" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_89_di" bpmnElement="f_89">
+        <di:waypoint x="972" y="340" />
+        <di:waypoint x="1144" y="340" />
+        <di:waypoint x="1144" y="225" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_90_di" bpmnElement="f_90">
+        <di:waypoint x="1169" y="200" />
+        <di:waypoint x="1249" y="200" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_g1_more_yes_di" bpmnElement="f_g1_more_yes">
+        <di:waypoint x="1274" y="225" />
+        <di:waypoint x="1274" y="430" />
+        <di:waypoint x="416" y="430" />
+        <di:waypoint x="416" y="225" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="845" y="412" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_g1_more_no_di" bpmnElement="f_g1_more_no">
+        <di:waypoint x="1299" y="200" />
+        <di:waypoint x="1392" y="200" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1328.6000000000001" y="182" width="14" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_g1_any_yes_di" bpmnElement="f_g1_any_yes">
+        <di:waypoint x="1442" y="200" />
+        <di:waypoint x="1717" y="200" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1560" y="182" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_g1_any_no_di" bpmnElement="f_g1_any_no">
+        <di:waypoint x="1417" y="225" />
+        <di:waypoint x="1417" y="340" />
+        <di:waypoint x="1498" y="340" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1427.4" y="290" width="14" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_91_di" bpmnElement="f_91">
+        <di:waypoint x="1648" y="340" />
+        <di:waypoint x="1742" y="340" />
+        <di:waypoint x="1742" y="225" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_92_di" bpmnElement="f_92">
+        <di:waypoint x="1767" y="200" />
+        <di:waypoint x="1810" y="200" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_93_di" bpmnElement="f_93">
+        <di:waypoint x="1960" y="200" />
+        <di:waypoint x="1997" y="200" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+  <bpmndi:BPMNDiagram id="D_Sub_reports">
+    <bpmndi:BPMNPlane id="Pl_Sub_reports" bpmnElement="Sub_reports">
+      <bpmndi:BPMNShape id="L_r_p_di" bpmnElement="L_r_p" isHorizontal="true" color:background-color="#eef5f4" color:border-color="#7a918d">
+        <dc:Bounds x="160" y="380" width="1374" height="200" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L_r_a_di" bpmnElement="L_r_a" isHorizontal="true" color:background-color="#fdf7ee" color:border-color="#9c8d76">
+        <dc:Bounds x="160" y="80" width="1374" height="300" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Start_r_di" bpmnElement="Start_r">
+        <dc:Bounds x="216" y="202" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="203" y="238" width="63" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_rclear_di" bpmnElement="T_rclear">
+        <dc:Bounds x="315" y="180" width="150" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_peer_di" bpmnElement="T_peer">
+        <dc:Bounds x="490" y="440" width="190" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_meth_di" bpmnElement="T_meth">
+        <dc:Bounds x="711" y="440" width="190" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_report_di" bpmnElement="T_report">
+        <dc:Bounds x="939" y="180" width="150" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_rnotes_di" bpmnElement="T_rnotes">
+        <dc:Bounds x="1173" y="180" width="150" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_r_di" bpmnElement="End_r">
+        <dc:Bounds x="1399" y="202" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1388" y="238" width="59" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_rn_75_di" bpmnElement="DOR_rn_75" color:background-color="#f6ecf7">
+        <dc:Bounds x="372" y="305" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="360" y="355" width="60" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_peer_76_di" bpmnElement="DOR_peer_76" color:background-color="#eef5f4">
+        <dc:Bounds x="671" y="305" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="655" y="355" width="68" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_json_77_di" bpmnElement="DOR_json_77" color:background-color="#eaf2fb">
+        <dc:Bounds x="437" y="495" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="412" y="545" width="86" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_json_78_di" bpmnElement="DOR_json_78" color:background-color="#eaf2fb">
+        <dc:Bounds x="905" y="305" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="880" y="355" width="86" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_rules_79_di" bpmnElement="DOR_rules_79" color:background-color="#fdf6e3">
+        <dc:Bounds x="970" y="85" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="946" y="135" width="85" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_rn_80_di" bpmnElement="DOR_rn_80" color:background-color="#f6ecf7">
+        <dc:Bounds x="1048" y="85" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1036" y="135" width="60" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_rep_81_di" bpmnElement="DOR_rep_81" color:background-color="#eef7ec">
+        <dc:Bounds x="1100" y="305" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1101" y="355" width="35" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_rn_82_di" bpmnElement="DOR_rn_82" color:background-color="#f6ecf7">
+        <dc:Bounds x="1282" y="305" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1270" y="355" width="60" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="di_171_di" bpmnElement="di_171">
+        <di:waypoint x="408" y="305" />
+        <di:waypoint x="418" y="260" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="di_174_di" bpmnElement="di_174">
+        <di:waypoint x="473" y="517" />
+        <di:waypoint x="553" y="520" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="do_172_di" bpmnElement="do_172">
+        <di:waypoint x="657" y="440" />
+        <di:waypoint x="694" y="355" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="di_173_di" bpmnElement="di_173">
+        <di:waypoint x="707" y="327" />
+        <di:waypoint x="957" y="260" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="di_175_di" bpmnElement="di_175">
+        <di:waypoint x="941" y="324" />
+        <di:waypoint x="1067" y="260" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="di_176_di" bpmnElement="di_176">
+        <di:waypoint x="1006" y="117" />
+        <di:waypoint x="1089" y="184" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="di_177_di" bpmnElement="di_177">
+        <di:waypoint x="1084" y="119" />
+        <di:waypoint x="1089" y="195" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="do_178_di" bpmnElement="do_178">
+        <di:waypoint x="1089" y="241" />
+        <di:waypoint x="1136" y="318" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="do_179_di" bpmnElement="do_179">
+        <di:waypoint x="1323" y="240" />
+        <di:waypoint x="1318" y="323" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_69_di" bpmnElement="f_69">
+        <di:waypoint x="252" y="220" />
+        <di:waypoint x="315" y="220" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_70_di" bpmnElement="f_70">
+        <di:waypoint x="465" y="220" />
+        <di:waypoint x="585" y="220" />
+        <di:waypoint x="585" y="440" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_71_di" bpmnElement="f_71">
+        <di:waypoint x="680" y="480" />
+        <di:waypoint x="711" y="480" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_72_di" bpmnElement="f_72">
+        <di:waypoint x="901" y="480" />
+        <di:waypoint x="1014" y="480" />
+        <di:waypoint x="1014" y="260" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_73_di" bpmnElement="f_73">
+        <di:waypoint x="1089" y="220" />
+        <di:waypoint x="1173" y="220" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_74_di" bpmnElement="f_74">
+        <di:waypoint x="1323" y="220" />
+        <di:waypoint x="1399" y="220" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+  <bpmndi:BPMNDiagram id="D_Sub_gate2">
+    <bpmndi:BPMNPlane id="Pl_Sub_gate2" bpmnElement="Sub_gate2">
+      <bpmndi:BPMNShape id="L_g2_h_di" bpmnElement="L_g2_h" isHorizontal="true" color:background-color="#fdf3f7" color:border-color="#9c8490">
+        <dc:Bounds x="30" y="0" width="2037" height="460" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Start_g2_di" bpmnElement="Start_g2">
+        <dc:Bounds x="86" y="182" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_g2_skim_di" bpmnElement="T_g2_skim">
+        <dc:Bounds x="185" y="160" width="150" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_g2_m_di" bpmnElement="G_g2_m" isMarkerVisible="true">
+        <dc:Bounds x="391" y="175" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_g2_inv_di" bpmnElement="T_g2_inv">
+        <dc:Bounds x="497" y="160" width="150" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_g2_what_di" bpmnElement="G_g2_what" isMarkerVisible="true">
+        <dc:Bounds x="716" y="175" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="650" y="150" width="90" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_g2_rerun_di" bpmnElement="T_g2_rerun">
+        <dc:Bounds x="822" y="70" width="150" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_g2_accept_di" bpmnElement="T_g2_accept">
+        <dc:Bounds x="822" y="250" width="150" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_g2_j_di" bpmnElement="G_g2_j" isMarkerVisible="true">
+        <dc:Bounds x="1119" y="175" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_g2_more_di" bpmnElement="G_g2_more" isMarkerVisible="true">
+        <dc:Bounds x="1249" y="175" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1235" y="150" width="90" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_g2_any_di" bpmnElement="G_g2_any" isMarkerVisible="true">
+        <dc:Bounds x="1392" y="175" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1443" y="150" width="60" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_g2_appr_di" bpmnElement="T_g2_appr">
+        <dc:Bounds x="1498" y="300" width="150" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_g2_k_di" bpmnElement="G_g2_k" isMarkerVisible="true">
+        <dc:Bounds x="1717" y="175" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_g2_commit_di" bpmnElement="T_g2_commit">
+        <dc:Bounds x="1810" y="160" width="150" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_g2_di" bpmnElement="End_g2">
+        <dc:Bounds x="1997" y="182" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_rr_111_di" bpmnElement="DOR_rr_111" color:background-color="#f0eef7">
+        <dc:Bounds x="242" y="35" width="36" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_rep_112_di" bpmnElement="DOR_rep_112" color:background-color="#eef7ec">
+        <dc:Bounds x="515" y="35" width="36" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_rn_113_di" bpmnElement="DOR_rn_113" color:background-color="#f6ecf7">
+        <dc:Bounds x="593" y="35" width="36" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_rn_114_di" bpmnElement="DOR_rn_114" color:background-color="#f6ecf7">
+        <dc:Bounds x="1022" y="175" width="36" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_rn_acc_di" bpmnElement="DOR_rn_acc" color:background-color="#f6ecf7">
+        <dc:Bounds x="1022" y="345" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1064" y="356" width="70" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DOR_rr_115_di" bpmnElement="DOR_rr_115" color:background-color="#f0eef7">
+        <dc:Bounds x="1659" y="385" width="36" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="di_180_di" bpmnElement="di_180">
+        <di:waypoint x="274" y="85" />
+        <di:waypoint x="282" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="di_181_di" bpmnElement="di_181">
+        <di:waypoint x="551" y="72" />
+        <di:waypoint x="607" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="di_182_di" bpmnElement="di_182">
+        <di:waypoint x="629" y="79" />
+        <di:waypoint x="636" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="do_183_di" bpmnElement="do_183">
+        <di:waypoint x="972" y="125" />
+        <di:waypoint x="1058" y="187" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="do_184_di" bpmnElement="do_184">
+        <di:waypoint x="972" y="320" />
+        <di:waypoint x="1022" y="362" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="do_185_di" bpmnElement="do_185">
+        <di:waypoint x="1648" y="349" />
+        <di:waypoint x="1695" y="407" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_101_di" bpmnElement="f_101">
+        <di:waypoint x="122" y="200" />
+        <di:waypoint x="185" y="200" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_102_di" bpmnElement="f_102">
+        <di:waypoint x="335" y="200" />
+        <di:waypoint x="391" y="200" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_103_di" bpmnElement="f_103">
+        <di:waypoint x="441" y="200" />
+        <di:waypoint x="497" y="200" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_104_di" bpmnElement="f_104">
+        <di:waypoint x="647" y="200" />
+        <di:waypoint x="716" y="200" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_g2_rerun_di" bpmnElement="f_g2_rerun">
+        <di:waypoint x="741" y="175" />
+        <di:waypoint x="741" y="110" />
+        <di:waypoint x="822" y="110" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_105_di" bpmnElement="f_105">
+        <di:waypoint x="972" y="110" />
+        <di:waypoint x="1144" y="110" />
+        <di:waypoint x="1144" y="175" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_g2_accept_di" bpmnElement="f_g2_accept">
+        <di:waypoint x="741" y="225" />
+        <di:waypoint x="741" y="290" />
+        <di:waypoint x="822" y="290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_106_di" bpmnElement="f_106">
+        <di:waypoint x="972" y="290" />
+        <di:waypoint x="1144" y="290" />
+        <di:waypoint x="1144" y="225" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_107_di" bpmnElement="f_107">
+        <di:waypoint x="1169" y="200" />
+        <di:waypoint x="1249" y="200" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_g2_more_yes_di" bpmnElement="f_g2_more_yes">
+        <di:waypoint x="1274" y="225" />
+        <di:waypoint x="1274" y="430" />
+        <di:waypoint x="416" y="430" />
+        <di:waypoint x="416" y="225" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="845" y="412" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_g2_more_no_di" bpmnElement="f_g2_more_no">
+        <di:waypoint x="1299" y="200" />
+        <di:waypoint x="1392" y="200" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1328.6000000000001" y="182" width="14" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_g2_any_yes_di" bpmnElement="f_g2_any_yes">
+        <di:waypoint x="1442" y="200" />
+        <di:waypoint x="1717" y="200" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1560" y="182" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_g2_any_no_di" bpmnElement="f_g2_any_no">
+        <di:waypoint x="1417" y="225" />
+        <di:waypoint x="1417" y="340" />
+        <di:waypoint x="1498" y="340" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1427.4" y="290" width="14" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_108_di" bpmnElement="f_108">
+        <di:waypoint x="1648" y="340" />
+        <di:waypoint x="1742" y="340" />
+        <di:waypoint x="1742" y="225" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_109_di" bpmnElement="f_109">
+        <di:waypoint x="1767" y="200" />
+        <di:waypoint x="1810" y="200" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_110_di" bpmnElement="f_110">
+        <di:waypoint x="1960" y="200" />
+        <di:waypoint x="1997" y="200" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
