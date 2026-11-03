@@ -104,8 +104,8 @@ if (readActivities(dir).some((e) => e.id === id)) {
 // are left blank: they're goal-setting's to fill, and a placeholder would read as an
 // answer.
 //
-// `adjudicator`, `recurrence` and `is_required` are not written, because a word doesn't differ
-// from an ordinary goal in any of them. An empty slot is the default, and writing a default
+// `recurrence` and `is_required` are not written, because a word doesn't differ
+// from an ordinary goal in either. An empty slot is the default, and writing a default
 // down is the beginning of a second definition site.
 const entry = [
   `### \`${id}\``,

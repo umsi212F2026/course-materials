@@ -63,7 +63,7 @@ const hasTag = (r, tag) => Array.isArray(r.tags) && r.tags.includes(tag);
 // predicate rather than a convention about a four-valued field.
 
 export const BARS = {
-  // The judge has already ruled it against a criterion someone wrote, and a second pass is what
+  // The tutor has already ruled it against a criterion someone wrote, and a second pass is what
   // review is for — this goal starts coming back in three days.
   'one unaided pass': (attempts) => attempts.some(isPass),
 

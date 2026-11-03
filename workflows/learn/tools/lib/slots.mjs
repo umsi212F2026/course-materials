@@ -14,11 +14,6 @@
 // A slot's value set is closed unless it is data. Data slots (`criterion`, `group` and `capability`) take
 // arbitrary text, which is why neither of them dispatches to anything.
 
-export const ADJUDICATORS = {
-  'study/judge': 'a fresh judge, two axes, in a fresh context',
-  tutor: 'the running agent rules, in session, no extra call',
-};
-
 // The bars themselves are in bars.mjs — a predicate each, over an attempt history. Named here
 // because this is where a value gets refused, and there is where it gets run.
 export const BARS = {
@@ -60,7 +55,7 @@ export const ORIGINS = {
 // Criterion values that are pointers to shared text rather than the learner's own words. A
 // value that matches one of these exactly is a reference; anything else is literal.
 //
-// The adjudicator is handed TEXT, never a name — so each entry carries the sentence, and
+// Whoever rules is handed TEXT, never a name, so each entry carries the sentence, and
 // `where` says which file it is maintained in.
 export const CRITERION_REFS = {
   vocabulary: {
@@ -89,14 +84,15 @@ export const TAGS = {
 // --- the slots ---------------------------------------------------------------
 // `values: null` means data: any text, nothing to refuse.
 
-// EVERY SLOT TAKES ONE VALUE. There was a ninth, `supply`, naming where a goal's activities came
-// from; it is retired, because every goal's activities are now entries in activities.md and
-// vocabulary is an ordinary one (`a-words`). AN OLD goals.md THAT STILL WRITES A `supply:` LINE
-// IS READ WITHOUT COMPLAINT: applySlots drops the field, so it is neither a slot nor payload.
+// EVERY SLOT TAKES ONE VALUE. Two are retired. `supply` named where a goal's activities came
+// from; every goal's activities are now entries in activities.md and vocabulary is an ordinary
+// one (`a-words`). `adjudicator` named who rules on an attempt; the tutor now rules everything in
+// session, and a program rules multiple choice. AN OLD goals.md THAT STILL WRITES A `supply:` OR
+// `adjudicator:` LINE IS READ WITHOUT COMPLAINT: applySlots drops the field, so it is neither a
+// slot nor payload.
 
 export const SLOTS = {
   criterion: { default: '', values: null, kind: 'data' },
-  adjudicator: { default: 'study/judge', values: ADJUDICATORS, kind: 'strategy' },
   bar: { default: 'one unaided pass', values: BARS, kind: 'strategy' },
   recurrence: { default: 'spaced', values: RECURRENCES, kind: 'flag' },
   is_required: { default: 'yes', values: REQUIREDNESS, kind: 'flag' },
@@ -193,8 +189,8 @@ export function applySlots(id, fields) {
 
   const payload = {};
   for (const [name, value] of Object.entries(fields)) {
-    // `supply` is a retired slot: an old goals.md may still carry it, and it must land nowhere.
-    if (name === 'goal' || name === 'supply' || name === 'cases' || Object.hasOwn(SLOTS, name)) continue;
+    // `supply` and `adjudicator` are retired slots: an old goals.md may still carry them, and they must land nowhere.
+    if (name === 'goal' || name === 'supply' || name === 'adjudicator' || name === 'cases' || Object.hasOwn(SLOTS, name)) continue;
     payload[name] = value;
   }
 
@@ -206,7 +202,7 @@ export function applySlots(id, fields) {
     text: fields.goal ?? '',
     ...slots,
     cases,
-    // Resolved here so an adjudicator is handed the sentence rather than the pointer.
+    // Resolved here so whoever rules is handed the sentence rather than the pointer.
     criterionText: CRITERION_REFS[slots.criterion]?.text ?? slots.criterion,
     criterionRef: CRITERION_REFS[slots.criterion] ? slots.criterion : null,
     payload,

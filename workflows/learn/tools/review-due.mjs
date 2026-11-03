@@ -69,8 +69,6 @@ for (const dir of topicFolders()) {
     due.push({
       topic: dir,
       goal: goal.id,
-      // The slot review needs to set up the check: `adjudicator` says who rules on it.
-      adjudicator: goal.adjudicator,
       served: served(dir, goal.id),
       due: schedule.due,
     });

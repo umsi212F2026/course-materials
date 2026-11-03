@@ -71,5 +71,5 @@ test('review-due.mjs items carry no supply field', () => {
   assert.equal(r.code, 0, r.stderr);
   const items = JSON.parse(r.stdout);
   assert.equal(items.length, 1);
-  assert.deepEqual(Object.keys(items[0]).sort(), ['adjudicator', 'due', 'goal', 'served', 'topic']);
+  assert.deepEqual(Object.keys(items[0]).sort(), ['due', 'goal', 'served', 'topic']);
 });

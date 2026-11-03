@@ -1,6 +1,5 @@
 // The text of one bank question, in the two parts next-item.mjs prints: what the learner sees, and
-// the key, which is grading text for the judge and never for the learner. judge-input.mjs prints
-// the same two, so the question and rubric the judge reads are exactly the ones the tutor served.
+// the key, which is grading text for the tutor and never for the learner.
 
 import { readIds } from './topic.mjs';
 

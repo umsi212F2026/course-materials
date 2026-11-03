@@ -59,7 +59,7 @@ export function serveNext(dir, { goal, activity, after, review }) {
   // decides that rather than the tutor: it holds the label and --after, so the rule lives in one
   // place. --after in the same scenario means the run has been introduced already. A review sitting
   // re-attempts one question cold, as a draw does, so it never gets framing. learnerText leaves it
-  // out, which is what keeps it from judge-input.mjs: the framing carries no fact an answer needs.
+  // out, which keeps it from the key: the framing carries no fact an answer needs.
   const [afterActivity, afterScenario] = (after ?? '').split('/');
   const continuing = afterActivity === item.activity && afterScenario === item.scenario;
   const framing = item.framing && !review && !continuing ? [item.framing, ''] : [];
