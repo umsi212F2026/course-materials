@@ -52,7 +52,7 @@ makes it alone whenever it knows it helped.
   bar counts it as a pass. `criterion: unchecked` stays for an attempt that could not have settled
   anything, such as one cut short.
 - **Multiple-choice feedback is fully programmatic.** The tool writes the verdict from the choice
-  texts and the scenario key. The tutor relays it verbatim and adds nothing. A learner who wants
+  texts. The tutor relays it verbatim and adds nothing. A learner who wants
   to know why asks, and the side conversation takes it from there.
 - **Quizzes are untouched.** Real and practice quizzes keep `quiz/grade`, run in a fresh context
   as a batch. The practice quiz's claim, "marked by the same grader as a real one", stands.
@@ -115,8 +115,9 @@ each goal the question credits, after the attempts. It replaces the judge's
 2. `--- learner sees ---`, then everything the learner is to read this turn:
    - for an mcq or each mcq part, the verdict built from the bank:
      `Correct: **3**, "<choice text>".` or
-     `Not this time. You chose **1**, "<choice text>". The answer is **3**, "<choice text>".`,
-     followed by the scenario key where the item has one
+     `Not this time. You chose **1**, "<choice text>". The answer is **3**, "<choice text>".`
+     and nothing more. The scenario key is not shown: it describes the whole scenario, so it
+     gives away the questions still to come in it, and stays grading text for the tutor
    - the progress block, exactly as `record-attempt.mjs --progress` prints it today
    - after a `not met`, the three choices from study's step 3, or on a goal with cases the
      variant whose third choice counts this question and goes on
