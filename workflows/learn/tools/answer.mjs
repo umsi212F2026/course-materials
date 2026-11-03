@@ -4,13 +4,13 @@
 //   node workflows/learn/tools/answer.mjs <topic> <label> --unaided yes --choice a=2,c=1 --criterion met
 //   node workflows/learn/tools/answer.mjs <topic> <label> --unaided no --criterion "not met"
 //
-// ONE CALL PER ANSWER. Study used to spawn a judge, run record-attempt.mjs once per goal, then
-// run next-item.mjs, and the learner waited through all of it for a multiple choice answer. Here
-// the tutor states what only it knows, whether the learner was unaided and (for an open part) the
-// criterion ruling, and this does the rest.
+// ONE CALL PER ANSWER, so the learner is not left waiting on a string of tools after a multiple
+// choice answer. The tutor states what only it knows, whether the learner was unaided and (for an
+// open part) the criterion ruling, and this records an attempt for each goal and serves the next
+// question.
 //
-// A PROGRAM RULES THE CHOICES. A multiple choice part is right or wrong by the bank's key, so no
-// judge reads it; --criterion is refused for a plain multiple choice question and required only
+// A PROGRAM RULES THE CHOICES. A multiple choice part is right or wrong by the bank's key, so the
+// tutor does not rule on it; --criterion is refused for a plain multiple choice question and required only
 // for a question with an open part. lib/rule.mjs holds the rules.
 //
 // THE TUTOR STATES --unaided ON EVERY CALL. A default would record an attempt the tutor helped
