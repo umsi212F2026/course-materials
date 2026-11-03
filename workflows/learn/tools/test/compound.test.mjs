@@ -9,6 +9,19 @@ import { makeTopic, run, CAP_GOAL } from './helpers.mjs';
 
 const RUBRIC_B = 'the Revise step Full for naming Revise; half for describing it without its name.';
 
+// What next-item --key prints after a compound with an open part: the key, then the criterion and
+// the ruling rules. judge-input still prints the bare KEY, so the two are kept apart.
+const RULING_BLOCK = [
+  '--- criterion ---',
+  'c-a: The thing is done.',
+  '--- ruling ---',
+  'Rule against the criterion as written, not a better one you can see.',
+  'Half credit is not met.',
+  'unclear is for a genuine tie, in either direction.',
+  'Anything that changed what they did is help. Clarifying which question was meant, or repeating it, is not.',
+  'Rule on what they wrote, not on how the session went.',
+].join('\n');
+
 function topic() {
   const dir = makeTopic({ goals: CAP_GOAL('c-a'), activities: '### a-x\n- **checks:** c-a\n' });
   const files = {
@@ -92,7 +105,7 @@ test('next-item prints the stem and every part to the learner, and each part key
   const learner = before.split('--- learner sees ---\n')[1];
   assert.equal(learner, LEARNER);
   for (const hidden of ['the Revise step', 'Watch for', 'loop back']) assert.ok(!before.includes(hidden), hidden);
-  assert.equal(after, `${KEY}\n`);
+  assert.equal(after, `${KEY}\n${RULING_BLOCK}\n`);
 });
 
 test('judge-input prints the same question and rubric under the compound\'s one goal', () => {
@@ -150,7 +163,7 @@ test('a compound with no stem and no scenario key: no leading blank line, rubric
   const dir = topicOf(BARE);
   const r = run('next-item.mjs', [dir, '--activity', 'a-y', '--key']);
   assert.equal(r.code, 0, r.stderr);
-  assert.ok(r.stdout.includes(`--- learner sees ---\n${BARE_LEARNER}\n--- key ---\n${BARE_KEY}\n`), r.stdout);
+  assert.ok(r.stdout.includes(`--- learner sees ---\n${BARE_LEARNER}\n--- key ---\n${BARE_KEY}\n${RULING_BLOCK}\n`), r.stdout);
   const j = run('judge-input.mjs', [dir, 'a-y/bare/q1']);
   assert.equal(j.code, 0, j.stderr);
   assert.ok(j.stdout.endsWith(`--- question ---\n${BARE_LEARNER}\n--- rubric ---\n${BARE_KEY}\n`), j.stdout);

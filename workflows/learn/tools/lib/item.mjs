@@ -2,6 +2,8 @@
 // the key, which is grading text for the judge and never for the learner. judge-input.mjs prints
 // the same two, so the question and rubric the judge reads are exactly the ones the tutor served.
 
+import { readIds } from './topic.mjs';
+
 // The prompt, and an mcq's choices numbered as the learner saw them.
 export function learnerText(item) {
   if (item.type === 'compound') return compoundLearnerText(item);
@@ -21,6 +23,43 @@ function compoundLearnerText(item) {
     return lines.join('\n');
   });
   return [item.prompt, ...parts].filter(Boolean).join('\n\n');
+}
+
+// A question the tutor must rule on: any non-mcq item, or a compound with a non-mcq part.
+export function hasOpenPart(item) {
+  if (item.type === 'compound') return item.parts.some((p) => p.type !== 'mcq');
+  return item.type !== 'mcq';
+}
+
+// THE RULES THE TUTOR RULES BY, printed after the criterion on --key.
+export const RULING = [
+  '--- ruling ---',
+  'Rule against the criterion as written, not a better one you can see.',
+  'Half credit is not met.',
+  'unclear is for a genuine tie, in either direction.',
+  'Anything that changed what they did is help. Clarifying which question was meant, or repeating it, is not.',
+  'Rule on what they wrote, not on how the session went.',
+].join('\n');
+
+// The criterion section of an open question's key: each goal it credits with its criterion
+// resolved, and under it the cases the question exercises with their texts. A goal whose entry has
+// a problem has no usable criterion, and says so rather than guessing one.
+export function criterionText(dir, item) {
+  const ids = readIds(dir);
+  const lines = ['--- criterion ---'];
+  for (const id of item.goals) {
+    const goal = ids.get(id);
+    if (!goal || goal.problems.length) {
+      lines.push(`${id}: can't be ruled until its goals.md entry is fixed`);
+      continue;
+    }
+    lines.push(`${id}: ${goal.criterionText}`);
+    for (const c of item.cases?.[id] ?? []) {
+      const found = goal.cases.find((x) => x.id === c);
+      lines.push(`  case ${c}: ${found ? found.text : '(not a case of this goal)'}`);
+    }
+  }
+  return lines.join('\n');
 }
 
 // An mcq's key is the scenario's key (when it has one) and then the correct choice, numbered as
