@@ -127,6 +127,71 @@ test('a step inserted between two placed ones makes room, and says what moved', 
   assert.match(checkDi(xml), /DI consistent/);
 });
 
+test('a chain of two new steps inserted between placed ones keeps its order, on one row', async () => {
+  // assess_posting -> check_deadline -> deadline_passed? -> review_verdict
+  const edited = PLACED
+    .replace('<bpmn:flowNodeRef>review_verdict</bpmn:flowNodeRef>',
+      '<bpmn:flowNodeRef>check_deadline</bpmn:flowNodeRef>\n        <bpmn:flowNodeRef>deadline_passed</bpmn:flowNodeRef>\n        <bpmn:flowNodeRef>review_verdict</bpmn:flowNodeRef>')
+    .replace('<bpmn:sequenceFlow id="to_review" sourceRef="assess_posting"', '<bpmn:sequenceFlow id="to_review" sourceRef="deadline_passed"')
+    .replace('</bpmn:process>',
+      '  <bpmn:userTask id="check_deadline" name="Check deadline" />\n' +
+      '    <bpmn:exclusiveGateway id="deadline_passed" name="deadline passed?" />\n' +
+      '    <bpmn:sequenceFlow id="to_check" sourceRef="assess_posting" targetRef="check_deadline" />\n' +
+      '    <bpmn:sequenceFlow id="to_deadline" sourceRef="check_deadline" targetRef="deadline_passed" />\n' +
+      '  </bpmn:process>');
+  const { xml } = await layout(edited);
+  const s = shapes(xml);
+  const right = (b) => b.x + b.width;
+  const cy = (b) => b.y + b.height / 2;
+  assert.ok(right(s.assess_posting) < s.check_deadline.x, 'assess before check');
+  assert.ok(right(s.check_deadline) < s.deadline_passed.x, 'check before gateway');
+  assert.ok(right(s.deadline_passed) < s.review_verdict.x, 'gateway before review');
+  assert.equal(cy(s.check_deadline), cy(s.review_verdict), 'check on the review row');
+  assert.equal(cy(s.deadline_passed), cy(s.review_verdict), 'gateway on the review row');
+  assert.match(checkDi(xml), /DI consistent/);
+});
+
+test('a new merge sits in the row of the step it leads into, and no edge crosses a shape', async () => {
+  // "no" from worth_applying and a new path from deadline_passed both reach posting_dropped
+  // through a new merge. This is what a test agent drew, replayed.
+  const edited = PLACED
+    .replace('<bpmn:flowNodeRef>review_verdict</bpmn:flowNodeRef>',
+      '<bpmn:flowNodeRef>check_deadline</bpmn:flowNodeRef>\n        <bpmn:flowNodeRef>deadline_passed</bpmn:flowNodeRef>\n        <bpmn:flowNodeRef>merge_dropped</bpmn:flowNodeRef>\n        <bpmn:flowNodeRef>review_verdict</bpmn:flowNodeRef>')
+    .replace('<bpmn:sequenceFlow id="to_review" sourceRef="assess_posting"', '<bpmn:sequenceFlow id="to_review" name="no" sourceRef="deadline_passed"')
+    .replace('<bpmn:sequenceFlow id="no" name="no" sourceRef="worth_applying" targetRef="posting_dropped" />',
+      '<bpmn:sequenceFlow id="no" name="no" sourceRef="worth_applying" targetRef="merge_dropped" />')
+    .replace('</bpmn:process>',
+      '  <bpmn:userTask id="check_deadline" name="Check deadline" />\n' +
+      '    <bpmn:exclusiveGateway id="deadline_passed" name="deadline passed?" />\n' +
+      '    <bpmn:exclusiveGateway id="merge_dropped" />\n' +
+      '    <bpmn:sequenceFlow id="to_check" sourceRef="assess_posting" targetRef="check_deadline" />\n' +
+      '    <bpmn:sequenceFlow id="to_deadline" sourceRef="check_deadline" targetRef="deadline_passed" />\n' +
+      '    <bpmn:sequenceFlow id="expired" name="yes" sourceRef="deadline_passed" targetRef="merge_dropped" />\n' +
+      '    <bpmn:sequenceFlow id="to_dropped" sourceRef="merge_dropped" targetRef="posting_dropped" />\n' +
+      '  </bpmn:process>');
+  const { xml } = await layout(edited);
+  const s = shapes(xml);
+  const cy = (b) => b.y + b.height / 2;
+  assert.equal(cy(s.merge_dropped), cy(s.posting_dropped), 'merge on the row of posting dropped');
+  // No edge passes through a shape other than its own two ends.
+  const flows = {};
+  for (const m of xml.matchAll(/<bpmn:sequenceFlow id="([^"]+)"[^>]*sourceRef="([^"]+)" targetRef="([^"]+)"/g)) flows[m[1]] = [m[2], m[3]];
+  for (const [id, block] of Object.entries(edges(xml))) {
+    if (!flows[id]) continue;
+    const pts = [...block.matchAll(/x="([-\d.]+)" y="([-\d.]+)"/g)].map((m) => [+m[1], +m[2]]);
+    for (let i = 1; i < pts.length; i++) {
+      const [a, b] = [pts[i - 1], pts[i]];
+      for (const [sid, box] of Object.entries(s)) {
+        if (flows[id].includes(sid) || /^lane_|^tracker$|_store$/.test(sid)) continue;
+        const x0 = Math.min(a[0], b[0]), x1 = Math.max(a[0], b[0]), y0 = Math.min(a[1], b[1]), y1 = Math.max(a[1], b[1]);
+        const hit = x0 < box.x + box.width - 2 && x1 > box.x + 2 && y0 < box.y + box.height - 2 && y1 > box.y + 2;
+        assert.ok(!hit, `${id} crosses ${sid}`);
+      }
+    }
+  }
+  assert.match(checkDi(xml), /DI consistent/);
+});
+
 test('a step moved to another lane changes only its y and its edges', async () => {
   const edited = PLACED
     .replace('        <bpmn:flowNodeRef>review_verdict</bpmn:flowNodeRef>\n', '')

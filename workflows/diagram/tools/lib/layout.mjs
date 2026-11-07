@@ -368,6 +368,26 @@ export async function layout(xml) {
       return baseCy - h / 2 + 9 * ROW;
     }
 
+    // From a new node, forward through nodes with no shape yet: the width the
+    // longest such chain needs (each node and the gap after it), and the placed
+    // shapes the chain runs into.
+    function chainAhead(n, seen = new Set()) {
+      seen.add(n.id);
+      const [w] = sizeOf(n);
+      let width = 0;
+      const ahead = [];
+      for (const t of succs.get(n.id)) {
+        const di = index.get(t.id);
+        if (di) ahead.push(di);
+        else if (!seen.has(t.id)) {
+          const sub = chainAhead(t, seen);
+          width = Math.max(width, sub.width);
+          ahead.push(...sub.ahead);
+        }
+      }
+      return { width: w + GAP + width, ahead };
+    }
+
     function shiftFrom(x0, dx) {
       for (const s of containerShapes()) if (s.bounds.x >= x0) moveShape(s, dx, 0);
     }
@@ -376,8 +396,13 @@ export async function layout(xml) {
       const [w, h] = sizeOf(n);
       const b = bandOf(n);
       const placedPreds = preds.get(n.id).map((p) => index.get(p.id)).filter(Boolean);
+      // Which row to try first: a node that merges paths sits in the row of the
+      // step it leads into; anything else follows its predecessor's row.
       const sameBandPred = placedPreds.find((p) => bandOfShape.get(p) === b);
-      const baseCy = sameBandPred ? cy(sameBandPred.bounds) : b.y + ROW / 2;
+      const sameBandSucc = succs.get(n.id).map((t) => index.get(t.id)).find((t) => t && bandOfShape.get(t) === b);
+      const merges = preds.get(n.id).length + flows.filter((f) => f.targetRef === n && back.has(`${f.sourceRef.id}>${n.id}`)).length > 1;
+      const baseCy =
+        merges && sameBandSucc ? cy(sameBandSucc.bounds) : sameBandPred ? cy(sameBandPred.bounds) : b.y + ROW / 2;
 
       if (relane.has(n.id)) {
         const di = index.get(n.id);
@@ -397,9 +422,12 @@ export async function layout(xml) {
         // A flow that changes lane needs room to turn clear of the labels
         // that events and gateways carry below them.
         left = Math.max(...placedPreds.map((p) => right(p.bounds) + (bandOfShape.get(p) === b ? GAP : GAP + 30)));
-        if (placedSuccs.length) {
-          const minL = Math.min(...placedSuccs.map((s) => s.bounds.x));
-          const need = left + w + GAP - minL;
+        // Make room once, for the whole chain of new steps that starts here and
+        // runs into shapes already placed, so no later shift lands on this one.
+        const { width, ahead } = chainAhead(n);
+        if (ahead.length) {
+          const minL = Math.min(...ahead.map((s) => s.bounds.x));
+          const need = left + width - minL;
           if (need > 0) shiftFrom(minL, need);
         }
       } else if (placedSuccs.length) {
@@ -491,7 +519,25 @@ export async function layout(xml) {
       if (di && di.get('waypoint').length) {
         const ds = isNew.has(s) ? null : delta.get(s) || { dx: 0, dy: 0 };
         const dt = isNew.has(t) ? null : delta.get(t) || { dx: 0, dy: 0 };
-        if (ds && dt && ds.dx === dt.dx && ds.dy === dt.dy) {
+        // A kept edge that a shape placed this run now sits on is rerouted too.
+        const crossed = () => {
+          const wp = di.get('waypoint');
+          for (const other of index.values()) {
+            if (!isNew.has(other) || !other.bounds || other === s || other === t) continue;
+            const o = other.bounds;
+            for (let i = 1; i < wp.length; i++) {
+              const box = {
+                x: Math.min(wp[i - 1].x, wp[i].x) + ds.dx,
+                y: Math.min(wp[i - 1].y, wp[i].y) + ds.dy,
+                width: Math.abs(wp[i].x - wp[i - 1].x),
+                height: Math.abs(wp[i].y - wp[i - 1].y),
+              };
+              if (overlaps(box, o, -2)) return true;
+            }
+          }
+          return false;
+        };
+        if (ds && dt && ds.dx === dt.dx && ds.dy === dt.dy && !crossed()) {
           if (ds.dx || ds.dy) {
             for (const p of di.get('waypoint')) {
               p.x = r(p.x + ds.dx);
