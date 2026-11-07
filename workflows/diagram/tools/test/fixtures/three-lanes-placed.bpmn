@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="definitions" targetNamespace="http://bpmn.io/schema/bpmn">
+  <bpmn:collaboration id="collaboration">
+    <bpmn:participant id="tracker" name="Postings tracker" processRef="tracker_process" />
+  </bpmn:collaboration>
+  <bpmn:process id="tracker_process" isExecutable="false">
+    <bpmn:laneSet id="lanes">
+      <bpmn:lane id="lane_human" name="HUMAN operator">
+        <bpmn:flowNodeRef>posting_saved</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>review_verdict</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>worth_applying</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>posting_tracked</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>posting_dropped</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="lane_agent" name="AI AGENT">
+        <bpmn:flowNodeRef>merge_assess</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>assess_posting</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="lane_program" name="PROGRAM">
+        <bpmn:flowNodeRef>fetch_posting</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="posting_saved" name="posting link saved">
+      <bpmn:outgoing>to_fetch</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="fetch_posting" name="Fetch posting">
+      <bpmn:incoming>to_fetch</bpmn:incoming>
+      <bpmn:outgoing>to_merge</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="merge_assess">
+      <bpmn:incoming>to_merge</bpmn:incoming>
+      <bpmn:incoming>rerun</bpmn:incoming>
+      <bpmn:outgoing>to_assess</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="assess_posting" name="Assess posting">
+      <bpmn:incoming>to_assess</bpmn:incoming>
+      <bpmn:outgoing>to_review</bpmn:outgoing>
+      <bpmn:dataOutputAssociation id="assess_writes_postings">
+        <bpmn:targetRef>postings_store</bpmn:targetRef>
+      </bpmn:dataOutputAssociation>
+    </bpmn:task>
+    <bpmn:userTask id="review_verdict" name="Review verdict">
+      <bpmn:incoming>to_review</bpmn:incoming>
+      <bpmn:outgoing>to_decide</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="worth_applying" name="worth applying?">
+      <bpmn:incoming>to_decide</bpmn:incoming>
+      <bpmn:outgoing>yes</bpmn:outgoing>
+      <bpmn:outgoing>no</bpmn:outgoing>
+      <bpmn:outgoing>rerun</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="posting_tracked" name="posting tracked">
+      <bpmn:incoming>yes</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="posting_dropped" name="posting dropped">
+      <bpmn:incoming>no</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:dataStoreReference id="postings_store" name="postings.csv" />
+    <bpmn:sequenceFlow id="to_fetch" sourceRef="posting_saved" targetRef="fetch_posting" />
+    <bpmn:sequenceFlow id="to_merge" sourceRef="fetch_posting" targetRef="merge_assess" />
+    <bpmn:sequenceFlow id="to_assess" sourceRef="merge_assess" targetRef="assess_posting" />
+    <bpmn:sequenceFlow id="to_review" sourceRef="assess_posting" targetRef="review_verdict" />
+    <bpmn:sequenceFlow id="to_decide" sourceRef="review_verdict" targetRef="worth_applying" />
+    <bpmn:sequenceFlow id="yes" name="yes" sourceRef="worth_applying" targetRef="posting_tracked" />
+    <bpmn:sequenceFlow id="no" name="no" sourceRef="worth_applying" targetRef="posting_dropped" />
+    <bpmn:sequenceFlow id="rerun" name="verdict looks wrong" sourceRef="worth_applying" targetRef="merge_assess" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="diagram">
+    <bpmndi:BPMNPlane id="plane" bpmnElement="collaboration">
+      <bpmndi:BPMNShape id="tracker_di" bpmnElement="tracker" isHorizontal="true">
+        <dc:Bounds x="160" y="80" width="992" height="603" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="posting_saved_di" bpmnElement="posting_saved">
+        <dc:Bounds x="240" y="132" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="fetch_posting_di" bpmnElement="fetch_posting">
+        <dc:Bounds x="356" y="573" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="merge_assess_di" bpmnElement="merge_assess">
+        <dc:Bounds x="536" y="378" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="assess_posting_di" bpmnElement="assess_posting">
+        <dc:Bounds x="636" y="363" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="review_verdict_di" bpmnElement="review_verdict">
+        <dc:Bounds x="816" y="110" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="worth_applying_di" bpmnElement="worth_applying">
+        <dc:Bounds x="966" y="125" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="posting_tracked_di" bpmnElement="posting_tracked">
+        <dc:Bounds x="1066" y="132" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="posting_dropped_di" bpmnElement="posting_dropped">
+        <dc:Bounds x="1066" y="272" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="postings_store_di" bpmnElement="postings_store">
+        <dc:Bounds x="661" y="468" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="lane_human_di" bpmnElement="lane_human" isHorizontal="true">
+        <dc:Bounds x="190" y="80" width="962" height="253" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="lane_agent_di" bpmnElement="lane_agent" isHorizontal="true">
+        <dc:Bounds x="190" y="333" width="962" height="210" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="lane_program_di" bpmnElement="lane_program" isHorizontal="true">
+        <dc:Bounds x="190" y="543" width="962" height="140" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="to_fetch_di" bpmnElement="to_fetch">
+        <di:waypoint x="276" y="150" />
+        <di:waypoint x="316" y="150" />
+        <di:waypoint x="316" y="613" />
+        <di:waypoint x="356" y="613" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="to_merge_di" bpmnElement="to_merge">
+        <di:waypoint x="456" y="613" />
+        <di:waypoint x="561" y="613" />
+        <di:waypoint x="561" y="428" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="to_assess_di" bpmnElement="to_assess">
+        <di:waypoint x="586" y="403" />
+        <di:waypoint x="636" y="403" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="to_review_di" bpmnElement="to_review">
+        <di:waypoint x="736" y="403" />
+        <di:waypoint x="776" y="403" />
+        <di:waypoint x="776" y="150" />
+        <di:waypoint x="816" y="150" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="to_decide_di" bpmnElement="to_decide">
+        <di:waypoint x="916" y="150" />
+        <di:waypoint x="966" y="150" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="yes_di" bpmnElement="yes">
+        <di:waypoint x="1016" y="150" />
+        <di:waypoint x="1066" y="150" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="no_di" bpmnElement="no">
+        <di:waypoint x="991" y="175" />
+        <di:waypoint x="991" y="290" />
+        <di:waypoint x="1066" y="290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="rerun_di" bpmnElement="rerun">
+        <di:waypoint x="991" y="125" />
+        <di:waypoint x="991" y="100" />
+        <di:waypoint x="561" y="100" />
+        <di:waypoint x="561" y="378" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="assess_writes_postings_di" bpmnElement="assess_writes_postings">
+        <di:waypoint x="686" y="443" />
+        <di:waypoint x="686" y="468" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
