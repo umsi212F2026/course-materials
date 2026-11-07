@@ -74,6 +74,13 @@ of these is found from there. Only the entry points are listed here.
   learning-topics, which stays with learn, study, review and quiz even when it involves making
   something.
   `workflows/develop/skills/superpowers/SKILL.md`
+- **draw-workflow** - Draw or revise a BPMN diagram of a workflow, showing who does each step
+  (the student, an AI agent following a skill file, or a program), what triggers it, and where
+  its state is kept, for the student to view in Camunda. Use when someone asks to draw, change
+  or fix a workflow diagram or a .bpmn file in their assignments repository, and whenever a
+  workflow's design changes in a way the diagram shows. Designing a new workflow starts with
+  superpowers, which uses this.
+  `workflows/diagram/skills/draw-workflow/SKILL.md`
 
 **Before starting a workflow, establish which data directory it operates on. Read
 `~/.codex/AGENTS.md`, which names it; do not infer it from the working directory, and do not

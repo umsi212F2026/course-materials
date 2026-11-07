@@ -105,6 +105,24 @@ That path is a constant, like `C:\Program Files\Git\cmd\git.exe`: git was instal
 machine-wide in the first setup session. Do not go looking for another bash, and do not
 rewrite a script in PowerShell. If it fails through that bash, say what it said and stop.
 
+## When the thing being designed is a workflow
+
+A workflow is steps done by people, agents and programs, like the one Problem Set 5 asks for.
+**Its design is a spec and a BPMN diagram, kept in step**: a change to either one goes into
+the other in the same commit. Brainstorming runs as it always does, and its spec still
+describes the workflow in words; the diagram holds the same design with structure. Draw and
+revise it following [`draw-workflow`](workflows/diagram/skills/draw-workflow/SKILL.md), which
+says where it goes and how.
+
+- **Show the student the diagram whenever it would make something clearer than words**: an
+  overview of the run, a question about what happens after a decision, a question about where
+  state is kept. That can be at any stage of brainstorming. The visual companion is not used
+  for a workflow; Camunda is the visual.
+- **Paths to skill files and programs join the diagram in `writing-plans`**, once the plan
+  names them. While the spec is being worked out, a step is a verb and an object in a lane.
+- **The spec's self-review also checks that the spec and the diagram agree** on the trigger,
+  the steps, who does each, the decisions, and where state is kept.
+
 ## Start
 
 Read `superpowers:using-superpowers` and follow it. It is how Superpowers begins a session, and
@@ -113,5 +131,6 @@ it sends a request to build something to `superpowers:brainstorming` first.
 ## Depends on
 
 - [`setup-superpowers`](workflows/bootstrap/skills/setup-superpowers/SKILL.md) - skill
+- [`draw-workflow`](workflows/diagram/skills/draw-workflow/SKILL.md) - skill
 - [`superpowers.bpmn`](workflows/develop/superpowers.bpmn) - diagram, this workflow drawn from
   the pinned commit
