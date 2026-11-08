@@ -13,6 +13,12 @@ ends. Settle what one run is before drawing anything: one posting, one week's ba
 sitting. Every loop and every end event depends on it. Say "run", never "token", which in this
 course means the unit students are billed in.
 
+**Two triggers whose runs happen at different times are two workflows.** Capturing a posting
+whenever one is found and reviewing the captures once a week are different runs, at different
+rates. Draw them as two pools in the same file, each with its own process and its own three
+lanes. What connects them is the state one writes and the other reads: a data store drawn in
+each pool, under the same name.
+
 ## Three lanes
 
 One pool, named for the workflow, with three lanes, in this order and with these names:
@@ -101,6 +107,30 @@ A new diagram, with nothing in it yet but the lanes:
     </bpmn:laneSet>
   </bpmn:process>
 </bpmn:definitions>
+```
+
+Two workflows in one file: a participant for each in the collaboration, and a process for
+each, with ids that keep the two apart. Each process has its own `laneSet` with all three lanes.
+
+```xml
+<bpmn:collaboration id="collaboration">
+  <bpmn:participant id="capture" name="Capture a posting" processRef="capture_process" />
+  <bpmn:participant id="review" name="Review captured postings" processRef="review_process" />
+</bpmn:collaboration>
+<bpmn:process id="capture_process" isExecutable="false">
+  <bpmn:laneSet id="capture_lanes">
+    <bpmn:lane id="capture_lane_human" name="HUMAN operator" />
+    <bpmn:lane id="capture_lane_agent" name="AI AGENT" />
+    <bpmn:lane id="capture_lane_program" name="PROGRAM" />
+  </bpmn:laneSet>
+  <bpmn:dataStoreReference id="inbox_in_capture" name="Capture inbox (folder)" />
+</bpmn:process>
+<bpmn:process id="review_process" isExecutable="false">
+  <bpmn:laneSet id="review_lanes">
+    ...the same three lanes, with review_ ids...
+  </bpmn:laneSet>
+  <bpmn:dataStoreReference id="inbox_in_review" name="Capture inbox (folder)" />
+</bpmn:process>
 ```
 
 A lane lists its steps, gateways and events; a lane with none is self-closing as above. Data

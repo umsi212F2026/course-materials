@@ -98,10 +98,12 @@ describes the workflow in words; the diagram holds the same design with structur
 revise it following [`draw-workflow`](workflows/diagram/skills/draw-workflow/SKILL.md), which
 says where it goes and how.
 
-- **Show the student the diagram whenever it would make something clearer than words**: an
-  overview of the run, a question about what happens after a decision, a question about where
-  state is kept. That can be at any stage of brainstorming. The visual companion is not used
-  for a workflow; Camunda is the visual.
+- **Show the student the diagram at two fixed moments in brainstorming**: as soon as the
+  trigger and the first steps are known, as a skeleton that the next question is asked by way
+  of; and when the overall design is put to them for approval, which is asked with the diagram
+  rather than a list alone. Between and after those, show it whenever it would make something
+  clearer than words: what happens after a decision, where state is kept, a choice of lane.
+  The visual companion is not used for a workflow; Camunda is the visual.
 - **Paths to skill files and programs join the diagram in `writing-plans`**, once the plan
   names them. While the spec is being worked out, a step is a verb and an object in a lane.
 - **The spec's self-review also checks that the spec and the diagram agree** on the trigger,

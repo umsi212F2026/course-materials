@@ -65,23 +65,55 @@ that change.
 
 ## Showing it to the student
 
-Show the diagram whenever it would make something clearer than words would: an overview of the
-whole run, a question about what happens after a decision, a question about where state is
-kept, a choice of lane. That can be at any stage of the design. Otherwise keep the conversation
-in text, and still keep the diagram in step.
+While a workflow is being designed, show the diagram at two fixed moments:
+
+1. **As soon as the trigger and the first steps are known**, draw a skeleton (the lanes, the
+   start event, the steps so far, an end event) and ask the next design question by way of it.
+2. **When the overall design is put to the student for approval**, ask with the diagram, not
+   with a list alone.
+
+Between and after those, show it whenever it would make something clearer than words would:
+an overview of the whole run, a question about what happens after a decision, a question about
+where state is kept, a choice of lane. Otherwise keep the conversation in text, and still keep
+the diagram in step.
 
 **Do all of the work above first, then send this as the last thing in the turn**, with nothing
-after it. Fill in the parts in angle brackets; the path is the diagram's full path.
+after it. Fill in the parts in angle brackets.
 
 > I've updated your workflow diagram: <what changed, in a sentence or two>.
 >
-> To see it, double-click `<full path to the diagram>`. If it is already open in Camunda and
-> Camunda asks whether to reload it, say yes.
+> <how to see it: one of the three below>
 >
 > <one question about the design that the diagram helps answer; one, not two>
 >
 > If you move anything in Camunda, save before you reply and I'll keep your layout. If you
 > haven't saved something you changed there, tell me before I edit the file again.
+
+**How to see it.** A path in a message cannot be clicked into Camunda, so:
+
+- **If the student has already opened this diagram in Camunda in this conversation**, say:
+
+  > Switch to Camunda. If it asks whether to reload the diagram, say yes.
+
+- **Otherwise, first try to show the file in a file window**, so they can double-click it. On
+  macOS run `open -R <diagram>`; on Windows run `explorer /select,"<diagram>"`, which reports
+  exit code 1 even when it works, so count it as working unless it printed an error. If it
+  worked, say (Finder on macOS, File Explorer on Windows):
+
+  > I've opened a Finder window with `workflow.bpmn` selected. Double-click it to open it in
+  > Camunda.
+
+- **If that command failed**, say this, with the diagram's full path, and only the tip for the
+  student's platform:
+
+  > Open Camunda Modeler, choose File → Open, and go to this file:
+  >
+  > ```
+  > <full path to the diagram>
+  > ```
+  >
+  > On a Mac, press Command-Shift-G in the Open window, paste the path, and press Return. On
+  > Windows, paste the path into the File name box and click Open.
 
 **If this turn created the diagram**, add this line before the question:
 
@@ -91,10 +123,6 @@ after it. Fill in the parts in angle brackets; the path is the diagram's full pa
 **If `layout.mjs` reported `moved`** for anything, add which steps moved and why, in a phrase,
 to the first line. It moves a shape only to make room for a new step or to put a step in the
 lane it now belongs to.
-
-If double-clicking does not open Camunda, open it for them: on macOS,
-`open -a "Camunda Modeler" <diagram>`; on Windows,
-`& "C:\Program Files\Camunda Modeler\Camunda Modeler.exe" <diagram>`.
 
 ## Depends on
 
