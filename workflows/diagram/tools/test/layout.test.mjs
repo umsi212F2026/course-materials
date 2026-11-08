@@ -28,7 +28,8 @@ function edges(xml) {
 }
 const laneMembers = (xml) => {
   const out = {};
-  for (const m of xml.matchAll(/<bpmn:lane id="([^"]+)"[^>]*>([\s\S]*?)<\/bpmn:lane>/g))
+  // [^>]*[^/]> so a self-closing, empty lane is not read as an opening tag
+  for (const m of xml.matchAll(/<bpmn:lane id="([^"]+)"[^>]*[^/]>([\s\S]*?)<\/bpmn:lane>/g))
     for (const r of m[2].matchAll(/<bpmn:flowNodeRef>([^<]+)</g)) out[r[1]] = m[1];
   return out;
 };
@@ -190,6 +191,25 @@ test('a new merge sits in the row of the step it leads into, and no edge crosses
     }
   }
   assert.match(checkDi(xml), /DI consistent/);
+});
+
+test('two workflows in one file are two pools, stacked, each with its own lanes', async () => {
+  const TWO = fixture('two-pools-no-di.bpmn');
+  const { xml } = await layout(TWO);
+  const s = shapes(xml);
+  for (const id of ['capture', 'review', 'capture_lane_human', 'capture_lane_agent', 'capture_lane_program',
+    'review_lane_human', 'review_lane_agent', 'review_lane_program', 'capture_clicked', 'save_posting',
+    'posting_captured', 'inbox_in_capture', 'review_requested', 'assess_postings', 'choose_postings',
+    'choices_made', 'inbox_in_review'])
+    assert.ok(s[id], `${id} has a shape`);
+  // The pools do not overlap, and each holds its own lanes and nodes.
+  assert.ok(s.capture.y + s.capture.height <= s.review.y, 'review pool below capture pool');
+  const inside = (a, b) => a.x >= b.x && a.y >= b.y && a.x + a.width <= b.x + b.width && a.y + a.height <= b.y + b.height;
+  for (const [node, lane] of Object.entries(laneMembers(xml))) assert.ok(inside(s[node], s[lane]), `${node} inside ${lane}`);
+  for (const id of ['capture_lane_human', 'capture_lane_program', 'inbox_in_capture']) assert.ok(inside(s[id], s.capture), `${id} in capture`);
+  for (const id of ['review_lane_human', 'review_lane_agent', 'inbox_in_review']) assert.ok(inside(s[id], s.review), `${id} in review`);
+  assert.match(checkDi(xml), /DI consistent/);
+  assert.equal((await layout(xml)).xml, xml, 'running twice equals once');
 });
 
 test('a step moved to another lane changes only its y and its edges', async () => {
