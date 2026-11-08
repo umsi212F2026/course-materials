@@ -57,22 +57,22 @@ this file disagree, this file wins.
 
 **The subagent tools.** `using-superpowers` sends you to `references/codex-tools.md`, which says
 "current presets run V2" and names the tools `spawn_agent`, `wait_agent` and so on. The version
-follows the model, and the course starts every student on Luna, which gets V1. On V1 the tools
-are `multi_agent_v1__spawn_agent` and the rest of the `multi_agent_v1__` family, and you call
-them as JavaScript from inside `functions.exec`. So a missing `spawn_agent` does not mean you
-cannot start a subagent. Believe your own tool list, as that file itself says to. **A child stays
-on V1 whatever model you give it**, so the tools do not change under you when a subagent runs on
-something else.
+follows the model the session runs on, and some models get V1 instead. On V1 the tools are
+`multi_agent_v1__spawn_agent` and the rest of the `multi_agent_v1__` family, and you call them
+as JavaScript from inside `functions.exec`. So a missing `spawn_agent` does not mean you cannot
+start a subagent. **Believe your own tool list**, as that file itself says to, not a guess from
+the model's name. **On V1, a child stays on V1 whatever model you give it**, so the tools do not
+change under you when a subagent runs on something else.
 
 **Which model to spawn on.** Model Selection tells you to reach for a more capable model as a
 task gets harder, and names tiers rather than models. Here, buy thinking rather than a bigger
-model: spawn on `gpt-5.6-luna` and raise `reasoning_effort` instead.
+model: spawn on the model this session is running on, and raise `reasoning_effort` instead.
 
 **Set both on every spawn.** A spawn that names a model and omits the effort takes that model's
-own default, which for Luna is `low`, so naming the model alone gets you the cheap model at its
-least capable. A tier up costs ten times as much per token and there is more above it, while the
+own default, which may be `low`, so naming the model alone can get you the model at its least
+capable. A tier up costs ten times as much per token and there is more above it, while the
 extra thinking costs output tokens, which are well under one percent of what a run spends. **Do
-not go past Terra without asking first.**
+not spawn on a more capable model than this session's own without asking first.**
 
 **That is a budget default, not a judgement about quality.** The allocation is $50 a month and
 one app built this way has cost $11, which is why it is the default. If the student says they
