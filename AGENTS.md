@@ -98,6 +98,12 @@ of these is found from there. Only the entry points are listed here.
   to hand it in.
   `workflows/record/skills/ready-to-submit/SKILL.md`
 
+**A problem set's folder can carry instructions of its own for you.** Before working in a folder
+of the assignments repository, read the `AGENTS.md` in that folder if there is one, and follow
+it. Codex does not load it for you: a session starts in the folder above the repositories, and
+reads only the files on the way down to there. `ps5/AGENTS.md` has you offer the student a
+change-record entry after each change to the diagram or a skill.
+
 **Before starting a workflow, establish which data directory it operates on. Read
 `~/.codex/AGENTS.md`, which names it; do not infer it from the working directory, and do not
 open by asking.** Installation 1 wrote that file so this question has one answer on every

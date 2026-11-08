@@ -35,9 +35,9 @@ Never edit `CHANGES.md` yourself.
 3. Note what changed (the diagram, or which skill) and what prompted it, if you know: a run on
    one of the examples, or design critique in class.
 
-**When `find-changes` hands you a change**, the student has already chosen to record it: skip
-step 1, and at the end of step 4 send no block. Commit, then go back to `find-changes`, which
-says what comes next.
+**When `find-changes` hands you a change**, do everything above, then start at step 2 below:
+the student has already chosen to record it. At the end of step 4 send no block. Commit, then go
+back to `find-changes`, which says what comes next.
 
 ## What you do
 
@@ -55,7 +55,8 @@ If they say no, say "OK, it stays out." and stop.
 
 **2. Ask who noticed it and who chose the fix.** Send this and end the turn:
 
-> Three quick questions about this change.
+> Three quick questions about <the diagram change, or the change to the `<name>` skill> in
+> commit <short hash>, "<its subject>".
 >
 > **What prompted it?** A run on one of your examples (which one?), or design critique in
 > class?
@@ -83,25 +84,38 @@ add-entry <repo> --title <t> --changed "<diagram | skill <name>>" --commit <hash
   --who-noticed "<answer>" --who-chose "<answer>" --what-changed <t>
 ```
 
-It prints the new entry's number. If it refuses, send this and stop:
+It prints the new entry's number. If it refuses because the agent noticed and chose the fix, or
+because a critique change's fix was not the student's choice, send this and stop:
 
 > This one doesn't go in your record: <the tool's message>
 
+Any other refusal is a mistake in how you ran it, such as a value not copied exactly from the
+lists or a commit hash mistyped. Fix it and run it again; do not tell the student it doesn't
+count.
+
 **3. Ask what they noticed.** Send this and end the turn:
 
-> In your own words: **what did you notice was wrong?** Whatever you write here goes into your
-> record exactly as you type it, so write it the way you would explain it to a classmate.
+> In your own words: **what did you notice was wrong?** Name the input or the critique that
+> showed you, and what was wrong with what came out. Whatever you write here goes into your
+> record exactly as you type it.
 
 **At the start of your next turn, before anything else**, if their reply answers the question,
-run `take-reply <repo> <n> noticed`. It copies their last message into the record. If their
-reply is a question instead, answer it and send the step 3 block again; do not run the tool on a
-question. If the tool says two sessions are active, rerun it once with `--transcript <path>` set
-to whichever of the two named files ends with the reply you just received. If it says the
-answer has a line starting with `#`, send its message as the block, and run it again on their
-next answer.
+run `take-reply <repo> <n> noticed`. It copies their last message into the record and prints
+what it recorded. If their reply is a question instead, answer it and send the step 3 block
+again; do not run the tool on a question. If the tool refuses:
 
-**4. Ask why they chose the fix.** Send this and end the turn:
+- **Two sessions are active:** rerun it once with `--transcript <path>` set to whichever of the
+  two named files ends with the reply you just received.
+- **Any other refusal**, such as a line starting with `#` or a reply that doesn't answer the
+  question: send the block for this step again with the tool's message as its first line, and
+  run it again on their next answer.
 
+**4. Ask why they chose the fix.** Send this, with what `take-reply` printed, and end the turn:
+
+> I recorded what you noticed, exactly as you wrote it:
+>
+> > <the words take-reply printed>
+>
 > And in your own words: **why did you choose this fix**, rather than some other way of
 > handling it?
 
@@ -109,9 +123,16 @@ At the start of your next turn, as in step 3, run `take-reply <repo> <n> why`. T
 `ps5/CHANGES.md` with the message `record: entry <n>`, and send this as the last thing in the
 turn:
 
-> Recorded as entry <n> in `ps5/CHANGES.md`.
+> Recorded as entry <n> in `ps5/CHANGES.md`, with why you chose the fix exactly as you wrote it:
+>
+> > <the words take-reply printed>
+
+**Ask every question here as a plain message**, never through a question or multiple-choice
+tool. The tool copies the student's typed reply, and an answer given through another tool may
+not be one it can read.
 
 ## Depends on
 
 - [`changes.mjs`](workflows/record/tools/changes.mjs) - tool
 - [`draw-workflow`](workflows/diagram/skills/draw-workflow/SKILL.md) - skill
+- [`find-changes`](workflows/record/skills/find-changes/SKILL.md) - skill
