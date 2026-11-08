@@ -61,11 +61,15 @@ Use only these. Each has an exact XML form below.
 object or data store with an association to that step. Where state lives is one of the first
 things a design critique asks.
 
-**Draw the file beside each step that uses it**, a separate reference for each, rather than one
-reference with associations reaching across the diagram. A file written in one lane and read in
-another otherwise becomes a dotted line through everything between. Each reference to a file
-points at the same `bpmn:dataObject`, which is what makes them one file; each reference to a
-store has the same name.
+**Draw a file again when the next step that uses it is far away**, rather than one reference
+with associations reaching across the diagram, which become dotted lines through everything
+between. When steps that use it sit next to each other, they share one reference. A step that
+uses many stores is a sign the stores could be fewer: one folder holding several kinds of file
+is one store. Each reference to a file points at the same `bpmn:dataObject`, which is what
+makes them one file; each reference to a store has the same name.
+
+**A store's name can say what it physically is**, since the cylinder looks like a database:
+`Capture inbox (folder)`, `tracker.csv`, `Criteria (criteria.md)`.
 
 **Never simplify by deleting.** Removing an arrow says there is no path. Removing an end event
 says the run never ends. To hide detail, collapse it into a subprocess.
@@ -77,8 +81,9 @@ step carries:
 
 - the full path from the repository root in `bpmn:documentation`:
   `ps5/skills/assess/SKILL.md`, `ps5/fetch.py`
-- the short name on a second line of its label: `Assess posting&#10;assess`. A `SKILL.md` is
-  named by its folder; anything else by its filename.
+- the short name on a second line of its label: `Assess posting&#10;assess.md`,
+  `Fetch posting&#10;fetch.py`. A `SKILL.md` is named by its folder with `.md` added, so it reads
+  as a file rather than as part of the step's name; anything else by its filename.
 
 Until the file exists, run `check-di.mjs` with `--planned`.
 

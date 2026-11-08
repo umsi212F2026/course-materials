@@ -82,29 +82,23 @@ after it. Fill in the parts in angle brackets.
 
 > I've updated your workflow diagram: <what changed, in a sentence or two>.
 >
-> <how to see it: one of the three below>
+> <how to see it: one of the two below>
 >
 > <one question about the design that the diagram helps answer; one, not two>
 >
 > If you move anything in Camunda, save before you reply and I'll keep your layout. If you
 > haven't saved something you changed there, tell me before I edit the file again.
 
-**How to see it.** A path in a message cannot be clicked into Camunda, so:
+**How to see it.** A path in a message cannot be clicked into Camunda, and you cannot open
+Camunda or a Finder window for the student: the sandbox lets those commands report success
+while nothing appears. So:
 
 - **If the student has already opened this diagram in Camunda in this conversation**, say:
 
   > Switch to Camunda. If it asks whether to reload the diagram, say yes.
 
-- **Otherwise, first try to show the file in a file window**, so they can double-click it. On
-  macOS run `open -R <diagram>`; on Windows run `explorer /select,"<diagram>"`, which reports
-  exit code 1 even when it works, so count it as working unless it printed an error. If it
-  worked, say (Finder on macOS, File Explorer on Windows):
-
-  > I've opened a Finder window with `workflow.bpmn` selected. Double-click it to open it in
-  > Camunda.
-
-- **If that command failed**, say this, with the diagram's full path, and only the tip for the
-  student's platform:
+- **Otherwise** say this, with the diagram's full path, and only the tip for the student's
+  platform:
 
   > Open Camunda Modeler, choose File → Open, and go to this file:
   >
