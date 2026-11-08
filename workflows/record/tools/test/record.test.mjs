@@ -159,3 +159,25 @@ test("setAttestation writes a fresh comment and replaces an old one", () => {
 test("setAttestation on an entry that does not exist throws", () => {
   assert.throws(() => setAttestation(UNATTESTED, 7, "why", "2026-11-18"), /entry 7/);
 });
+
+test("Windows line endings parse the same as Unix ones", () => {
+  const r = parseRecord(SAMPLE.replace(/\n/g, "\r\n"));
+  assert.deepEqual(r.problems, []);
+  assert.equal(r.entries.length, 2);
+  assert.equal(r.entries[0].parts.noticed.text, NOTICED);
+  assert.equal(r.entries[0].parts.noticed.attestation, "fresh");
+});
+
+test("setAttestation on a file with Windows line endings writes a fresh comment", () => {
+  const once = setAttestation(UNATTESTED.replace(/\n/g, "\r\n"), 1, "why", "2026-11-18");
+  assert.equal(parseRecord(once).entries[0].parts.why.attestation, "fresh");
+});
+
+test("a duplicate entry number is a problem", () => {
+  const r = parseRecord(SAMPLE.replace("## 2. drop expired postings", "## 1. drop expired postings"));
+  assert.ok(r.problems.some((p) => /more than one entry 1/.test(p.message)));
+});
+
+test("the file keeps its final newline after a write", () => {
+  assert.ok(setAttestation(UNATTESTED, 1, "why", "2026-11-18").endsWith("\n"));
+});

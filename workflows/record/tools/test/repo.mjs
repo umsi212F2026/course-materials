@@ -57,19 +57,37 @@ export function changes(initial, entries) {
   return `# Change record\n\nInitial design: ${initial}\n\n${entries.join("\n")}`;
 }
 
-/** A repository that passes every item of check. Returns { repo, initial }. */
+/** Give `repo` a bare remote, push to it and track it, as a student's clone does. */
+export function withRemote(repo) {
+  const bare = mkdtempSync(join(tmpdir(), "record-remote-"));
+  git(bare, "init", "-q", "--bare");
+  git(repo, "remote", "add", "origin", bare);
+  git(repo, "push", "-q", "-u", "origin", "HEAD");
+  return bare;
+}
+
+/** A repository that passes every item of check, pushed to its remote.
+ *
+ *  Returns { repo, initial, commits, entry }: `commits` are the two skill changes after the
+ *  initial design, and `entry(n, opts)` renders entry n pointing at commits[n - 1]. */
 export function passingRepo() {
   const repo = emptyRepo();
   write(repo, "ps5/CHANGES.md", "# Change record\n\nInitial design: <commit hash>\n");
   write(repo, "ps5/workflow.bpmn", "<definitions/>\n");
   write(repo, "ps5/skills/extract/SKILL.md", "# extract\n");
   const initial = commit(repo, "initial design");
+  const commits = [1, 2].map((i) => {
+    write(repo, "ps5/skills/extract/SKILL.md", `# extract v${i + 1}\n`);
+    return commit(repo, `extract, change ${i}`);
+  });
   for (let i = 1; i <= 10; i++) {
     const id = `e${String(i).padStart(2, "0")}`;
     write(repo, `ps5/examples/${id}/input.txt`, `posting ${i}\n`);
     write(repo, `ps5/examples/${id}/output.json`, "{}\n");
   }
-  write(repo, "ps5/CHANGES.md", changes(initial.slice(0, 7), [entryText(1), entryText(2)]));
+  const entry = (n, opts = {}) => entryText(n, { ...opts, fields: { ...FIELDS, commit: commits[n - 1].slice(0, 7), ...opts.fields } });
+  write(repo, "ps5/CHANGES.md", changes(initial.slice(0, 7), [entry(1), entry(2)]));
   commit(repo, "examples and record");
-  return { repo, initial };
+  withRemote(repo);
+  return { repo, initial, commits, entry };
 }

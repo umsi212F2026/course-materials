@@ -55,12 +55,20 @@ function validValue(key, value) {
   return value.length > 0;
 }
 
-/** The record in `text`. Never throws. */
+/** `text` with Windows line endings made Unix ones. Git for Windows checks files out with
+ *  CRLF by default, so a Windows student's record has them before anyone edits it. */
+export const unixLines = (text) => text.replace(/\r\n/g, "\n");
+
+/** The record in `text`. Never throws.
+ *
+ *  `initialLine` says whether the `Initial design:` line is `missing`, still the `placeholder`,
+ *  or `set`, so a check can say which. */
 export function parseRecord(text) {
-  const lines = text.split("\n");
+  const lines = unixLines(text).split("\n");
   const problems = [];
   const entries = [];
   let initialDesign = null;
+  let initialLine = "missing";
 
   // Top-level sections: the preamble, then one per `## ` heading.
   const starts = [];
@@ -69,7 +77,13 @@ export function parseRecord(text) {
   });
   for (const l of lines.slice(0, starts[0] ?? lines.length)) {
     const m = INITIAL_RE.exec(l.trim());
-    if (m && m[1] && !/^<.*>$/.test(m[1])) initialDesign = m[1].trim();
+    if (!m) continue;
+    const value = m[1].trim().replace(/^`(.*)`$/, "$1");
+    if (!value || /^<.*>$/.test(value)) initialLine = "placeholder";
+    else {
+      initialLine = "set";
+      initialDesign = value;
+    }
   }
 
   starts.forEach((start, k) => {
@@ -79,10 +93,12 @@ export function parseRecord(text) {
       problems.push({ line: start + 1, message: `"${lines[start]}" is not an entry heading, which looks like "## 1. <title>".` });
       return;
     }
-    entries.push(parseEntry(lines, start, end, Number(m[1]), m[2].trim(), problems));
+    const n = Number(m[1]);
+    if (entries.some((e) => e.n === n)) problems.push({ line: start + 1, message: `There is more than one entry ${n}. Renumber one of them.` });
+    entries.push(parseEntry(lines, start, end, n, m[2].trim(), problems));
   });
 
-  return { initialDesign, entries, problems };
+  return { initialDesign, initialLine, entries, problems };
 }
 
 function parseEntry(lines, start, end, n, title, problems) {
@@ -148,6 +164,7 @@ export function renderEntry(n, { title, fields, parts }) {
 
 /** The whole file with entry `n`'s `key` part rewritten as `body` lines after its heading. */
 function replacePart(text, n, key, body) {
+  text = unixLines(text);
   const lines = text.split("\n");
   const entry = parseRecord(text).entries.find((e) => e.n === n);
   if (!entry) throw new Error(`There is no entry ${n} in CHANGES.md.`);
@@ -162,7 +179,7 @@ function replacePart(text, n, key, body) {
     }
   const region = [lines[at], "", ...body(part)];
   if (stop < lines.length) region.push("");
-  return [...lines.slice(0, at), ...region, ...lines.slice(stop)].join("\n");
+  return [...lines.slice(0, at), ...region, ...lines.slice(stop)].join("\n").replace(/\n*$/, "\n");
 }
 
 /** The whole file with entry `n`'s `key` part attested on `date`, replacing any old comment. */

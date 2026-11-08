@@ -84,7 +84,7 @@ function home(...sessions) {
   const h = mkdtempSync(join(tmpdir(), "record-home-"));
   const now = Date.now();
   const paths = sessions.map(({ name, ageMs }) => {
-    const p = codexRollout(h, name, [meta("cli"), userMsg("please record this"), agentMsg("What did you notice?"), userMsg(REPLY), agentMsg("ok")]);
+    const p = codexRollout(h, name, [meta("cli"), userMsg("please record this"), agentMsg("In your own words: what did you notice was wrong?"), userMsg(REPLY), agentMsg("ok")]);
     utimesSync(p, (now - ageMs) / 1000, (now - ageMs) / 1000);
     return p;
   });
@@ -95,7 +95,7 @@ test("take-reply copies the student's last message exactly into the part", () =>
   const repo = started();
   addEntry(repo, ENTRY);
   const s = home({ name: "a", ageMs: 1_000 });
-  assert.equal(takeReply(repo, 1, "noticed", { home: s.home, now: s.now }), "recorded your words in entry 1, noticed");
+  assert.equal(takeReply(repo, 1, "noticed", { home: s.home, now: s.now }), `recorded your words in entry 1, noticed:\n\n${REPLY.trim()}`);
   const r = parseRecord(record(repo));
   assert.equal(r.entries[0].parts.noticed.text, REPLY.trim());
   assert.equal(r.entries[0].parts.why.text, "");
@@ -136,7 +136,7 @@ test("a reply with a line CHANGES.md would read as a heading is refused", () => 
   addEntry(repo, ENTRY);
   const before = record(repo);
   const h = mkdtempSync(join(tmpdir(), "record-home-"));
-  const p = codexRollout(h, "x", [meta("cli"), userMsg("## my answer\nit broke")]);
+  const p = codexRollout(h, "x", [meta("cli"), agentMsg("In your own words?"), userMsg("## my answer\nit broke")]);
   assert.throws(() => takeReply(repo, 1, "noticed", { transcript: p }), /heading/);
   assert.equal(record(repo), before);
 });
@@ -144,6 +144,41 @@ test("a reply with a line CHANGES.md would read as a heading is refused", () => 
 test("take-reply into an entry that does not exist is refused", () => {
   const repo = started();
   const h = mkdtempSync(join(tmpdir(), "record-home-"));
-  const p = codexRollout(h, "x", [meta("cli"), userMsg("words")]);
+  const p = codexRollout(h, "x", [meta("cli"), agentMsg("In your own words?"), userMsg("words")]);
   assert.throws(() => takeReply(repo, 3, "noticed", { transcript: p }), /entry 3/);
+});
+
+function transcript(records) {
+  const h = mkdtempSync(join(tmpdir(), "record-home-"));
+  return codexRollout(h, "t", [meta("cli"), ...records]);
+}
+
+test("a reply to a question that did not ask for their own words is refused", () => {
+  const repo = started();
+  addEntry(repo, ENTRY);
+  const before = record(repo);
+  const p = transcript([agentMsg("Who noticed the problem?"), userMsg("a run on examples/e01, 1, 2")]);
+  assert.throws(() => takeReply(repo, 1, "noticed", { transcript: p }), /own words/);
+  assert.equal(record(repo), before);
+});
+
+test("a reply that was dropped, such as one with an image, does not let an older message through", () => {
+  const repo = started();
+  addEntry(repo, ENTRY);
+  const p = transcript([
+    agentMsg("Three quick questions."),
+    userMsg("a run on examples/e01, 1, 2"),
+    agentMsg("In your own words: what did you notice was wrong?"),
+    userMsg("see the screenshot", ["user.text", "user.image"]),
+  ]);
+  assert.throws(() => takeReply(repo, 1, "noticed", { transcript: p }), /own words/);
+});
+
+test("an answer sent through the Codex question tool is unwrapped to just the answer", () => {
+  const repo = started();
+  addEntry(repo, ENTRY);
+  const wrapped = `<send_user_message_question_reply>${JSON.stringify([{ questionItemId: "q1", answer: "It took the first deadline." }])}</send_user_message_question_reply>`;
+  const p = transcript([agentMsg("In your own words: what did you notice was wrong?"), userMsg(wrapped)]);
+  takeReply(repo, 1, "noticed", { transcript: p });
+  assert.equal(parseRecord(record(repo)).entries[0].parts.noticed.text, "It took the first deadline.");
 });

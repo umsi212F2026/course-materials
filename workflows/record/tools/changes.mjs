@@ -23,8 +23,8 @@ import { existsSync, readFileSync, writeFileSync, readdirSync, statSync } from "
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { homedir } from "node:os";
-import { parseRecord, qualifies, setAttestation, setPart, renderEntry } from "./lib/record.mjs";
-import { git, commitExists, filesAt } from "./lib/git.mjs";
+import { parseRecord, qualifies, setAttestation, setPart, renderEntry, unixLines } from "./lib/record.mjs";
+import { git, commitExists, filesAt, filesChanged, isAfter } from "./lib/git.mjs";
 import { findSession, harnessFor } from "../../feedback/tools/export-session.mjs";
 import { codexCandidates, readCodex } from "../../feedback/tools/lib/codex.mjs";
 import { claudeCandidates, readClaude } from "../../feedback/tools/lib/claude.mjs";
@@ -43,7 +43,7 @@ function requireRepo(repo) {
 
 function readRecord(repo) {
   const path = join(repo, RECORD);
-  return existsSync(path) ? readFileSync(path, "utf8") : null;
+  return existsSync(path) ? unixLines(readFileSync(path, "utf8")) : null;
 }
 
 const subdirs = (dir) => (existsSync(dir) ? readdirSync(dir).filter((d) => statSync(join(dir, d)).isDirectory()).sort() : []);
@@ -69,7 +69,9 @@ export function check(repo) {
     named,
     text === null
       ? `${RECORD} does not exist.`
-      : h === null
+      : r.initialLine === "missing"
+        ? 'CHANGES.md has no "Initial design:" line. Its first line after the heading should read "Initial design: <commit hash>".'
+        : h === null
         ? "CHANGES.md does not name an initial design yet."
         : named
           ? `Initial design: ${h}.`
@@ -107,6 +109,7 @@ export function check(repo) {
 
   const counted = r.entries.filter(qualifies);
   const problems = r.problems.map((p) => `line ${p.line}: ${p.message}`);
+  for (const e of counted) problems.push(...commitProblems(repo, e, named ? h : null));
   add(
     "entries",
     counted.length >= MIN_ENTRIES && !problems.length,
@@ -124,7 +127,40 @@ export function check(repo) {
   add("own words", !empty.length, empty.length ? `${empty.join("; ")}.` : "Every qualifying entry has both parts.");
   add("attested", !unattested.length, unattested.length ? `${unattested.join("; ")}.` : "Every part is attested and unchanged since.");
 
+  const pushed = pushState(repo);
+  add("pushed", pushed === null, pushed ?? "Everything under ps5/ is committed and pushed.");
+
   return { ok: items.every((i) => i.ok), items };
+}
+
+/** What is wrong with entry `e`'s commit, as the grader checks it: it exists, comes after the
+ *  initial design, and changed the diagram or the skill the entry names. */
+function commitProblems(repo, e, initial) {
+  const c = e.fields.commit;
+  if (!c) return [];
+  if (!commitExists(repo, c)) return [`entry ${e.n}: its commit, ${c}, is not a commit in this repository.`];
+  const out = [];
+  if (initial && !isAfter(repo, initial, c)) out.push(`entry ${e.n}: its commit, ${c}, does not come after the initial design.`);
+  const changed = e.fields.changed;
+  if (changed && !kindsOf(filesChanged(repo, c)).includes(changed))
+    out.push(`entry ${e.n}: its commit, ${c}, does not change the ${changed === "diagram" ? "diagram" : `${changed.slice(6)} skill`}.`);
+  return out;
+}
+
+/** Why the grader would not see this work yet, or null when it would.
+ *
+ *  GRADING READS WHAT IS ON GITHUB. Work that passes every other item but sits uncommitted, or
+ *  committed and never pushed, is work the grader never sees. */
+function pushState(repo) {
+  const dirty = git(repo, "status", "--porcelain", "--", "ps5");
+  if (dirty) return `${dirty.split("\n").length} file(s) under ps5/ are not committed yet. Commit them, then push.`;
+  try {
+    git(repo, "rev-parse", "--abbrev-ref", "@{u}");
+  } catch {
+    return "This branch has nowhere to push to yet. Push it with: git push -u origin main";
+  }
+  const ahead = Number(git(repo, "rev-list", "--count", "@{u}..HEAD"));
+  return ahead ? `${ahead} commit${ahead === 1 ? " is" : "s are"} not pushed yet. Run: git push` : null;
 }
 
 /** What a commit changed that the record counts: the diagram, and each skill by name. */
@@ -200,10 +236,40 @@ export function takeReply(repo, n, key, { transcript, home = homedir(), now = ne
   const session = transcript
     ? { path: transcript, harness: harnessFor(transcript) }
     : findSession([...codexCandidates(home), ...claudeCandidates(home)], now.getTime());
-  const words = READERS[session.harness](session.path).findLast((e) => e.role === "student")?.text;
-  if (!words?.trim()) throw new Error("There is no message from you in this session to copy.");
-  writeFileSync(join(repo, RECORD), setPart(text, Number(n), key, words));
-  return `recorded your words in entry ${n}, ${key}`;
+  const words = studentAnswer(READERS[session.harness](session.path));
+  const next = setPart(text, Number(n), key, words);
+  writeFileSync(join(repo, RECORD), next);
+  const part = parseRecord(next).entries.find((e) => e.n === Number(n)).parts[key].text;
+  return `recorded your words in entry ${n}, ${key}:\n\n${part}`;
+}
+
+/** The student's last message, if it answers a question that asked for their own words.
+ *
+ *  IT MUST ANSWER THAT QUESTION, OR NOTHING IS COPIED. The last message the reader returns is not
+ *  always the reply: a message with an image in it is not typed text and is skipped, which would
+ *  leave an older answer, to a different question, as the last one. So the agent's last words
+ *  before it must be one of the skills' own-words questions, all of which say "own words".
+ *
+ *  A REPLY THROUGH CODEX'S QUESTION TOOL ARRIVES WRAPPED, as JSON inside a tag, and Claude Code
+ *  marks a picked option as `[answered: ...]`. The student's words are the answer inside. */
+function studentAnswer(entries) {
+  const at = entries.findLastIndex((e) => e.role === "student");
+  if (at < 0) throw new Error("There is no message from you in this session to copy.");
+  const asked = entries.slice(0, at).findLast((e) => e.role === "agent" && e.text.trim());
+  if (!asked || !/own words/i.test(asked.text))
+    throw new Error("Your last message doesn't answer a question asking for your own words, so nothing was copied. Ask the question again.");
+  let words = entries[at].text;
+  const wrapped = /^\s*<send_user_message_question_reply>([\s\S]*)<\/send_user_message_question_reply>\s*$/.exec(words);
+  if (wrapped) {
+    try {
+      words = JSON.parse(wrapped[1]).map((a) => a.answer ?? "").join("\n\n");
+    } catch {
+      throw new Error("Your answer came through the question tool in a form I can't read. Ask the question again as a plain message.");
+    }
+  }
+  words = words.replace(/^\s*\[answered: ([\s\S]*)\]\s*$/, "$1");
+  if (!words.trim()) throw new Error("Your last message is empty, so nothing was copied.");
+  return words;
 }
 
 const pad = (n) => String(n).padStart(2, "0");

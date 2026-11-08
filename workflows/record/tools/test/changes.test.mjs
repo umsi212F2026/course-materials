@@ -18,9 +18,12 @@ const NAMES = [
   "entries",
   "own words",
   "attested",
+  "pushed",
 ];
 const item = (r, name) => r.items.find((i) => i.name === name);
-const failing = (r) => r.items.filter((i) => !i.ok).map((i) => i.name);
+// Most tests change the working tree without committing, which `pushed` reports; it has tests
+// of its own below.
+const failing = (r) => r.items.filter((i) => !i.ok && i.name !== "pushed").map((i) => i.name);
 
 test("a complete repository passes every item, in order", () => {
   const { repo } = passingRepo();
@@ -53,12 +56,16 @@ test("an initial design with no skill fails that item only", () => {
   const repo = emptyRepo();
   write(repo, "ps5/workflow.bpmn", "<definitions/>\n");
   const initial = commit(repo, "diagram only");
-  write(repo, "ps5/skills/extract/SKILL.md", "# extract\n");
+  const commits = [1, 2].map((i) => {
+    write(repo, "ps5/skills/extract/SKILL.md", `# extract ${i}\n`);
+    return commit(repo, `extract ${i}`);
+  });
   for (let i = 1; i <= 10; i++) {
     write(repo, `ps5/examples/e${i}/input.txt`, "x\n");
     write(repo, `ps5/examples/e${i}/output.txt`, "y\n");
   }
-  write(repo, "ps5/CHANGES.md", changes(initial, [entryText(1), entryText(2)]));
+  const at = (n) => entryText(n, { fields: { ...FIELDS, commit: commits[n - 1] } });
+  write(repo, "ps5/CHANGES.md", changes(initial, [at(1), at(2)]));
   commit(repo, "rest");
   assert.deepEqual(failing(check(repo)), ["initial design has a diagram and a skill"]);
 });
@@ -92,9 +99,9 @@ test("an example missing its output fails examples and is named", () => {
 });
 
 test("one qualifying entry fails entries", () => {
-  const { repo, initial } = passingRepo();
+  const { repo, initial, entry } = passingRepo();
   const agentOnly = { ...FIELDS, whoNoticed: "the agent", whoChose: "the agent" };
-  write(repo, "ps5/CHANGES.md", changes(initial, [entryText(1), entryText(2, { fields: agentOnly })]));
+  write(repo, "ps5/CHANGES.md", changes(initial, [entry(1), entry(2, { fields: agentOnly })]));
   assert.deepEqual(failing(check(repo)), ["entries"]);
 });
 
@@ -108,8 +115,8 @@ test("a problem in the record fails entries and says where", () => {
 });
 
 test("an empty own-words part fails own words and attested", () => {
-  const { repo, initial } = passingRepo();
-  write(repo, "ps5/CHANGES.md", changes(initial, [entryText(1), entryText(2, { why: "", attest: false })]));
+  const { repo, initial, entry } = passingRepo();
+  write(repo, "ps5/CHANGES.md", changes(initial, [entry(1), entry(2, { why: "", attest: false })]));
   const r = check(repo);
   assert.deepEqual(failing(r), ["own words", "attested"]);
   assert.match(item(r, "own words").detail, /entry 2/);
@@ -133,8 +140,8 @@ test("no CHANGES.md at all fails, without throwing", () => {
 });
 
 test("attest makes a part fresh", () => {
-  const { repo, initial } = passingRepo();
-  write(repo, "ps5/CHANGES.md", changes(initial, [entryText(1), entryText(2, { attest: false })]));
+  const { repo, initial, entry } = passingRepo();
+  write(repo, "ps5/CHANGES.md", changes(initial, [entry(1), entry(2, { attest: false })]));
   assert.equal(attest(repo, 2, "noticed", "2026-11-18"), "attested entry 2, noticed");
   const r = parseRecord(readFileSync(join(repo, "ps5/CHANGES.md"), "utf8"));
   assert.equal(r.entries[1].parts.noticed.attestation, "fresh");
@@ -160,4 +167,71 @@ test("the CLI parse command prints the parsed record", () => {
   const { repo } = passingRepo();
   const out = JSON.parse(execFileSync(process.execPath, [TOOL, "parse", repo], { encoding: "utf8" }));
   assert.equal(out.entries.length, 2);
+});
+
+test("an entry whose commit is not in history fails entries and names it", () => {
+  const { repo, initial, entry } = passingRepo();
+  write(repo, "ps5/CHANGES.md", changes(initial, [entry(1), entry(2, { fields: { commit: "deadbee" } })]));
+  const r = check(repo);
+  assert.deepEqual(failing(r), ["entries"]);
+  assert.match(item(r, "entries").detail, /entry 2.*deadbee/);
+});
+
+test("an entry whose commit does not touch what it names fails entries", () => {
+  const { repo, initial, entry } = passingRepo();
+  write(repo, "ps5/CHANGES.md", changes(initial, [entry(1), entry(2, { fields: { changed: "diagram" } })]));
+  const r = check(repo);
+  assert.deepEqual(failing(r), ["entries"]);
+  assert.match(item(r, "entries").detail, /entry 2.*diagram/);
+});
+
+test("an entry whose commit is the initial design or before it fails entries", () => {
+  const { repo, initial, entry } = passingRepo();
+  write(repo, "ps5/CHANGES.md", changes(initial, [entry(1), entry(2, { fields: { commit: initial.slice(0, 7), changed: "diagram" } })]));
+  const r = check(repo);
+  assert.deepEqual(failing(r), ["entries"]);
+  assert.match(item(r, "entries").detail, /entry 2.*after the initial design/);
+});
+
+test("a complete, pushed repository passes pushed", () => {
+  const { repo } = passingRepo();
+  assert.equal(item(check(repo), "pushed").ok, true);
+});
+
+test("uncommitted work under ps5 fails pushed", () => {
+  const { repo } = passingRepo();
+  write(repo, "ps5/examples/e11/input.txt", "new\n");
+  const r = check(repo);
+  assert.equal(item(r, "pushed").ok, false);
+  assert.match(item(r, "pushed").detail, /not committed/);
+});
+
+test("commits not yet pushed fail pushed", () => {
+  const { repo } = passingRepo();
+  write(repo, "ps5/examples/e11/input.txt", "new\n");
+  commit(repo, "one more");
+  const r = check(repo);
+  assert.equal(item(r, "pushed").ok, false);
+  assert.match(item(r, "pushed").detail, /1 commit.*not pushed/);
+});
+
+test("a repository with no remote fails pushed", () => {
+  const { repo } = passingRepo();
+  execFileSync("git", ["-C", repo, "remote", "remove", "origin"]);
+  assert.match(item(check(repo), "pushed").detail, /push/);
+  assert.equal(item(check(repo), "pushed").ok, false);
+});
+
+test("a record with Windows line endings checks the same", () => {
+  const { repo } = passingRepo();
+  const text = readFileSync(join(repo, "ps5/CHANGES.md"), "utf8").replace(/\n/g, "\r\n");
+  write(repo, "ps5/CHANGES.md", text);
+  assert.deepEqual(failing(check(repo)), []);
+});
+
+test("a missing initial design line is told apart from the placeholder", () => {
+  const { repo } = passingRepo();
+  const text = readFileSync(join(repo, "ps5/CHANGES.md"), "utf8").replace(/Initial design: .*\n/, "");
+  write(repo, "ps5/CHANGES.md", text);
+  assert.match(item(check(repo), "initial design named").detail, /no "Initial design:" line/);
 });

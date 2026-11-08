@@ -17,6 +17,23 @@ export function commitExists(repo, hash) {
   }
 }
 
+/** The files commit `hash` changed, as repository paths, unquoted even when not ASCII. */
+export function filesChanged(repo, hash) {
+  const out = git(repo, "-c", "core.quotepath=off", "show", "--name-only", "--format=", hash);
+  return out ? out.split("\n").filter(Boolean) : [];
+}
+
+/** Whether commit `hash` comes after commit `base`: `base` is an ancestor of it, and not it. */
+export function isAfter(repo, base, hash) {
+  if (git(repo, "rev-parse", `${base}^{commit}`) === git(repo, "rev-parse", `${hash}^{commit}`)) return false;
+  try {
+    git(repo, "merge-base", "--is-ancestor", base, hash);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 /** Every file under `dir` at commit `hash`, as repository paths. */
 export function filesAt(repo, hash, dir) {
   const out = git(repo, "ls-tree", "-r", "--name-only", hash, "--", dir);
