@@ -5,6 +5,7 @@
 //   node workflows/record/tools/changes.mjs parse <repo>
 //   node workflows/record/tools/changes.mjs check <repo>
 //   node workflows/record/tools/changes.mjs attest <repo> <n> <noticed|why>
+//   node workflows/record/tools/changes.mjs candidates <repo>
 //
 // <repo> is the student's assignments repository. Results are JSON on stdout, except attest,
 // which prints one line. On failure prints one line to stderr and exits 1, having written
@@ -119,6 +120,42 @@ export function check(repo) {
   return { ok: items.every((i) => i.ok), items };
 }
 
+/** What a commit changed that the record counts: the diagram, and each skill by name. */
+function kindsOf(files) {
+  const kinds = [];
+  if (files.some((f) => /^ps5\/[^/]+\.bpmn$/.test(f))) kinds.push("diagram");
+  for (const f of files) {
+    const m = /^ps5\/skills\/([^/]+)\/SKILL\.md$/.exec(f);
+    if (m && !kinds.includes(`skill ${m[1]}`)) kinds.push(`skill ${m[1]}`);
+  }
+  return kinds;
+}
+
+/** Commits since the initial design that changed the diagram or a skill, oldest first.
+ *
+ *  A COMMIT CAN CHANGE A SKILL AND A PROGRAM TOGETHER, and only the skill counts. Every file it
+ *  touched under ps5/ is listed, so the skill asking about it can say which part is in question. */
+export function candidates(repo) {
+  requireRepo(repo);
+  const r = parseRecord(readRecord(repo) ?? "");
+  const since = r.initialDesign;
+  if (since === null) throw new Error("CHANGES.md does not name an initial design yet.");
+  if (!commitExists(repo, since)) throw new Error(`"${since}" is not a commit in this repository.`);
+  const recorded = r.entries.map((e) => e.fields.commit).filter(Boolean);
+  const log = git(repo, "log", "--reverse", "--name-only", "--format=%x1e%H%x1f%cs%x1f%s", `${since}..HEAD`, "--", "ps5");
+  const commits = [];
+  for (const chunk of log.split("\x1e").slice(1)) {
+    const [head, ...rest] = chunk.split("\n");
+    const [hash, date, subject] = head.split("\x1f");
+    const files = rest.map((l) => l.trim()).filter(Boolean);
+    const kinds = kindsOf(files);
+    if (!kinds.length) continue;
+    const inRecord = recorded.some((c) => hash.startsWith(c) || c.startsWith(hash));
+    commits.push({ hash, date, subject, files, kinds, inRecord });
+  }
+  return { since, commits };
+}
+
 const pad = (n) => String(n).padStart(2, "0");
 const today = (d = new Date()) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 
@@ -136,6 +173,7 @@ const COMMANDS = {
   parse: (repo) => JSON.stringify(parse(repo), null, 2),
   check: (repo) => JSON.stringify(check(repo), null, 2),
   attest: (repo, n, key) => attest(repo, n, key),
+  candidates: (repo) => JSON.stringify(candidates(repo), null, 2),
 };
 
 export function main(argv) {
