@@ -25,13 +25,18 @@
 //
 // Exit code 1 if anything is wrong.
 
-import { readFileSync, existsSync, statSync } from 'node:fs';
+import { readFileSync, existsSync, statSync, realpathSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { execFileSync } from 'node:child_process';
 
-const file = process.argv[2];
+// --planned: a bound path that does not exist yet is listed as planned rather than
+// reported. For the stretch between a plan naming its files and the build writing them.
+const args = process.argv.slice(2);
+const planned = args.includes('--planned');
+const file = args.find((a) => !a.startsWith('--'));
 if (!file) {
-  console.error('usage: node workflows/diagram/tools/check-di.mjs <file.bpmn>');
+  console.error('usage: node workflows/diagram/tools/check-di.mjs [--planned] <file.bpmn>');
   process.exit(1);
 }
 const xml = readFileSync(file, 'utf8');
@@ -337,11 +342,41 @@ for (const [ref, names] of group('ref', 'name')) {
 // The `owner/repo:` prefix is what makes the second kind followable by a reader
 // — without it, `skills/brainstorming/SKILL.md` looks local, and this repo has
 // its own skills/ for it to be confused with.
-const PATH =
-  /(?:[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+:)?[A-Za-z0-9_-]+(?:\/[A-Za-z0-9_-]+)*\/[A-Za-z0-9_-]+\.(?:md|mjs|json)/g;
+//
+// Paths resolve from the root of the repository the diagram is in, so a student's
+// diagram binds `ps5/skills/assess/SKILL.md` in their own repository. A leading `./`,
+// `../` or `/` is captured with the path so it can be refused: a reader can only follow
+// a path from the root.
 const EXTERNAL = /^([A-Za-z0-9_.-]+)\/([A-Za-z0-9_.-]+):(.+)$/;
-const ROOTED = /^(?:workflows|notes|plans|scripts)\//;
-const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../../..');
+const toolRepo = resolve(dirname(fileURLToPath(import.meta.url)), '../../..');
+let repoRoot = toolRepo;
+try {
+  repoRoot = execFileSync('git', ['-C', dirname(resolve(file)), 'rev-parse', '--show-toplevel'], {
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'ignore'],
+  }).trim();
+} catch {
+  // Not in a git repository: fall back to the course's own, as before.
+}
+const sameDir = (a, b) => {
+  try {
+    return realpathSync(a) === realpathSync(b);
+  } catch {
+    return false;
+  }
+};
+// In the course's repository a path must start in one of its top-level folders, which
+// also catches a path written relative to the diagram's own folder. Elsewhere the only
+// requirement is that it is not relative or absolute.
+const inCourseRepo = sameDir(repoRoot, toolRepo);
+const ROOTED = inCourseRepo ? /^(?:workflows|notes|plans|scripts)\// : /^(?!\.{1,2}\/|\/)/;
+// The course binds only skills and Node tools, and its diagrams quote upstream text with
+// example paths in other languages. A student's programs may be in any of these.
+const EXT = inCourseRepo ? 'md|mjs|json' : 'md|mjs|json|js|ts|py|sh';
+const PATH = new RegExp(
+  String.raw`(?:\.{1,2}\/|\/)?(?:[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+:)?[A-Za-z0-9_-]+(?:\/[A-Za-z0-9_-]+)*\/[A-Za-z0-9_-]+\.(?:${EXT})`,
+  'g'
+);
 
 // Where to look for an external clone. "Beside this repo" is right for the main
 // checkout, but a linked worktree lives in the corral
@@ -359,6 +394,7 @@ try {
   // No .git, or unreadable — the sibling-of-repoRoot guess is all we have.
 }
 const missingClones = new Set();
+const plannedPaths = new Set();
 const carriers = new Map(); // path -> [{id, label}]
 
 for (const m of xml.matchAll(/<bpmn:(\w+)\s([^>]*?)(\/?)>/g)) {
@@ -437,7 +473,8 @@ for (const [p, on] of carriers) {
   }
 
   const onDisk = existsSync(resolve(repoRoot, p));
-  if (!onDisk && !flagged)
+  if (!onDisk && !flagged && planned) plannedPaths.add(p);
+  else if (!onDisk && !flagged)
     problems.push(`${p} does not exist — write it, or mark the label NOT WRITTEN YET`);
   if (onDisk && flagged)
     problems.push(`${p} exists now — drop NOT WRITTEN YET from ${on.map((o) => o.id).join(', ')}`);
@@ -450,6 +487,8 @@ for (const repo of missingClones)
   console.log(`${file}: note — '${repo}' is not cloned beside this repo, so its paths went unchecked`);
 if (missingClones.has('superpowers'))
   console.log(`  clone it: workflows/develop/tools/get-superpowers.sh`);
+
+for (const p of plannedPaths) console.log(`${file}: planned: ${p} is bound but not written yet`);
 
 if (!problems.length) {
   console.log(

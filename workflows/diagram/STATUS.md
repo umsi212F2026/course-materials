@@ -14,15 +14,21 @@ use; it is not a design.
   not have.
 - `tools/` — real and working: `check-di.mjs` and `bpmnlint` validate, `autolayout.mjs` places
   nodes, `render.mjs` makes images, `bpmn-viewer.html` displays a diagram without an editor.
-- No guide, no student-facing skill, no diagram of its own.
+- `skills/draw-workflow/`: the student-facing skill, added for Problem Set 5. Generic: it
+  draws or revises a workflow's `.bpmn` in the student's assignments repository, keeps it in
+  step with the Superpowers spec, and is reached through `superpowers` or directly. It uses
+  `tools/layout.mjs`, which draws lanes and keeps every placed shape where it is, and
+  `check-di.mjs`, which now resolves bindings in the diagram's own repository. Paul's
+  `workflow-diagram` is untouched; folding the two together is part of the redesign below.
+- No guide and no diagram of its own.
 
 ## What it is going to become
 
 Students will draw their own workflow diagrams. When they do, the diagram lives in their
 repository rather than this one, and the skill takes a data directory like every other skill.
 
-Whether that is this skill widened or a second one beside it is open. Deferred deliberately —
-the first-day bootstrap comes first.
+That turned out to be a second skill beside this one, `draw-workflow`, decided 2026-11-07.
+Paul's skill stays as it is until he switches over.
 
 ## This unit does not install Camunda, and inherits a machine that has it
 

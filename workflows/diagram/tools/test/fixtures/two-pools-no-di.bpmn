@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="definitions" targetNamespace="http://bpmn.io/schema/bpmn">
+  <bpmn:collaboration id="collaboration">
+    <bpmn:participant id="capture" name="Capture a posting" processRef="capture_process" />
+    <bpmn:participant id="review" name="Review captured postings" processRef="review_process" />
+  </bpmn:collaboration>
+  <bpmn:process id="capture_process" isExecutable="false">
+    <bpmn:laneSet id="capture_lanes">
+      <bpmn:lane id="capture_lane_human" name="HUMAN operator">
+        <bpmn:flowNodeRef>capture_clicked</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="capture_lane_agent" name="AI AGENT" />
+      <bpmn:lane id="capture_lane_program" name="PROGRAM">
+        <bpmn:flowNodeRef>save_posting</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>posting_captured</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="capture_clicked" name="capture button clicked">
+      <bpmn:outgoing>to_save</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:scriptTask id="save_posting" name="Save posting">
+      <bpmn:incoming>to_save</bpmn:incoming>
+      <bpmn:outgoing>to_captured</bpmn:outgoing>
+      <bpmn:dataOutputAssociation id="save_writes_inbox">
+        <bpmn:targetRef>inbox_in_capture</bpmn:targetRef>
+      </bpmn:dataOutputAssociation>
+    </bpmn:scriptTask>
+    <bpmn:endEvent id="posting_captured" name="posting captured">
+      <bpmn:incoming>to_captured</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:dataStoreReference id="inbox_in_capture" name="Capture inbox (folder)" />
+    <bpmn:sequenceFlow id="to_save" sourceRef="capture_clicked" targetRef="save_posting" />
+    <bpmn:sequenceFlow id="to_captured" sourceRef="save_posting" targetRef="posting_captured" />
+  </bpmn:process>
+  <bpmn:process id="review_process" isExecutable="false">
+    <bpmn:laneSet id="review_lanes">
+      <bpmn:lane id="review_lane_human" name="HUMAN operator">
+        <bpmn:flowNodeRef>review_requested</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>choose_postings</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>choices_made</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="review_lane_agent" name="AI AGENT">
+        <bpmn:flowNodeRef>assess_postings</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="review_lane_program" name="PROGRAM" />
+    </bpmn:laneSet>
+    <bpmn:startEvent id="review_requested" name="review sitting started">
+      <bpmn:outgoing>to_assess</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="assess_postings" name="Assess postings">
+      <bpmn:incoming>to_assess</bpmn:incoming>
+      <bpmn:outgoing>to_choose</bpmn:outgoing>
+      <bpmn:property id="assess_input" name="__targetRef_placeholder" />
+      <bpmn:dataInputAssociation id="assess_reads_inbox">
+        <bpmn:sourceRef>inbox_in_review</bpmn:sourceRef>
+        <bpmn:targetRef>assess_input</bpmn:targetRef>
+      </bpmn:dataInputAssociation>
+    </bpmn:serviceTask>
+    <bpmn:userTask id="choose_postings" name="Choose postings">
+      <bpmn:incoming>to_choose</bpmn:incoming>
+      <bpmn:outgoing>to_made</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="choices_made" name="application choices made">
+      <bpmn:incoming>to_made</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:dataStoreReference id="inbox_in_review" name="Capture inbox (folder)" />
+    <bpmn:sequenceFlow id="to_assess" sourceRef="review_requested" targetRef="assess_postings" />
+    <bpmn:sequenceFlow id="to_choose" sourceRef="assess_postings" targetRef="choose_postings" />
+    <bpmn:sequenceFlow id="to_made" sourceRef="choose_postings" targetRef="choices_made" />
+  </bpmn:process>
+</bpmn:definitions>

@@ -51,34 +51,18 @@ be.
 
 ## Where it is wrong here
 
-Five things it says are not true on a student's machine. They come before where to start
+Four things it says are not true on a student's machine. They come before where to start
 because the first file you open sends you straight to the first of them. Where Superpowers and
 this file disagree, this file wins.
 
 **The subagent tools.** `using-superpowers` sends you to `references/codex-tools.md`, which says
 "current presets run V2" and names the tools `spawn_agent`, `wait_agent` and so on. The version
-follows the model, and the course starts every student on Luna, which gets V1. On V1 the tools
-are `multi_agent_v1__spawn_agent` and the rest of the `multi_agent_v1__` family, and you call
-them as JavaScript from inside `functions.exec`. So a missing `spawn_agent` does not mean you
-cannot start a subagent. Believe your own tool list, as that file itself says to. **A child stays
-on V1 whatever model you give it**, so the tools do not change under you when a subagent runs on
-something else.
-
-**Which model to spawn on.** Model Selection tells you to reach for a more capable model as a
-task gets harder, and names tiers rather than models. Here, buy thinking rather than a bigger
-model: spawn on `gpt-5.6-luna` and raise `reasoning_effort` instead.
-
-**Set both on every spawn.** A spawn that names a model and omits the effort takes that model's
-own default, which for Luna is `low`, so naming the model alone gets you the cheap model at its
-least capable. A tier up costs ten times as much per token and there is more above it, while the
-extra thinking costs output tokens, which are well under one percent of what a run spends. **Do
-not go past Terra without asking first.**
-
-**That is a budget default, not a judgement about quality.** The allocation is $50 a month and
-one app built this way has cost $11, which is why it is the default. If the student says they
-pay for their own subscription, or asks for more capable models, or lifts the ceiling in any
-other words, **do as they ask**. Their budget, their
-call.
+follows the model the session runs on, and some models get V1 instead. On V1 the tools are
+`multi_agent_v1__spawn_agent` and the rest of the `multi_agent_v1__` family, and you call them
+as JavaScript from inside `functions.exec`. So a missing `spawn_agent` does not mean you cannot
+start a subagent. **Believe your own tool list**, as that file itself says to, not a guess from
+the model's name. **On V1, a child stays on V1 whatever model you give it**, so the tools do not
+change under you when a subagent runs on something else.
 
 **`~/.codex/config.toml`.** The same file asks you to have the student add lines to it, to turn
 on multi-agent support and to set a default model for subagents. Do neither, and do not suggest
@@ -105,6 +89,26 @@ That path is a constant, like `C:\Program Files\Git\cmd\git.exe`: git was instal
 machine-wide in the first setup session. Do not go looking for another bash, and do not
 rewrite a script in PowerShell. If it fails through that bash, say what it said and stop.
 
+## When the thing being designed is a workflow
+
+A workflow is steps done by people, agents and programs, like the one Problem Set 5 asks for.
+**Its design is a spec and a BPMN diagram, kept in step**: a change to either one goes into
+the other in the same commit. Brainstorming runs as it always does, and its spec still
+describes the workflow in words; the diagram holds the same design with structure. Draw and
+revise it following [`draw-workflow`](workflows/diagram/skills/draw-workflow/SKILL.md), which
+says where it goes and how.
+
+- **Show the student the diagram at two fixed moments in brainstorming**: as soon as the
+  trigger and the first steps are known, as a skeleton that the next question is asked by way
+  of; and when the overall design is put to them for approval, which is asked with the diagram
+  rather than a list alone. Between and after those, show it whenever it would make something
+  clearer than words: what happens after a decision, where state is kept, a choice of lane.
+  The visual companion is not used for a workflow; Camunda is the visual.
+- **Paths to skill files and programs join the diagram in `writing-plans`**, once the plan
+  names them. While the spec is being worked out, a step is a verb and an object in a lane.
+- **The spec's self-review also checks that the spec and the diagram agree** on the trigger,
+  the steps, who does each, the decisions, and where state is kept.
+
 ## Start
 
 Read `superpowers:using-superpowers` and follow it. It is how Superpowers begins a session, and
@@ -113,5 +117,6 @@ it sends a request to build something to `superpowers:brainstorming` first.
 ## Depends on
 
 - [`setup-superpowers`](workflows/bootstrap/skills/setup-superpowers/SKILL.md) - skill
+- [`draw-workflow`](workflows/diagram/skills/draw-workflow/SKILL.md) - skill
 - [`superpowers.bpmn`](workflows/develop/superpowers.bpmn) - diagram, this workflow drawn from
   the pinned commit
