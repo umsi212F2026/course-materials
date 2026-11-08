@@ -1,0 +1,11 @@
+{
+  "_note": "The per-session selection: how many questions to draw from each bank on one date. Published, because a practice quiz is generated from this same file by the same library, so students practise the shape they will actually face. It says how many from where and nothing about which questions: the draw is random per student, and the questions themselves live in the sources named below, which students already have.",
+  "session": 20,
+  "date": "2026-11-10",
+  "draw": {
+    "learning-topics/triggers-2026-11/a-words": 2,
+    "learning-topics/triggers-2026-11/a-pick-trigger-defense": 1,
+    "learning-topics/storing-state-2026-11/a-words": 1,
+    "learning-topics/storing-state-2026-11/a-pick-access": 1
+  }
+}
