@@ -81,6 +81,22 @@ of these is found from there. Only the entry points are listed here.
   workflow's design changes in a way the diagram shows. Designing a new workflow starts with
   superpowers, which uses this.
   `workflows/diagram/skills/draw-workflow/SKILL.md`
+- **record-change** - Add one change to a student's Problem Set 5 change record,
+  ps5/CHANGES.md, with what they noticed and why they chose the fix in their own words. Use
+  right after a change to ps5/workflow.bpmn or a ps5/skills/*/SKILL.md once CHANGES.md names an
+  initial design, when the student asks to record a change, and when find-changes hands one
+  over.
+  `workflows/record/skills/record-change/SKILL.md`
+- **find-changes** - Look through a student's Problem Set 5 history for changes to the diagram
+  or a skill file that are not in their change record yet, and record the ones they choose. Use
+  when the student asks what is missing from their change record, wants to catch up on it, or
+  is getting ready to submit Problem Set 5.
+  `workflows/record/skills/find-changes/SKILL.md`
+- **ready-to-submit** - Check a student's Problem Set 5 against what the grader looks for, and
+  have them confirm that the own-words parts of their change record are their own writing. Use
+  when the student asks whether Problem Set 5 is ready to submit, wants to check it, or is about
+  to hand it in.
+  `workflows/record/skills/ready-to-submit/SKILL.md`
 
 **Before starting a workflow, establish which data directory it operates on. Read
 `~/.codex/AGENTS.md`, which names it; do not infer it from the working directory, and do not
