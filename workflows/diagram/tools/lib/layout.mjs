@@ -444,6 +444,12 @@ export async function layout(xml) {
       }
       const top = findRow(b, left, w, h, baseCy);
       const di = addShape(plane, index, n, { x: left, y: top, width: w, height: h });
+      // A decision's question goes above and to the left of the diamond, clear of
+      // the flows that leave it to the right and below.
+      if (is(n, 'bpmn:Gateway') && n.name) {
+        const t = textBox(n.name);
+        setLabel(di, { x: left + 10 - t.width, y: top + 5 - t.height, ...t });
+      }
       register(b, di);
     }
 
@@ -585,7 +591,27 @@ export async function layout(xml) {
         used(e.t).add(`${to}:back`);
       }
       di.waypoint = pts.map(([x, y]) => moddle.create('dc:Point', { x: r(x), y: r(y) }));
+      // An answer leaving a decision is labelled where it leaves, not halfway along.
+      if (e.kind === 'sequence' && e.el.name && is(e.src, 'bpmn:Gateway')) {
+        const t = textBox(e.el.name);
+        const [[x0, y0], [x1, y1]] = pts;
+        const at =
+          y0 === y1 ? { x: x0 + 6, y: y0 - 4 - t.height } : y1 > y0 ? { x: x0 + 6, y: y0 + 4 } : { x: x0 + 6, y: y0 - 4 - t.height };
+        setLabel(di, { ...at, ...t });
+      }
     }
+  }
+
+  // The size bpmn-js gives a label: 12px text, wrapped at 90px.
+  function textBox(text) {
+    const len = text.length * 6.5;
+    return { width: Math.min(90, Math.max(14, Math.ceil(len))), height: 14 * Math.max(1, Math.ceil(len / 90)) };
+  }
+
+  function setLabel(di, b) {
+    di.label = moddle.create('bpmndi:BPMNLabel', {
+      bounds: moddle.create('dc:Bounds', { x: r(b.x), y: r(b.y), width: r(b.width), height: r(b.height) }),
+    });
   }
 }
 

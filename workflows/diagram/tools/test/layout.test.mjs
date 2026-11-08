@@ -53,6 +53,27 @@ test('a diagram with no layout gets a shape for everything, and check-di passes'
   assert.match(checkDi(xml), /DI consistent/);
 });
 
+test("a decision's question sits above and left of the diamond, and its answers next to it", async () => {
+  const { xml } = await layout(NO_DI);
+  const s = shapes(xml);
+  const label = (id) => {
+    const m = xml.match(new RegExp(`bpmnElement="${id}"[^>]*>(?:(?!</bpmndi:BPMN(?:Shape|Edge)>)[\\s\\S])*?<bpmndi:BPMNLabel>\\s*<dc:Bounds x="([-\\d.]+)" y="([-\\d.]+)" width="([\\d.]+)" height="([\\d.]+)"`));
+    return m && { x: +m[1], y: +m[2], width: +m[3], height: +m[4] };
+  };
+  const gw = s.worth_applying;
+  const q = label('worth_applying');
+  assert.ok(q, 'the question has a placed label');
+  assert.ok(q.x + q.width <= gw.x + gw.width / 2, 'question ends left of the diamond centre');
+  assert.ok(q.y + q.height <= gw.y + gw.height / 2, 'question ends above the diamond centre');
+  for (const id of ['yes', 'no', 'rerun']) {
+    const a = label(id);
+    assert.ok(a, `${id} has a placed label`);
+    const near = a.x < gw.x + gw.width + 40 && a.x + a.width > gw.x - 40 && a.y < gw.y + gw.height + 40 && a.y + a.height > gw.y - 40;
+    assert.ok(near, `${id} label is next to the diamond`);
+  }
+  assert.equal(label('merge_assess'), null, 'a merge has no name, so no label');
+});
+
 test('every node lies inside the band of its lane', async () => {
   const { xml } = await layout(NO_DI);
   const s = shapes(xml);
@@ -179,7 +200,7 @@ test('a new merge sits in the row of the step it leads into, and no edge crosses
   for (const m of xml.matchAll(/<bpmn:sequenceFlow id="([^"]+)"[^>]*sourceRef="([^"]+)" targetRef="([^"]+)"/g)) flows[m[1]] = [m[2], m[3]];
   for (const [id, block] of Object.entries(edges(xml))) {
     if (!flows[id]) continue;
-    const pts = [...block.matchAll(/x="([-\d.]+)" y="([-\d.]+)"/g)].map((m) => [+m[1], +m[2]]);
+    const pts = [...block.matchAll(/<di:waypoint x="([-\d.]+)" y="([-\d.]+)"/g)].map((m) => [+m[1], +m[2]]);
     for (let i = 1; i < pts.length; i++) {
       const [a, b] = [pts[i - 1], pts[i]];
       for (const [sid, box] of Object.entries(s)) {
