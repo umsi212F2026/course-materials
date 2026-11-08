@@ -146,22 +146,38 @@ export function renderEntry(n, { title, fields, parts }) {
   return out.join("\n").replace(/\n*$/, "\n");
 }
 
-/** The whole file with entry `n`'s `key` part attested on `date`, replacing any old comment. */
-export function setAttestation(text, n, key, date) {
+/** The whole file with entry `n`'s `key` part rewritten as `body` lines after its heading. */
+function replacePart(text, n, key, body) {
   const lines = text.split("\n");
-  const r = parseRecord(text);
-  const entry = r.entries.find((e) => e.n === n);
+  const entry = parseRecord(text).entries.find((e) => e.n === n);
   if (!entry) throw new Error(`There is no entry ${n} in CHANGES.md.`);
   const part = entry.parts[key];
   const at = part.line - 1;
-  if (!lines[at].startsWith("### ")) throw new Error(`Entry ${n} has no ${key} section to attest.`);
+  if (!lines[at].startsWith("### ")) throw new Error(`Entry ${n} has no ${key} section.`);
   let stop = lines.length;
   for (let i = at + 1; i < lines.length; i++)
     if (lines[i].startsWith("## ") || lines[i].startsWith("### ")) {
       stop = i;
       break;
     }
-  const region = [lines[at], "", ...(part.text ? [part.text, ""] : []), `<!-- attested ${date} sha256:${partHash(part.text)} -->`];
+  const region = [lines[at], "", ...body(part)];
   if (stop < lines.length) region.push("");
   return [...lines.slice(0, at), ...region, ...lines.slice(stop)].join("\n");
+}
+
+/** The whole file with entry `n`'s `key` part attested on `date`, replacing any old comment. */
+export function setAttestation(text, n, key, date) {
+  return replacePart(text, n, key, (part) => [...(part.text ? [part.text, ""] : []), `<!-- attested ${date} sha256:${partHash(part.text)} -->`]);
+}
+
+/** The whole file with entry `n`'s `key` part holding `words`, and no attestation.
+ *
+ *  A LINE THE PARSER WOULD READ AS STRUCTURE IS REFUSED, not escaped. A heading inside the
+ *  student's words would split the entry, and changing their words to avoid it is exactly what
+ *  this tool exists not to do. */
+export function setPart(text, n, key, words) {
+  const w = words.trim();
+  if (w.split("\n").some((l) => /^#{1,3} /.test(l) || ATTEST_RE.test(l.trim())))
+    throw new Error("Your answer has a line starting with #, which CHANGES.md reads as a heading. Answer again without one.");
+  return replacePart(text, n, key, () => (w ? [w] : []));
 }

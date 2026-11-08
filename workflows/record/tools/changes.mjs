@@ -6,6 +6,9 @@
 //   node workflows/record/tools/changes.mjs check <repo>
 //   node workflows/record/tools/changes.mjs attest <repo> <n> <noticed|why>
 //   node workflows/record/tools/changes.mjs candidates <repo>
+//   node workflows/record/tools/changes.mjs add-entry <repo> --title <t> --changed <c> --commit <h>
+//        --prompted-by <p> --who-noticed <w> --who-chose <w> --what-changed <t>
+//   node workflows/record/tools/changes.mjs take-reply <repo> <n> <noticed|why> [--transcript <path>]
 //
 // <repo> is the student's assignments repository. Results are JSON on stdout, except attest,
 // which prints one line. On failure prints one line to stderr and exits 1, having written
@@ -19,8 +22,12 @@
 import { existsSync, readFileSync, writeFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
-import { parseRecord, qualifies, setAttestation } from "./lib/record.mjs";
+import { homedir } from "node:os";
+import { parseRecord, qualifies, setAttestation, setPart, renderEntry } from "./lib/record.mjs";
 import { git, commitExists, filesAt } from "./lib/git.mjs";
+import { findSession, harnessFor } from "../../feedback/tools/export-session.mjs";
+import { codexCandidates, readCodex } from "../../feedback/tools/lib/codex.mjs";
+import { claudeCandidates, readClaude } from "../../feedback/tools/lib/claude.mjs";
 
 const RECORD = "ps5/CHANGES.md";
 const MIN_EXAMPLES = 10;
@@ -156,6 +163,49 @@ export function candidates(repo) {
   return { since, commits };
 }
 
+/** Append an entry with both own-words parts empty. Returns its number.
+ *
+ *  THE TABLE'S LAST ROW IS REFUSED HERE, not only in the skill. A change the agent noticed and
+ *  the agent fixed never reaches the file, whatever the agent running the skill decides. */
+export function addEntry(repo, { title, changed, commit, promptedBy, whoNoticed, whoChose, whatChanged }) {
+  requireRepo(repo);
+  const text = readRecord(repo);
+  if (text === null) throw new Error(`${RECORD} does not exist.`);
+  if (whoNoticed === "the agent" && whoChose === "the agent")
+    throw new Error("That change was noticed and fixed by the agent, so it does not go in the record.");
+  if (promptedBy === "design critique" && whoChose !== "me")
+    throw new Error("A change prompted by design critique goes in the record only when you chose the fix.");
+  const before = parseRecord(text);
+  const n = Math.max(0, ...before.entries.map((e) => e.n)) + 1;
+  const fields = { changed, commit, promptedBy, whoNoticed, whoChose, whatChanged };
+  const next = text.replace(/\n*$/, "\n\n") + renderEntry(n, { title: title ?? "", fields, parts: { noticed: "", why: "" } });
+  const added = parseRecord(next).problems.filter((p) => !before.problems.some((q) => q.message === p.message));
+  if (added.length) throw new Error(added[0].message);
+  writeFileSync(join(repo, RECORD), next);
+  return n;
+}
+
+const READERS = { Codex: readCodex, "Claude Code": readClaude };
+
+/** Copy the student's most recent message, exactly, into entry `n`'s `key` part.
+ *
+ *  THE WORDS COME FROM THE TRANSCRIPT, never from the agent. Passed on a command line they would
+ *  be retyped by the agent and mangled by the shell; read from the session they are what the
+ *  student typed. The session is found as export-session finds it, and refuses as it does. */
+export function takeReply(repo, n, key, { transcript, home = homedir(), now = new Date() } = {}) {
+  requireRepo(repo);
+  if (!["noticed", "why"].includes(key)) throw new Error(`The part must be noticed or why, not "${key}".`);
+  const text = readRecord(repo);
+  if (text === null) throw new Error(`${RECORD} does not exist.`);
+  const session = transcript
+    ? { path: transcript, harness: harnessFor(transcript) }
+    : findSession([...codexCandidates(home), ...claudeCandidates(home)], now.getTime());
+  const words = READERS[session.harness](session.path).findLast((e) => e.role === "student")?.text;
+  if (!words?.trim()) throw new Error("There is no message from you in this session to copy.");
+  writeFileSync(join(repo, RECORD), setPart(text, Number(n), key, words));
+  return `recorded your words in entry ${n}, ${key}`;
+}
+
 const pad = (n) => String(n).padStart(2, "0");
 const today = (d = new Date()) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 
@@ -174,7 +224,29 @@ const COMMANDS = {
   check: (repo) => JSON.stringify(check(repo), null, 2),
   attest: (repo, n, key) => attest(repo, n, key),
   candidates: (repo) => JSON.stringify(candidates(repo), null, 2),
+  "add-entry": (repo, ...rest) => String(addEntry(repo, flags(rest, ENTRY_FLAGS))),
+  "take-reply": (repo, n, key, ...rest) => takeReply(repo, n, key, flags(rest, { transcript: "transcript" })),
 };
+
+const ENTRY_FLAGS = {
+  title: "title",
+  changed: "changed",
+  commit: "commit",
+  "prompted-by": "promptedBy",
+  "who-noticed": "whoNoticed",
+  "who-chose": "whoChose",
+  "what-changed": "whatChanged",
+};
+
+function flags(argv, known) {
+  const out = {};
+  for (let i = 0; i < argv.length; i++) {
+    const key = known[argv[i].replace(/^--/, "")];
+    if (!argv[i].startsWith("--") || !key) throw new Error(`Unknown option: ${argv[i]}`);
+    out[key] = argv[++i] ?? "";
+  }
+  return out;
+}
 
 export function main(argv) {
   const [cmd, repo, ...rest] = argv;

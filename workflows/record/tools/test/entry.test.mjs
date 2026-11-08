@@ -1,0 +1,149 @@
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { readFileSync, mkdtempSync, utimesSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
+import { execFileSync, spawnSync } from "node:child_process";
+import { addEntry, takeReply } from "../changes.mjs";
+import { parseRecord } from "../lib/record.mjs";
+import { emptyRepo, write, commit } from "./repo.mjs";
+import { codexRollout, meta, userMsg, agentMsg } from "../../../feedback/tools/test/fixtures.mjs";
+
+const TOOL = join(dirname(fileURLToPath(import.meta.url)), "..", "changes.mjs");
+
+function started() {
+  const repo = emptyRepo();
+  write(repo, "ps5/CHANGES.md", "# Change record\n\nInitial design: abc1234\n");
+  commit(repo, "start");
+  return repo;
+}
+const record = (repo) => readFileSync(join(repo, "ps5/CHANGES.md"), "utf8");
+
+const ENTRY = {
+  title: "take the later deadline",
+  changed: "skill extract",
+  commit: "abc1234",
+  promptedBy: "a run on `examples/e01`",
+  whoNoticed: "me",
+  whoChose: "the agent, from my description",
+  whatChanged: "extract takes the last deadline",
+};
+
+test("add-entry appends entry 1, then entry 2, with empty own-words parts", () => {
+  const repo = started();
+  assert.equal(addEntry(repo, ENTRY), 1);
+  assert.equal(addEntry(repo, { ...ENTRY, title: "second" }), 2);
+  const r = parseRecord(record(repo));
+  assert.deepEqual(r.problems, []);
+  assert.deepEqual(r.entries.map((e) => e.title), ["take the later deadline", "second"]);
+  assert.equal(r.entries[1].parts.noticed.text, "");
+  assert.equal(r.entries[0].fields.whoChose, "the agent, from my description");
+});
+
+test("agent noticed and agent chose is refused, writing nothing", () => {
+  const repo = started();
+  const before = record(repo);
+  assert.throws(() => addEntry(repo, { ...ENTRY, whoNoticed: "the agent", whoChose: "the agent" }), {
+    message: "That change was noticed and fixed by the agent, so it does not go in the record.",
+  });
+  assert.equal(record(repo), before);
+});
+
+test("a who value outside the lists is refused, writing nothing", () => {
+  const repo = started();
+  const before = record(repo);
+  assert.throws(() => addEntry(repo, { ...ENTRY, whoNoticed: "my roommate" }), /Who noticed/);
+  assert.throws(() => addEntry(repo, { ...ENTRY, whoChose: "nobody" }), /Who chose the fix/);
+  assert.equal(record(repo), before);
+});
+
+test("a critique change the student did not choose is refused, writing nothing", () => {
+  const repo = started();
+  const before = record(repo);
+  assert.throws(
+    () => addEntry(repo, { ...ENTRY, promptedBy: "design critique", whoNoticed: "a classmate or Paul", whoChose: "the agent, from my description" }),
+    /design critique/
+  );
+  assert.equal(record(repo), before);
+  assert.equal(addEntry(repo, { ...ENTRY, promptedBy: "design critique", whoNoticed: "a classmate or Paul", whoChose: "me" }), 1);
+});
+
+test("the CLI add-entry prints the new number", () => {
+  const repo = started();
+  const args = ["add-entry", repo, "--title", "t", "--changed", "diagram", "--commit", "abc1234", "--prompted-by", "design critique",
+    "--who-noticed", "a classmate or Paul", "--who-chose", "me", "--what-changed", "added a check step"];
+  assert.equal(execFileSync(process.execPath, [TOOL, ...args], { encoding: "utf8" }).trim(), "1");
+  const refused = spawnSync(process.execPath, [TOOL, ...args.map((a) => (a === "me" ? "the agent" : a))], { encoding: "utf8" });
+  assert.equal(refused.status, 1);
+});
+
+const REPLY = "The deadline it picked was the *first* one,\nbut `applications` close on the second.\n\n  It also said $HOME.";
+
+function home(...sessions) {
+  const h = mkdtempSync(join(tmpdir(), "record-home-"));
+  const now = Date.now();
+  const paths = sessions.map(({ name, ageMs }) => {
+    const p = codexRollout(h, name, [meta("cli"), userMsg("please record this"), agentMsg("What did you notice?"), userMsg(REPLY), agentMsg("ok")]);
+    utimesSync(p, (now - ageMs) / 1000, (now - ageMs) / 1000);
+    return p;
+  });
+  return { home: h, now: new Date(now), paths };
+}
+
+test("take-reply copies the student's last message exactly into the part", () => {
+  const repo = started();
+  addEntry(repo, ENTRY);
+  const s = home({ name: "a", ageMs: 1_000 });
+  assert.equal(takeReply(repo, 1, "noticed", { home: s.home, now: s.now }), "recorded your words in entry 1, noticed");
+  const r = parseRecord(record(repo));
+  assert.equal(r.entries[0].parts.noticed.text, REPLY.trim());
+  assert.equal(r.entries[0].parts.why.text, "");
+  assert.deepEqual(r.problems, []);
+});
+
+test("take-reply replaces earlier words and their attestation", () => {
+  const repo = started();
+  addEntry(repo, ENTRY);
+  const s = home({ name: "a", ageMs: 1_000 });
+  takeReply(repo, 1, "why", { home: s.home, now: s.now });
+  takeReply(repo, 1, "why", { home: s.home, now: s.now });
+  const text = record(repo);
+  assert.equal(text.split(REPLY.trim()).length, 2);
+  assert.equal(parseRecord(text).entries[0].parts.why.attestation, "missing");
+});
+
+test("two sessions written within ten seconds refuse and name both", () => {
+  const repo = started();
+  addEntry(repo, ENTRY);
+  const before = record(repo);
+  const s = home({ name: "a", ageMs: 1_000 }, { name: "b", ageMs: 5_000 });
+  assert.throws(() => takeReply(repo, 1, "noticed", { home: s.home, now: s.now }), (e) => s.paths.every((p) => e.message.includes(p)));
+  assert.equal(record(repo), before);
+});
+
+test("--transcript names the session outright", () => {
+  const repo = started();
+  addEntry(repo, ENTRY);
+  const s = home({ name: "a", ageMs: 1_000 }, { name: "b", ageMs: 5_000 });
+  const out = execFileSync(process.execPath, [TOOL, "take-reply", repo, "1", "why", "--transcript", s.paths[1]], { encoding: "utf8" });
+  assert.match(out, /entry 1, why/);
+  assert.equal(parseRecord(record(repo)).entries[0].parts.why.text, REPLY.trim());
+});
+
+test("a reply with a line CHANGES.md would read as a heading is refused", () => {
+  const repo = started();
+  addEntry(repo, ENTRY);
+  const before = record(repo);
+  const h = mkdtempSync(join(tmpdir(), "record-home-"));
+  const p = codexRollout(h, "x", [meta("cli"), userMsg("## my answer\nit broke")]);
+  assert.throws(() => takeReply(repo, 1, "noticed", { transcript: p }), /heading/);
+  assert.equal(record(repo), before);
+});
+
+test("take-reply into an entry that does not exist is refused", () => {
+  const repo = started();
+  const h = mkdtempSync(join(tmpdir(), "record-home-"));
+  const p = codexRollout(h, "x", [meta("cli"), userMsg("words")]);
+  assert.throws(() => takeReply(repo, 3, "noticed", { transcript: p }), /entry 3/);
+});
