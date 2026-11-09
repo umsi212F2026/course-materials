@@ -4,7 +4,7 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
 import { candidates } from "../changes.mjs";
-import { emptyRepo, write, commit, changes, entryText, FIELDS } from "./repo.mjs";
+import { emptyRepo, write, commit, changes, entryText, FIELDS, bpmn } from "./repo.mjs";
 
 const TOOL = join(dirname(fileURLToPath(import.meta.url)), "..", "changes.mjs");
 
@@ -61,24 +61,6 @@ test("a diagram commit already in the record is marked", () => {
   assert.deepEqual(c.kinds, ["diagram"]);
   assert.equal(c.inRecord, true);
 });
-
-/** A BPMN file as Camunda saves it: the process, then the layout of its shapes. */
-function bpmn({ task = "Extract the deadline", x = 100, version = "5.30.0" } = {}) {
-  return `<?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" id="d" exporter="Camunda Modeler" exporterVersion="${version}">
-  <bpmn:process id="p">
-    <bpmn:task id="t1" name="${task}" />
-  </bpmn:process>
-  <bpmndi:BPMNDiagram id="dia">
-    <bpmndi:BPMNPlane id="plane" bpmnElement="p">
-      <bpmndi:BPMNShape id="t1_di" bpmnElement="t1">
-        <dc:Bounds x="${x}" y="80" width="100" height="80" />
-      </bpmndi:BPMNShape>
-    </bpmndi:BPMNPlane>
-  </bpmndi:BPMNDiagram>
-</bpmn:definitions>
-`;
-}
 
 /** History: the initial design, then a layout-only diagram commit, then a real one. */
 function layoutHistory() {

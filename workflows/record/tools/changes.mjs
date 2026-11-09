@@ -142,7 +142,10 @@ function commitProblems(repo, e, initial) {
   const out = [];
   if (initial && !isAfter(repo, initial, c)) out.push(`entry ${e.n}: its commit, ${c}, does not come after the initial design.`);
   const changed = e.fields.changed;
-  if (changed && !kindsOf(filesChanged(repo, c)).includes(changed))
+  const files = filesChanged(repo, c);
+  if (changed === "diagram" && kindsOf(files).includes("diagram") && !diagramChanged(repo, c, files))
+    out.push(`entry ${e.n}: its commit, ${c}, only changes the diagram's layout, not its steps.`);
+  else if (changed && !kindsOf(files).includes(changed))
     out.push(`entry ${e.n}: its commit, ${c}, does not change the ${changed === "diagram" ? "diagram" : `${changed.slice(6)} skill`}.`);
   return out;
 }

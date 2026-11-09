@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 import { execFileSync, spawnSync } from "node:child_process";
 import { check, attest } from "../changes.mjs";
 import { parseRecord } from "../lib/record.mjs";
-import { passingRepo, emptyRepo, write, remove, commit, changes, entryText, FIELDS } from "./repo.mjs";
+import { passingRepo, emptyRepo, write, remove, commit, changes, entryText, FIELDS, bpmn } from "./repo.mjs";
 
 const TOOL = join(dirname(fileURLToPath(import.meta.url)), "..", "changes.mjs");
 const NAMES = [
@@ -183,6 +183,16 @@ test("an entry whose commit does not touch what it names fails entries", () => {
   const r = check(repo);
   assert.deepEqual(failing(r), ["entries"]);
   assert.match(item(r, "entries").detail, /entry 2.*diagram/);
+});
+
+test("a diagram entry whose commit only changes the layout fails entries", () => {
+  const { repo, initial, entry } = passingRepo();
+  write(repo, "ps5/workflow.bpmn", bpmn());
+  commit(repo, "diagram: extract the deadline");
+  write(repo, "ps5/workflow.bpmn", bpmn({ x: 300, version: "5.31.0" }));
+  const moved = commit(repo, "tidy the diagram");
+  write(repo, "ps5/CHANGES.md", changes(initial, [entry(1), entry(2, { fields: { commit: moved.slice(0, 7), changed: "diagram" } })]));
+  assert.match(item(check(repo), "entries").detail, /entry 2.*only.*layout/);
 });
 
 test("an entry whose commit is the initial design or before it fails entries", () => {
