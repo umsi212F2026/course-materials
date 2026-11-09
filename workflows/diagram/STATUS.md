@@ -3,13 +3,13 @@
 **This workflow is a stub. It has not been designed, and it is not in its final state.**
 
 Everything else under `workflows/` was worked out deliberately — what the phases are, who the
-executor is at each step, which artifacts exist and who owns them. This one grew out of Paul
+executor is at each step, which artifacts exist and who owns them. This one grew out of the instructor
 using an agent to draw BPMN diagrams and writing down what worked. It is useful and it is in
 use; it is not a design.
 
 ## What it actually is today
 
-- `skills/workflow-diagram/` — instructions written for Paul specifically. They name him, and
+- `skills/workflow-diagram/` — instructions written for the instructor specifically. They address him, and
   they assume the visual editing happens in the bpmn.io VS Code extension, which students will
   not have.
 - `tools/` — real and working: `check-di.mjs` and `bpmnlint` validate, `autolayout.mjs` places
@@ -18,7 +18,7 @@ use; it is not a design.
   draws or revises a workflow's `.bpmn` in the student's assignments repository, keeps it in
   step with the Superpowers spec, and is reached through `superpowers` or directly. It uses
   `tools/layout.mjs`, which draws lanes and keeps every placed shape where it is, and
-  `check-di.mjs`, which now resolves bindings in the diagram's own repository. Paul's
+  `check-di.mjs`, which now resolves bindings in the diagram's own repository. The instructor's
   `workflow-diagram` is untouched; folding the two together is part of the redesign below.
 - No guide and no diagram of its own.
 
@@ -28,7 +28,7 @@ Students will draw their own workflow diagrams. When they do, the diagram lives 
 repository rather than this one, and the skill takes a data directory like every other skill.
 
 That turned out to be a second skill beside this one, `draw-workflow`, decided 2026-11-07.
-Paul's skill stays as it is until he switches over.
+The instructor's skill stays as it is until he switches over.
 
 ## This unit does not install Camunda, and inherits a machine that has it
 

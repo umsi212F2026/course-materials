@@ -1,11 +1,11 @@
 ---
 name: workflow-diagram
-description: Draw or revise a workflow as a BPMN diagram, interactively, with Paul. Covers the executor lanes, the naming and binding conventions, which construct to reach for, and the two validators that have to pass. Use when building a new workflow diagram, adding a phase to an existing one, or converting a sketch into BPMN.
+description: Draw or revise a workflow as a BPMN diagram, interactively, with the instructor. Covers the executor lanes, the naming and binding conventions, which construct to reach for, and the two validators that have to pass. Use when building a new workflow diagram, adding a phase to an existing one, or converting a sketch into BPMN.
 ---
 
 # Workflow diagram
 
-You draw the semantics and the coordinates; Paul does the visual work in the bpmn.io VS Code
+You draw the semantics and the coordinates; the instructor does the visual work in the bpmn.io VS Code
 editor. Both of you edit the same `.bpmn` file, so the protocol below is not optional.
 
 Conventions and the BPMN specifics are in
@@ -39,7 +39,7 @@ is a guess. If it genuinely doesn't exist yet, say so _in the label_ —
 `workflows/learn/tools/review-due.mjs — NOT WRITTEN YET` — rather than leaving a path that
 silently doesn't resolve.
 
-**Read the skill files, not just Paul's description.** The diagram is worth having only if it
+**Read the skill files, not just the instructor's description.** The diagram is worth having only if it
 says what the skills say. Every serious defect found in the audit was a place where the picture
 and the prose disagreed.
 
@@ -66,7 +66,7 @@ it. Kept apart, they show both how much has been formalized into programs and wh
 each call. If a phase has no machine decision at all and that matters, say so in a text
 annotation; never pull programs out of PROGRAM to make the point.
 
-## Working with Paul
+## Working with the instructor
 
 He owns layout. You own semantics. Both of you write the same file.
 

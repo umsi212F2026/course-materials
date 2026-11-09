@@ -453,7 +453,7 @@ node workflows/learn/tools/record-status.mjs <topic> blocked <goal> --needs cura
 > I have recorded your pass, and logged the question as one that needs fixing. That log is in
 > your own clone, though, so nobody else sees it.
 >
-> **Send Paul the question id (`<item id>`) and what you have just told me.** It is his bank
+> **Send the instructor the question id (`<item id>`) and what you have just told me.** It is his bank
 > and only he can change it, and the same question is going to catch somebody else on Tuesday.
 
 **The channel is a person, and that is honest at this size.** Nobody can push a fix to the
