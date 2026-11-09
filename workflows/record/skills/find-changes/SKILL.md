@@ -34,8 +34,9 @@ If it fails, send this and stop:
 > `ps5/CHANGES.md`, as `Initial design: <hash>`, and commit that.
 
 **2. Show them.** Keep the commits with `inRecord: false`. The tool has already left out
-diagram commits that only moved shapes. **Then read each one's diff** with
-`git -C <repo> show <hash> -- <its diagram or skill files>`, and leave out every commit whose
+diagram commits that only moved shapes. **Then read their diffs, all in one command:**
+`git -C <repo> show <every hash> -- ps5/workflow.bpmn 'ps5/skills/*/SKILL.md'`. Leave out
+every commit whose
 diagram or skill part only rewords without changing the meaning, fixes typos or formatting, or
 renames something. Those are not worth recording, and listing them teaches the student to skim
 the list. When you are not sure, keep it: the student decides what counts.
