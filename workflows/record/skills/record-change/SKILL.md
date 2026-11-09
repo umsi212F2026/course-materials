@@ -1,6 +1,6 @@
 ---
 name: record-change
-description: Add one change to a student's Problem Set 5 change record, ps5/CHANGES.md, with what they noticed and why they chose the fix in their own words. Use right after a change to ps5/workflow.bpmn or a ps5/skills/*/SKILL.md once CHANGES.md names an initial design, when the student asks to record a change, and when find-changes hands one over.
+description: Add one change to a student's Problem Set 5 change record, ps5/CHANGES.md, with what they noticed and why they chose the fix in their own words. Use right after a change to ps5/workflow.bpmn or a ps5/skills/*/SKILL.md that ps5/AGENTS.md says is worth recording, once CHANGES.md names an initial design, when the student asks to record a change, and when find-changes hands one over.
 ---
 
 # Record a change
@@ -29,6 +29,10 @@ Never edit `CHANGES.md` yourself.
 
 1. Run `parse <repo>`. If `initialDesign` is `null`, stop here and say nothing about the record:
    changes before the initial design do not go in it.
+   **If you are offering on your own**, not because the student asked or `find-changes` handed
+   the change over, go on only if `ps5/AGENTS.md` says the change is worth recording, and the
+   student has not already declined it or asked you to stop offering. Otherwise stop here and
+   say nothing about the record.
 2. **Find the change's commit.** If you were handed one, use it. If the change is not committed
    yet, commit it now, with a message that says what changed. A diagram change and its spec go
    in one commit, as `draw-workflow` does.
@@ -96,7 +100,7 @@ count.
 **3. Ask what they noticed.** Send this and end the turn:
 
 > In your own words: **what did you notice was wrong?** Name the input or the critique that
-> showed you, and what was wrong with what came out. Whatever you write here goes into your
+> showed you, and what was wrong with what came out. Whatever you write here will go into your
 > record exactly as you type it.
 
 **At the start of your next turn, before anything else**, if their reply answers the question,
