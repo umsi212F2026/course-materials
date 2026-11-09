@@ -177,14 +177,35 @@ function kindsOf(files) {
   return kinds;
 }
 
-/** A BPMN file with its layout and Camunda's version stamp taken out, so two saves of the same
- *  process compare equal however the shapes were moved. */
+/** A BPMN file reduced to its process, so two saves of the same process compare equal however
+ *  the shapes were moved.
+ *
+ *  ORDER IS NOT MEANING, BUT NESTING IS. Camunda reorders sibling elements when it saves, so
+ *  each element's children are sorted. A step moved into another lane is still a change,
+ *  because the lane's children change. The layout section and the version stamp are dropped. */
 function processOf(xml) {
-  return xml
-    .replace(/<(\w+:)?BPMNDiagram\b[\s\S]*?<\/(\w+:)?BPMNDiagram>/g, "")
-    .replace(/\s(exporter|exporterVersion)="[^"]*"/g, "")
-    .replace(/\s+/g, " ")
-    .trim();
+  const root = { tag: "", attrs: "", text: "", children: [] };
+  const stack = [root];
+  for (const [tok] of xml.matchAll(/<!--[\s\S]*?-->|<\?[\s\S]*?\?>|<!\[CDATA\[[\s\S]*?\]\]>|<[^>]+>|[^<]+/g)) {
+    const top = stack[stack.length - 1];
+    if (tok.startsWith("<!--") || tok.startsWith("<?")) continue;
+    if (tok.startsWith("</")) stack.pop();
+    else if (tok.startsWith("<![CDATA[")) top.text += tok.slice(9, -3).trim();
+    else if (tok.startsWith("<")) {
+      const m = /^<([^\s/>]+)([\s\S]*?)(\/?)>$/.exec(tok);
+      const attrs = [...m[2].matchAll(/([^\s=]+)\s*=\s*"([^"]*)"/g)]
+        .filter(([, k]) => k !== "exporter" && k !== "exporterVersion")
+        .map(([, k, v]) => `${k}="${v}"`)
+        .sort()
+        .join(" ");
+      const node = { tag: m[1], attrs, text: "", children: [] };
+      top.children.push(node);
+      if (!m[3]) stack.push(node);
+    } else top.text += tok.trim();
+  }
+  const canon = (n) =>
+    /(^|:)BPMNDiagram$/.test(n.tag) ? "" : `<${n.tag} ${n.attrs}>${n.text}${n.children.map(canon).filter(Boolean).sort().join("")}</>`;
+  return canon(root);
 }
 
 /** Whether commit `hash` changed any `.bpmn` file under ps5/ in more than its layout. */

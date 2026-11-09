@@ -70,7 +70,7 @@ function layoutHistory() {
   const initial = commit(repo, "initial design");
   write(repo, "ps5/CHANGES.md", changes(initial.slice(0, 7), []));
   commit(repo, "name the initial design");
-  write(repo, "ps5/workflow.bpmn", bpmn({ x: 240, version: "5.31.0" }));
+  write(repo, "ps5/workflow.bpmn", bpmn({ x: 240, version: "5.31.0", reordered: true }));
   const moved = commit(repo, "tidy the diagram");
   write(repo, "ps5/workflow.bpmn", bpmn({ x: 240, version: "5.31.0", task: "Extract every date" }));
   const real = commit(repo, "diagram: extract every date");

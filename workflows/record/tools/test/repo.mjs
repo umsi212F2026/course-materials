@@ -93,11 +93,13 @@ export function passingRepo() {
 }
 
 /** A BPMN file as Camunda saves it: the process, then the layout of its shapes. */
-export function bpmn({ task = "Extract the deadline", x = 100, version = "5.30.0" } = {}) {
+export function bpmn({ task = "Extract the deadline", x = 100, version = "5.30.0", reordered = false } = {}) {
+  const tasks = [`<bpmn:task id="t1" name="${task}" />`, `<bpmn:task id="t2" name="Save it" />`];
+  if (reordered) tasks.reverse();
   return `<?xml version="1.0" encoding="UTF-8"?>
 <bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" id="d" exporter="Camunda Modeler" exporterVersion="${version}">
   <bpmn:process id="p">
-    <bpmn:task id="t1" name="${task}" />
+    ${tasks.join("\n    ")}
   </bpmn:process>
   <bpmndi:BPMNDiagram id="dia">
     <bpmndi:BPMNPlane id="plane" bpmnElement="p">
