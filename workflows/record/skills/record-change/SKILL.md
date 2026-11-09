@@ -1,6 +1,6 @@
 ---
 name: record-change
-description: Add one change to a student's Problem Set 5 change record, ps5/CHANGES.md, with what they noticed and why they chose the fix in their own words. Use right after a change to ps5/workflow.bpmn or a ps5/skills/*/SKILL.md that ps5/AGENTS.md says is worth recording, once CHANGES.md names an initial design, when the student asks to record a change, and when find-changes hands one over.
+description: Add one change to a student's Problem Set 5 change record, ps5/CHANGES.md, with what was wrong and why that fix, in their own words. Use right after a change to ps5/workflow.bpmn or a ps5/skills/*/SKILL.md that ps5/AGENTS.md says is worth recording, once CHANGES.md names an initial design, when the student asks to record a change, and when find-changes hands one over.
 ---
 
 # Record a change
@@ -62,7 +62,7 @@ the turn:
 > **Who noticed the problem?**
 > 1. me
 > 2. the agent
-> 3. a classmate or Paul
+> 3. a classmate or instructor
 >
 > **Who chose the fix?**
 > 1. me
@@ -93,10 +93,10 @@ Any other refusal is a mistake in how you ran it, such as a value not copied exa
 lists or a commit hash mistyped. Fix it and run it again; do not tell the student it doesn't
 count.
 
-**2. Ask what they noticed.** Send this and end the turn:
+**2. Ask what was wrong.** Send this and end the turn:
 
-> In your own words: **what did you notice was wrong?** Name the input or the critique that
-> showed you, and what was wrong with what came out. Whatever you write here will go into your
+> In your own words: **what was wrong that this change fixes?** Name the input or the critique
+> that showed the problem, and what the problem was. Whatever you write here will go into your
 > record exactly as you type it.
 
 **At the start of your next turn, before anything else**, if their reply answers the question,
@@ -110,20 +110,19 @@ again; do not run the tool on a question. If the tool refuses:
   question: send the block for this step again with the tool's message as its first line, and
   run it again on their next answer.
 
-**3. Ask why they chose the fix.** Send this, with what `take-reply` printed, and end the turn:
+**3. Ask why this fix.** Send this, with what `take-reply` printed, and end the turn:
 
-> I recorded what you noticed, exactly as you wrote it:
+> I recorded what was wrong, exactly as you wrote it:
 >
 > > <the words take-reply printed>
 >
-> And in your own words: **why did you choose this fix**, rather than some other way of
-> handling it?
+> And in your own words: **why this fix**, rather than some other way of handling it?
 
 At the start of your next turn, as in step 2, run `take-reply <repo> <n> why`. Then commit
 `ps5/CHANGES.md` with the message `record: entry <n>`, and send this as the last thing in the
 turn:
 
-> Recorded as entry <n> in `ps5/CHANGES.md`, with why you chose the fix exactly as you wrote it:
+> Recorded as entry <n> in `ps5/CHANGES.md`, with why this fix exactly as you wrote it:
 >
 > > <the words take-reply printed>
 

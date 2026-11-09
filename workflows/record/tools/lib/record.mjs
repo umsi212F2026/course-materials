@@ -20,12 +20,12 @@ const FIELDS = [
   ["whatChanged", "What changed"],
 ];
 
-export const WHO_NOTICED = ["me", "the agent", "a classmate or Paul"];
+export const WHO_NOTICED = ["me", "the agent", "a classmate or instructor"];
 export const WHO_CHOSE = ["me", "the agent, from my description", "me, from options the agent gave", "the agent"];
 
 const PARTS = [
-  ["noticed", "What I noticed was wrong (my own words)"],
-  ["why", "Why I chose this fix (my own words)"],
+  ["noticed", "What was wrong (my own words)"],
+  ["why", "Why this fix (my own words)"],
 ];
 
 const ENTRY_RE = /^## (\d+)\. (.+)$/;

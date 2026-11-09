@@ -82,7 +82,7 @@ of these is found from there. Only the entry points are listed here.
   superpowers, which uses this.
   `workflows/diagram/skills/draw-workflow/SKILL.md`
 - **record-change** - Add one change to a student's Problem Set 5 change record,
-  ps5/CHANGES.md, with what they noticed and why they chose the fix in their own words. Use
+  ps5/CHANGES.md, with what was wrong and why that fix, in their own words. Use
   right after a change to ps5/workflow.bpmn or a ps5/skills/*/SKILL.md that ps5/AGENTS.md says
   is worth recording, once CHANGES.md names an initial design, when the student asks to record
   a change, and when find-changes hands one over.

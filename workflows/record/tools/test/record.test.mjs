@@ -15,13 +15,13 @@ const entry = (n, title, who, noticed, why) => `## ${n}. ${title}
 - **Who chose the fix:** ${who.chose}
 - **What changed:** extract now takes the last deadline in a posting
 
-### What I noticed was wrong (my own words)
+### What was wrong (my own words)
 
 ${noticed}
 
 ${att(noticed)}
 
-### Why I chose this fix (my own words)
+### Why this fix (my own words)
 
 ${why}
 
@@ -33,7 +33,7 @@ const SAMPLE = `# Change record
 Initial design: a1b2c3d
 
 ${entry(1, "take the later deadline", { noticed: "me", chose: "me" }, NOTICED, WHY)}
-${entry(2, "drop expired postings", { noticed: "a classmate or Paul", chose: "me" }, "It kept expired ones.", "Nobody wants those.")}`;
+${entry(2, "drop expired postings", { noticed: "a classmate or instructor", chose: "me" }, "It kept expired ones.", "Nobody wants those.")}`;
 
 const ENTRY = {
   title: "take the later deadline",
@@ -60,7 +60,7 @@ test("parses a well-formed record", () => {
   assert.equal(r.entries[0].fields.promptedBy, "a run on `examples/acme-intern`");
   assert.equal(r.entries[0].parts.noticed.text, NOTICED);
   assert.equal(r.entries[0].parts.noticed.attestation, "fresh");
-  assert.equal(r.entries[1].fields.whoNoticed, "a classmate or Paul");
+  assert.equal(r.entries[1].fields.whoNoticed, "a classmate or instructor");
   assert.deepEqual(r.problems, []);
 });
 
@@ -103,8 +103,8 @@ test("a renamed entry heading and a stray line are each reported, and parsing go
 });
 
 test("a missing own-words heading is a problem", () => {
-  const r = parseRecord(SAMPLE.replace("### Why I chose this fix (my own words)", "### Why"));
-  assert.ok(r.problems.some((p) => /Why I chose this fix/.test(p.message)));
+  const r = parseRecord(SAMPLE.replace("### Why this fix (my own words)", "### Why"));
+  assert.ok(r.problems.some((p) => /Why this fix/.test(p.message)));
 });
 
 test("an edited part reads stale", () => {
@@ -123,9 +123,9 @@ test("agent noticed and agent chose does not qualify", () => {
 });
 
 test("a critique entry qualifies only when the student chose the fix", () => {
-  assert.equal(qualifies({ fields: { promptedBy: "design critique", whoNoticed: "a classmate or Paul", whoChose: "me" } }), true);
+  assert.equal(qualifies({ fields: { promptedBy: "design critique", whoNoticed: "a classmate or instructor", whoChose: "me" } }), true);
   assert.equal(
-    qualifies({ fields: { promptedBy: "design critique", whoNoticed: "a classmate or Paul", whoChose: "the agent, from my description" } }),
+    qualifies({ fields: { promptedBy: "design critique", whoNoticed: "a classmate or instructor", whoChose: "the agent, from my description" } }),
     false
   );
 });
