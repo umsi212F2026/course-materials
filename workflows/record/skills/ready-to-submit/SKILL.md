@@ -31,6 +31,15 @@ node workflows/record/tools/changes.mjs parse <repo>
 to confirm: every own-words part (its `noticed`, then its `why`) of an entry whose `qualifies`
 is true, whose `attestation` is not `fresh` and whose `text` is not empty, in entry order.
 
+**Then read every own-words part of a qualifying entry**, confirmed or not, against the
+grader's bar: each part says concretely what was wrong, or why that fix. Flag a part only when
+it clearly falls short: a "what was wrong" that does not say what the workflow got wrong, such
+as "I improved the prompt" or "fixed it", or a "why" that gives no reason at all. Read each
+beside the entry's commit, as the grader will, and leave anything borderline unflagged; the
+grader judges "why" generously. No program can make this call, so it is yours, and it is only a
+warning: **never suggest wording, and never offer to help rewrite it.** The words are the
+student's, and so is the decision whether to change them.
+
 **When there are parts to confirm**, ask about all of them in one call to
 `request_user_input_async`, one question per part, in that order:
 
@@ -42,27 +51,35 @@ is true, whose `attestation` is not `fresh` and whose `text` is not empty, in en
 The first option is preselected, so a student who clicks through without reading is asked to
 rewrite, never recorded as having written something they did not read.
 
-Then send this, filled in, as the last thing in the turn:
+Then send this, filled in, as the last thing in the turn. Keep a ⚠️ line for each part you
+flagged, and none when you flagged nothing:
 
 > Here's how Problem Set 5 checks out against what the grader looks for:
 >
 > - ✅ <item name>
 > - ❌ <item name>: <its detail>
 > - ...
+>
+> ⚠️ Entry <n>, <what was wrong | why this fix>, "<the text>", might lose credit: <in one
+> sentence, what the grader looks for that it does not say>.
 >
 > Please answer the questions about the parts of your record that are in your own words.
 
 If you have no `request_user_input_async`, ask about the parts one at a time instead, each as a
 plain message that shows the part exactly as it is and asks the same question.
 
-**When there are none**, send this and end the turn. Keep "It's ready to submit on Canvas." only
-when every item passed, and "Want me to help with the ones marked ❌?" only when one did not:
+**When there are none**, send this and end the turn. Keep a ⚠️ line for each part you
+flagged, "It's ready to submit on Canvas." only when every item passed, and "Want me to help
+with the ones marked ❌?" only when one did not:
 
 > Here's how Problem Set 5 checks out against what the grader looks for:
 >
 > - ✅ <item name>
 > - ❌ <item name>: <its detail>
 > - ...
+>
+> ⚠️ Entry <n>, <what was wrong | why this fix>, "<the text>", might lose credit: <in one
+> sentence, what the grader looks for that it does not say>.
 >
 > Every own-words part is confirmed as yours. It's ready to submit on Canvas.
 >

@@ -92,9 +92,8 @@ count.
 
 **2. Ask what was wrong.** Send this and end the turn:
 
-> In your own words: **what was wrong that this change fixes?** Name the input or the critique
-> that showed the problem, and what the problem was. Whatever you write here will go into your
-> record exactly as you type it.
+> In your own words: **what was wrong that this change fixes?** Say what the workflow got
+> wrong. Whatever you write here will go into your record exactly as you type it.
 
 **At the start of your next turn, before anything else**, if their reply answers the question,
 run `take-reply <repo> <n> noticed`. It copies their last message into the record and prints
