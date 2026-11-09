@@ -62,6 +62,52 @@ test("a diagram commit already in the record is marked", () => {
   assert.equal(c.inRecord, true);
 });
 
+/** A BPMN file as Camunda saves it: the process, then the layout of its shapes. */
+function bpmn({ task = "Extract the deadline", x = 100, version = "5.30.0" } = {}) {
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" id="d" exporter="Camunda Modeler" exporterVersion="${version}">
+  <bpmn:process id="p">
+    <bpmn:task id="t1" name="${task}" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="dia">
+    <bpmndi:BPMNPlane id="plane" bpmnElement="p">
+      <bpmndi:BPMNShape id="t1_di" bpmnElement="t1">
+        <dc:Bounds x="${x}" y="80" width="100" height="80" />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
+`;
+}
+
+/** History: the initial design, then a layout-only diagram commit, then a real one. */
+function layoutHistory() {
+  const repo = emptyRepo();
+  write(repo, "ps5/workflow.bpmn", bpmn());
+  write(repo, "ps5/skills/extract/SKILL.md", "# extract\n");
+  const initial = commit(repo, "initial design");
+  write(repo, "ps5/CHANGES.md", changes(initial.slice(0, 7), []));
+  commit(repo, "name the initial design");
+  write(repo, "ps5/workflow.bpmn", bpmn({ x: 240, version: "5.31.0" }));
+  const moved = commit(repo, "tidy the diagram");
+  write(repo, "ps5/workflow.bpmn", bpmn({ x: 240, version: "5.31.0", task: "Extract every date" }));
+  const real = commit(repo, "diagram: extract every date");
+  return { repo, moved, real };
+}
+
+test("a diagram commit that only moves shapes or re-saves the file is excluded", () => {
+  const h = layoutHistory();
+  assert.deepEqual(candidates(h.repo).commits.map((c) => c.hash), [h.real]);
+});
+
+test("a layout change in the same commit as a skill change lists only the skill", () => {
+  const h = layoutHistory();
+  write(h.repo, "ps5/workflow.bpmn", bpmn({ x: 400, version: "5.31.0", task: "Extract every date" }));
+  write(h.repo, "ps5/skills/extract/SKILL.md", "# extract v2\n");
+  const both = commit(h.repo, "skill, and tidy the diagram");
+  assert.deepEqual(candidates(h.repo).commits.find((c) => c.hash === both).kinds, ["skill extract"]);
+});
+
 test("no initial design is an error naming the problem", () => {
   const repo = emptyRepo();
   write(repo, "ps5/CHANGES.md", "# Change record\n\nInitial design: <commit hash>\n");

@@ -174,7 +174,34 @@ function kindsOf(files) {
   return kinds;
 }
 
+/** A BPMN file with its layout and Camunda's version stamp taken out, so two saves of the same
+ *  process compare equal however the shapes were moved. */
+function processOf(xml) {
+  return xml
+    .replace(/<(\w+:)?BPMNDiagram\b[\s\S]*?<\/(\w+:)?BPMNDiagram>/g, "")
+    .replace(/\s(exporter|exporterVersion)="[^"]*"/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/** Whether commit `hash` changed any `.bpmn` file under ps5/ in more than its layout. */
+function diagramChanged(repo, hash, files) {
+  const show = (rev, f) => {
+    try {
+      return git(repo, "show", `${rev}:${f}`);
+    } catch {
+      return "";
+    }
+  };
+  return files
+    .filter((f) => /^ps5\/[^/]+\.bpmn$/.test(f))
+    .some((f) => processOf(show(hash, f)) !== processOf(show(`${hash}^`, f)));
+}
+
 /** Commits since the initial design that changed the diagram or a skill, oldest first.
+ *
+ *  A COMMIT THAT ONLY MOVED SHAPES DID NOT CHANGE THE DIAGRAM. Camunda rewrites the layout
+ *  section and its version stamp on every save, and that is not a change the record counts.
  *
  *  A COMMIT CAN CHANGE A SKILL AND A PROGRAM TOGETHER, and only the skill counts. Every file it
  *  touched under ps5/ is listed, so the skill asking about it can say which part is in question. */
@@ -191,7 +218,7 @@ export function candidates(repo) {
     const [head, ...rest] = chunk.split("\n");
     const [hash, date, subject] = head.split("\x1f");
     const files = rest.map((l) => l.trim()).filter(Boolean);
-    const kinds = kindsOf(files);
+    const kinds = kindsOf(files).filter((k) => k !== "diagram" || diagramChanged(repo, hash, files));
     if (!kinds.length) continue;
     const inRecord = recorded.some((c) => hash.startsWith(c) || c.startsWith(hash));
     commits.push({ hash, date, subject, files, kinds, inRecord });
