@@ -39,28 +39,22 @@ Never edit `CHANGES.md` yourself.
 3. Note what changed (the diagram, or which skill) and what prompted it, if you know: a run on
    one of the examples, or design critique in class.
 
-**When `find-changes` hands you a change**, do everything above, then start at step 2 below:
-the student has already chosen to record it. At the end of step 4 send no block. Commit, then go
+**When `find-changes` hands you a change**, do everything above, then send step 1's block
+with its first two paragraphs replaced by "Three quick questions about the change to <the
+diagram, or the `<name>` skill> in commit <short hash>, "<its subject>":". The student has
+already chosen to record it, and the line tells them which of their choices this is. At the
+end of step 3 send no block. Commit, then go
 back to `find-changes`, which says what comes next.
 
 ## What you do
 
-**1. Ask whether it goes in the record.** Send this, filled in, and end the turn:
+**1. Offer it, and ask who noticed it and who chose the fix.** Send this, filled in, and end
+the turn:
 
-> That change to <the diagram, or the `<name>` skill> could go in your change record.
+> That change to <the diagram, or the `<name>` skill>, in commit <short hash>, "<its
+> subject>", could go in your change record. If you'd rather leave it out, just say so.
 >
-> Your record counts changes to the diagram or a skill file that **you** noticed or guided:
-> you spotted the problem, or you chose the fix, or both. A change I both noticed and fixed
-> on my own doesn't count, and it doesn't go in.
->
-> Do you want this one in your record?
-
-If they say no, say "OK, it stays out." and stop.
-
-**2. Ask who noticed it and who chose the fix.** Send this and end the turn:
-
-> Three quick questions about <the diagram change, or the change to the `<name>` skill> in
-> commit <short hash>, "<its subject>".
+> Otherwise, three quick questions:
 >
 > **What prompted it?** A run on one of your examples (which one?), or design critique in
 > class?
@@ -77,6 +71,8 @@ If they say no, say "OK, it stays out." and stop.
 > 4. the agent
 >
 > For example: "a run on examples/acme, 1, 2".
+
+If they say to leave it out, say "OK, it stays out." and stop.
 
 Take their answers as they gave them. If an answer is unclear, ask that question again; do not
 pick one for them. Then run `add-entry` with a short `--title` and `--what-changed` of your own,
@@ -97,7 +93,7 @@ Any other refusal is a mistake in how you ran it, such as a value not copied exa
 lists or a commit hash mistyped. Fix it and run it again; do not tell the student it doesn't
 count.
 
-**3. Ask what they noticed.** Send this and end the turn:
+**2. Ask what they noticed.** Send this and end the turn:
 
 > In your own words: **what did you notice was wrong?** Name the input or the critique that
 > showed you, and what was wrong with what came out. Whatever you write here will go into your
@@ -105,7 +101,7 @@ count.
 
 **At the start of your next turn, before anything else**, if their reply answers the question,
 run `take-reply <repo> <n> noticed`. It copies their last message into the record and prints
-what it recorded. If their reply is a question instead, answer it and send the step 3 block
+what it recorded. If their reply is a question instead, answer it and send the step 2 block
 again; do not run the tool on a question. If the tool refuses:
 
 - **Two sessions are active:** rerun it once with `--transcript <path>` set to whichever of the
@@ -114,7 +110,7 @@ again; do not run the tool on a question. If the tool refuses:
   question: send the block for this step again with the tool's message as its first line, and
   run it again on their next answer.
 
-**4. Ask why they chose the fix.** Send this, with what `take-reply` printed, and end the turn:
+**3. Ask why they chose the fix.** Send this, with what `take-reply` printed, and end the turn:
 
 > I recorded what you noticed, exactly as you wrote it:
 >
@@ -123,7 +119,7 @@ again; do not run the tool on a question. If the tool refuses:
 > And in your own words: **why did you choose this fix**, rather than some other way of
 > handling it?
 
-At the start of your next turn, as in step 3, run `take-reply <repo> <n> why`. Then commit
+At the start of your next turn, as in step 2, run `take-reply <repo> <n> why`. Then commit
 `ps5/CHANGES.md` with the message `record: entry <n>`, and send this as the last thing in the
 turn:
 

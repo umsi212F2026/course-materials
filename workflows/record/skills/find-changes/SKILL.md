@@ -56,7 +56,8 @@ its line: only the diagram or skill part of it can go in the record.
 
 **3. Record each one they chose.** For each, oldest first, follow
 [`record-change`](workflows/record/skills/record-change/SKILL.md) with its commit hash and the
-two folders, starting at its step 2. Its step 2 block ends the turn, so the next change begins
+two folders, as a hand-off from `find-changes`. Its step 1 block ends the turn, so the next
+change begins
 in the turn after the last one is committed. For a change they remember that is not listed,
 find its commit with `git log` in `assignments` first, and if you can't find one, ask them
 which commit it was.
