@@ -28,13 +28,21 @@ node workflows/record/tools/changes.mjs parse <repo>
 ```
 
 `check` lists nine items, each `ok` or not, with a `detail`. From `parse`, list the parts still
-to confirm: every own-words part of a qualifying entry (its `noticed`, then its `why`) whose
-`attestation` is not `fresh` and whose `text` is not empty, in entry order. An entry qualifies
-unless its `whoNoticed` and `whoChose` are both `the agent`, or its `promptedBy` is
-`design critique` and its `whoChose` is not `me`.
+to confirm: every own-words part (its `noticed`, then its `why`) of an entry whose `qualifies`
+is true, whose `attestation` is not `fresh` and whose `text` is not empty, in entry order.
 
-**When there are parts to confirm**, send this, filled in with the first of them, and end the
-turn:
+**When there are parts to confirm**, ask about all of them in one call to
+`request_user_input_async`, one question per part, in that order:
+
+- **Title:** "Entry <n>, <what was wrong | why this fix>, exactly as it is in
+  `ps5/CHANGES.md`: "<the text>". Did you write this yourself, rather than an agent writing it
+  for you?"
+- **Options**, in this order: "No, I'll rewrite it", "Yes, I wrote it"
+
+The first option is preselected, so a student who clicks through without reading is asked to
+rewrite, never recorded as having written something they did not read.
+
+Then send this, filled in, as the last thing in the turn:
 
 > Here's how Problem Set 5 checks out against what the grader looks for:
 >
@@ -42,13 +50,10 @@ turn:
 > - ❌ <item name>: <its detail>
 > - ...
 >
-> Your change record has parts in your own words, and I'll ask you about each one in turn.
-> Here's the first, exactly as it is in `ps5/CHANGES.md`:
->
-> **Entry <n>, <what was wrong | why this fix>:**
-> > <the text>
->
-> Did you write this yourself, rather than an agent writing it for you?
+> Please answer the questions about the parts of your record that are in your own words.
+
+If you have no `request_user_input_async`, ask about the parts one at a time instead, each as a
+plain message that shows the part exactly as it is and asks the same question.
 
 **When there are none**, send this and end the turn. Keep "It's ready to submit on Canvas." only
 when every item passed, and "Want me to help with the ones marked ❌?" only when one did not:
@@ -63,37 +68,29 @@ when every item passed, and "Want me to help with the ones marked ❌?" only whe
 >
 > Want me to help with the ones marked ❌?
 
-**2. One part at a time.** On their answer about a part:
+**2. Record the answers.** For every part they answered "Yes, I wrote it", run
+`attest <repo> <n> <noticed|why>`. An answer that is neither option is not a yes: ask about
+that part again.
 
-- **Yes:** run `attest <repo> <n> <noticed|why>`. If another part is left to confirm, send this,
-  filled in, and end the turn:
+**Then each part they answered no, one at a time.** Send this and end the turn:
 
-  > Recorded. Next, exactly as it is in `ps5/CHANGES.md`:
-  >
-  > **Entry <n>, <what was wrong | why this fix>:**
-  > > <the text>
-  >
-  > Did you write this yourself, rather than an agent writing it for you?
+> Please rewrite entry <n>'s "<what was wrong | why this fix>" in your own words. You can edit
+> `ps5/CHANGES.md` yourself and tell me when you have, or reply here with the new version and
+> I'll put it in exactly as you write it.
 
-- **No:** send this and end the turn:
+If their reply is the new version, run `take-reply <repo> <n> <noticed|why>` at the start of
+your next turn, before anything else; it prints what it recorded. If they say they edited the
+file, run `parse` again. Either way, ask about that part again as in step 1, with one question
+showing its new text, and record the answer as above.
 
-  > Please rewrite entry <n>'s "<what was wrong | why this fix>" in your
-  > own words. You can edit `ps5/CHANGES.md` yourself and tell me when you have, or reply here
-  > with the new version and I'll put it in exactly as you write it.
-
-  If their reply is the new version, run `take-reply <repo> <n> <noticed|why>` at the start of
-  your next turn, before anything else; it prints what it recorded. If they say they edited the
-  file, run `parse` again. Either way, ask about that same part again with the block above,
-  showing its new text.
+**Send the rewrite request as a plain message**, never through `request_user_input_async` or
+any other question tool. `take-reply` finds the student's words by the message of yours that
+asked for them, so that message has to be a plain one.
 
 When no part is left to confirm, commit `ps5/CHANGES.md` with the message `record: attested`,
 and go back to step 1, so the student sees the final state. If the `pushed` item is the only one
 failing, end that block with "Want me to push it?" in place of its last line, and push when they
 say yes.
-
-**Ask every question here as a plain message**, never through a question or multiple-choice
-tool. The tool copies the student's typed reply, and an answer given through another tool may
-not be one it can read.
 
 ## Depends on
 

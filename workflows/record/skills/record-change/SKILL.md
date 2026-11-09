@@ -36,56 +36,53 @@ Never edit `CHANGES.md` yourself.
 2. **Find the change's commit.** If you were handed one, use it. If the change is not committed
    yet, commit it now, with a message that says what changed. A diagram change and its spec go
    in one commit, as `draw-workflow` does.
-3. Note what changed (the diagram, or which skill) and what prompted it, if you know: a run on
-   one of the examples, or design critique in class.
+3. Note what changed: the diagram, or which skill.
 
-**When `find-changes` hands you a change**, do everything above, then send step 1's block
-with its first two paragraphs replaced by "Three quick questions about the change to <the
-diagram, or the `<name>` skill> in commit <short hash>, "<its subject>":". The student has
-already chosen to record it, and the line tells them which of their choices this is. At the
-end of step 3 send no block. Commit, then go
-back to `find-changes`, which says what comes next.
+**When `find-changes` hands you a change**, do everything above, then ask step 1's questions
+without the first one: the student has already chosen to record it. At the end of step 3 send
+no block. Commit, then go back to `find-changes`, which says what comes next.
 
 ## What you do
 
-**1. Offer it, and ask who noticed it and who chose the fix.** Send this, filled in, and end
-the turn:
+**1. Offer it, and ask who noticed it and who chose the fix.** Ask these three questions
+together in one call to `request_user_input_async`, filled in, with the options exactly as
+written and in this order. Then send this as the last thing in the turn:
 
-> That change to <the diagram, or the `<name>` skill>, in commit <short hash>, "<its
-> subject>", could go in your change record. If you'd rather leave it out, just say so.
->
-> Otherwise, three quick questions:
->
-> **What prompted it?** A run on one of your examples (which one?), or design critique in
-> class?
->
-> **Who noticed the problem?**
-> 1. me
-> 2. the agent
-> 3. a classmate or instructor
->
-> **Who chose the fix?**
-> 1. me
-> 2. the agent, from my description
-> 3. me, from options the agent gave
-> 4. the agent
->
-> For example: "a run on examples/acme, 1, 2".
+> Please answer the questions about this change.
+
+The questions:
+
+1. **Title:** "That change to <the diagram, or the `<name>` skill>, in commit <short hash>,
+   "<its subject>", could go in your change record. Do you want it there?"
+   **Options:** "Yes, record it", "No, leave it out"
+2. **Title:** "Who noticed the problem it fixes?"
+   **Options:** "the agent", "me", "a classmate or instructor"
+3. **Title:** "Who chose the fix?"
+   **Options:** "the agent", "the agent, from my description", "me, from options the agent
+   gave", "me"
+
+**The order of the options is deliberate.** The first option is preselected, so a student who
+clicks through without choosing lands on "the agent" twice, which the tool turns away, rather
+than on "me" twice, which would put a change in their record that they did not guide.
+
+If you have no `request_user_input_async`, send the three questions as one plain message
+instead, each with its options as a numbered list, and end the turn.
 
 If they say to leave it out, say "OK, it stays out." and stop.
 
-Take their answers as they gave them. If an answer is unclear, ask that question again; do not
-pick one for them. Then run `add-entry` with a short `--title` and `--what-changed` of your own,
-and their answers, word for word from the lists:
+Take their answers as they gave them. If an answer is free text that is not one of the options,
+or is unclear, ask that question again; do not pick one for them. Then run `add-entry` with a
+short `--title` and `--what-changed` of your own, and their answers, word for word from the
+options:
 
 ```
 add-entry <repo> --title <t> --changed "<diagram | skill <name>>" --commit <hash>
-  --prompted-by "<a run on examples/<id> | design critique>"
   --who-noticed "<answer>" --who-chose "<answer>" --what-changed <t>
 ```
 
 It prints the new entry's number. If it refuses because the agent noticed and chose the fix, or
-because a critique change's fix was not the student's choice, send this and stop:
+because a classmate or the instructor noticed it and the student did not choose the fix, send
+this and stop:
 
 > This one doesn't go in your record: <the tool's message>
 
@@ -126,9 +123,9 @@ turn:
 >
 > > <the words take-reply printed>
 
-**Ask every question here as a plain message**, never through a question or multiple-choice
-tool. The tool copies the student's typed reply, and an answer given through another tool may
-not be one it can read.
+**Ask the two own-words questions as plain messages**, never through `request_user_input_async`
+or any other question tool. `take-reply` finds the student's words by the message of yours
+that asked for them, so that message has to be a plain one.
 
 ## Depends on
 

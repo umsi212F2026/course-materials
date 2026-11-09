@@ -7,7 +7,7 @@
 //   node workflows/record/tools/changes.mjs attest <repo> <n> <noticed|why>
 //   node workflows/record/tools/changes.mjs candidates <repo>
 //   node workflows/record/tools/changes.mjs add-entry <repo> --title <t> --changed <c> --commit <h>
-//        --prompted-by <p> --who-noticed <w> --who-chose <w> --what-changed <t>
+//        --who-noticed <w> --who-chose <w> --what-changed <t>
 //   node workflows/record/tools/changes.mjs take-reply <repo> <n> <noticed|why> [--transcript <path>]
 //
 // <repo> is the student's assignments repository. Results are JSON on stdout, except attest,
@@ -48,10 +48,11 @@ function readRecord(repo) {
 
 const subdirs = (dir) => (existsSync(dir) ? readdirSync(dir).filter((d) => statSync(join(dir, d)).isDirectory()).sort() : []);
 
-/** The record in `repo`, parsed. */
+/** The record in `repo`, parsed, with whether each entry qualifies. */
 export function parse(repo) {
   requireRepo(repo);
-  return parseRecord(readRecord(repo) ?? "");
+  const r = parseRecord(readRecord(repo) ?? "");
+  return { ...r, entries: r.entries.map((e) => ({ ...e, qualifies: qualifies(e) })) };
 }
 
 /** Every item the grader looks for, in order, each with whether it passes and why. */
@@ -254,17 +255,17 @@ export function candidates(repo) {
  *
  *  THE TABLE'S LAST ROW IS REFUSED HERE, not only in the skill. A change the agent noticed and
  *  the agent fixed never reaches the file, whatever the agent running the skill decides. */
-export function addEntry(repo, { title, changed, commit, promptedBy, whoNoticed, whoChose, whatChanged }) {
+export function addEntry(repo, { title, changed, commit, whoNoticed, whoChose, whatChanged }) {
   requireRepo(repo);
   const text = readRecord(repo);
   if (text === null) throw new Error(`${RECORD} does not exist.`);
   if (whoNoticed === "the agent" && whoChose === "the agent")
     throw new Error("That change was noticed and fixed by the agent, so it does not go in the record.");
-  if (promptedBy === "design critique" && whoChose !== "me")
-    throw new Error("A change prompted by design critique goes in the record only when you chose the fix.");
+  if (whoNoticed === "a classmate or instructor" && !whoChose.startsWith("me"))
+    throw new Error("When a classmate or the instructor noticed the problem, the change goes in the record only when you chose the fix.");
   const before = parseRecord(text);
   const n = Math.max(0, ...before.entries.map((e) => e.n)) + 1;
-  const fields = { changed, commit, promptedBy, whoNoticed, whoChose, whatChanged };
+  const fields = { changed, commit, whoNoticed, whoChose, whatChanged };
   const next = text.replace(/\n*$/, "\n\n") + renderEntry(n, { title: title ?? "", fields, parts: { noticed: "", why: "" } });
   const added = parseRecord(next).problems.filter((p) => !before.problems.some((q) => q.message === p.message));
   if (added.length) throw new Error(added[0].message);
@@ -349,7 +350,6 @@ const ENTRY_FLAGS = {
   title: "title",
   changed: "changed",
   commit: "commit",
-  "prompted-by": "promptedBy",
   "who-noticed": "whoNoticed",
   "who-chose": "whoChose",
   "what-changed": "whatChanged",

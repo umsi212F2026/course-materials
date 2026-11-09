@@ -14,7 +14,6 @@ import { createHash } from "node:crypto";
 const FIELDS = [
   ["changed", "Changed"],
   ["commit", "Commit"],
-  ["promptedBy", "Prompted by"],
   ["whoNoticed", "Who noticed"],
   ["whoChose", "Who chose the fix"],
   ["whatChanged", "What changed"],
@@ -39,17 +38,17 @@ export function partHash(text) {
 }
 
 /** Whether an entry belongs in the record: the spec's table, whose last row is agent and agent.
- *  A change prompted by design critique counts only when the student chose the fix. */
+ *  A problem a classmate or the instructor noticed counts only when the student chose the fix,
+ *  on their own or from options the agent gave. */
 export function qualifies(entry) {
   const f = entry.fields;
   if (f.whoNoticed === "the agent" && f.whoChose === "the agent") return false;
-  if (f.promptedBy === "design critique" && f.whoChose !== "me") return false;
+  if (f.whoNoticed === "a classmate or instructor" && !f.whoChose?.startsWith("me")) return false;
   return true;
 }
 
 function validValue(key, value) {
   if (key === "changed") return value === "diagram" || /^skill \S+$/.test(value);
-  if (key === "promptedBy") return value === "design critique" || /^a run on \S/.test(value);
   if (key === "whoNoticed") return WHO_NOTICED.includes(value);
   if (key === "whoChose") return WHO_CHOSE.includes(value);
   return value.length > 0;

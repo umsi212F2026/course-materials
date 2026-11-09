@@ -33,8 +33,15 @@ If it fails, send this and stop:
 > Your record starts from your initial design. Put its commit hash on the first line of
 > `ps5/CHANGES.md`, as `Initial design: <hash>`, and commit that.
 
-**2. Show them.** Keep the commits with `inRecord: false`. Number them oldest first. Then send
-this, filled in, and end the turn:
+**2. Show them.** Keep the commits with `inRecord: false`. The tool has already left out
+diagram commits that only moved shapes. **Then read each one's diff** with
+`git -C <repo> show <hash> -- <its diagram or skill files>`, and leave out every commit whose
+diagram or skill part only rewords without changing the meaning, fixes typos or formatting, or
+renames something. Those are not worth recording, and listing them teaches the student to skim
+the list. When you are not sure, keep it: the student decides what counts.
+
+Number the ones left oldest first. Then send this, filled in, and end the turn. When you left
+any out, add "I left out <how many> that only changed wording or formatting." after the list:
 
 > Since your initial design, these commits changed your diagram or a skill and aren't in your
 > record yet:

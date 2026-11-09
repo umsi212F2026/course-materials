@@ -39,7 +39,6 @@ const attested = (text) => `${text}\n\n<!-- attested 2026-11-18 sha256:${partHas
 export const FIELDS = {
   changed: "skill extract",
   commit: "abc1234",
-  promptedBy: "a run on `examples/e01`",
   whoNoticed: "me",
   whoChose: "me",
   whatChanged: "takes the later deadline",

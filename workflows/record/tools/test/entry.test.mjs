@@ -24,7 +24,6 @@ const ENTRY = {
   title: "take the later deadline",
   changed: "skill extract",
   commit: "abc1234",
-  promptedBy: "a run on `examples/e01`",
   whoNoticed: "me",
   whoChose: "the agent, from my description",
   whatChanged: "extract takes the last deadline",
@@ -62,16 +61,16 @@ test("a critique change the student did not choose is refused, writing nothing",
   const repo = started();
   const before = record(repo);
   assert.throws(
-    () => addEntry(repo, { ...ENTRY, promptedBy: "design critique", whoNoticed: "a classmate or instructor", whoChose: "the agent, from my description" }),
-    /design critique/
+    () => addEntry(repo, { ...ENTRY, whoNoticed: "a classmate or instructor", whoChose: "the agent, from my description" }),
+    /classmate or the instructor noticed/
   );
   assert.equal(record(repo), before);
-  assert.equal(addEntry(repo, { ...ENTRY, promptedBy: "design critique", whoNoticed: "a classmate or instructor", whoChose: "me" }), 1);
+  assert.equal(addEntry(repo, { ...ENTRY, whoNoticed: "a classmate or instructor", whoChose: "me" }), 1);
 });
 
 test("the CLI add-entry prints the new number", () => {
   const repo = started();
-  const args = ["add-entry", repo, "--title", "t", "--changed", "diagram", "--commit", "abc1234", "--prompted-by", "design critique",
+  const args = ["add-entry", repo, "--title", "t", "--changed", "diagram", "--commit", "abc1234",
     "--who-noticed", "a classmate or instructor", "--who-chose", "me", "--what-changed", "added a check step"];
   assert.equal(execFileSync(process.execPath, [TOOL, ...args], { encoding: "utf8" }).trim(), "1");
   const refused = spawnSync(process.execPath, [TOOL, ...args.map((a) => (a === "me" ? "the agent" : a))], { encoding: "utf8" });

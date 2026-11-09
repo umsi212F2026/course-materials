@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { execFileSync, spawnSync } from "node:child_process";
-import { check, attest } from "../changes.mjs";
+import { check, attest, parse } from "../changes.mjs";
 import { parseRecord } from "../lib/record.mjs";
 import { passingRepo, emptyRepo, write, remove, commit, changes, entryText, FIELDS, bpmn } from "./repo.mjs";
 
@@ -167,6 +167,13 @@ test("the CLI parse command prints the parsed record", () => {
   const { repo } = passingRepo();
   const out = JSON.parse(execFileSync(process.execPath, [TOOL, "parse", repo], { encoding: "utf8" }));
   assert.equal(out.entries.length, 2);
+});
+
+test("parse says whether each entry qualifies, so no skill restates the rule", () => {
+  const { repo, initial, entry } = passingRepo();
+  const agentOnly = { ...FIELDS, whoNoticed: "the agent", whoChose: "the agent" };
+  write(repo, "ps5/CHANGES.md", changes(initial, [entry(1), entry(2, { fields: agentOnly })]));
+  assert.deepEqual(parse(repo).entries.map((e) => e.qualifies), [true, false]);
 });
 
 test("an entry whose commit is not in history fails entries and names it", () => {

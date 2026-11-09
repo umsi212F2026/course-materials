@@ -10,7 +10,6 @@ const entry = (n, title, who, noticed, why) => `## ${n}. ${title}
 
 - **Changed:** skill extract
 - **Commit:** a1b2c3d4
-- **Prompted by:** a run on \`examples/acme-intern\`
 - **Who noticed:** ${who.noticed}
 - **Who chose the fix:** ${who.chose}
 - **What changed:** extract now takes the last deadline in a posting
@@ -40,7 +39,6 @@ const ENTRY = {
   fields: {
     changed: "skill extract",
     commit: "a1b2c3d4",
-    promptedBy: "a run on `examples/acme-intern`",
     whoNoticed: "me",
     whoChose: "the agent, from my description",
     whatChanged: "extract now takes the last deadline",
@@ -57,7 +55,7 @@ test("parses a well-formed record", () => {
   assert.equal(r.entries[0].n, 1);
   assert.equal(r.entries[0].title, "take the later deadline");
   assert.equal(r.entries[0].fields.whoNoticed, "me");
-  assert.equal(r.entries[0].fields.promptedBy, "a run on `examples/acme-intern`");
+  assert.equal(r.entries[0].fields.promptedBy, undefined);
   assert.equal(r.entries[0].parts.noticed.text, NOTICED);
   assert.equal(r.entries[0].parts.noticed.attestation, "fresh");
   assert.equal(r.entries[1].fields.whoNoticed, "a classmate or instructor");
@@ -123,11 +121,11 @@ test("agent noticed and agent chose does not qualify", () => {
 });
 
 test("a critique entry qualifies only when the student chose the fix", () => {
-  assert.equal(qualifies({ fields: { promptedBy: "design critique", whoNoticed: "a classmate or instructor", whoChose: "me" } }), true);
-  assert.equal(
-    qualifies({ fields: { promptedBy: "design critique", whoNoticed: "a classmate or instructor", whoChose: "the agent, from my description" } }),
-    false
-  );
+  const critique = (whoChose) => qualifies({ fields: { whoNoticed: "a classmate or instructor", whoChose } });
+  assert.equal(critique("me"), true);
+  assert.equal(critique("me, from options the agent gave"), true);
+  assert.equal(critique("the agent, from my description"), false);
+  assert.equal(critique("the agent"), false);
 });
 
 test("render then parse round-trips", () => {
