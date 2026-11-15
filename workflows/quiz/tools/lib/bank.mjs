@@ -786,7 +786,9 @@ export const SAME_SCENARIO_NOTE = '**Same scenario as the previous question.**';
  *  `next` is the caller's seeded random source, so the bake stays deterministic and practice stays
  *  random. `seenAt` is practice's unseen-first ordering: the scenario seen longest ago, or never,
  *  wins, with the shuffle breaking ties, and within it unseen questions are taken first. The bake
- *  passes none, which ranks every scenario alike.
+ *  passes none, which ranks every scenario alike. Within the scenario, every goal it holds is
+ *  covered before any goal is drawn twice, so a take smaller than the scenario still checks each
+ *  goal it can.
  *
  *  THE QUESTIONS COME BACK IN FILE ORDER, because a scenario's questions are often written to be
  *  read in sequence, one step at a time. Every one after the first carries the full setup, so
@@ -813,9 +815,23 @@ export function pickSameScenario(items, take, next, seenAt = () => -Infinity) {
   if (!fit.length || take < 1) return [];
   const [chosen] = oldestFirst(shuffle(fit).map((g) => [Math.max(...g.map(seenAt)), g]));
   const order = new Map(chosen.map((it, i) => [it, i]));
-  const picked = oldestFirst(shuffle(chosen).map((it) => [seenAt(it), it]))
-    .slice(0, take)
-    .sort((a, b) => order.get(a) - order.get(b));
+  // EVERY GOAL BEFORE ANY GOAL TWICE. A scenario's questions are often several on one goal and one
+  // on another, and a random few could miss the odd one out entirely, leaving that goal unchecked
+  // for that student. So the first question of each goal, in the ranked order, comes ahead of
+  // every second one. Within that, the ranking still decides: unseen first, then the shuffle.
+  const ranked = oldestFirst(shuffle(chosen).map((it) => [seenAt(it), it]));
+  const goalOf = (it) => (it.goals ?? (it.goal ? [it.goal] : [])).join(' ');
+  const covered = new Set();
+  const firsts = [];
+  const seconds = [];
+  for (const it of ranked) {
+    if (covered.has(goalOf(it))) seconds.push(it);
+    else {
+      covered.add(goalOf(it));
+      firsts.push(it);
+    }
+  }
+  const picked = [...firsts, ...seconds].slice(0, take).sort((a, b) => order.get(a) - order.get(b));
   return picked.map((it, i) => (i === 0 ? it : { ...it, prompt: `${SAME_SCENARIO_NOTE}\n\n${it.prompt}` }));
 }
 
