@@ -88,9 +88,11 @@ on; APPLY needs the learner's own work, which a bank cannot hold. So a word's ba
 from its confusables, and adding a real near miss to `goals.md` is how a word gets more
 questions. A word with no confusable has only its CATCH questions.
 
-**Aim for two CATCH questions: one the learner answers in their own words, and one multiple
-choice.** Keep only the good ones: a multiple choice that can't be made good is left out, not
-kept to make up the number, and the word keeps its free-response CATCH alone. A multiple choice
+**Aim for two CATCH questions, both multiple choice.** Keep only the good ones: a multiple
+choice that can't be made good is left out, not kept to make up the number. A free-response
+CATCH, where the learner says in their own words what is wrong with a sentence, is the fallback
+for a word where no good multiple choice can be made, since grading a free answer takes
+judgment. A multiple choice
 CATCH's choices are four statements about one described situation, each using the word: three
 misuse it, each the way a
 learner really might (the confusion on the word's _watch for_ line, the word read as its
