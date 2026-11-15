@@ -288,6 +288,32 @@ test("pickSameScenario only chooses a scenario that holds the whole take, and dr
   assert.deepEqual(pickSameScenario(strata[0].items, 4, () => 0.5), []);
 });
 
+test("pickSameScenario covers every goal it can before repeating one", () => {
+  // One scenario of five: four on ga and one, the fourth, on gb.
+  const goals = ["ga", "ga", "ga", "gb", "ga"];
+  const root = workspace({
+    "learning-topics/t1/tasks/a-g/s1.md": qs(5),
+    "learning-topics/t1/rubrics/a-g/s1.md": goals.map((g, i) => `### q${i + 1}\n\n- **answer:** A.\n- **goal:** ${g}\n`).join("\n"),
+  });
+  const { strata, problems } = drawn({ draw: { "learning-topics/t1/a-g": same(2) } }, root);
+  assert.deepEqual(problems, []);
+  const picked = new Set();
+  for (let i = 0; i < 40; i++) {
+    let x = i / 40;
+    const next = () => ((x = (x * 7.31 + 0.17) % 1), x);
+    for (const take of [2, 3]) {
+      const got = pickSameScenario(strata[0].items, take, next);
+      assert.equal(got.length, take);
+      assert.ok(got.some((it) => it.goals.includes("gb")), `take ${take} includes the one gb question`);
+      const order = strata[0].items.map((it) => it.id);
+      assert.deepEqual(got.map((it) => order.indexOf(it.id)), got.map((it) => order.indexOf(it.id)).sort((a, b) => a - b));
+      for (const it of got) picked.add(it.id);
+    }
+  }
+  // The ga questions still vary, so the spread does not fix which of them is drawn.
+  assert.ok(picked.size >= 4);
+});
+
 test("a sameScenario practice draw serves one scenario's questions together", () => {
   const root = workspace(T1);
   const pool = { draw: { "learning-topics/t1/items": 1, "learning-topics/t1/a-x": same(3) } };
