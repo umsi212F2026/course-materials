@@ -1,0 +1,22 @@
+{
+  "_note": "The per-session selection: how many questions to draw from each bank on one date. Published, because a practice quiz is generated from this same file by the same library, so students practise the shape they will actually face. It says how many from where and nothing about which questions: the draw is random per student, and the questions themselves live in the sources named below, which students already have.",
+  "session": 22,
+  "date": "2026-11-17",
+  "draw": {
+    "learning-topics/failure-handling-2026-11/a-words": 1,
+    "learning-topics/failure-handling-2026-11/a-pick-rerun-outcome": 1,
+    "learning-topics/failure-handling-2026-11/a-pick-noticed-or-not": 1,
+    "learning-topics/permissions-2026-11/a-words": 1,
+    "learning-topics/permissions-2026-11/a-look-over-steps": { "take": 3, "sameScenario": true },
+    "learning-topics/permissions-2026-11/a-weigh-one-limit": 1
+  },
+  "exclude": {
+    "learning-topics/permissions-2026-11/a-words/w-allowlist/catch-never-run": "free response; this quiz is multiple choice",
+    "learning-topics/permissions-2026-11/a-words/w-blast-radius/catch-never-failed": "free response; this quiz is multiple choice",
+    "learning-topics/permissions-2026-11/a-words/w-human-in-loop/catch-after-sending": "free response; this quiz is multiple choice",
+    "learning-topics/permissions-2026-11/a-words/w-prompt-injection/catch-own-request": "free response; this quiz is multiple choice",
+    "learning-topics/permissions-2026-11/a-words/w-sandbox/catch-can-change": "free response; this quiz is multiple choice",
+    "learning-topics/permissions-2026-11/a-words/w-scoped-token/catch-text-units": "free response; this quiz is multiple choice",
+    "learning-topics/permissions-2026-11/a-words/w-untrusted-input/catch-own-check": "free response; this quiz is multiple choice"
+  }
+}
