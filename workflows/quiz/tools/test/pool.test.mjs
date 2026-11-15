@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { join, dirname, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { execFileSync } from "node:child_process";
-import { readBank, readPoolSources, applyPool, recordLabel, keyParts } from "../lib/bank.mjs";
+import { readBank, readPoolSources, applyPool, recordLabel, keyParts, takeOf, pickSameScenario, SAME_SCENARIO_NOTE } from "../lib/bank.mjs";
 import { drawPractice } from "../quiz-draw.mjs";
 
 const REPO = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "..");
@@ -218,6 +218,97 @@ test("exclude takes qualified folder ids and bare single-file ids", () => {
     ["learning-topics/t1/a-x/s2/q2"],
     ["i2", "i3", "i4"],
   ]);
+});
+
+const same = (take) => ({ take, sameScenario: true });
+
+test("takeOf reads a plain count and the object form alike", () => {
+  assert.equal(takeOf(3), 3);
+  assert.equal(takeOf(same(2)), 2);
+});
+
+test("a sameScenario draw value gives one stratum over the whole activity that says so", () => {
+  const root = workspace(T1);
+  const { shape, strata, problems } = drawn({ draw: { "learning-topics/t1/a-x": same(2) } }, root);
+  assert.deepEqual(problems, []);
+  assert.deepEqual(shape, [["learning-topics/t1/a-x", 2, 5]]);
+  assert.equal(strata[0].sameScenario, true);
+  // A plain count carries no flag.
+  assert.equal(drawn({ draw: { "learning-topics/t1/a-x": 2 } }, root).strata[0].sameScenario, undefined);
+});
+
+test("sameScenario needs some scenario with enough questions", () => {
+  const root = workspace(T1);
+  // s1 has 3 and s2 has 2, so 3 is fine and 4 is not.
+  assert.deepEqual(drawn({ draw: { "learning-topics/t1/a-x": same(3) } }, root).problems, []);
+  const { problems } = drawn({ draw: { "learning-topics/t1/a-x": same(4) } }, root);
+  assert.deepEqual(problems, ["pool draws 4 from one scenario of learning-topics/t1/a-x, but no scenario has 4 available"]);
+});
+
+test("sameScenario on a single-file bank, a joined key or a whole topic is a problem", () => {
+  const root = workspace(T1);
+  const joined = "learning-topics/t1/a-x | learning-topics/t1/a-y";
+  const { problems } = drawn(
+    { draw: { "learning-topics/t1/items": same(1), [joined]: same(1), "learning-topics/t1": same(1) } },
+    root,
+  );
+  assert.ok(problems.some((p) => p.includes("learning-topics/t1/items") && p.includes("single-file")));
+  assert.ok(problems.some((p) => p.includes(joined) && p.includes("one activity")));
+  assert.ok(problems.some((p) => p.startsWith("pool draws from learning-topics/t1 with sameScenario") && p.includes("one activity")));
+});
+
+test("pickSameScenario takes one scenario's questions in file order, noting the scenario after the first", () => {
+  const root = workspace(T1);
+  const { strata } = drawn({ draw: { "learning-topics/t1/a-x": same(2) } }, root);
+  const scenarios = new Set();
+  for (let i = 0; i < 20; i++) {
+    let x = i / 20;
+    const next = () => ((x = (x * 7.31 + 0.17) % 1), x);
+    const got = pickSameScenario(strata[0].items, 2, next);
+    assert.equal(got.length, 2);
+    assert.equal(new Set(got.map((it) => it.scenario)).size, 1);
+    const order = strata[0].items.map((it) => it.id);
+    assert.ok(order.indexOf(got[0].id) < order.indexOf(got[1].id));
+    assert.ok(!got[0].prompt.startsWith(SAME_SCENARIO_NOTE));
+    assert.ok(got[1].prompt.startsWith(`${SAME_SCENARIO_NOTE}\n\n`));
+    // The bank's own item is left alone.
+    assert.ok(!strata[0].items.some((it) => it.prompt.startsWith(SAME_SCENARIO_NOTE)));
+    scenarios.add(got[0].scenario);
+  }
+  // Both scenarios hold 2, so both turn up.
+  assert.deepEqual([...scenarios].sort(), ["s1", "s2"]);
+});
+
+test("pickSameScenario only chooses a scenario that holds the whole take, and draws nothing when none does", () => {
+  const root = workspace(T1);
+  const { strata } = drawn({ draw: { "learning-topics/t1/a-x": same(3) } }, root);
+  for (const r of [0, 0.3, 0.6, 0.99]) {
+    assert.ok(pickSameScenario(strata[0].items, 3, () => r).every((it) => it.scenario === "s1"));
+  }
+  assert.deepEqual(pickSameScenario(strata[0].items, 4, () => 0.5), []);
+});
+
+test("a sameScenario practice draw serves one scenario's questions together", () => {
+  const root = workspace(T1);
+  const pool = { draw: { "learning-topics/t1/items": 1, "learning-topics/t1/a-x": same(3) } };
+  for (const seed of ["a", "b", "c"]) {
+    const { items, problems } = drawPractice(pool, root, { seed });
+    assert.deepEqual(problems, []);
+    assert.equal(items.length, 4);
+    assert.deepEqual(items.slice(1).map((i) => i.label), ["a-x/s1/q1", "a-x/s1/q2", "a-x/s1/q3"]);
+    assert.ok(items[2].prompt.startsWith(SAME_SCENARIO_NOTE) && items[3].prompt.startsWith(SAME_SCENARIO_NOTE));
+  }
+});
+
+test("a sameScenario practice draw prefers a scenario the student has not seen", () => {
+  const root = workspace({
+    ...T1,
+    "learning-topics/t1/evidence/attempts.jsonl": JSON.stringify({ at: "2026-09-01T00:00:00Z", label: "a-x/s1/q2" }) + "\n",
+  });
+  for (const seed of ["a", "b", "c", "d", "e", "f"]) {
+    const { items } = drawPractice({ draw: { "learning-topics/t1/a-x": same(2) } }, root, { seed });
+    assert.deepEqual(items.map((i) => i.label), ["a-x/s2/q1", "a-x/s2/q2"]);
+  }
 });
 
 // BACKWARD COMPATIBILITY against the real pools and the real sources: every published pool must

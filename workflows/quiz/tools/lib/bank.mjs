@@ -765,6 +765,60 @@ export function readPoolSources(pool, root) {
 /** The keys a draw key joins with ` | `; a plain key is its own one part. */
 export const keyParts = (key) => key.split(" | ").map((k) => k.trim());
 
+/** How many a draw value asks for: a plain count, or the object form's `take`. */
+export const takeOf = (value) => (typeof value === 'object' && value !== null ? value.take : value);
+
+/** The line that opens every question after the first in a same-scenario run. */
+export const SAME_SCENARIO_NOTE = '**Same scenario as the previous question.**';
+
+/** One student's questions from a same-scenario stratum: one scenario, then `take` of its questions.
+ *
+ *  ONE SCENARIO, SEVERAL QUESTIONS, A DIFFERENT SCENARIO FOR THE NEXT STUDENT. A folder activity's
+ *  scenario is a long setup with several short questions under it, so drawing them separately
+ *  makes a student read a new setup for every question. This keeps the reading to one setup while
+ *  each student still gets their own scenario.
+ *
+ *  ONLY A SCENARIO HOLDING THE WHOLE TAKE IS ELIGIBLE, so the run is never padded from another
+ *  scenario. None eligible draws nothing, and the caller's shortfall check says so; applyPool has
+ *  already reported it against the pool. Scenarios are told apart by bank as well as name, since
+ *  names repeat across activities.
+ *
+ *  `next` is the caller's seeded random source, so the bake stays deterministic and practice stays
+ *  random. `seenAt` is practice's unseen-first ordering: the scenario seen longest ago, or never,
+ *  wins, with the shuffle breaking ties, and within it unseen questions are taken first. The bake
+ *  passes none, which ranks every scenario alike.
+ *
+ *  THE QUESTIONS COME BACK IN FILE ORDER, because a scenario's questions are often written to be
+ *  read in sequence, one step at a time. Every one after the first carries the full setup, so
+ *  nobody has to scroll back to it, and opens with SAME_SCENARIO_NOTE, so nobody rereads it
+ *  hunting for a difference. The note goes on copies: the bank's own items are left alone. */
+export function pickSameScenario(items, take, next, seenAt = () => -Infinity) {
+  const groups = new Map();
+  for (const it of items) {
+    const key = `${it.bank}\u0000${it.scenario}`;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(it);
+  }
+  const shuffle = (list) => {
+    const out = [...list];
+    for (let i = out.length - 1; i > 0; i--) {
+      const j = Math.floor(next() * (i + 1));
+      [out[i], out[j]] = [out[j], out[i]];
+    }
+    return out;
+  };
+  const oldestFirst = (pairs) => pairs.sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0)).map(([, v]) => v);
+
+  const fit = [...groups.values()].filter((g) => g.length >= take);
+  if (!fit.length || take < 1) return [];
+  const [chosen] = oldestFirst(shuffle(fit).map((g) => [Math.max(...g.map(seenAt)), g]));
+  const order = new Map(chosen.map((it, i) => [it, i]));
+  const picked = oldestFirst(shuffle(chosen).map((it) => [seenAt(it), it]))
+    .slice(0, take)
+    .sort((a, b) => order.get(a) - order.get(b));
+  return picked.map((it, i) => (i === 0 ? it : { ...it, prompt: `${SAME_SCENARIO_NOTE}\n\n${it.prompt}` }));
+}
+
 /** Split a draw key into the source it falls under and the rest: the longest of `sources` that
  *  is the key or a prefix of it at a `/`. The empty source (the topic form) prefixes every key.
  *  Null when none does, which applyPool reports as it always has. */
@@ -806,6 +860,11 @@ function spread(take, banks) {
  *  of its questions each student gets. It is stratified on purpose: "three about reading a
  *  diagram and one about lanes" is a statement about what the quiz covers, which a flat draw
  *  cannot make and cannot be relied on to produce by chance.
+ *
+ *  A count may instead be `{ "take": <how many>, "sameScenario": true }`, on a key naming one
+ *  folder activity: each student then gets that many questions from one scenario of it, a
+ *  different scenario per student (see pickSameScenario). The stratum carries `sameScenario`,
+ *  and the caller draws it with pickSameScenario rather than a plain pick.
  *
  *  `exclude` drops individual ids from a bank that is otherwise all in.
  *
@@ -878,8 +937,38 @@ export function applyPool(bank, pool) {
     };
 
     const strata = [];
-    for (const [name, take] of Object.entries(pool.draw)) {
+    for (const [name, value] of Object.entries(pool.draw)) {
+      const take = takeOf(value);
+      const sameScenario = typeof value === 'object' && value !== null && value.sameScenario === true;
+      if (!Number.isInteger(take) || take < 1) {
+        problems.push(`pool draws ${JSON.stringify(value)} from ${name}; a draw is a count, or { "take": <count>, "sameScenario": true }`);
+        continue;
+      }
       const parts = keyParts(name);
+      if (sameScenario) {
+        // ONE ACTIVITY OR NOTHING. A joined key or a whole topic spans banks, and a scenario belongs
+        // to one, so "one scenario of these" would quietly mean "one scenario of whichever bank".
+        const got = parts.length > 1 ? null : resolveKey(name);
+        if (!got || got.whole) {
+          problems.push(`pool draws from ${name} with sameScenario, which needs one activity, not several banks`);
+          continue;
+        }
+        if (got.problem) {
+          problems.push(got.problem);
+          continue;
+        }
+        if (!got.items.some((i) => 'scenario' in i)) {
+          problems.push(`pool draws from ${name} with sameScenario, but ${got.owner} is a single-file bank, which has no scenarios`);
+          continue;
+        }
+        const sizes = new Map();
+        for (const i of got.items) sizes.set(i.scenario, (sizes.get(i.scenario) ?? 0) + 1);
+        if (![...sizes.values()].some((n) => n >= take)) {
+          problems.push(`pool draws ${take} from one scenario of ${name}, but no scenario has ${take} available`);
+        }
+        strata.push({ name, take, items: got.items, bank: got.owner, sameScenario: true });
+        continue;
+      }
       if (parts.length > 1) {
         const items = [];
         for (const part of parts) {
