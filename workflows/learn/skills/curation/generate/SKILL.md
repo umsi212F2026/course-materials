@@ -223,7 +223,9 @@ and neither you nor the tutor will notice, because it will simply certify the wr
   goal with cases, **which cases each kind of question carries**, so the tutor running it live
   can record them; between them the generator's questions carry every case. A pass passes every
   case a question carries, so two cases a learner could get one right and one wrong on are two
-  kinds of question, not one.
+  kinds of question, not one. A kind that deliberately carries no case (a tie, the flipped half
+  of a pair) says so, and the tutor records it with `--cases none`, as a banked question's
+  `cases: none` is recorded.
 
 There is no `kind` to choose. A goal comes back in review for months after it's first met, so
 fresh questions matter, and a generator is what supplies them. On a student's own topic the

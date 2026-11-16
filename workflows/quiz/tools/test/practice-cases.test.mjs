@@ -40,3 +40,14 @@ test("a multi-goal row carries each goal's cases on its per_goal entry", () => {
   const by = Object.fromEntries(row.per_goal.map((p) => [p.goal, p.cases]));
   assert.deepEqual(by, { "c-a": ["one"], "c-b": [] });
 });
+
+test("a question banked with cases: none leaves as [\"none\"], for record-attempt --cases none", () => {
+  const [row] = scored([mcq("q1", { goal: "c-a", goals: ["c-a"], cases: { "c-a": [] } })], [{ item_id: "q1", text: "0" }]);
+  assert.deepEqual(row.cases, ["none"]);
+  const [multi] = scored(
+    [mcq("q1", { goals: ["c-a", "c-b"], cases: { "c-a": [] } })],
+    [{ item_id: "q1", text: "0" }],
+  );
+  const by = Object.fromEntries(multi.per_goal.map((p) => [p.goal, p.cases]));
+  assert.deepEqual(by, { "c-a": ["none"], "c-b": [] });
+});

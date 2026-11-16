@@ -248,7 +248,8 @@ node workflows/learn/tools/record-attempt.mjs <topic> <goal> "<label>" --tags <t
 Take all five straight off the row from step 6: `row.topic`, `row.goal`, `row.label`,
 `row.axes` as it stands, and `row.tags` where the row has one. Add
 `--cases <row.cases, comma-joined>` when `row.cases` is not empty: a goal with cases refuses a
-ruled attempt without it.
+ruled attempt without it. A `row.cases` of `["none"]` is a question banked to credit no case,
+and goes through as `--cases none`, like any other.
 
 **An empty `row.cases` on a goal whose `goals.md` entry has a `cases` slot** means the question
 was written before its goal's cases were. This is the one thing not on the row: read the case

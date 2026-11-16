@@ -94,7 +94,9 @@ it has them, from `goals.md`, resolving a reference criterion through
 6. **Its cases are real, and not bundled.** For each goal with cases, does the question, answered
    in full, really exercise every case its `cases:` line lists? A case listed but not reached
    would be passed untested. And could a learner get one listed case right and another wrong?
-   One ruling covers all of them, so such a question should be split, one per case.
+   One ruling covers all of them, so such a question should be split, one per case. A
+   `cases: none` question must really exercise no case; one that does exercise a case should
+   list it, or a pass on it goes unrecorded.
 7. **It stands alone when drawn.** A quiz shows the setup and this one question, never the
    framing and never another question, so checks 1, 2 and 5 judge against the setup alone.
    Read the setup and the question together, with no framing: is it a complete task that says

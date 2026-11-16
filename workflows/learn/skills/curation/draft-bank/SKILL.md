@@ -203,7 +203,11 @@ The rules behind that example:
   - `cases:` for each goal it names that has cases, the ones this question exercises. Naming one
     goal, `- **cases:** allows-dashboard, allows-safe`; naming several, per goal,
     `- **cases:** c-a: x, y; c-b: z`. A goal with cases needs its entry here on every question
-    naming it, and survey reports one missing or naming a case its goal does not define.
+    naming it, and survey reports one missing or naming a case its goal does not define. **A
+    question that deliberately exercises none of its goal's cases** (a tie, the flipped half of a
+    pair, a question kept so "about as well" stays in play) says `- **cases:** none`, or
+    `c-a: none` per goal: its ruling is recorded but credits no case. Never leave the line empty;
+    survey reports that as missing.
   - `answer:` what a complete answer says. For an mcq, the 1-based number of the right choice.
   - `credit:` what full and half credit mean. A single-goal question has one statement. **A
     question naming two or more goals lists one statement per goal**, as an indented list, each

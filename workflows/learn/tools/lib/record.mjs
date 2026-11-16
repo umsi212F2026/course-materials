@@ -64,6 +64,11 @@ export function checkAttempt(
   // A `declared` that names cases is their word on those cases alone, not on the goal: the choice
   // study offers on a goal with cases after a not-met ruling the learner thinks was wrong.
   const defined = (goal.cases ?? []).map((c) => c.id);
+  // `--cases none` IS A RULING THAT CREDITS NO CASE, for a question banked with `cases: none`. It
+  // is stored as `cases: []`, which bars.mjs counts toward nothing.
+  const noCase = cases.includes('none');
+  if (noCase && cases.length > 1) die(`--cases none cannot be listed beside other cases.`);
+  if (noCase) cases = [];
   if (cases.length && !defined.length) die(`${goalId} has no cases, so --cases does not apply.`);
   const unknownCases = cases.filter((c) => !defined.includes(c));
   if (unknownCases.length) {
@@ -74,7 +79,7 @@ export function checkAttempt(
   // It is stored with `cases: []` rather than none, so bars.mjs cannot take it for a grandfathered
   // attempt counting toward every case.
   const unchecked = !!axes && axes.criterion === 'unchecked';
-  if (axes && defined.length && !cases.length && !unchecked) {
+  if (axes && defined.length && !cases.length && !unchecked && !noCase) {
     die(`${goalId} has cases, so a ruled attempt needs --cases naming those the question exercised.\ncases are: ${defined.join(', ')}`);
   }
 
@@ -84,7 +89,7 @@ export function checkAttempt(
     goal: goalId,
     label,
     ...(tags.length ? { tags } : {}),
-    ...(cases.length || (unchecked && defined.length) ? { cases } : {}),
+    ...(cases.length || ((noCase || unchecked) && defined.length) ? { cases } : {}),
     source,
   };
 

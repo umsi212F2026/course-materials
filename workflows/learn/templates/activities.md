@@ -316,7 +316,9 @@ with the learner.
       cases:       for each goal named that has cases, the ones this question exercises:
                    `x, y` when it names one goal, `c-a: x, y; c-b: z` per goal otherwise. A
                    pass passes every case listed and a miss none, so cases a learner could
-                   get one right and one wrong on belong in separate questions
+                   get one right and one wrong on belong in separate questions. `none` (or
+                   `c-a: none`) for a question that deliberately exercises no case: its
+                   ruling is recorded and credits no case. An empty line is reported
       answer:      what a complete answer says
       credit:      what full and half credit mean. A question naming two or more goals lists
                    one statement per goal, each starting `<goal-id>`: with the id in backticks

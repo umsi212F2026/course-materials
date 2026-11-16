@@ -70,6 +70,15 @@ function goalsFor(items) {
 const tagsOf = (it) =>
   it?.tags ? (it.tags.length ? it.tags.join(",") : null) : it?.move ? MOVE_TAGS[it.move] ?? null : null;
 
+/** The cases a question lists for one goal, for `--cases`. AN EMPTY LIST UNDER THE GOAL'S KEY is a
+ *  question banked with `cases: none`, and leaves as ["none"] so record-attempt credits no case;
+ *  no key leaves as [], which the quiz skill settles from goals.md. */
+const casesFor = (it, goal) => {
+  const listed = goal ? it?.cases?.[goal] : undefined;
+  if (!listed) return [];
+  return listed.length ? listed : ["none"];
+};
+
 /**
  * An image of this draw, or a 404. THE URL ONLY EVER SELECTS A KEY: the name must be 64
  * lowercase hex characters and present in the draw's own map, and the file read is the map's
@@ -388,7 +397,8 @@ function score(dir) {
         // THE CASES THIS QUESTION EXERCISED FOR ITS GOAL, for record-attempt --cases. A goal with
         // cases will not take a ruled attempt without them. [] means the goal has none, or the
         // question was written before its goal's cases were, which the quiz skill settles.
-        cases: (i.goal && it?.cases?.[i.goal]) || [],
+        // ["none"] is a question banked with `cases: none`, passed through as `--cases none`.
+        cases: casesFor(it, i.goal),
         type: i.type,
         credit: i.credit,
         missed: i.missed,
@@ -435,7 +445,7 @@ function score(dir) {
               per_goal: named.map((g) => {
                 const p = i.per_goal?.[g] ?? { credit: i.credit, missed: i.missed, axes: i.axes };
                 const axes = kinds[g] === "capability" ? { ...p.axes, criterion: "unchecked" } : p.axes;
-                return { goal: g, credit: p.credit, missed: p.missed, axes, cases: it?.cases?.[g] ?? [] };
+                return { goal: g, credit: p.credit, missed: p.missed, axes, cases: casesFor(it, g) };
               }),
             }
           : {}),

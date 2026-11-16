@@ -168,6 +168,22 @@ test('a question on a goal with cases that lists none for it is reported', () =>
   assert.ok(found.some((p) => p.includes('a-x/s1/q1') && p.includes('c-a') && /lists no case/.test(p)), found.join('\n'));
 });
 
+test('cases: none on a goal with cases raises nothing; an empty cases line is still reported', () => {
+  const none = bankTopic(WITH, '### q1\n\n- **goal:** c-a\n- **answer:** X.\n- **cases:** none\n');
+  assert.ok(!none.some((p) => p.includes('a-x/s1/q1')), none.join('\n'));
+  const empty = bankTopic(WITH, '### q1\n\n- **goal:** c-a\n- **answer:** X.\n- **cases:**\n');
+  assert.ok(empty.some((p) => p.includes('a-x/s1/q1') && /lists no case|empty cases/.test(p)), empty.join('\n'));
+});
+
+test('cases: none beside a case, or an empty per-goal entry, is reported; a typo still trips', () => {
+  const both = bankTopic(WITH, '### q1\n\n- **goal:** c-a\n- **answer:** X.\n- **cases:** none, one\n');
+  assert.ok(both.some((p) => p.includes('a-x/s1/q1') && /one or the other/.test(p)), both.join('\n'));
+  const typo = bankTopic(WITH, '### q1\n\n- **goal:** c-a\n- **answer:** X.\n- **cases:** nnoe\n');
+  assert.ok(typo.some((p) => p.includes('nnoe') && /does not define/.test(p)), typo.join('\n'));
+  const two = bankTopic(WITH, '### q1\n\n- **goal:** c-a, c-b\n- **answer:** X.\n- **credit:** `c-a`: x. `c-b`: y.\n- **cases:** c-a:\n');
+  assert.ok(two.some((p) => p.includes('a-x/s1/q1') && /empty cases entry/.test(p)), two.join('\n'));
+});
+
 test('a folder question naming no goal is reported', () => {
   const found = bankTopic(WITH, '### q1\n\n- **answer:** X.\n');
   assert.ok(found.some((p) => p.includes('a-x/s1/q1') && /names no goal/.test(p)), found.join('\n'));
@@ -211,6 +227,33 @@ test('record-attempt refuses --cases on a goal that has none', () => {
   const r = run('record-attempt.mjs', [withCases(), 'c-b', 'l', '--axes', AXES, '--cases', 'one']);
   assert.notEqual(r.code, 0);
   assert.match(r.stderr, /no cases/);
+});
+
+test('record-attempt --cases none records a ruling crediting no case', () => {
+  const dir = withCases();
+  const r = run('record-attempt.mjs', [dir, 'c-a', 'a-x/s1/q1', '--axes', AXES, '--cases', 'none']);
+  assert.equal(r.code, 0, r.stderr);
+  assert.deepEqual(lastAttempt(dir).cases, []);
+  assert.match(r.stdout, /bar not met/);
+});
+
+test('record-attempt refuses --cases none beside another case', () => {
+  const r = run('record-attempt.mjs', [withCases(), 'c-a', 'l', '--axes', AXES, '--cases', 'none,one']);
+  assert.notEqual(r.code, 0);
+  assert.match(r.stderr, /none/);
+});
+
+test('next-item prints cases: none for a question banked with none', () => {
+  const dir = makeTopic({
+    goals: CAP_GOAL('c-a', block([['one', 'first'], ['two', 'second']])),
+    activities: '### a-x\n- **checks:** c-a\n',
+  });
+  mkdirSync(join(dir, 'tasks/a-x'), { recursive: true });
+  mkdirSync(join(dir, 'rubrics/a-x'), { recursive: true });
+  writeFileSync(join(dir, 'tasks/a-x/s1.md'), '### q1\n\nName it.\n');
+  writeFileSync(join(dir, 'rubrics/a-x/s1.md'), '### q1\n\n- **goal:** c-a\n- **answer:** X.\n- **cases:** none\n');
+  const r = run('next-item.mjs', [dir, '--goal', 'c-a']);
+  assert.match(r.stdout, /cases: c-a: none\n/);
 });
 
 test('a ruled attempt on a goal with cases needs --cases', () => {

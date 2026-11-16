@@ -15,7 +15,8 @@
 //                                for the daily transcript scan, which is designed but not built
 //   --cases a,b                  which of the goal's cases the question exercised. Required on a ruled
 //                                attempt (--axes) for a goal that has cases, unless its criterion is
-//                                unchecked; refused for one that has none
+//                                unchecked; refused for one that has none. `--cases none` rules a
+//                                question banked with `cases: none`, crediting no case
 //   --note "..."                 optional, e.g. why they stopped
 //   --progress                   then print where that leaves the topic, as `progress.mjs --after
 //                                <goal-id>` does. Study passes it; review and the quiz do not show it
@@ -59,7 +60,7 @@ const USAGE = `usage:
   --axes '{"unaided":"yes|no|unclear","criterion":"met|not met|unclear|unchecked"}'
   --outcome abandoned | declared | elsewhere
   --tags ${Object.keys(TAGS).join(',')}
-  --cases <case>,<case>   which of the goal's cases the question exercised
+  --cases <case>,<case>   which of the goal's cases the question exercised, or none
   --source study | review | quiz | scan   (default study)
   --note "..."
   --progress              then print where that leaves the topic`;

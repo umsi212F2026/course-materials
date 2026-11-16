@@ -329,13 +329,29 @@ function readCompound(taskBody, rubricBody, where, key) {
 // c-b: z` is per goal, for a question naming several. Returns { cases: { [goal]: string[] },
 // problems } with `cases` {} when there is no line. It does not know the goal's DEFINED cases,
 // which live in goals.md; idProblems checks those. `where` labels the problems.
+//
+// `none`, in place of the case ids, says the question deliberately exercises no case: a tie, or
+// the flipped half of a pair, kept so a multiple choice cannot be guessed. It parses to an empty
+// list UNDER THE GOAL'S KEY, which is how survey tells it from a missing line (no key), and a
+// ruling on it records `cases: []`, counting toward no case.
 function parseQuestionCases(value, goals, where) {
   const problems = [];
   const cases = {};
   if (!value) return { cases, problems };
   const ids = (text) => text.split(',').map((c) => c.replace(/`/g, '').trim()).filter(Boolean);
+  const put = (goal, text) => {
+    const list = ids(text);
+    if (list.includes('none')) {
+      if (list.length > 1) problems.push(`${where} lists none for ${goal} beside other cases; it is one or the other`);
+      cases[goal] = [...(cases[goal] ?? [])];
+    } else if (!list.length) {
+      problems.push(`${where} has an empty cases entry for ${goal}; name its cases, or write none`);
+    } else {
+      cases[goal] = [...(cases[goal] ?? []), ...list];
+    }
+  };
   if (!value.includes(':')) {
-    if (goals.length === 1) cases[goals[0]] = ids(value);
+    if (goals.length === 1) put(goals[0], value);
     else problems.push(`${where} lists cases without a goal, but names ${goals.length ? `goals ${goals.join(', ')}` : 'no goal'}; write them per goal as \`c-a: x, y; c-b: z\``);
     return { cases, problems };
   }
@@ -347,7 +363,7 @@ function parseQuestionCases(value, goals, where) {
     }
     const goal = m[1].trim();
     if (!goals.includes(goal)) problems.push(`${where} lists cases for ${goal}, which the question does not name`);
-    else cases[goal] = [...(cases[goal] ?? []), ...ids(m[2])];
+    else put(goal, m[2]);
   }
   return { cases, problems };
 }

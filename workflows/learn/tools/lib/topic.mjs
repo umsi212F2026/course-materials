@@ -656,11 +656,13 @@ export function idProblems(dir, status = statusOf(dir)) {
     for (const id of item.goals)
       if (!seen.has(id)) found.push(`${item.label} names goal ${id}, which is not in goals.md`);
     // CASES: each one listed must be one its goal defines, and a question on a goal that has cases
-    // must say which it exercises, or a pass could not be recorded against any of them.
+    // must say which it exercises, or a pass could not be recorded against any of them. `cases:
+    // none` says so on purpose and leaves an empty list under the goal's key; a missing or empty
+    // line leaves no key, and is reported.
     for (const id of item.goals) {
       const defined = seen.get(id)?.cases ?? [];
       const listed = item.cases[id] ?? [];
-      if (defined.length && !listed.length) found.push(`${item.label} is on ${id}, which has cases, but lists no case for it`);
+      if (defined.length && !(id in item.cases)) found.push(`${item.label} is on ${id}, which has cases, but lists no case for it (write \`cases: none\` if it exercises none on purpose)`);
       for (const c of listed)
         if (!defined.some((d) => d.id === c)) found.push(`${item.label} lists case ${c} for ${id}, which ${id} does not define`);
     }

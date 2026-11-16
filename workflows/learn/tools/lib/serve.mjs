@@ -69,9 +69,8 @@ export function serveNext(dir, { goal, activity, after, review }) {
     `tags: ${item.tags?.length ? item.tags.join(', ') : 'none'}`,
     // ONE LINE PER GOAL THE QUESTION GIVES CASES FOR, for the tutor to see. answer.mjs takes the
     // cases from the bank itself; record-attempt takes --cases for a question set live.
-    ...Object.entries(item.cases ?? {})
-      .filter(([, c]) => c.length)
-      .map(([g, c]) => `cases: ${g}: ${c.join(', ')}`),
+    // An empty list is a question banked with `cases: none`.
+    ...Object.entries(item.cases ?? {}).map(([g, c]) => `cases: ${g}: ${c.length ? c.join(', ') : 'none'}`),
     `repeat: ${repeat ? `yes (last served ${lastServed.slice(0, 10)})` : 'no'}`,
     // SERVED IN PLACE OF THIS GOAL'S QUESTION, which waits behind it; see lib/pick.mjs. It may name
     // another goal, and the tutor records an attempt per goal it names, as for any question.

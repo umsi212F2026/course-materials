@@ -314,6 +314,16 @@ test('a goal with cases the question lists none for is refused', () => {
   refused(answer(dir, 'a-x/s2/q1', '--unaided', 'yes', '--choice', '1'), dir, /record-attempt\.mjs/);
 });
 
+test('a question banked with cases: none records its ruling crediting no case', () => {
+  const dir = topic('- **cases:** none\n');
+  const r = answer(dir, 'a-x/s2/q1', '--unaided', 'yes', '--choice', '1');
+  assert.equal(r.code, 0, r.stderr);
+  const a = attempts(dir)[0];
+  assert.equal(a.criterion, 'met');
+  assert.deepEqual(a.cases, []);
+  assert.match(r.stdout, /bar not met/);
+});
+
 test('--unaided no with a right choice records unaided no, criterion met, and the bar is not met', () => {
   const dir = topic();
   const r = answer(dir, 'a-x/s1/q1', '--unaided', 'no', '--choice', '3');

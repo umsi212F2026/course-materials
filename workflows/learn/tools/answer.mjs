@@ -118,10 +118,13 @@ try {
   const ids = readIds(dir);
   for (const goalId of item.goals) {
     const slots = ids.get(goalId)?.cases ?? [];
-    const cases = item.cases?.[goalId] ?? [];
-    if (slots.length && !cases.length) {
+    // A question banked with `cases: none` has an empty list under the goal's key, and its ruling
+    // records as `--cases none` would, crediting no case. No key means no cases line at all.
+    const banked = item.cases?.[goalId];
+    if (slots.length && !banked) {
       die(`${goalId} has cases and ${label} lists none for it. Record that goal through record-attempt.mjs, as before.`);
     }
+    const cases = banked && !banked.length && slots.length ? ['none'] : banked ?? [];
     records.push(
       checkAttempt(dir, goalId, {
         label,

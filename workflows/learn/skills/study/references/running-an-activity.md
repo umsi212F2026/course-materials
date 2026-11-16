@@ -38,7 +38,8 @@ node workflows/learn/tools/next-item.mjs <topic-folder> --activity <activity-id>
 ```
 
 It prints a `label:`, the goals the question credits, its `tags:`, a `cases: <goal>: x, y` line
-for each goal it exercises named cases of, and whether it is a repeat, then
+for each goal it exercises named cases of (`cases: <goal>: none` for one banked to credit no
+case), and whether it is a repeat, then
 `--- learner sees ---` and the text. **Show the learner only what follows that line, and
 stop at `--- key ---`.** **Show all of it, every time, the scenario's setup included**, even for
 the next question in a scenario they have just been answering: the learner sees only your latest
