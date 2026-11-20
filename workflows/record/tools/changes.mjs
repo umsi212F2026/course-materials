@@ -136,7 +136,7 @@ export function check(repo) {
 
 /** What is wrong with entry `e`'s commit, as the grader checks it: it exists, comes after the
  *  initial design, and changed the diagram or the skill the entry names. */
-function commitProblems(repo, e, initial) {
+export function commitProblems(repo, e, initial) {
   const c = e.fields.commit;
   if (!c) return [];
   if (!commitExists(repo, c)) return [`entry ${e.n}: its commit, ${c}, is not a commit in this repository.`];
@@ -168,7 +168,7 @@ function pushState(repo) {
 }
 
 /** What a commit changed that the record counts: the diagram, and each skill by name. */
-function kindsOf(files) {
+export function kindsOf(files) {
   const kinds = [];
   if (files.some((f) => /^ps5\/[^/]+\.bpmn$/.test(f))) kinds.push("diagram");
   for (const f of files) {
@@ -184,7 +184,7 @@ function kindsOf(files) {
  *  ORDER IS NOT MEANING, BUT NESTING IS. Camunda reorders sibling elements when it saves, so
  *  each element's children are sorted. A step moved into another lane is still a change,
  *  because the lane's children change. The layout section and the version stamp are dropped. */
-function processOf(xml) {
+export function processOf(xml) {
   const root = { tag: "", attrs: "", text: "", children: [] };
   const stack = [root];
   for (const [tok] of xml.matchAll(/<!--[\s\S]*?-->|<\?[\s\S]*?\?>|<!\[CDATA\[[\s\S]*?\]\]>|<[^>]+>|[^<]+/g)) {
@@ -210,7 +210,7 @@ function processOf(xml) {
 }
 
 /** Whether commit `hash` changed any `.bpmn` file under ps5/ in more than its layout. */
-function diagramChanged(repo, hash, files) {
+export function diagramChanged(repo, hash, files) {
   const show = (rev, f) => {
     try {
       return git(repo, "show", `${rev}:${f}`);
