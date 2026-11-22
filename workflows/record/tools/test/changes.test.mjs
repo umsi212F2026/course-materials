@@ -232,6 +232,13 @@ test("commits not yet pushed fail pushed", () => {
   assert.match(item(r, "pushed").detail, /1 commit.*not pushed/);
 });
 
+test("a commit outside ps5 not yet pushed fails pushed", () => {
+  const { repo } = passingRepo();
+  write(repo, "ps4/notes.md", "x\n");
+  commit(repo, "elsewhere");
+  assert.match(item(check(repo), "pushed").detail, /1 commit.*not pushed/);
+});
+
 test("a repository with no remote fails pushed", () => {
   const { repo } = passingRepo();
   execFileSync("git", ["-C", repo, "remote", "remove", "origin"]);

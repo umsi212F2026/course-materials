@@ -97,12 +97,35 @@ of these is found from there. Only the entry points are listed here.
   when the student asks whether Problem Set 5 is ready to submit, wants to check it, or is about
   to hand it in.
   `workflows/record/skills/ready-to-submit/SKILL.md`
+- **start-project** - Set up a student's final project, asking what it extends, what kind it is
+  and where its code will live, then creating or adopting a public repository for it when that
+  is where it goes, copying in the problem set it extends and the starter files, and filling in
+  project/SUBMIT.md. Use when the student asks to start their final project, or to create its
+  repository.
+  `workflows/rounds/skills/start-project/SKILL.md`
+- **record-round** - Add one round to a student's final project record, ROUNDS.md, with its
+  spec, plan and commits, and what's new and why next in their own words. Use when a round's
+  implementation is committed and the project's AGENTS.md says to offer it, once ROUNDS.md
+  names a base, when the student asks to record a round, and when find-rounds hands one over.
+  `workflows/rounds/skills/record-round/SKILL.md`
+- **find-rounds** - Look through a student's final project for Superpowers plans committed after
+  the base that are not rounds in ROUNDS.md yet, and record the ones they choose. Use when the
+  student asks what is missing from their rounds, wants to catch up on them, or is getting ready
+  to submit the final project.
+  `workflows/rounds/skills/find-rounds/SKILL.md`
+- **project-ready** - Check a student's final project against what the grader looks for, on
+  their laptop and as a stranger on the web sees it, and have them confirm that the own-words
+  parts of ROUNDS.md are their own writing. Use when the student asks whether the final project
+  is ready to submit, wants to check it, or is about to hand it in.
+  `workflows/rounds/skills/project-ready/SKILL.md`
 
 **A problem set's folder can carry instructions of its own for you.** Before working in a folder
 of the assignments repository, read the `AGENTS.md` in that folder if there is one, and follow
 it. Codex does not load it for you: a session starts in the folder above the repositories, and
 reads only the files on the way down to there. `ps5/AGENTS.md` has you offer the student a
-change-record entry after a change to the diagram or a skill that is worth recording.
+change-record entry after a change to the diagram or a skill that is worth recording. The same
+goes for the final project's folder when `~/.codex/AGENTS.md` names it as `Final project:`: its
+`AGENTS.md` has you offer to record a round.
 
 **Before starting a workflow, establish which data directory it operates on. Read
 `~/.codex/AGENTS.md`, which names it; do not infer it from the working directory, and do not

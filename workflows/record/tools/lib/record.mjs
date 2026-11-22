@@ -29,7 +29,7 @@ const PARTS = [
 
 const ENTRY_RE = /^## (\d+)\. (.+)$/;
 const FIELD_RE = /^- \*\*([^*]+):\*\*\s?(.*)$/;
-const ATTEST_RE = /^<!-- attested (\d{4}-\d{2}-\d{2}) sha256:([0-9a-f]{12}) -->$/;
+export const ATTEST_RE = /^<!-- attested (\d{4}-\d{2}-\d{2}) sha256:([0-9a-f]{12}) -->$/;
 const INITIAL_RE = /^Initial design:\s*(.*)$/;
 
 /** First 12 hex digits of the SHA-256 of `text`, trimmed. */
@@ -161,12 +161,13 @@ export function renderEntry(n, { title, fields, parts }) {
   return out.join("\n").replace(/\n*$/, "\n");
 }
 
-/** The whole file with entry `n`'s `key` part rewritten as `body` lines after its heading. */
-function replacePart(text, n, key, body) {
+/** The whole file with entry `n`'s `key` part rewritten as `body` lines after its heading.
+ *  `entriesOf` and `file` let another record format (ROUNDS.md) reuse this. */
+export function replacePart(text, n, key, body, entriesOf = (t) => parseRecord(t).entries, file = "CHANGES.md") {
   text = unixLines(text);
   const lines = text.split("\n");
-  const entry = parseRecord(text).entries.find((e) => e.n === n);
-  if (!entry) throw new Error(`There is no entry ${n} in CHANGES.md.`);
+  const entry = entriesOf(text).find((e) => e.n === n);
+  if (!entry) throw new Error(`There is no entry ${n} in ${file}.`);
   const part = entry.parts[key];
   const at = part.line - 1;
   if (!lines[at].startsWith("### ")) throw new Error(`Entry ${n} has no ${key} section.`);
