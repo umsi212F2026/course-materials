@@ -89,8 +89,8 @@ export async function showcaseEntry(prUrl, fetchFn = globalThis.fetch) {
     const pr = await getJson(base, fetchFn);
     out.state = pr.merged_at ? "merged" : pr.state === "open" ? "open" : "closed";
     const files = await getJson(`${base}/files`, fetchFn);
-    out.removesPs3 = files.some((f) => f.status === "removed" && /(^|\/)[^/]*-ps3\.json$/.test(f.filename));
-    const added = files.filter((f) => f.status === "added" && /(^|\/)[^/]*-project\.json$/.test(f.filename));
+    out.removesPs3 = files.some((f) => (f.status === "removed" && /(^|\/)[^/]*-ps3\.json$/.test(f.filename)) || (f.status === "renamed" && /(^|\/)[^/]*-ps3\.json$/.test(f.previous_filename ?? "")));
+    const added = files.filter((f) => (f.status === "added" || f.status === "renamed") && /(^|\/)[^/]*-project\.json$/.test(f.filename));
     if (added.length !== 1) {
       out.problems.push(`The pull request adds ${added.length} *-project.json files, not one.`);
       return out;
@@ -138,16 +138,24 @@ const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
  *  answers, and links into the repository that are pinned to a commit and answer. */
 export async function reportProblems(url, repoUrl, fetchFn = globalThis.fetch) {
   let html;
+  let base = url;
   try {
     const res = await get(url, fetchFn);
     if (res.status >= 400) return [`${url} answered ${res.status}.`];
     html = await res.text();
+    base = res.url || url;
   } catch (e) {
     return [e.message];
   }
+  const baseTag = /<base\b[^>]*?\bhref\s*=\s*["']([^"']+)["']/i.exec(html);
+  if (baseTag) {
+    try {
+      base = new URL(baseTag[1], base).href;
+    } catch {}
+  }
   const resolve = (ref) => {
     try {
-      return new URL(ref.replace(/&amp;/g, "&"), url).href;
+      return new URL(ref.replace(/&amp;/g, "&"), base).href;
     } catch {
       return null;
     }

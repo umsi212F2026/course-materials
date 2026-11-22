@@ -252,3 +252,22 @@ test("negotiated runs only the pull request and project URL items", async () => 
   assert.deepEqual(r.items.map((i) => i.name), ["TERMS.md", "SUBMIT.md", "assignments pushed", "showcase pull request", "project URL answers"]);
   assert.deepEqual(r.items.filter((i) => !i.ok), []);
 });
+
+test("relative URLs resolve against the final URL after a redirect", async () => {
+  const bare = "https://me.github.io/proj";
+  const routes = { ...siteRoutes, [bare]: { status: 200, url: SITE, text: async () => REPORT } };
+  assert.deepEqual(await reportProblems(bare, REPO, fake(routes)), []);
+});
+
+test("a base href is honored", async () => {
+  const routes = { ...siteRoutes, [SITE]: `<base href="https://cdn.example.com/a/">${REPORT}`, "https://cdn.example.com/a/shot.png": "png" };
+  assert.deepEqual(await reportProblems(SITE, REPO, fake(routes)), []);
+});
+
+test("a renamed ps3 card counts as the project card and as removing the ps3 card", async () => {
+  const files = [{ filename: "src/data/projects/me-project.json", previous_filename: "src/data/projects/me-ps3.json", status: "renamed", raw_url: RAW }];
+  const e = await showcaseEntry(PR, fake(prRoutes({ files })));
+  assert.equal(e.file, "src/data/projects/me-project.json");
+  assert.equal(e.removesPs3, true);
+  assert.deepEqual(e.problems, []);
+});
