@@ -87,7 +87,9 @@ for each part you flagged, and `--looks-like "<n>=<judgment>"` for each round yo
 the judgment is `a bug fix`, `catch-up on Problem Set <n>`, `catch-up on your base` or
 `deployment`. It prints every item the grader looks for and your flags, and ends with what fits:
 a request to answer the questions while parts are left to confirm, and otherwise whether it is
-ready. Send its output as your reply, as it is, and as the last thing in the turn.
+ready. **Run it as a command of its own**, with nothing joined to it by `&&`, `;` or a pipe, and as
+the last command of the turn, after any `attest` and commit. Then send its output as your reply,
+as it is, and nothing after it.
 
 **2. Record the answers.** For every part they answered "Yes, I wrote it", run
 `attest <dir> <n> <new|why>`. An answer that is neither option is not a yes: ask about that
@@ -110,8 +112,8 @@ asked for them, so that message has to be a plain one.
 
 When no part is left to confirm, commit `ROUNDS.md` with
 `git -C <dir> commit -m "rounds: attested" -- ROUNDS.md`, and go back to step 1, so the student
-sees the final state. When that message ends "Want me to push it?" and they say yes, push
-whichever repository needs it.
+sees the final state, with `say report` run on its own after that commit. When that message ends
+"Want me to push it?" and they say yes, push whichever repository needs it.
 
 ## Depends on
 

@@ -70,12 +70,15 @@ export function reportMessage({ kind, items, toConfirm, weak = [], looksLike = [
     "Here's how your final project checks out against what the grader looks for. The online items are what a stranger sees, without your sign-in:",
     items.map((i) => (i.ok ? `- ✅ ${capital(i.name)}` : `- ❌ ${capital(i.name)}: ${i.detail}`)).join("\n"),
   ];
-  for (const w of weak) out.push(`⚠️ Round ${w.n}, ${PART_NAMES[w.key]}, "${w.text}", might lose credit: ${sentence(w.reason)}`);
-  for (const r of looksLike) out.push(`⚠️ Round ${r.n} looks like ${checkLabel(r.label)}, which earns nothing as a round.`);
-  for (const i of items) if (i.ok && /^Warning: /.test(i.detail)) out.push(`⚠️ ${capital(i.name)}: ${i.detail.replace(/^Warning: /, "")}`);
+  // The warnings go after the verdict: an agent that trims a long message trims its tail, and the
+  // verdict and the graded-live line are the ones the student must not miss.
+  const warnings = [];
+  for (const w of weak) warnings.push(`⚠️ Round ${w.n}, ${PART_NAMES[w.key]}, "${w.text}", might lose credit: ${sentence(w.reason)}`);
+  for (const r of looksLike) warnings.push(`⚠️ Round ${r.n} looks like ${checkLabel(r.label)}, which earns nothing as a round.`);
+  for (const i of items) if (i.ok && /^Warning: /.test(i.detail)) warnings.push(`⚠️ ${capital(i.name)}: ${i.detail.replace(/^Warning: /, "")}`);
 
   if (toConfirm > 0) {
-    out.push("Please answer the questions about the parts of your record that are in your own words.");
+    out.push(...warnings, "Please answer the questions about the parts of your record that are in your own words.");
     return out.join("\n\n");
   }
   if (kind !== "negotiated") out.push("Every own-words part is confirmed as yours.");
@@ -84,6 +87,7 @@ export function reportMessage({ kind, items, toConfirm, weak = [], looksLike = [
   if (!failing.length) out.push("It's ready to submit on Canvas.");
   else if (failing.every((i) => PUSH_ITEMS.includes(i.name))) out.push("Want me to push it?");
   else out.push("Want me to help with the ones marked ❌?");
+  out.push(...warnings);
   return out.join("\n\n");
 }
 

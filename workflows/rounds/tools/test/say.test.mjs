@@ -129,15 +129,21 @@ test("a negotiated project has no own-words line", () => {
   assert.ok(msg.endsWith("It's ready to submit on Canvas."));
 });
 
-test("say report runs the check itself and names the flagged part's own text", async () => {
+test("say report runs the check itself, names the flagged part's own text, and puts flags after the verdict", async () => {
   const { dir } = passingProject();
   const a = assignmentsRepo();
   const msg = await main(["say", "report", dir, "--assignments", a, "--weak", "1 why=it gives no reason", "--looks-like", "2=deployment"]);
   assert.ok(msg.startsWith(HEAD));
-  assert.match(msg, /⚠️ Round 1, why next, "why 0", might lose credit: it gives no reason\./);
-  assert.match(msg, /⚠️ Round 2 looks like deployment, which earns nothing as a round\./);
   assert.ok(msg.includes("Every own-words part is confirmed as yours."));
-  assert.ok(msg.endsWith("It's ready to submit on Canvas."));
+  assert.ok(
+    msg.endsWith(
+      [
+        "It's ready to submit on Canvas.",
+        '⚠️ Round 1, why next, "why 0", might lose credit: it gives no reason.',
+        "⚠️ Round 2 looks like deployment, which earns nothing as a round.",
+      ].join("\n\n"),
+    ),
+  );
 });
 
 test("say report refuses a flag it cannot place", async () => {
