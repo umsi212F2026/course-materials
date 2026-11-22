@@ -1,0 +1,9 @@
+{
+  "_note": "The per-session selection: how many questions to draw from each bank on one date. Published, because a practice quiz is generated from this same file by the same library, so students practise the shape they will actually face. It says how many from where and nothing about which questions: the draw is random per student, and the questions themselves live in the sources named below, which students already have.",
+  "session": 24,
+  "date": "2026-11-24",
+  "draw": {
+    "learning-topics/cloud-workflows-2026-11/a-words": 1,
+    "learning-topics/cloud-workflows-2026-11/a-flip-one-fact": { "take": 2, "sameScenario": true }
+  }
+}
