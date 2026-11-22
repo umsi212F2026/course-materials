@@ -110,17 +110,48 @@ is not meant to be.
 node workflows/quiz/tools/quiz-practice.mjs --session <n>
 ```
 
-**It prints the URL in about a second and then does not exit until they submit.** Two things
-follow, and getting either wrong costs several minutes of thrashing.
+**It prints the URL in about a second and then does not exit until they submit**, unless it
+prints `PERSONAL:` instead, below. Two things follow, and getting either wrong costs several
+minutes of thrashing.
 
 **Ask for escalated permission on this command the first time, without waiting to be refused.**
 It opens a page on `127.0.0.1`, which a sandbox refuses by default. Nothing is served off the
-machine and no request leaves it, which is what the justification should say.
+machine and no request leaves it, which is what the justification should say. On a quiz with
+personal questions it also runs `git` and `tar` to copy the last commit of their assignments
+clone, which is outside `course-materials`, into `tmp/`: say that too, and that it reads there
+and writes nothing there. A sandbox refusing that does not fail the command: it comes back as a
+short draw saying no clone was found or the last commit could not be read, which tells them
+something false about their work.
 
 **Do not background it with `&` or `nohup`.** The process does not survive the command
 returning, and the log comes back empty with no error to explain it. Run it in the foreground
 and let the command yield while it keeps running: the URL is printed long before any sensible
 yield elapses, and the server is still there when you get your turn back.
+
+**If it printed `PERSONAL:`, it has exited without opening the page**, because this quiz has
+questions about the student's own PS5 work, and you write them. Do all of this before you say
+anything:
+
+1. Read the file that line names, and draft from it alone. It holds their work as of their last
+   commit, what to draft, and where to write it. Do not open their assignments clone or ask them
+   about their work: the drafts are checked against that commit, and a line quoted from anywhere
+   else is dropped.
+2. Draft the candidates it asks for and write them where it says.
+3. Run the `--resume` command it printed, with escalated permission and in the foreground, as
+   above: it checks each draft against the commit by reading their assignments clone with
+   `git`, and opens the page on `127.0.0.1`, so the request covers both. A refused read drops
+   every draft, and the student gets a quiz with no personal questions for no reason they can
+   see. From here it prints what a launch prints, the URL and any `SHORT:` line included.
+
+**One draft, one `--resume`.** A `DROPPED:` line names a draft that failed the check and why. It
+is for you, and it is not a reason to draft again: a draw with fewer personal questions is served
+like any short draw, and its `SHORT:` line says why. Only `NOT SERVED:`, which means the
+candidates file itself could not be read, sends you back to fix the file as it says and run
+`--resume` again.
+
+**Volunteer nothing about the questions you drafted.** You know what they ask and what a good
+answer says, which is why you volunteer nothing, and the block below tells them that you know.
+That is the whole of what you say about them unasked.
 
 Take the URL from what it printed, and send them this as **the last thing in the turn**, with
 that URL rather than the one below, which is only the usual one:
@@ -132,12 +163,30 @@ that URL rather than the one below, which is only the usual one:
 > me something along the way, ask; I will help, and that answer will count as helped. **Come
 > back here and tell me when you have pressed Submit.**
 
+**If you drafted personal questions and any were served**, which the listing above the URL shows
+as a line like `2 from personal:ps5`, that count goes into this paragraph as `<k>`, and the
+paragraph goes into the block after its first:
+
+> **I wrote `<k>` of these questions myself, about your own PS5 work, so I know what those ask.**
+> The rest come from the pool.
+
+**If `--session` also printed `UNCOMMITTED:`, add this to that paragraph:**
+
+> They are about your last commit. Your PS5 folder has changes you have not committed, and the
+> questions do not cover those.
+
 **If the command printed a `SHORT:` line, its sentence goes into that block, ahead of the
 rest**, with what the `PROBLEMS` lines above it name as missing:
 
 > **This draw is short: 4 questions, not the 5 this quiz asks for.** You have not got
 > `assignments/ps1-data-analysis`, so nothing could be drawn from it. Running `update` and
 > sitting this again would give you the whole quiz.
+
+**Where the `SHORT:` line gives a reason of its own, about personal questions, that reason goes
+in as its second sentence, as printed:**
+
+> **This draw is short: 4 questions, not the 5 this quiz asks for.** None of the drafted
+> prompt-injection questions passed the check.
 
 **A short draw is served rather than refused, and saying so is the whole of your part in it.**
 Practising the rest is worth doing and they are the one who decides. But nobody can count the

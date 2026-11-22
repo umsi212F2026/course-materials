@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { join, dirname, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { execFileSync } from "node:child_process";
-import { readBank, readPoolSources, applyPool, recordLabel, keyParts, takeOf, pickSameScenario, SAME_SCENARIO_NOTE } from "../lib/bank.mjs";
+import { readBank, readPoolSources, applyPool, recordLabel, keyParts, takeOf, pickSameScenario, SAME_SCENARIO_NOTE, personalStratum, askedOf } from "../lib/bank.mjs";
 import { drawPractice } from "../quiz-draw.mjs";
 
 const REPO = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "..");
@@ -390,4 +390,67 @@ test(`every real pool draws as it did at ${BASELINE}`, async (t) => {
   }
   // A run that compared nothing proved nothing, and should say so rather than pass.
   if (!compared) t.skip(`no pool's sources are under ${ROOT}`);
+});
+
+test("a personal:ps5 key is a stratum with no bank items and no problem", () => {
+  const root = workspace(T1);
+  const pool = { draw: { "learning-topics/t1/items": 2, "personal:ps5": 2 } };
+  const { strata, problems } = applyPool(readPoolSources(pool, root), pool);
+  assert.deepEqual(problems, []);
+  const p = strata.find((s) => s.name === "personal:ps5");
+  assert.deepEqual(p, { name: "personal:ps5", personal: "ps5", take: 2, items: [] });
+});
+
+test("a personal:ps5 key with take 3 is a problem \"personal:ps5 takes exactly 2\"", () => {
+  const root = workspace(T1);
+  const pool = { draw: { "personal:ps5": 3 } };
+  const { strata, problems } = applyPool(readPoolSources(pool, root), pool);
+  assert.deepEqual(problems, ["personal:ps5 takes exactly 2"]);
+  assert.equal(strata.length, 1);
+  assert.equal(strata[0].take, 3);
+});
+
+test("readPoolSources reads no source for a personal key", () => {
+  const root = workspace(T1);
+  const pool = { draw: { "personal:ps5": 2 } };
+  const got = readPoolSources(pool, root);
+  assert.deepEqual(got.sources, []);
+  assert.deepEqual(got.problems, []);
+  assert.deepEqual(got.items, []);
+});
+
+test("a pool without a personal key strata exactly as before", () => {
+  const root = workspace(T1);
+  const pool = { draw: { "learning-topics/t1/items": 2 } };
+  assert.equal(personalStratum(pool), null);
+  assert.deepEqual(drawn(pool, root).shape, [["learning-topics/t1/items", 2, 4]]);
+});
+
+test("personalStratum names the first personal key and its take", () => {
+  assert.deepEqual(personalStratum({ draw: { a: 1, "personal:ps5": 2, "personal:ps6": 1 } }), { ps: "ps5", take: 2 });
+  assert.deepEqual(personalStratum({ draw: { "personal:ps5": { take: 2 } } }), { ps: "ps5", take: 2 });
+});
+
+test("drawPractice lists the personal stratum with nothing drawn and no shortfall", () => {
+  const root = workspace(T1);
+  const pool = { draw: { "learning-topics/t1/items": 2, "personal:ps5": 2 } };
+  const got = drawPractice(pool, root, { seed: "x" });
+  const p = got.strata.find((s) => s.name === "personal:ps5");
+  assert.deepEqual(p, { name: "personal:ps5", take: 2, drawn: 0, personal: "ps5" });
+  assert.equal(got.items.length, 2);
+  assert.deepEqual(got.problems, []);
+});
+
+test("--list counts the personal take in the question total", () => {
+  assert.equal(askedOf({ draw: { a: 3, b: { take: 2, sameScenario: true }, "personal:ps5": 2 } }), 7);
+  assert.equal(askedOf({}), 0);
+});
+
+test("a bare personal: key is a problem and lists no stratum", () => {
+  const root = workspace(T1);
+  const pool = { draw: { "personal:": 2 } };
+  const { strata, problems } = applyPool(readPoolSources(pool, root), pool);
+  assert.deepEqual(problems, ["personal: names no problem set"]);
+  assert.deepEqual(strata, []);
+  assert.equal(personalStratum(pool), null);
 });

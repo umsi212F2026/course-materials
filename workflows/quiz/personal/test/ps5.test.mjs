@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, renameSync, rmSync } from "node:fs";
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, renameSync, rmSync, cpSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -287,4 +287,13 @@ test("materialFor leaves out a diagram summary when there is no diagram, and ent
   const m = materialFor(f.repo);
   assert.deepEqual(m.generated, []);
   assert.ok(!m.files.some((x) => x.path.endsWith("CHANGES.md")));
+});
+
+test("materialFor on a copy that is not a git clone gives the same generated summaries", () => {
+  const f = buildFixture(scratch(), {});
+  // The fixture's entries carry commit: fields, which only the git repository can check.
+  assert.match(readFileSync(join(f.repo, "ps5/CHANGES.md"), "utf8"), /\*\*Commit:\*\* [0-9a-f]{40}/);
+  const copy = scratch();
+  cpSync(join(f.repo, "ps5"), join(copy, "ps5"), { recursive: true });
+  assert.deepEqual(materialFor(copy).generated, materialFor(f.repo).generated);
 });
