@@ -781,7 +781,7 @@ export function readPoolSources(pool, root) {
 }
 
 const PERSONAL_PREFIX = 'personal:';
-const isPersonalKey = (key) => key.startsWith(PERSONAL_PREFIX);
+export const isPersonalKey = (key) => key.startsWith(PERSONAL_PREFIX);
 
 /** The personal questions a pool declares, as { ps, take }, or null when it declares none.
  *
@@ -792,7 +792,7 @@ const isPersonalKey = (key) => key.startsWith(PERSONAL_PREFIX);
  *  such key wins if a pool has several. */
 export function personalStratum(pool) {
   for (const [key, value] of Object.entries(pool.draw ?? {})) {
-    if (isPersonalKey(key)) return { ps: key.slice(PERSONAL_PREFIX.length), take: takeOf(value) };
+    if (isPersonalKey(key) && key.length > PERSONAL_PREFIX.length) return { ps: key.slice(PERSONAL_PREFIX.length), take: takeOf(value) };
   }
   return null;
 }
@@ -1002,6 +1002,10 @@ export function applyPool(bank, pool) {
         // Only ps5 has personal questions, and always two. The stratum is listed either way, so a
         // wrong take is reported once here rather than also reading as a missing stratum.
         const ps = name.slice(PERSONAL_PREFIX.length);
+        if (!ps) {
+          problems.push(`${name} names no problem set`);
+          continue;
+        }
         if (ps === 'ps5' && take !== 2) problems.push(`${name} takes exactly 2`);
         strata.push({ name, take, items: [], personal: ps });
         continue;

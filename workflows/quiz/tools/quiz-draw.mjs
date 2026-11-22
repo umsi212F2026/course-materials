@@ -43,7 +43,7 @@
 import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { resolve, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { readPoolSources, applyPool, recordLabel, takeOf, pickSameScenario } from "./lib/bank.mjs";
+import { readPoolSources, applyPool, recordLabel, takeOf, pickSameScenario, isPersonalKey } from "./lib/bank.mjs";
 import { resolveItem, sourceDir } from "./lib/images.mjs";
 import { readLog, readGoals } from "../../learn/tools/lib/topic.mjs";
 import { readStatus, foldStatus } from "../../learn/tools/lib/status.mjs";
@@ -224,7 +224,7 @@ export function drawPractice(pool, root, { seed, preferUnseen = true } = {}) {
   const shape = [];
   for (const s of withTopic) {
     // A personal stratum has no bank items to draw. Whoever fills it adds its items and its shortfall.
-    if (s.personal) {
+    if (isPersonalKey(s.name)) {
       shape.push({ name: s.name, take: s.take, drawn: 0, personal: s.personal });
       continue;
     }
@@ -264,7 +264,7 @@ export function drawPractice(pool, root, { seed, preferUnseen = true } = {}) {
   const drawnBy = new Map();
   for (const s of shape) drawnBy.set(s.name, (drawnBy.get(s.name) ?? 0) + s.drawn);
   for (const [name, value] of Object.entries(pool.draw ?? {})) {
-    if (name.startsWith("personal:")) continue;
+    if (isPersonalKey(name)) continue;
     const take = takeOf(value);
     const got = drawnBy.get(name) ?? 0;
     if (got < take) problems.push(`${name} drew ${got} of the ${take} asked for`);

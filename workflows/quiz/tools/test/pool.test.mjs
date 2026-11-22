@@ -445,3 +445,12 @@ test("--list counts the personal take in the question total", () => {
   assert.equal(askedOf({ draw: { a: 3, b: { take: 2, sameScenario: true }, "personal:ps5": 2 } }), 7);
   assert.equal(askedOf({}), 0);
 });
+
+test("a bare personal: key is a problem and lists no stratum", () => {
+  const root = workspace(T1);
+  const pool = { draw: { "personal:": 2 } };
+  const { strata, problems } = applyPool(readPoolSources(pool, root), pool);
+  assert.deepEqual(problems, ["personal: names no problem set"]);
+  assert.deepEqual(strata, []);
+  assert.equal(personalStratum(pool), null);
+});
