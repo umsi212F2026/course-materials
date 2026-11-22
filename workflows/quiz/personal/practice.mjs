@@ -28,6 +28,7 @@ const MATERIAL = { ps5: materialFor };
 
 const NO_CLONE = "no assignments clone was found, so no personal questions could be drafted";
 const noWork = (ps) => `no ${ps.toUpperCase()} work in your last commit, so no personal questions could be drafted`;
+const noWorkUncommitted = (ps) => `no ${ps.toUpperCase()} work in your last commit, and your ${ps.toUpperCase()} folder has changes you have not committed: commit them and run this again`;
 const UNREAD = "your last commit could not be read, so no personal questions could be drafted";
 const NONE_PASSED = "none of the drafted personal questions passed the check";
 const NO_INJECTION = "none of the drafted prompt-injection questions passed the check";
@@ -80,6 +81,21 @@ function uncommittedIn(assignments, folder) {
   return folders.some((f) => git(assignments, "status", "--porcelain", "--", f) !== "");
 }
 
+// materialFor runs git against the copy, and the copy sits inside the course-materials checkout.
+// Without a ceiling, git would walk up and find that checkout's repository instead of seeing none.
+// The ceiling is the practice folder, so the copy is never inside any repository, as a real clone's
+// own top level is not. The environment is restored when the build returns or throws.
+export function buildWithoutRepo(build, head) {
+  const before = process.env.GIT_CEILING_DIRECTORIES;
+  process.env.GIT_CEILING_DIRECTORIES = realpathSync(dirname(head));
+  try {
+    return build(head);
+  } finally {
+    if (before === undefined) delete process.env.GIT_CEILING_DIRECTORIES;
+    else process.env.GIT_CEILING_DIRECTORIES = before;
+  }
+}
+
 // Each heading one level down, so an instructions file sits under the material's own title.
 const demote = (text) => text.replace(/^(#+) /gm, "#$1 ");
 
@@ -116,14 +132,21 @@ export function preparePersonal({ assignments, out, ps }) {
   try {
     sha = git(assignments, "rev-parse", "--verify", "HEAD^{commit}");
     mkdirSync(head, { recursive: true });
-    const tarball = execFileSync("git", ["-C", assignments, "archive", "HEAD"], { maxBuffer: 1 << 30, stdio: ["ignore", "pipe", "ignore"] });
-    execFileSync("tar", ["-x", "-C", head], { input: tarball, stdio: ["pipe", "ignore", "ignore"] });
+    // Only the top-level PS5 folders are extracted: the generator reads nothing else.
+    const dirs = git(assignments, "ls-tree", "-d", "--name-only", "HEAD").split("\n").filter((d) => /^ps5/i.test(d));
+    if (dirs.length) {
+      const tarball = execFileSync("git", ["-C", assignments, "archive", "HEAD", "--", ...dirs], { maxBuffer: 1 << 30, stdio: ["ignore", "pipe", "ignore"] });
+      execFileSync("tar", ["-x", "-C", head], { input: tarball, stdio: ["pipe", "ignore", "ignore"] });
+    }
   } catch {
     return { short: UNREAD };
   }
 
-  const m = build(head);
-  if (m.missing) return { short: noWork(ps), uncommitted: uncommittedIn(assignments, null) };
+  const m = readdirSync(head).length ? buildWithoutRepo(build, head) : { missing: true };
+  if (m.missing) {
+    const uncommitted = uncommittedIn(assignments, null);
+    return { short: uncommitted ? noWorkUncommitted(ps) : noWork(ps), uncommitted };
+  }
   const material = join(out, "personal-material.md");
   const candidates = join(out, "personal-candidates.json");
   writeFileSync(material, materialText({ ps, sha, folder: m.folder, files: m.files, generated: m.generated, candidates }));
@@ -145,7 +168,7 @@ export function resumePersonal({ assignments, out, sha, ps, seed }) {
   if (!Array.isArray(data?.candidates)) throw new Error(`${file} has no "candidates" list. It must be { "candidates": [...], "addressed": "" }.`);
 
   // The generated summaries are rebuilt from the same HEAD copy the material was written from.
-  const m = MATERIAL[ps]?.(join(out, "head")) ?? {};
+  const m = (MATERIAL[ps] ? buildWithoutRepo(MATERIAL[ps], join(out, "head")) : {});
   const generated = Object.fromEntries((m.generated ?? []).map((g) => [g.path, g.text]));
   const kept = [];
   const dropped = [];
