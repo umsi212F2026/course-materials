@@ -1,10 +1,10 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync } from "node:fs";
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, readdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { execFileSync } from "node:child_process";
-import { assignmentsDir, preparePersonal, resumePersonal } from "../practice.mjs";
+import { assignmentsDir, preparePersonal, resumePersonal, buildWithoutRepo } from "../practice.mjs";
 import { buildFixture } from "./fixtures/ps5.mjs";
 
 const scratch = () => mkdtempSync(join(tmpdir(), "ps5-practice-"));
@@ -71,8 +71,62 @@ test("preparePersonal is short when HEAD has no ps5 work but the working tree do
   put(f.repo, "ps5/CHANGES.md", "# Change record\n\nInitial design: abcdef1\n");
   put(f.repo, "ps5/workflow.bpmn", "<bpmn/>\n");
   const r = preparePersonal({ assignments: f.repo, out: scratch(), ps: "ps5" });
-  assert.equal(r.short, "no PS5 work in your last commit, so no personal questions could be drafted");
+  assert.equal(r.short, "no PS5 work in your last commit, and your PS5 folder has changes you have not committed: commit them and run this again");
   assert.equal(r.uncommitted, true);
+});
+
+test("preparePersonal keeps the plain reason when nothing is uncommitted", () => {
+  const f = buildFixture(scratch(), { noFolder: true });
+  const r = preparePersonal({ assignments: f.repo, out: scratch(), ps: "ps5" });
+  assert.equal(r.short, "no PS5 work in your last commit, so no personal questions could be drafted");
+  assert.equal(r.uncommitted, false);
+});
+
+test("preparePersonal extracts only the PS5 folders, and a renamed one still works", () => {
+  const f = buildFixture(scratch(), {});
+  put(f.repo, "ps1/notes.md", "not for the generator\n");
+  put(f.repo, "docs/big.md", "x\n");
+  execFileSync("git", ["-C", f.repo, "mv", "ps5", "ps5-tracker"]);
+  execFileSync("git", ["-C", f.repo, "add", "-A"]);
+  execFileSync("git", ["-C", f.repo, "commit", "-q", "-m", "rename"]);
+  const out = scratch();
+  const r = preparePersonal({ assignments: f.repo, out, ps: "ps5" });
+  assert.ok(r.material, r.short);
+  assert.deepEqual(readdirSync(join(out, "head")), ["ps5-tracker"]);
+  assert.match(readFileSync(r.material, "utf8"), /ps5-tracker\/CHANGES\.md/);
+});
+
+test("the copy is read as no repository, even inside another one", () => {
+  const f = buildFixture(scratch(), {});
+  const plainOut = scratch();
+  const want = preparePersonal({ assignments: f.repo, out: plainOut, ps: "ps5" });
+  assert.ok(want.material, want.short);
+  // An enclosing repository with commits, as course-materials is around its tmp folder.
+  const outer = scratch();
+  execFileSync("git", ["-C", outer, "init", "-q"]);
+  put(outer, "README.md", "outer\n");
+  execFileSync("git", ["-C", outer, "add", "-A"]);
+  execFileSync("git", ["-C", outer, "-c", "user.email=a@example.com", "-c", "user.name=A", "-c", "commit.gpgsign=false", "commit", "-q", "-m", "outer"]);
+  const out = join(outer, "tmp", "practice-1");
+  mkdirSync(out, { recursive: true });
+  const before = process.env.GIT_CEILING_DIRECTORIES;
+  const r = preparePersonal({ assignments: f.repo, out, ps: "ps5" });
+  assert.equal(process.env.GIT_CEILING_DIRECTORIES, before);
+  assert.ok(r.material, r.short);
+  const norm = (text, dir) => text.split(dir).join("<out>");
+  assert.equal(norm(readFileSync(r.material, "utf8"), out), norm(readFileSync(want.material, "utf8"), plainOut));
+});
+
+test("git sees no repository at the copy, and the environment is restored", () => {
+  const outer = buildFixture(scratch(), {}).repo;
+  const head = join(outer, "tmp", "practice-1", "head");
+  mkdirSync(head, { recursive: true });
+  const sees = (dir) => { try { execFileSync("git", ["-C", dir, "rev-parse", "--git-dir"], { stdio: "ignore" }); return true; } catch { return false; } };
+  assert.equal(sees(head), true, "without the ceiling the copy resolves to the enclosing repository");
+  assert.equal(buildWithoutRepo(sees, head), false);
+  assert.equal(process.env.GIT_CEILING_DIRECTORIES, undefined);
+  assert.throws(() => buildWithoutRepo(() => { throw new Error("boom"); }, head), /boom/);
+  assert.equal(process.env.GIT_CEILING_DIRECTORIES, undefined);
 });
 
 test("preparePersonal is short when the last commit cannot be read", () => {

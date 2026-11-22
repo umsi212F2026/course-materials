@@ -788,7 +788,7 @@ export const isPersonalKey = (key) => key.startsWith(PERSONAL_PREFIX);
  *  PERSONAL QUESTIONS ARE A STRATUM THAT NO BANK SUPPLIES. They are follow-ups about one student's
  *  own problem-set work, so a pool names them with the key `personal:<ps>` and a take, and what
  *  fills the stratum is decided per student by whoever draws, not read from tasks/. This module
- *  only recognises the key: the stratum comes back empty, and it is never a source path. The first
+ *  only recognizes the key: the stratum comes back empty, and it is never a source path. The first
  *  such key wins if a pool has several. */
 export function personalStratum(pool) {
   for (const [key, value] of Object.entries(pool.draw ?? {})) {
