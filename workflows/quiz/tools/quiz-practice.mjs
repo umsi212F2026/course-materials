@@ -4,6 +4,7 @@
 //
 //   node workflows/quiz/tools/quiz-practice.mjs --list
 //   node workflows/quiz/tools/quiz-practice.mjs --session 5
+//   node workflows/quiz/tools/quiz-practice.mjs --resume tmp/practice-2026-09-20T14-02-11
 //   node workflows/quiz/tools/quiz-practice.mjs --score tmp/practice-2026-09-20T14-02-11
 //
 // THE QUESTIONS ARE ANSWERED ON A PAGE, NOT IN A CHAT, and that is the point rather than the
@@ -26,11 +27,15 @@
 
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { createServer } from "node:http";
+import { homedir } from "node:os";
+import { randomUUID } from "node:crypto";
 import { resolve, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { drawPractice, loadPool, listPools } from "./quiz-draw.mjs";
 import { collectAnswers, buildQueue, mergeGrades, itemGoals, gradedParts, parsePartKey, partKey, CREDIT_VALUE } from "./lib/grade.mjs";
-import { recordLabel, askedOf } from "./lib/bank.mjs";
+import { recordLabel, askedOf, personalStratum } from "./lib/bank.mjs";
+// THE PERSONAL-QUESTION GENERATOR, the grader's own, so a practice draft is checked as a real one is.
+import { assignmentsDir, preparePersonal, resumePersonal } from "../personal/practice.mjs";
 // THE QUIZ APP'S RENDERER, so a question looks here as it will on the day.
 import { markdown, markdownInline } from "./lib/markdown.mjs";
 // THE LEARN WORKFLOW'S READER, not a second one. What a practice quiz leaves behind is an
@@ -466,59 +471,19 @@ function listing() {
   }
 }
 
-function main() {
-  if (process.argv.includes("--list")) return listing();
+// THE SHORT LINE, SAID IN ONE LINE, BECAUSE ONE LINE IS WHAT GETS PASSED ON. The problems a draw
+// reports name each short stratum and are what a person debugging wants; this is the sentence
+// the student has to hear, and the skill quotes it into the message that hands over the URL. When
+// personal questions fell short, their reason follows the count as a sentence of its own.
+function sayShort(count, asked, reason) {
+  if (!asked || count >= asked) return;
+  const why = reason ? ` ${reason[0].toUpperCase()}${reason.slice(1)}.` : "";
+  console.error(`\nSHORT: this draw has ${count} questions, not the ${asked} this quiz asks for.${why}`);
+}
 
-  if (process.argv.includes("--score")) {
-    const dir = process.argv[process.argv.indexOf("--score") + 1];
-    if (!dir || !existsSync(join(dir, "draw.json"))) {
-      console.error("Usage: node workflows/quiz/tools/quiz-practice.mjs --score <dir>");
-      process.exit(1);
-    }
-    return score(dir);
-  }
-
-  const portAt = process.argv.indexOf("--port");
-  const port = Number(portAt === -1 ? 5300 : process.argv[portAt + 1]);
-  const sessionAt = process.argv.indexOf("--session");
-  const session = sessionAt === -1 ? null : process.argv[sessionAt + 1];
-  if (!session) {
-    console.error("Usage: node workflows/quiz/tools/quiz-practice.mjs --session <n> [--port 5300]\n");
-    console.error("Published pools:");
-    listing();
-    process.exit(1);
-  }
-  const pool = loadPool(session);
-  if (!pool) {
-    console.error(`No published pool for session ${session}. Published pools:`);
-    listing();
-    process.exit(1);
-  }
-  const source = `session ${pool.session}, the quiz of ${pool.date}`;
-
-  const { items, strata, problems, images } = drawPractice(pool, ROOT, {
-    seed: process.argv.includes("--seed") ? process.argv[process.argv.indexOf("--seed") + 1] : undefined,
-  });
-  if (problems.length) {
-    console.error(`\nPROBLEMS in session ${session}'s pool:`);
-    for (const p of problems) console.error(`  ${p}`);
-  }
-  if (!items.length) {
-    console.error(`\nSession ${session}'s pool drew nothing.`);
-    process.exit(1);
-  }
-  // SAID IN ONE LINE, BECAUSE ONE LINE IS WHAT GETS PASSED ON. The problems above name each
-  // short stratum and are what a person debugging wants; this is the sentence the student has
-  // to hear, and the skill quotes it into the message that hands over the URL.
-  const asked = askedOf(pool);
-  if (asked && items.length < asked) {
-    console.error(
-      `\nSHORT: this draw has ${items.length} questions, not the ${asked} this quiz asks for.`,
-    );
-  }
-
-  const stamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
-  const out = join(REPO, "tmp", `practice-${stamp}`);
+/** Serve the page for a draw until it is submitted, then record the answers in `out`. `rerun` is
+ *  the command's own arguments, for the message that suggests another port. */
+function serve({ items, strata, images, source, out, port, rerun }) {
   const html = page(items, source);
 
   const server = createServer(async (req, res) => {
@@ -565,7 +530,7 @@ function main() {
     if (err.code === "EADDRINUSE") {
       console.error(`Port ${port} is already in use, probably by a practice quiz still waiting.`);
       console.error(`Finish that one at http://127.0.0.1:${port}, or start this one on another port:`);
-      console.error(`\n  node workflows/quiz/tools/quiz-practice.mjs --session ${session} --port ${port + 1}\n`);
+      console.error(`\n  node workflows/quiz/tools/quiz-practice.mjs ${rerun} --port ${port + 1}\n`);
       process.exit(1);
     }
     // A SANDBOX REFUSING THE BIND IS THE OTHER ORDINARY CASE, and it came out as a raw Node
@@ -591,6 +556,117 @@ function main() {
     console.log(`\n  http://127.0.0.1:${port}\n`);
     console.log(`Answer them there. This waits until you submit.`);
   });
+}
+
+// The personal stratum with what filled it, so the listing says how many were served.
+const filled = (strata, n) => strata.map((s) => (s.personal ? { ...s, drawn: n } : s));
+
+/** The second half of a draw with personal questions: check the agent's drafts and serve. */
+function resume(dir, port) {
+  const drawPath = join(dir ?? "", "draw.json");
+  if (!dir || !existsSync(drawPath)) {
+    console.error("Usage: node workflows/quiz/tools/quiz-practice.mjs --resume <dir> [--port 5300]");
+    process.exit(1);
+  }
+  const d = readJson(drawPath);
+  // A SUBMITTED RUN HAS ALREADY REPLACED THE PENDING DRAW with the real quiz's shape, which
+  // --score reads. Resuming it again would serve a second set of answers over the first.
+  if (!d.personal) {
+    console.error(`${dir} is not waiting for personal questions. Start a new one with --session.`);
+    process.exit(1);
+  }
+  let r;
+  try {
+    r = resumePersonal({ assignments: d.assignments, out: dir, sha: d.sha, ps: d.personal.ps, seed: randomUUID() });
+  } catch (e) {
+    console.error(`NOT SERVED: ${e.message}`);
+    process.exit(1);
+  }
+  for (const x of r.dropped) console.error(`DROPPED: ${x.id ?? "(no id)"}: ${x.reason}`);
+  const items = [...d.items, ...r.items];
+  const short = r.items.length < d.personal.take ? r.short ?? `only ${r.items.length} of your drafted personal questions passed the check` : null;
+  sayShort(items.length, d.asked, short);
+  serve({ items, strata: filled(d.strata, r.items.length), images: d.images, source: d.source, out: dir, port, rerun: `--resume ${dir}` });
+}
+
+function main() {
+  if (process.argv.includes("--list")) return listing();
+
+  if (process.argv.includes("--score")) {
+    const dir = process.argv[process.argv.indexOf("--score") + 1];
+    if (!dir || !existsSync(join(dir, "draw.json"))) {
+      console.error("Usage: node workflows/quiz/tools/quiz-practice.mjs --score <dir>");
+      process.exit(1);
+    }
+    return score(dir);
+  }
+
+  const portAt = process.argv.indexOf("--port");
+  const port = Number(portAt === -1 ? 5300 : process.argv[portAt + 1]);
+
+  if (process.argv.includes("--resume")) return resume(process.argv[process.argv.indexOf("--resume") + 1], port);
+
+  const sessionAt = process.argv.indexOf("--session");
+  const session = sessionAt === -1 ? null : process.argv[sessionAt + 1];
+  if (!session) {
+    console.error("Usage: node workflows/quiz/tools/quiz-practice.mjs --session <n> [--port 5300]\n");
+    console.error("Published pools:");
+    listing();
+    process.exit(1);
+  }
+  const pool = loadPool(session);
+  if (!pool) {
+    console.error(`No published pool for session ${session}. Published pools:`);
+    listing();
+    process.exit(1);
+  }
+  const source = `session ${pool.session}, the quiz of ${pool.date}`;
+
+  const { items, strata, problems, images } = drawPractice(pool, ROOT, {
+    seed: process.argv.includes("--seed") ? process.argv[process.argv.indexOf("--seed") + 1] : undefined,
+  });
+  if (problems.length) {
+    console.error(`\nPROBLEMS in session ${session}'s pool:`);
+    for (const p of problems) console.error(`  ${p}`);
+  }
+  const personal = personalStratum(pool);
+  if (!items.length && !personal) {
+    console.error(`\nSession ${session}'s pool drew nothing.`);
+    process.exit(1);
+  }
+  const asked = askedOf(pool);
+
+  const stamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
+  const out = join(REPO, "tmp", `practice-${stamp}`);
+  const rerun = `--session ${session}`;
+
+  // PERSONAL QUESTIONS ARE DRAFTED BEFORE THE PAGE OPENS, by the student's agent, from material
+  // written here. The bank items wait in draw.json for --resume, which checks the drafts and
+  // serves them all together. A reason no questions can be drafted goes straight to serving.
+  let reason = null;
+  if (personal) {
+    mkdirSync(out, { recursive: true });
+    const assignments = assignmentsDir({ codexHome: process.env.CODEX_HOME ?? join(homedir(), ".codex"), materials: REPO });
+    const prep = preparePersonal({ assignments, out, ps: personal.ps });
+    writeFileSync(join(out, "draw.json"), JSON.stringify({
+      source, asked, items, strata, images, sha: prep.sha ?? null, assignments, personal,
+    }, null, 2) + "\n");
+    const uncommitted = `UNCOMMITTED: your ${personal.ps.toUpperCase()} folder has changes you have not committed, so the personal questions are about your last commit.`;
+    if (!prep.short) {
+      console.log(`PERSONAL: ${prep.material}`);
+      if (prep.uncommitted) console.log(uncommitted);
+      console.log(`Draft the candidates it asks for, then: node workflows/quiz/tools/quiz-practice.mjs --resume ${out}`);
+      return;
+    }
+    if (prep.uncommitted) console.error(`\n${uncommitted}`);
+    reason = prep.short;
+  }
+  if (!items.length) {
+    console.error(`\nSession ${session}'s pool drew nothing.`);
+    process.exit(1);
+  }
+  sayShort(items.length, asked, reason);
+  serve({ items, strata, images, source, out, port, rerun });
 }
 
 if (process.argv[1] && import.meta.url === `file://${process.argv[1]}`) main();
