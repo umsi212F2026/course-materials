@@ -309,7 +309,7 @@ export function check(dir, { assignments, online = false, fetch } = {}) {
   let pushed = `There is no assignments repository to look in. Pass --assignments <repo>.`;
   if (assignments) {
     try {
-      pushed = pushState(assignments, "project");
+      pushed = pushState(assignments, "project", { limitAhead: true });
     } catch {
       pushed = `${assignments} is not a git repository.`;
     }
@@ -366,7 +366,7 @@ function roundsItems(dir, submit, add) {
   add("own words", !empty.length, empty.length ? `${empty.join("; ")}.` : "Every valid round has both parts.");
   add("attested", !unattested.length, unattested.length ? `${unattested.join("; ")}.` : "Every part is attested and unchanged since.");
 
-  const state = pushState(dir, ".");
+  const state = pushState(dir, ".", { limitAhead: true });
   add("project pushed", state === null, state ?? "Everything in the project folder is committed and pushed.");
 
   if (submit.kind !== "deployed") add("README", true, "Not required for a workflow.");

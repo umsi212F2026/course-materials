@@ -41,11 +41,13 @@ export function filesAt(repo, hash, dir) {
 }
 
 /** Why the grader would not see the work under `path` in `repo` yet, or null when it would.
- *  `path` is relative to `repo`; "." is the whole of it, and a subfolder limits both questions.
+ *  `path` is relative to `repo`; "." is the whole of it. The uncommitted check is always limited
+ *  to `path`; the unpushed-commit count is too only with `limitAhead`, otherwise it counts every
+ *  commit in the repository.
  *
  *  GRADING READS WHAT IS ON GITHUB. Work that passes every other item but sits uncommitted, or
  *  committed and never pushed, is work the grader never sees. */
-export function pushState(repo, path) {
+export function pushState(repo, path, { limitAhead = false } = {}) {
   const where = path === "." ? "the project folder" : `${path}/`;
   const dirty = git(repo, "status", "--porcelain", "--", path);
   if (dirty) return `${dirty.split("\n").length} file(s) under ${where} are not committed yet. Commit them, then push.`;
@@ -54,6 +56,6 @@ export function pushState(repo, path) {
   } catch {
     return "This branch has nowhere to push to yet. Push it with: git push -u origin main";
   }
-  const ahead = Number(git(repo, "rev-list", "--count", "@{u}..HEAD", "--", path));
+  const ahead = Number(git(repo, "rev-list", "--count", "@{u}..HEAD", ...(limitAhead ? ["--", path] : [])));
   return ahead ? `${ahead} commit${ahead === 1 ? " is" : "s are"} not pushed yet. Run: git push` : null;
 }

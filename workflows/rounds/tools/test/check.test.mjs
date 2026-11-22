@@ -23,6 +23,29 @@ test("a complete workflow project passes every item, in order", () => {
   assert.equal(r.ok, true);
 });
 
+test("a project in a subfolder passes, and a sibling ps5 does not fail project pushed", () => {
+  const p = passingProject({ prefix: "project/" });
+  const assignments = assignmentsRepo();
+  const r = check(p.dir, { assignments });
+  assert.deepEqual(r.items.filter((i) => !i.ok), []);
+  write(p.repo, "ps5/CHANGES.md", "# ps5 edited\n");
+  assert.equal(item(check(p.dir, { assignments }), "project pushed").ok, true);
+  commit(p.repo, "ps5 only");
+  const after = check(p.dir, { assignments });
+  assert.equal(item(after, "project pushed").ok, true);
+  assert.equal(after.ok, true);
+  write(p.repo, "project/src/new.js", "x\n");
+  assert.equal(item(check(p.dir, { assignments }), "project pushed").ok, false);
+});
+
+test("negotiated with Work: project/ passes SUBMIT.md", () => {
+  const empty = emptyRepo();
+  write(empty, "README.md", "x\n");
+  commit(empty, "x");
+  const a = assignmentsRepo({ submit: submitText({ kind: "negotiated", work: "project/" }), terms: "# Terms\n" });
+  assert.equal(item(check(empty, { assignments: a }), "SUBMIT.md").ok, true);
+});
+
 test("base named fails without a usable Base", () => {
   const { p, assignments } = fresh();
   write(p.repo, "ROUNDS.md", "# Rounds\n\nBase: <commit hash>\n");
