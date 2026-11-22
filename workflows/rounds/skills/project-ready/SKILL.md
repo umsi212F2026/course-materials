@@ -15,9 +15,18 @@ parts.** When the student says no, they rewrite it.
 **Establish the folders from `~/.codex/AGENTS.md`**, which names `course-materials` and the
 student's `assignments` repository, before you say anything. The project folder, `<dir>`, is
 its `Final project:` line. Where there is no such line, read `<assignments>/project/SUBMIT.md`:
-`Work: project/` means `<dir>` is `<assignments>/project`. Ask only where a folder is missing or
-not there, and say that is what happened. Where neither names a project folder, send this and
-stop:
+`Work: project/` means `<dir>` is `<assignments>/project`. Where `Work:` is a repository URL
+instead, look in the folder that holds `assignments` for a folder whose
+`git remote get-url origin` is that repository, by HTTPS or SSH, with or without `.git`. If
+there is one, it is `<dir>`: add `Final project: <its absolute path>` to `~/.codex/AGENTS.md` on
+the line after `Assignments:`, and go on. If there is none, send this and end the turn, then add
+that line with the folder they give and go on:
+
+> Your `SUBMIT.md` says your final project is at <the URL>, but I can't find a copy of it on
+> this laptop. Which folder is it in?
+
+Ask only where a folder is missing or not there, and say that is what happened. Where neither
+names a project folder, send this and stop:
 
 > Your final project isn't set up yet. Ask me to start your final project.
 

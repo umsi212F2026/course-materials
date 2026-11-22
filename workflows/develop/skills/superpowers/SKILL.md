@@ -13,8 +13,8 @@ where what it says is not true on a student's machine.
 
 ## Operates on
 
-Two folders. **Establish both from `~/.codex/AGENTS.md`**, which names the course
-repositories, before you say anything:
+Two folders, and a third for the final project. **Establish them from `~/.codex/AGENTS.md`**,
+which names the course repositories, before you say anything:
 
 - **`assignments`**, the student's repository, where what they build goes. The project
   Superpowers works in is one folder inside it, and its specs, its plans and its code all go
@@ -22,12 +22,19 @@ repositories, before you say anything:
   working in its folder (`ps1-data-analysis`, say), that problem set's folder is the project.
   Anything else gets a new folder of its own: agree a name with the student when brainstorming
   first needs somewhere to write.
+- **the final project**, when the work is for it: `~/.codex/AGENTS.md` has a `Final project:`
+  line, or `<assignments>/project/SUBMIT.md` says `Work: project/`. That folder, the line's or
+  `<assignments>/project`, is the project, even outside `assignments`. Its specs and plans go
+  in its own `docs/superpowers/specs/` and `docs/superpowers/plans/`, never at the top of
+  `assignments`, and commit each spec and each plan on its own, before writing any code that
+  implements it. A round counts only from its plan's commit, and only plans inside the project
+  folder are rounds.
 - **the clone**, `superpowers`, in the same folder as `course-materials`. Read it, and never
   edit it, commit in it or pull it. It stays on the commit the course pins, and a newer
   Superpowers arrives only when the course moves the pin and the student runs
   `setup-superpowers` again.
 
-Do not open with a question about either. Ask only where `~/.codex/AGENTS.md` is missing or
+Do not open with a question about any of them. Ask only where `~/.codex/AGENTS.md` is missing or
 names a folder that is not there, and say that is what happened.
 
 **If there is no clone there, or the student asked to set up, install or check Superpowers**,

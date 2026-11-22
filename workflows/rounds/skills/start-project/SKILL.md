@@ -25,7 +25,17 @@ For `Work: project/` it adds nothing there: the other skills read `Work: project
 ## Before you ask anything
 
 1. **If `~/.codex/AGENTS.md` already has a `Final project:` line**, or `project/SUBMIT.md`
-   already has `Work:` filled in, send this and stop:
+   already has `Work:` filled in, the project is started. When `Work:` is a repository URL and
+   there is no `Final project:` line, find its folder first: look in `<parent>` for a folder
+   whose `git remote get-url origin` is that repository, by HTTPS or SSH, with or without
+   `.git`, and add `Final project: <its absolute path>` to `~/.codex/AGENTS.md` on the line
+   after `Assignments:`. If there is none, send this and end the turn, then add that line with
+   the folder they give:
+
+   > Your `SUBMIT.md` says your final project is at <the URL>, but I can't find a copy of it on
+   > this laptop. Which folder is it in?
+
+   Then send this and stop:
 
    > Your final project is already started, in `<the folder>`.
 
@@ -95,15 +105,26 @@ If they answer "No, not yet", send this and stop:
 
 Choose a short name that says what the project is, in lowercase words joined by hyphens, and
 check that the student has no repository by that name: `gh repo view <login>/<name>` must
-fail. For an extension, do steps 1 and 2 of "The copy" below first, and list the top-level
-files and folders left in `<tmp>`. Then ask:
+fail. For an extension, do steps 1 and 2 of "The copy" below first, list the top-level files
+and folders left in `<tmp>`, and look in `<tmp>` for anything that might be a secret:
+
+- files named `*.pem`, `*.key`, `*credentials*`, `*service-account*.json` or `.env*`, at any
+  depth
+- lines that look like a key:
+  `grep -rInE 'sk-[A-Za-z0-9_-]{8,}|AKIA[0-9A-Z]{16}|-----BEGIN|(api|API)[_-]?(key|KEY)[[:space:]]*[=:]' <tmp>`
+
+Then ask:
 
 - **Title:** "I'll create a **public** repository, `<login>/<name>`, at
   https://github.com/<login>/<name>. Anyone on the internet will be able to see everything you
   push to it. <For an extension: "It will start with these, copied from your Problem Set <n>
-  folder: <the top-level names in `<tmp>`>, plus `AGENTS.md` and `ROUNDS.md`."> Is that name
-  OK?"
+  folder: <the top-level names in `<tmp>`>, plus `AGENTS.md` and `ROUNDS.md`."> <When the
+  search found anything: "These might hold a secret, such as an API key or a password, and
+  would be public too: <each file, with the line that matched>. If one does, answer No and
+  tell me which to leave out."> Is that name OK?"
 - **Options:** "No, use a different name", "Yes, create it"
+
+If they name files to leave out, delete them from `<tmp>` and ask again.
 
 If they answer "No, use a different name", send this and end the turn:
 
@@ -120,13 +141,20 @@ Do all of this before you say anything more, in the case that applies.
 (`ps1-data-analysis`, `ps2-web-app`, `ps3`, `ps4` or `ps5`) into `<target>`, the project folder:
 
 1. Make an empty temporary folder, `<tmp>`, outside every repository, and run
-   `git -C <assignments> archive HEAD:<folder> | tar -x -C <tmp>`. It takes committed files
-   only.
+   `git -C <assignments> archive -o <tmp>.tar HEAD:<folder>`, then `tar -xf <tmp>.tar -C <tmp>`
+   and delete `<tmp>.tar`. It takes committed files only.
 2. Delete from `<tmp>`, at any depth: every `AGENTS.md`, `INSTRUCTIONS.md`, `CHANGES.md`,
    `REFLECTION.md` and `QUESTIONS.md`; every folder named `rubrics` or `tasks`; and every file
    named `.env` or `.env.<something>` except `.env.example`. The student's answers and the
    course's own files stay out of the project.
-3. `cp -Rn <tmp>/. <target>/`, which never replaces a file already there, then delete `<tmp>`.
+3. For `project/`, first delete a `ROUNDS.md` or `SUBMIT.md` at the top of `<tmp>`, if there
+   is one. Then `cp -R <tmp>/. <target>/`, and delete `<tmp>`. Into `project/`, this puts the
+   problem set's `README.md` in place of the starter one, and leaves `project/`'s `AGENTS.md`,
+   `INSTRUCTIONS.md`, `ROUNDS.md` and `SUBMIT.md` as they are.
+
+**On Windows, run these through the bash that came with git**, as
+`& "C:\Program Files\Git\bin\bash.exe" -c "<the command>"`, with forward slashes in every path,
+as with the search for secrets above. PowerShell's own `tar`, `cp` and `grep` are not these.
 
 For something new, copy nothing.
 
@@ -134,7 +162,18 @@ For something new, copy nothing.
 
 1. `gh repo create <name> --public --clone`. The new folder is `<parent>/<name>`.
 2. For an extension, finish the copy into `<parent>/<name>`.
-3. Copy `<assignments>/project/AGENTS.md` and `<assignments>/project/ROUNDS.md` into the root.
+3. Copy `<assignments>/project/AGENTS.md` and `<assignments>/project/ROUNDS.md` into the root,
+   and write a `.gitignore` there, keeping any lines the copy brought in a `.gitignore` of its
+   own and adding these four, so a secret or installed packages never reach the public
+   repository:
+
+   ```
+   .env
+   .env.*
+   !.env.example
+   node_modules/
+   ```
+
 4. `git -C <parent>/<name> add -A`, commit with the message `Start the final project`, then
    `git -C <parent>/<name> branch -M main` and `git -C <parent>/<name> push -u origin main`.
 
@@ -161,9 +200,10 @@ rather than replacing it. Commit with the message `Start the final project`, and
 
 **Private, in `project/`.** Create no repository: `project/` already has its `AGENTS.md`,
 `ROUNDS.md`, `INSTRUCTIONS.md`, `SUBMIT.md` and `README.md`, and `~/.codex/AGENTS.md` gets no
-line. For an extension, do the copy into `<assignments>/project`; step 3 keeps those five files
-as they are. Then `git -C <assignments> add project` and commit with the message
-`project: copy Problem Set <n>`.
+line. For an extension, do the copy into `<assignments>/project`; step 3 keeps four of those
+files as they are and replaces `README.md` with the problem set's own, when it has one. Then
+`git -C <assignments> add project` and
+`git -C <assignments> commit -m "project: copy Problem Set <n>" -- project`.
 
 **In every case**, fill in `Kind:`, `Extends:` and `Work:` in `<assignments>/project/SUBMIT.md`,
 replacing only those three lines' values and leaving `Showcase:` as it is. `Work:` is the
@@ -187,7 +227,8 @@ the others:
 > (Adopted Problem Set 3) It's your Problem Set 3 repository, with `ROUNDS.md` added.
 >
 > (Private, in `project/`, extension) It has your Problem Set <n> work in it, copied from its
-> folder in `assignments`.
+> folder in `assignments`. If your site is already deployed from that folder, change the root
+> directory in your host's settings to `project/`, so the live site runs this copy from now on.
 >
 > (Private, in `project/`, something new) Your code goes in that folder.
 >
