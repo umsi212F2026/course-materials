@@ -215,36 +215,18 @@ project/SUBMIT.md`.
 
 ## The turn that ends the skill
 
-Send this, filled in, as the last thing in the turn. Keep the line that fits the case and drop
-the others:
+From inside `course-materials`, run
 
-> Your final project is set up in `<the absolute path of the project folder>`.
->
-> (New public repository, extension) It has your Problem Set <n> work in it, copied from
-> `assignments`, at https://github.com/<owner>/<name>.
->
-> (New public repository, something new) It's empty apart from `AGENTS.md` and `ROUNDS.md`, at
-> https://github.com/<owner>/<name>.
->
-> (Adopted Problem Set 3) It's your Problem Set 3 repository, with `ROUNDS.md` added.
->
-> (Private, in `project/`, extension) It has your Problem Set <n> work in it, copied from its
-> folder in `assignments`. If your site is already deployed from that folder, change the root
-> directory in your host's settings to `project/`, so the live site runs this copy from now on.
->
-> (Private, in `project/`, something new) Your code goes in that folder.
->
-> **Next, get your base working and commit it:** <for an extension of Problem Set 1 to 4, "your
-> problem set's work, publicly deployed"; for a Problem Set 5 extension, "your Problem Set 5
-> workflow, running"; for something new and deployed, "a live URL anyone can open"; for a new
-> workflow, "a diagram, a skill, a step done by a program or by you, and at least ten real
-> inputs processed, each saved beside its output">. If it already works, the commit you have
-> now is your base. Then put that commit's hash on the `Base:` line of `ROUNDS.md` and commit
-> that too.
->
-> **Nothing before your base can be a round.** A round starts with a Superpowers spec and plan
-> committed after it.
+```
+node workflows/rounds/tools/rounds.mjs say start-project <assignments>
+```
+
+adding `--folder <the folder> --adopted` when the project is the student's Problem Set 3
+repository. It prints the message that ends the skill, built from `SUBMIT.md`. Send its output
+as your reply, as it is, and as the last thing in the turn. If it refuses, `SUBMIT.md` is not
+filled in yet: fill it in as above, and run it again.
 
 ## Depends on
 
+- [`rounds.mjs`](workflows/rounds/tools/rounds.mjs) - tool
 - [`record-round`](workflows/rounds/skills/record-round/SKILL.md) - skill

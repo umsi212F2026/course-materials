@@ -35,17 +35,14 @@ Run the tool from inside `course-materials`, with the absolute paths of `<dir>` 
 
 ## What you do
 
-**1. Check, and ask.** Run:
+**1. Read, judge, and ask.** Run:
 
 ```
-node workflows/rounds/tools/rounds.mjs check <dir> --assignments <repo> --online
 node workflows/rounds/tools/rounds.mjs parse <dir>
 ```
 
-`check` lists its items in order, each `ok` or not, with a `detail`. Which items there are
-depends on `Kind:` in `SUBMIT.md`. For `negotiated`, there is a `TERMS.md` item and no rounds
-items, and nothing below about rounds or own-words parts applies: go straight to the block for
-when there are no parts to confirm, without its line about own-words parts.
+For `Kind: negotiated` in `SUBMIT.md`, nothing below about rounds or own-words parts applies: go
+straight to the message at the end of this step, with no flags.
 
 From `parse`, list the parts still to confirm: every own-words part (its `new`, then its `why`)
 of a round whose `valid` is true, whose `attestation` is not `fresh` and whose `text` is not
@@ -75,50 +72,22 @@ likely to give nothing for.
 The first option is preselected, so a student who clicks through without reading is asked to
 rewrite, never recorded as having written something they did not read.
 
-Then send this, filled in, as the last thing in the turn. List every item `check` returned.
-Keep a ⚠️ line for each part and each round you flagged, and for each item that passed with a
-`detail` starting "Warning:", and none when there is nothing to warn about:
-
-> Here's how your final project checks out against what the grader looks for. The online items
-> are what a stranger sees, without your sign-in:
->
-> - ✅ <item name>
-> - ❌ <item name>: <its detail>
-> - ...
->
-> ⚠️ Round <n>, <what's new | why next>, "<the text>", might lose credit: <in one sentence, what
-> the grader looks for that it does not say>.
->
-> ⚠️ Round <n> looks like <a bug fix | catch-up on Problem Set <n> | catch-up on your base |
-> deployment>, which earns nothing as a round.
->
-> ⚠️ <item name>: <its detail>
->
-> Please answer the questions about the parts of your record that are in your own words.
-
 If you have no `request_user_input_async`, ask about the parts one at a time instead, each as a
-plain message that shows the part exactly as it is and asks the same question.
+plain message that shows the part exactly as it is and asks the same question, and send the
+message below only once none is left to ask about.
 
-**When there are none**, send this and end the turn. Keep the ⚠️ lines as above, the line about
-the site only for `Kind: deployed`, "It's ready to submit on Canvas." only when every item
-passed, and "Want me to help with the ones marked ❌?" only when one did not:
+**The message.** Run the check, which is slow because it asks the web what a stranger sees:
 
-> Here's how your final project checks out against what the grader looks for. The online items
-> are what a stranger sees, without your sign-in:
->
-> - ✅ <item name>
-> - ❌ <item name>: <its detail>
-> - ...
->
-> ⚠️ ...
->
-> Every own-words part is confirmed as yours.
->
-> Your site will be graded live, so keep it running the code on `main` until grading is done.
->
-> It's ready to submit on Canvas.
->
-> Want me to help with the ones marked ❌?
+```
+node workflows/rounds/tools/rounds.mjs say report <dir> --assignments <repo> --online
+```
+
+adding `--weak "<n> <new|why>=<in one sentence, what the grader looks for that it does not say>"`
+for each part you flagged, and `--looks-like "<n>=<judgment>"` for each round you flagged, where
+the judgment is `a bug fix`, `catch-up on Problem Set <n>`, `catch-up on your base` or
+`deployment`. It prints every item the grader looks for and your flags, and ends with what fits:
+a request to answer the questions while parts are left to confirm, and otherwise whether it is
+ready. Send its output as your reply, as it is, and as the last thing in the turn.
 
 **2. Record the answers.** For every part they answered "Yes, I wrote it", run
 `attest <dir> <n> <new|why>`. An answer that is neither option is not a yes: ask about that
@@ -141,9 +110,8 @@ asked for them, so that message has to be a plain one.
 
 When no part is left to confirm, commit `ROUNDS.md` with
 `git -C <dir> commit -m "rounds: attested" -- ROUNDS.md`, and go back to step 1, so the student
-sees the final state. If `project pushed` and `assignments pushed` are the only items failing,
-end that block with "Want me to push it?" in place of its last line, and push whichever
-repository needs it when they say yes.
+sees the final state. When that message ends "Want me to push it?" and they say yes, push
+whichever repository needs it.
 
 ## Depends on
 

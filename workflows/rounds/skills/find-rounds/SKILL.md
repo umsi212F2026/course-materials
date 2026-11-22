@@ -41,12 +41,8 @@ node workflows/rounds/tools/rounds.mjs candidates <dir>
 node workflows/rounds/tools/rounds.mjs parse <dir>
 ```
 
-If `candidates` fails, send this and stop:
-
-> I can't look for rounds yet: <its message>
->
-> Your rounds start from your base. When your base works, put the hash of the commit where it
-> does on the `Base:` line of `ROUNDS.md`, and commit that.
+If `candidates` fails, run `say candidates <dir>`, send its output as your reply, as it is, and
+stop.
 
 **2. Show them.** Keep the plans with `recorded: false`, oldest first. For each one with
 `suggestedCommits`, read its diff and decide whether it clearly is a bug fix, catch-up on the
@@ -54,43 +50,17 @@ problem set it extends, or deployment, as
 [`record-round`](workflows/rounds/skills/record-round/SKILL.md)'s "Read the round against the
 rule" does. When you are not sure, it is none of them.
 
-Number them. Then send this, filled in, and end the turn. For a plan with no `spec`, put "no
-spec with its name: which spec goes with it?" in place of the spec. For a plan with no
-`suggestedCommits`, put in place of the commits the words for its `suggestedReason`:
+Then run
 
-- "no code yet": "no commits implement it yet"
-- "code only before the plan": "its code was all committed before the plan, and code committed
-  before its plan can't be a round"
-- "shares a commit with the next plan": "its code is in the commit that adds the next plan:
-  which commits implement it?"
+```
+node workflows/rounds/tools/rounds.mjs say candidates <dir>
+```
 
-Add "This looks like <a bug fix | catch-up on Problem Set <n> | catch-up on your base |
-deployment>, which does not count as a round." to the line of each one step 2 found. Keep the
-line about the top of the repository only when `candidates` lists any plans in `outside`, and
-name each of them:
-
-> Your project needs two rounds, and `ROUNDS.md` has <how many valid rounds parse found> so far.
-> Since your base, these plans aren't in it yet:
->
-> 1. <date>, `<plan>`: spec `<spec>`, commits <suggestedCommits>
-> 2. ...
->
-> Only a plan committed after your base can be a round, and only the commits from the plan's
-> own commit on can implement it.
->
-> These plans are at the top of your repository, outside your project folder, so they can't be
-> rounds: <the plans in `outside`>. Put the next round's spec and plan in `docs/superpowers/`
-> inside your project folder.
->
-> Which of these do you want to record? For each, are those the commits that implement it?
-
-Where the list is empty, send this in its place and end the turn. Keep the second sentence only
-when `outside` is empty, and the third only when it is not:
-
-> Your project needs two rounds, and `ROUNDS.md` has <how many> so far. Every plan committed
-> since your base is already in it. These plans are at the top of your repository, outside your
-> project folder, so they can't be rounds: <the plans in `outside`>. A new round starts with a
-> Superpowers spec and plan, inside your project folder in `docs/superpowers/`.
+adding `--looks-like "<plan>=<judgment>"` for each plan you found to be one of them, where the
+judgment is `a bug fix`, `catch-up on Problem Set <n>`, `catch-up on your base` or `deployment`.
+It prints the numbered list, in the order of `candidates`, or what to say when there is
+nothing to record. Send its output as your reply, as it is, and end the turn. The student's
+answers refer to its numbers.
 
 **3. Record each one they chose.** For each, oldest first, follow
 [`record-round`](workflows/rounds/skills/record-round/SKILL.md) with its plan, its spec (the

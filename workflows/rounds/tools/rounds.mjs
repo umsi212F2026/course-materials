@@ -8,9 +8,14 @@
 //   node workflows/rounds/tools/rounds.mjs take-reply <dir> <n> <new|why> [--transcript <path>]
 //   node workflows/rounds/tools/rounds.mjs attest <dir> <n> <new|why>
 //   node workflows/rounds/tools/rounds.mjs check <dir> --assignments <repo> [--online]
+//   node workflows/rounds/tools/rounds.mjs say start-project <assignments> [--folder <path>] [--adopted]
+//   node workflows/rounds/tools/rounds.mjs say report <dir> --assignments <repo> [--online]
+//                                          [--weak "<n> <new|why>=<reason>"]... [--looks-like "<n>=<judgment>"]...
+//   node workflows/rounds/tools/rounds.mjs say candidates <dir> [--looks-like "<plan>=<judgment>"]...
 //
 // <dir> is the project folder: a repository, or a folder inside one. Results are JSON on stdout,
-// except add-round (the new number), take-reply and attest, which print text. On failure prints
+// except add-round (the new number), take-reply and attest, which print text, and say, which
+// prints the message that ends a skill, for the agent to send as it is. On failure prints
 // one line to stderr and exits 1, having written nothing. check exits 0 whether or not its items
 // pass: failing items are its answer, not an error.
 //
@@ -33,6 +38,7 @@ import { codexCandidates, readCodex } from "../../feedback/tools/lib/codex.mjs";
 import { claudeCandidates, readClaude } from "../../feedback/tools/lib/claude.mjs";
 import { parseRounds, renderRound, setRoundPart, setRoundAttestation, splitCommits } from "./lib/rounds.mjs";
 import { studentAnswer } from "./lib/reply.mjs";
+import { startProjectMessage, reportMessage, candidatesMessage, cannotLookMessage, checkLabel } from "./lib/say.mjs";
 import { readSubmit, SUBMIT, showcaseEntry, isPublic, answers, reportProblems, liveCommitProblem, deployApi } from "./lib/submit.mjs";
 
 const RECORD = "ROUNDS.md";
@@ -527,7 +533,83 @@ const COMMANDS = {
     return r instanceof Promise ? r.then(done) : done(r);
   },
   "take-reply": (dir, n, key, ...rest) => takeReply(dir, n, key, flags(rest, { transcript: "transcript" })),
+  say: (which, ...rest) => {
+    const run = SAY[which];
+    if (!run) throw new Error(`say needs a message name: start-project, report or candidates, not "${which}".`);
+    return run(...rest);
+  },
 };
+
+/** The messages that end the skills. Each returns the text, or a promise of it. */
+const SAY = {
+  "start-project": (assignments, ...rest) => {
+    const f = repeatable(rest, ["folder"], [], ["adopted"]);
+    return startProjectMessage(readSubmit(assignments), { assignments, folder: f.folder, adopted: f.adopted });
+  },
+  report: (dir, ...rest) => {
+    if (!dir) throw new Error("say report needs the path of your project folder.");
+    const f = repeatable(rest, ["assignments"], ["weak", "looks-like"], ["online"]);
+    const p = parse(dir);
+    const round = (n) => {
+      const r = p.rounds.find((x) => x.n === Number(n));
+      if (!r) throw new Error(`There is no round ${n} in ROUNDS.md.`);
+      return r;
+    };
+    const weak = f.weak.map((arg) => {
+      const m = /^(\d+)\s+(\S+)=(.+)$/s.exec(arg);
+      if (!m) throw new Error(`--weak takes "<n> <new|why>=<what the grader looks for that it does not say>", not "${arg}".`);
+      requireKey(m[2]);
+      return { n: Number(m[1]), key: m[2], text: round(m[1]).parts[m[2]].text, reason: m[3] };
+    });
+    const looksLike = f["looks-like"].map((arg) => {
+      const m = /^(\d+)=(.+)$/s.exec(arg);
+      if (!m) throw new Error(`--looks-like takes "<n>=<judgment>", not "${arg}".`);
+      round(m[1]);
+      return { n: Number(m[1]), label: checkLabel(m[2]) };
+    });
+    const kind = readSubmit(f.assignments).kind;
+    const toConfirm =
+      kind === "negotiated"
+        ? 0
+        : p.rounds.filter((r) => r.valid).flatMap((r) => KEYS.map((k) => r.parts[k])).filter((part) => part.text && part.attestation !== "fresh").length;
+    const say = (r) => reportMessage({ kind, items: r.items, toConfirm, weak, looksLike });
+    const r = check(dir, { assignments: f.assignments, online: f.online });
+    return r instanceof Promise ? r.then(say) : say(r);
+  },
+  candidates: (dir, ...rest) => {
+    if (!dir) throw new Error("say candidates needs the path of your project folder.");
+    const f = repeatable(rest, [], ["looks-like"]);
+    let c;
+    try {
+      c = candidates(dir);
+    } catch (e) {
+      return cannotLookMessage(e.message);
+    }
+    const plans = c.plans.filter((x) => !x.recorded);
+    const looksLike = {};
+    for (const arg of f["looks-like"]) {
+      const [plan, label] = [arg.slice(0, arg.lastIndexOf("=")), arg.slice(arg.lastIndexOf("=") + 1)];
+      if (!plans.some((x) => x.plan === norm(plan))) throw new Error(`${plan} is not one of the plans that are not rounds yet.`);
+      looksLike[norm(plan)] = checkLabel(label);
+    }
+    const valid = parse(dir).rounds.filter((r) => r.valid).length;
+    return candidatesMessage({ valid, plans, outside: c.outside, looksLike });
+  },
+};
+
+/** Options for say: `single` take one value, `multi` may repeat and collect a list, `bare` take none. */
+function repeatable(argv, single, multi = [], bare = []) {
+  const out = Object.fromEntries([...multi.map((k) => [k, []]), ...bare.map((k) => [k, false])]);
+  for (let i = 0; i < argv.length; i++) {
+    const key = argv[i].replace(/^--/, "");
+    if (!argv[i].startsWith("--")) throw new Error(`Unknown option: ${argv[i]}`);
+    if (bare.includes(key)) out[key] = true;
+    else if (single.includes(key)) out[key] = argv[++i] ?? "";
+    else if (multi.includes(key)) out[key].push(argv[++i] ?? "");
+    else throw new Error(`Unknown option: ${argv[i]}`);
+  }
+  return out;
+}
 
 function flags(argv, known, bare = []) {
   const out = {};
