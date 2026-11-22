@@ -67,7 +67,28 @@ test("a PR that cannot be read gives problems and never throws", async () => {
   assert.equal(e.card, null);
   assert.match(e.problems[0], /404/);
   const t = await showcaseEntry(PR, fake({ [API]: timeout() }));
-  assert.match(t.problems[0], new RegExp(API));
+  assert.match(t.problems[0], new RegExp(PR));
+  assert.doesNotMatch(t.problems[0], /api\.github\.com/);
+  assert.doesNotMatch(e.problems[0], /api\.github\.com/);
+});
+
+const RESET = Date.UTC(2026, 11, 1, 15, 30) / 1000;
+const limited = (status = 403) => ({ ...reply({ message: "API rate limit exceeded" }, status), headers: new Headers({ "x-ratelimit-remaining": "0", "x-ratelimit-reset": String(RESET) }) });
+const resetTime = new Date(RESET * 1000).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+
+test("GitHub's rate limit reads as the limit, with the local reset time", async () => {
+  for (const status of [403, 429]) {
+    const e = await showcaseEntry(PR, fake({ [API]: limited(status) }));
+    assert.match(e.problems[0], /GitHub's limit for unsigned checks was reached/);
+    assert.ok(e.problems[0].includes(`try again after ${resetTime}`), e.problems[0]);
+  }
+  const forbidden = await showcaseEntry(PR, fake({ [API]: reply({}, 403) }));
+  assert.match(forbidden.problems[0], /403/);
+  const p = passingProject();
+  const f = full({ "https://api.github.com/repos/me/proj": limited() });
+  const it = item(await check(p.dir, { assignments: assignmentsRepo(), online: true, fetch: f }), "public repository");
+  assert.equal(it.ok, false);
+  assert.match(it.detail, /limit for unsigned checks/);
 });
 
 test("requests are unauthenticated, carry a User-Agent and a timeout", async () => {
@@ -144,6 +165,20 @@ test("api/version on an older commit fails, on the same commit passes", async ()
   assert.equal(await liveCommitProblem(p.dir, fake({ [url]: { commit: head.slice(0, 7) } })), null);
   assert.equal(await liveCommitProblem(p.dir, fake({ [url]: { commit: head } })), null);
   assert.match(await liveCommitProblem(p.dir, fake({})), /404/);
+  assert.equal(await liveCommitProblem(p.dir, fake({ [url]: { commit: head.slice(0, 10).toUpperCase() } })), null);
+  for (const bad of ["main", head.slice(0, 6), `${head}0`, "zzzzzzz"]) assert.match(await liveCommitProblem(p.dir, fake({ [url]: { commit: bad } })), /commit hash/, bad);
+});
+
+test("a live commit whose tree matches HEAD apart from ROUNDS.md passes", async () => {
+  const p = deployedProject("API: https://api.example.com/");
+  const url = "https://api.example.com/api/version";
+  const deployed = git(p.repo, "rev-parse", "HEAD");
+  write(p.repo, "ROUNDS.md", git(p.repo, "show", "HEAD:ROUNDS.md") + "\n");
+  commit(p.repo, "rounds: attested");
+  assert.equal(await liveCommitProblem(p.dir, fake({ [url]: { commit: deployed.slice(0, 7) } })), null);
+  write(p.repo, "src/late.js", "late\n");
+  commit(p.repo, "late change");
+  assert.match(await liveCommitProblem(p.dir, fake({ [url]: { commit: deployed.slice(0, 7) } })), /not this project's HEAD/);
 });
 
 test("no API line passes live commit", async () => {
@@ -215,6 +250,7 @@ test("a PR that cannot be read fails 10 and items 12 to 14 say there is no card"
   const p = passingProject();
   const r = await check(p.dir, { assignments: assignmentsRepo(), online: true, fetch: fake({}) });
   assert.match(item(r, "showcase pull request").detail, /404/);
+  assert.ok(item(r, "showcase pull request").detail.includes(PR));
   assert.equal(item(r, "project URL answers").detail, "no showcase card to read the project URL from");
   assert.equal(item(r, "report").detail, "no showcase card to read the project URL from");
 });

@@ -91,6 +91,30 @@ const insideDir = (file) => {
   return !isAbsolute(n) && n !== ".." && !n.startsWith("../");
 };
 
+/** A path as ROUNDS.md stores it and every comparison sees it: `./a//b.md` is `a/b.md`. */
+const norm = (file) => (file ? posix.normalize(file).replace(/^(\.\/)+/, "") : file);
+
+/** Whether commit `hash` changes anything under `dir` outside its `docs/`. */
+function changesOutsideDocs(dir, hash) {
+  const out = git(dir, "diff-tree", "--root", "--no-commit-id", "--name-only", "-r", "--relative", hash, "--", ".");
+  return out.split("\n").some((f) => f && !f.startsWith("docs/"));
+}
+
+/** Plans under the repository's top-level docs/superpowers/plans/ added after `base`, when `dir`
+ *  is a folder inside the repository rather than its root. None of them can be a round. */
+function outsidePlans(dir, base) {
+  if (!git(dir, "rev-parse", "--show-prefix")) return [];
+  const top = git(dir, "rev-parse", "--show-toplevel");
+  const out = git(top, "ls-tree", "-r", "--name-only", "HEAD", "--", PLANS);
+  return out
+    .split("\n")
+    .filter((f) => f.endsWith(".md"))
+    .filter((f) => {
+      const a = addedIn(top, f);
+      return a && isAfter(top, base, a.hash);
+    });
+}
+
 /** Why round `r` fails the rules, as sentences; empty when it passes. `base` is the Base hash or
  *  null. Duplicates are the caller's business, since they need every round. */
 function reasonsFor(dir, r, base) {
@@ -101,7 +125,7 @@ function reasonsFor(dir, r, base) {
 
   const added = {};
   for (const [key, label] of [["spec", "spec"], ["plan", "plan"]]) {
-    const file = r.fields[key];
+    const file = norm(r.fields[key]);
     if (!file) {
       out.push(`Round ${r.n} names no ${label}.`);
       continue;
@@ -115,7 +139,8 @@ function reasonsFor(dir, r, base) {
       continue;
     }
     added[key] = addedIn(dir, file);
-    if (baseOk && added[key] && !isAfter(dir, base, added[key].hash))
+    if (!added[key]) out.push(`The ${label}, ${file}, has no commit that adds it, so it cannot be placed after the base.`);
+    else if (baseOk && !isAfter(dir, base, added[key].hash))
       out.push(`The ${label}, ${file}, is not after the base: it was first added in ${short(added[key].hash)}.`);
   }
 
@@ -127,8 +152,15 @@ function reasonsFor(dir, r, base) {
   const missing = [c.first, c.last].filter((h, i, a) => a.indexOf(h) === i && !commitExists(dir, h));
   for (const h of missing) out.push(`${h} is not a commit in this repository.`);
   if (missing.length) return out;
-  if (added.plan && !isAfter(dir, added.plan.hash, c.first))
-    out.push(`The first implementing commit, ${c.first}, does not come after the plan's commit, ${short(added.plan.hash)}.`);
+  // The plan's own commit may be the first implementing commit when it also changes code; code
+  // committed before the plan's commit never belongs to the round.
+  if (added.plan) {
+    const own = git(dir, "rev-parse", `${c.first}^{commit}`) === added.plan.hash;
+    if (own && !changesOutsideDocs(dir, c.first))
+      out.push(`The first implementing commit, ${c.first}, is the plan's own commit, which changes nothing outside docs/.`);
+    else if (!own && !isAfter(dir, added.plan.hash, c.first))
+      out.push(`The first implementing commit, ${c.first}, does not come after the plan's commit, ${short(added.plan.hash)}. Code committed before its plan cannot be a round.`);
+  }
   if (git(dir, "rev-parse", `${c.first}^{commit}`) !== git(dir, "rev-parse", `${c.last}^{commit}`) && !isAfter(dir, c.first, c.last))
     out.push(`The last implementing commit, ${c.last}, is not the first, ${c.first}, or after it.`);
   if (!isAncestorOfHead(dir, c.last)) out.push(`The last implementing commit, ${c.last}, is not an ancestor of HEAD.`);
@@ -146,13 +178,13 @@ function isAncestorOfHead(dir, hash) {
 
 function judge(dir, parsed) {
   const planCount = {};
-  for (const r of parsed.rounds) if (r.fields.plan) planCount[r.fields.plan] = (planCount[r.fields.plan] ?? 0) + 1;
+  for (const r of parsed.rounds) if (r.fields.plan) planCount[norm(r.fields.plan)] = (planCount[norm(r.fields.plan)] ?? 0) + 1;
   const numCount = {};
   for (const r of parsed.rounds) numCount[r.n] = (numCount[r.n] ?? 0) + 1;
   return parsed.rounds.map((r) => {
     const reasons = reasonsFor(dir, r, parsed.base);
     if (numCount[r.n] > 1) reasons.push(`There is more than one round ${r.n}.`);
-    if (r.fields.plan && planCount[r.fields.plan] > 1) reasons.push(`Another round names the same plan, ${r.fields.plan}.`);
+    if (r.fields.plan && planCount[norm(r.fields.plan)] > 1) reasons.push(`Another round names the same plan, ${r.fields.plan}.`);
     return { ...r, valid: reasons.length === 0, reasons };
   });
 }
@@ -165,16 +197,20 @@ export function parse(dir) {
 }
 
 /** Every plan under dir first added after the Base, oldest first, with what the record needs to
- *  name its round: its spec, and the commits that look like its implementation.
+ *  name its round: its spec, and the commits that look like its implementation. When there are
+ *  none, `suggestedReason` says why: "no code yet", "code only before the plan", or "shares a
+ *  commit with the next plan".
  *
  *  A PLAN ELSEWHERE IN THE REPOSITORY IS NOT LISTED. The listing and the history are both limited
- *  to dir, so a plan under ps5/ never appears for a project folder beside it. */
+ *  to dir, so a plan under ps5/ never appears for a project folder beside it. Plans at the top of
+ *  the repository, where Superpowers puts them by default, are listed apart as `outside`, since
+ *  the student may believe they are rounds. */
 export function candidates(dir) {
   requireDir(dir);
   const r = parseRounds(readRecord(dir) ?? "");
   if (r.base === null) throw new Error("ROUNDS.md has no Base: line with a commit hash yet.");
   if (!commitExists(dir, r.base)) throw new Error(`The Base, ${r.base}, is not a commit in this repository.`);
-  const recorded = r.rounds.map((x) => x.fields.plan);
+  const recorded = r.rounds.map((x) => norm(x.fields.plan));
 
   const listing = (d) => {
     const out = git(dir, "ls-tree", "-r", "--name-only", "HEAD", "--", d);
@@ -196,32 +232,62 @@ export function candidates(dir) {
     });
   const at = (hash) => commits.findIndex((c) => c.hash === hash);
   plans.sort((a, b) => at(a.added.hash) - at(b.added.hash));
+  const starts = plans.map((p) => at(p.added.hash));
+  // Implementation is anything outside docs/ other than the record itself.
+  const isCode = (c) => c.files.some((f) => !f.startsWith("docs/") && f !== RECORD);
 
-  return {
-    base: r.base,
-    plans: plans.map((p, i) => {
-      const stem = posix.basename(p.plan, ".md");
-      const spec = specs.find((s) => posix.basename(s, ".md").replace(/-design$/, "") === stem) ?? null;
-      const from = at(p.added.hash) + 1;
-      const next = plans[i + 1];
-      const to = next ? at(next.added.hash) : commits.length;
-      const window = commits.slice(from, to);
-      const first = window.find((c) => c.files.some((f) => !f.startsWith("docs/")));
-      const suggestedCommits = first ? `${short(first.hash)}..${short(window[window.length - 1].hash)}` : null;
-      return { plan: p.plan, spec, addedIn: p.added.hash, date: p.added.date, recorded: recorded.includes(p.plan), suggestedCommits };
-    }),
-  };
+  // A spec is named for its plan, or failing that is the newest unrecorded one committed after the
+  // base, at or before the plan's commit. No spec goes to two plans.
+  const stemOf = (f) => posix.basename(f, ".md").replace(/-design$/, "");
+  const byName = plans.map((p) => specs.find((s) => stemOf(s) === stemOf(p.plan)) ?? null);
+  const used = new Set([...r.rounds.map((x) => norm(x.fields.spec)), ...byName.filter(Boolean)]);
+  const later = specs
+    .map((s) => ({ s, added: addedIn(dir, s) }))
+    .filter((x) => x.added && isAfter(dir, r.base, x.added.hash))
+    .map((x) => ({ s: x.s, at: at(x.added.hash) }));
+
+  const claimed = new Set();
+  const listed = plans.map((p, i) => {
+    const isRecorded = recorded.includes(p.plan);
+    let spec = byName[i];
+    if (!spec && !isRecorded) {
+      const pick = later.filter((x) => x.at <= starts[i] && !used.has(x.s)).sort((a, b) => b.at - a.at)[0];
+      if (pick) {
+        spec = pick.s;
+        used.add(spec);
+      }
+    }
+    // The window runs from the plan's own commit to the next plan committed after it, so plans
+    // added in one commit share it.
+    const from = starts[i];
+    const next = starts.find((s) => s > from);
+    const window = commits.slice(from, next ?? commits.length).map((c, k) => ({ ...c, k: from + k }));
+    const code = window.filter(isCode);
+    let suggestedCommits = null;
+    let suggestedReason = null;
+    if (code.length) {
+      suggestedCommits = `${short(code[0].hash)}..${short(code[code.length - 1].hash)}`;
+      for (let k = code[0].k; k <= code[code.length - 1].k; k++) claimed.add(k);
+    } else if (next !== undefined && isCode(commits[next])) suggestedReason = "shares a commit with the next plan";
+    else if (commits.slice(0, from).some((c, k) => isCode(c) && !claimed.has(k))) suggestedReason = "code only before the plan";
+    else suggestedReason = "no code yet";
+    return { plan: p.plan, spec, addedIn: p.added.hash, date: p.added.date, recorded: isRecorded, suggestedCommits, suggestedReason };
+  });
+
+  return { base: r.base, plans: listed, outside: outsidePlans(dir, r.base) };
 }
 
 /** Append a round with both own-words parts empty. Returns its number.
  *
  *  THE RULES ARE ENFORCED HERE, not only in the skill, so a round that would fail the check is
  *  never written. Nothing is written when any of them fails. */
-export function addRound(dir, { title, spec, plan, commits }) {
+export function addRound(dir, { title, spec: rawSpec, plan: rawPlan, commits }) {
+  const spec = norm(rawSpec);
+  const plan = norm(rawPlan);
   const text = requireRecord(dir);
   const before = parseRounds(text);
   if (before.base === null) throw new Error("ROUNDS.md has no Base: line with a commit hash yet.");
-  if (before.rounds.some((r) => r.fields.plan === plan)) throw new Error(`The plan ${plan} is already recorded as a round.`);
+  if (before.rounds.some((r) => norm(r.fields.plan) === plan)) throw new Error(`The plan ${plan} is already recorded as a round.`);
   const n = Math.max(0, ...before.rounds.map((r) => r.n)) + 1;
   const fields = { spec, plan, commits };
   const probe = { n, title: title ?? "", fields };
@@ -346,8 +412,12 @@ async function onlineItems(dir, submit, add, fetch = globalThis.fetch) {
     const repo = submit.kind === "workflow" ? workUrl : card?.githubUrl;
     if (!repo) add("public repository", submit.kind !== "workflow", submit.kind === "workflow" ? "A workflow names its public repository as Work." : "No repository is given.");
     else {
-      const pub = await isPublic(repo, fetch);
-      add("public repository", pub, pub ? `${repo} is public.` : `${repo} is not public, or could not be read.`);
+      try {
+        const pub = await isPublic(repo, fetch);
+        add("public repository", pub, pub ? `${repo} is public.` : `${repo} is not public, or could not be read.`);
+      } catch (e) {
+        add("public repository", false, e.message);
+      }
     }
   }
 
@@ -406,7 +476,16 @@ function roundsItems(dir, submit, add) {
 
   const valid = p.rounds.filter((r) => r.valid);
   const invalid = p.rounds.filter((r) => !r.valid).map((r) => `round ${r.n}: ${r.reasons[0]}`);
-  add("two rounds", valid.length >= 2, `${valid.length} valid round${valid.length === 1 ? "" : "s"}, of at least 2.` + (invalid.length ? ` Problems: ${invalid.join(" ")}` : ""));
+  const outside = baseOk ? outsidePlans(dir, p.base) : [];
+  add(
+    "two rounds",
+    valid.length >= 2,
+    `${valid.length} valid round${valid.length === 1 ? "" : "s"}, of at least 2.` +
+      (invalid.length ? ` Problems: ${invalid.join(" ")}` : "") +
+      (outside.length
+        ? ` These plans are at the top of the repository, outside the project folder, so they cannot be rounds: ${outside.join(", ")}. Move specs and plans into the project folder's docs/superpowers/ for the next round.`
+        : ""),
+  );
 
   const empty = [];
   const unattested = [];

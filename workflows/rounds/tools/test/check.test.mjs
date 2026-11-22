@@ -108,6 +108,17 @@ test("two rounds fails with one valid round", () => {
   assert.match(item(r, "two rounds").detail, /1 valid/);
 });
 
+test("two rounds names plans at the top of the repository for a project in a subfolder", () => {
+  const p = passingProject({ prefix: "project/" });
+  const assignments = assignmentsRepo();
+  assert.doesNotMatch(item(check(p.dir, { assignments }), "two rounds").detail, /top of the repository/);
+  write(p.repo, "docs/superpowers/plans/2026-11-24-stray.md", "# stray\n");
+  commit(p.repo, "stray plan");
+  const detail = item(check(p.dir, { assignments }), "two rounds").detail;
+  assert.match(detail, /docs\/superpowers\/plans\/2026-11-24-stray\.md/);
+  assert.match(detail, /Move specs and plans into the project folder/);
+});
+
 test("own words fails when a part is empty", () => {
   const { p, assignments } = fresh();
   const text = git(p.repo, "show", "HEAD:ROUNDS.md");

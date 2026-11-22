@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
 import { execFileSync, spawnSync } from "node:child_process";
 import { parse, candidates, addRound, takeReply, attest } from "../rounds.mjs";
 import { parseRounds } from "../lib/rounds.mjs";
-import { roundsRepo, write, commit, withBase, ROUND1, ROUND2 } from "./repo.mjs";
+import { roundsRepo, write, commit, git, emptyRepo, withBase, ROUND1, ROUND2 } from "./repo.mjs";
 import { codexRollout, meta, userMsg, agentMsg } from "../../../feedback/tools/test/fixtures.mjs";
 
 const TOOL = join(dirname(fileURLToPath(import.meta.url)), "..", "rounds.mjs");
@@ -51,8 +51,8 @@ test("refuses a plan recorded twice", () => {
 test("refuses commits that break the rules, naming the reason", () => {
   const r = started();
   const before = rounds(r);
-  // first implementing commit is the plan's own commit
-  assert.throws(() => addRound(r.dir, { ...ROUND1, commits: `${r.plan1.slice(0, 7)}..${r.impl1.slice(0, 7)}` }), /does not come after the plan/);
+  // first implementing commit is the plan's own commit, which changes only docs/
+  assert.throws(() => addRound(r.dir, { ...ROUND1, commits: `${r.plan1.slice(0, 7)}..${r.impl1.slice(0, 7)}` }), /plan's own commit, which changes nothing outside docs\//);
   // last before first
   assert.throws(() => addRound(r.dir, { ...ROUND2, commits: `${r.impl2.slice(0, 7)}..${r.plan2.slice(0, 7)}` }), /is not the first/);
   assert.throws(() => addRound(r.dir, { ...ROUND1, commits: `${r.impl1.slice(0, 7)}..${r.impl1a.slice(0, 7)}` }), /is not the first/);
@@ -130,7 +130,143 @@ test("candidates refuses without a Base, and a plan with no work after it has no
   commit(r.repo, "late plan");
   const late = candidates(r.dir).plans.find((x) => x.plan.endsWith("late.md"));
   assert.equal(late.suggestedCommits, null);
+  assert.equal(late.suggestedReason, "no code yet");
   assert.equal(late.spec, null);
+  assert.equal(candidates(r.dir).plans[0].suggestedReason, null);
+});
+
+/** A repository with a Base already committed, and ROUNDS.md naming it. Returns { repo, base, dir }. */
+function based(prefix = "") {
+  const repo = emptyRepo();
+  write(repo, "README.md", "# repo\n");
+  const base = commit(repo, "base");
+  write(repo, `${prefix}ROUNDS.md`, withBase(base.slice(0, 7)));
+  commit(repo, "name the base");
+  return { repo, base, dir: join(repo, prefix) };
+}
+
+test("spec, plan and code in one commit can be a round", () => {
+  const { repo, dir } = based();
+  write(repo, ROUND1.spec, "# spec\n");
+  write(repo, ROUND1.plan, "# plan\n");
+  write(repo, "src/a.js", "a\n");
+  const all = commit(repo, "everything at once").slice(0, 7);
+  const c = candidates(dir).plans[0];
+  assert.equal(c.suggestedCommits, `${all}..${all}`);
+  assert.equal(c.suggestedReason, null);
+  assert.equal(addRound(dir, { ...ROUND1, commits: all }), 1);
+  assert.equal(parse(dir).rounds[0].valid, true);
+});
+
+test("code committed before the plan's commit cannot be a round", () => {
+  const { repo, dir } = based();
+  write(repo, "src/a.js", "a\n");
+  const early = commit(repo, "code first").slice(0, 7);
+  write(repo, ROUND1.spec, "# spec\n");
+  write(repo, ROUND1.plan, "# plan\n");
+  commit(repo, "plan after");
+  const c = candidates(dir).plans[0];
+  assert.equal(c.suggestedCommits, null);
+  assert.equal(c.suggestedReason, "code only before the plan");
+  write(repo, "src/b.js", "b\n");
+  const late = commit(repo, "more code").slice(0, 7);
+  assert.throws(() => addRound(dir, { ...ROUND1, commits: `${early}..${late}` }), /does not come after the plan's commit.*before its plan cannot be a round/);
+});
+
+test("a plan whose code is in the next plan's commit says so", () => {
+  const { repo, dir } = based();
+  write(repo, ROUND1.spec, "# spec 1\n");
+  write(repo, ROUND1.plan, "# plan 1\n");
+  commit(repo, "plan 1");
+  write(repo, "src/a.js", "a\n");
+  write(repo, ROUND2.spec, "# spec 2\n");
+  write(repo, ROUND2.plan, "# plan 2\n");
+  const both = commit(repo, "code 1 and plan 2").slice(0, 7);
+  const [one, two] = candidates(dir).plans;
+  assert.equal(one.suggestedCommits, null);
+  assert.equal(one.suggestedReason, "shares a commit with the next plan");
+  assert.equal(two.suggestedCommits, `${both}..${both}`);
+});
+
+test("plans added in one commit share the window after it", () => {
+  const { repo, dir } = based();
+  for (const r of [ROUND1, ROUND2]) {
+    write(repo, r.spec, "# spec\n");
+    write(repo, r.plan, "# plan\n");
+  }
+  commit(repo, "two plans");
+  write(repo, "src/a.js", "a\n");
+  const code = commit(repo, "code").slice(0, 7);
+  const plans = candidates(dir).plans;
+  assert.deepEqual(plans.map((p) => p.suggestedCommits), [`${code}..${code}`, `${code}..${code}`]);
+});
+
+test("a suggested range drops trailing commits that touch only ROUNDS.md or docs/", () => {
+  const r = started();
+  commit(r.repo, "set the base");
+  write(r.repo, r.p("docs/notes.md"), "notes\n");
+  commit(r.repo, "notes");
+  addRound(r.dir, { ...ROUND1, commits: r.impl1.slice(0, 7) });
+  commit(r.repo, "rounds: round 1");
+  assert.equal(candidates(r.dir).plans[1].suggestedCommits, `${r.impl2.slice(0, 7)}..${r.impl2.slice(0, 7)}`);
+});
+
+test("a spec with another name is matched by when it was committed", () => {
+  const { repo, dir } = based();
+  write(repo, "docs/superpowers/specs/2026-11-19-reading-design.md", "# spec\n");
+  write(repo, ROUND1.plan, "# plan\n");
+  commit(repo, "spec and plan");
+  write(repo, "src/a.js", "a\n");
+  commit(repo, "code");
+  assert.equal(candidates(dir).plans[0].spec, "docs/superpowers/specs/2026-11-19-reading-design.md");
+});
+
+test("a spec already in a round, or matched by name, is not matched to another plan", () => {
+  const r = started();
+  commit(r.repo, "set the base");
+  addRound(r.dir, { ...ROUND1, commits: r.impl1.slice(0, 7) });
+  commit(r.repo, "round 1");
+  write(r.repo, r.p("docs/superpowers/plans/2026-11-25-other.md"), "# other\n");
+  commit(r.repo, "other plan");
+  const plans = candidates(r.dir).plans;
+  assert.equal(plans.find((x) => x.plan.endsWith("other.md")).spec, null);
+  assert.equal(plans.find((x) => x.plan === ROUND2.plan).spec, ROUND2.spec);
+});
+
+test("candidates in a subfolder report plans at the top of the repository as outside", () => {
+  const r = started("project/");
+  commit(r.repo, "set the base");
+  write(r.repo, "docs/superpowers/plans/2026-11-24-stray.md", "# stray\n");
+  commit(r.repo, "stray plan");
+  assert.deepEqual(candidates(r.dir).outside, ["docs/superpowers/plans/2026-11-24-stray.md"]);
+  assert.deepEqual(candidates(started().dir).outside, []);
+});
+
+test("a plan no commit adds is a failing reason", () => {
+  const r = started();
+  commit(r.repo, "set the base");
+  git(r.repo, "checkout", "-q", "-b", "side");
+  write(r.repo, "side.txt", "x\n");
+  commit(r.repo, "side");
+  git(r.repo, "checkout", "-q", "-");
+  git(r.repo, "merge", "-q", "--no-ff", "--no-commit", "side");
+  write(r.repo, "docs/superpowers/plans/2026-11-27-merged.md", "# merged\n");
+  write(r.repo, "src/m.js", "m\n");
+  commit(r.repo, "merge with a plan in it");
+  const head = git(r.repo, "rev-parse", "--short=7", "HEAD");
+  assert.throws(() => addRound(r.dir, { title: "m", spec: ROUND2.spec, plan: "docs/superpowers/plans/2026-11-27-merged.md", commits: head }), /no commit that adds it/);
+});
+
+test("plan and spec paths are stored and compared normalized", () => {
+  const r = started();
+  addRound(r.dir, { ...ROUND1, spec: `./${ROUND1.spec}`, plan: `./docs/superpowers//plans/${ROUND1.plan.split("/").pop()}`, commits: r.impl1.slice(0, 7) });
+  assert.match(rounds(r), new RegExp(`\\*\\*Plan:\\*\\* ${ROUND1.plan}\\n`));
+  assert.match(rounds(r), new RegExp(`\\*\\*Spec:\\*\\* ${ROUND1.spec}\\n`));
+  assert.equal(candidates(r.dir).plans[0].recorded, true);
+  assert.throws(() => addRound(r.dir, { ...ROUND1, title: "again", commits: r.impl1.slice(0, 7) }), /already recorded/);
+  write(r.repo, r.p("ROUNDS.md"), rounds(r).replace(`**Plan:** ${ROUND1.plan}`, `**Plan:** ./${ROUND1.plan}`));
+  assert.equal(candidates(r.dir).plans[0].recorded, true);
+  assert.equal(parse(r.dir).rounds[0].valid, true);
 });
 
 const REPLY = "It could read\nthe *whole* file now.";

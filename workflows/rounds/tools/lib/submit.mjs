@@ -54,14 +54,25 @@ const TIMEOUT_MS = 60000;
 const HEADERS = { "User-Agent": "si212-rounds-check", Accept: "application/vnd.github+json" };
 
 /** A request with the timeout and the header GitHub requires. Throws on a network failure, with
- *  the URL in the message so the caller can report it. */
+ *  the URL in the message so the caller can report it, and on GitHub's rate limit, with an error
+ *  marked `rateLimited` that says when to try again.
+ *
+ *  THE CHECKS STAY UNSIGNED, so GitHub allows each address 60 requests an hour. A classroom sharing one
+ *  address can use them up, and the student needs to hear that, not a bare 403. */
 async function get(url, fetchFn) {
+  let res;
   try {
-    return await fetchFn(url, { headers: HEADERS, redirect: "follow", signal: AbortSignal.timeout(TIMEOUT_MS) });
+    res = await fetchFn(url, { headers: HEADERS, redirect: "follow", signal: AbortSignal.timeout(TIMEOUT_MS) });
   } catch (e) {
     const why = e?.name === "TimeoutError" || e?.name === "AbortError" ? `did not answer within ${TIMEOUT_MS / 1000} seconds` : `could not be reached (${e?.message ?? e})`;
     throw new Error(`${url} ${why}.`);
   }
+  if ((res.status === 403 || res.status === 429) && res.headers?.get?.("x-ratelimit-remaining") === "0") {
+    const reset = Number(res.headers.get("x-ratelimit-reset"));
+    const when = reset ? new Date(reset * 1000).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) : "an hour";
+    throw Object.assign(new Error(`GitHub's limit for unsigned checks was reached: try again after ${when}.`), { rateLimited: true });
+  }
+  return res;
 }
 
 async function getJson(url, fetchFn) {
@@ -85,6 +96,8 @@ export async function showcaseEntry(prUrl, fetchFn = globalThis.fetch) {
     return out;
   }
   const base = `${API}/repos/${SHOWCASE_REPO}/pulls/${m[3]}`;
+  // The student knows the pull request by its page, not by the API address the check reads.
+  const theirs = (msg) => msg.split(base).join(prUrl.replace(/\/$/, ""));
   try {
     const pr = await getJson(base, fetchFn);
     out.state = pr.merged_at ? "merged" : pr.state === "open" ? "open" : "closed";
@@ -103,19 +116,21 @@ export async function showcaseEntry(prUrl, fetchFn = globalThis.fetch) {
     }
   } catch (e) {
     out.state = null;
-    out.problems.push(e.message);
+    out.problems.push(theirs(e.message));
   }
   return out;
 }
 
 /** Whether the repository at `repoUrl` is public, as a stranger sees it. A repository that cannot
- *  be read counts as not public. */
+ *  be read counts as not public; GitHub's rate limit throws instead, since it says nothing about
+ *  the repository. */
 export async function isPublic(repoUrl, fetchFn = globalThis.fetch) {
   const m = /^https:\/\/github\.com\/([^/\s]+)\/([^/\s#?]+?)(?:\.git)?\/?$/.exec(repoUrl ?? "");
   if (!m) return false;
   try {
     return (await getJson(`${API}/repos/${m[1]}/${m[2]}`, fetchFn)).private === false;
-  } catch {
+  } catch (e) {
+    if (e.rateLimited) throw e;
     return false;
   }
 }
@@ -199,11 +214,21 @@ export async function liveCommitProblem(dir, fetchFn = globalThis.fetch) {
     return e.message;
   }
   if (!live) return `${url} did not report a commit.`;
+  if (!/^[0-9a-f]{7,40}$/i.test(live)) return `${url} reported "${live}", which is not a commit hash of 7 to 40 characters.`;
+  live = live.toLowerCase();
   let head;
   try {
     head = git(dir, "rev-parse", "HEAD");
   } catch {
     return `${dir} has no HEAD to compare with.`;
   }
-  return head.startsWith(live) || live.startsWith(head) ? null : `The live API runs ${live.slice(0, 7)}, not this project's HEAD, ${head.slice(0, 7)}.`;
+  if (head.startsWith(live)) return null;
+  // A commit after the deployed one that changes only ROUNDS.md, such as attesting, leaves the
+  // live code the project's HEAD.
+  try {
+    git(dir, "diff", "--quiet", live, "HEAD", "--", ".", ":!ROUNDS.md");
+    return null;
+  } catch {
+    return `The live API runs ${live.slice(0, 7)}, not this project's HEAD, ${head.slice(0, 7)}.`;
+  }
 }
