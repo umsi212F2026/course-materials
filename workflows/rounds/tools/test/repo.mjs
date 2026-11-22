@@ -1,9 +1,11 @@
 // A throwaway repository holding a student's project folder, for tests that need real git history.
 
 import { join } from "node:path";
-import { emptyRepo, write, commit, git } from "../../../record/tools/test/repo.mjs";
+import { emptyRepo, write, commit, git, withRemote } from "../../../record/tools/test/repo.mjs";
+import { partHash } from "../../../record/tools/lib/record.mjs";
+import { renderRound } from "../lib/rounds.mjs";
 
-export { emptyRepo, write, commit, git };
+export { emptyRepo, write, commit, git, withRemote };
 
 export const ROUNDS_HEAD = (base) => `# Rounds\n\nBase: ${base}\n`;
 
@@ -48,3 +50,52 @@ export const ROUND2 = {
   spec: "docs/superpowers/specs/2026-11-22-exporter-design.md",
   plan: "docs/superpowers/plans/2026-11-22-exporter.md",
 };
+
+const attested = (text) => `${text}\n\n<!-- attested 2026-11-18 sha256:${partHash(text)} -->`;
+
+/** SUBMIT.md text, every line set unless overridden. */
+export const submitText = ({ kind = "workflow", extendsPs = "PS3", work = "https://github.com/me/proj", showcase = "https://github.com/umsi212F2026/student-showcase/pull/7" } = {}) =>
+  `# Final project submission\n\nKind: ${kind}\nExtends: ${extendsPs}\nWork: ${work}\nShowcase: ${showcase}\n`;
+
+/** A pushed project repository that passes every offline item of a workflow check: the base holds a
+ *  diagram, a skill and ten processed examples, and two attested rounds follow it.
+ *  Returns { repo, dir, base }. */
+export function passingProject({ readme = "# Project\n\nThe parser and the exporter.\n" } = {}) {
+  const repo = emptyRepo();
+  write(repo, "README.md", readme);
+  write(repo, "ROUNDS.md", ROUNDS_HEAD("<commit hash>"));
+  write(repo, "workflow.bpmn", "<definitions/>\n");
+  write(repo, "skills/extract/SKILL.md", "# extract\n");
+  for (let i = 1; i <= 10; i++) {
+    const id = `e${String(i).padStart(2, "0")}`;
+    write(repo, `examples/${id}/input.txt`, `posting ${i}\n`);
+    write(repo, `examples/${id}/output.json`, "{}\n");
+  }
+  const base = commit(repo, "base");
+  const done = [];
+  for (const [r, file] of [[ROUND1, "a"], [ROUND2, "b"]]) {
+    write(repo, r.spec, `# spec ${r.title}\n`);
+    write(repo, r.plan, `# plan ${r.title}\n`);
+    commit(repo, `plan ${r.title}`);
+    write(repo, `src/${file}.js`, `${file}\n`);
+    done.push({ ...r, commits: commit(repo, `implement ${r.title}`).slice(0, 7) });
+  }
+  const rounds = done.map((r, i) =>
+    renderRound(i + 1, { title: r.title, fields: { spec: r.spec, plan: r.plan, commits: r.commits }, parts: { new: attested(`new ${i}`), why: attested(`why ${i}`) } }),
+  );
+  write(repo, "ROUNDS.md", `${ROUNDS_HEAD(base.slice(0, 7))}\n${rounds.join("\n")}`);
+  commit(repo, "record");
+  withRemote(repo);
+  return { repo, dir: repo, base };
+}
+
+/** A pushed assignments repository whose project/ holds SUBMIT.md (and TERMS.md when given). */
+export function assignmentsRepo({ submit = submitText(), terms = null } = {}) {
+  const repo = emptyRepo();
+  write(repo, "README.md", "# assignments\n");
+  if (submit !== null) write(repo, "project/SUBMIT.md", submit);
+  if (terms !== null) write(repo, "project/TERMS.md", terms);
+  commit(repo, "project");
+  withRemote(repo);
+  return repo;
+}

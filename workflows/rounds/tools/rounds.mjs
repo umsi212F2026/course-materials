@@ -7,10 +7,12 @@
 //   node workflows/rounds/tools/rounds.mjs add-round <dir> --title <t> --spec <path> --plan <path> --commits <x..y>
 //   node workflows/rounds/tools/rounds.mjs take-reply <dir> <n> <new|why> [--transcript <path>]
 //   node workflows/rounds/tools/rounds.mjs attest <dir> <n> <new|why>
+//   node workflows/rounds/tools/rounds.mjs check <dir> --assignments <repo> [--online]
 //
 // <dir> is the project folder: a repository, or a folder inside one. Results are JSON on stdout,
 // except add-round (the new number), take-reply and attest, which print text. On failure prints
-// one line to stderr and exits 1, having written nothing.
+// one line to stderr and exits 1, having written nothing. check exits 0 whether or not its items
+// pass: failing items are its answer, not an error.
 //
 // THE SKILLS NEVER EDIT ROUNDS.md THEMSELVES. Every write goes through here, so the format in
 // lib/rounds.mjs is the only one that exists, and the student's own words are never retyped by
@@ -25,12 +27,13 @@ import { join, posix, isAbsolute } from "node:path";
 import { pathToFileURL } from "node:url";
 import { homedir } from "node:os";
 import { unixLines } from "../../record/tools/lib/record.mjs";
-import { git, commitExists, isAfter } from "../../record/tools/lib/git.mjs";
+import { git, commitExists, isAfter, pushState } from "../../record/tools/lib/git.mjs";
 import { findSession, harnessFor } from "../../feedback/tools/export-session.mjs";
 import { codexCandidates, readCodex } from "../../feedback/tools/lib/codex.mjs";
 import { claudeCandidates, readClaude } from "../../feedback/tools/lib/claude.mjs";
 import { parseRounds, renderRound, setRoundPart, setRoundAttestation, splitCommits } from "./lib/rounds.mjs";
 import { studentAnswer } from "./lib/reply.mjs";
+import { readSubmit, SUBMIT } from "./lib/submit.mjs";
 
 const RECORD = "ROUNDS.md";
 const PLANS = "docs/superpowers/plans";
@@ -263,6 +266,118 @@ export function attest(dir, n, key, date = today()) {
   return `attested round ${n}, ${key}`;
 }
 
+const MIN_EXAMPLES = 10;
+const TERMS = "project/TERMS.md";
+
+/** The `examples/<id>/` folders at `hash` that hold both an input.* and an output.*, and the ids
+ *  of those that hold only one, for files under `dir`. */
+function examplesAt(dir, hash) {
+  const files = git(dir, "ls-tree", "-r", "--name-only", hash, "--", ".").split("\n").filter(Boolean);
+  const byId = {};
+  for (const f of files) {
+    const m = /^examples\/([^/]+)\/([^/]+)$/.exec(f);
+    if (m) (byId[m[1]] ??= []).push(m[2]);
+  }
+  const complete = [];
+  const incomplete = [];
+  for (const [id, names] of Object.entries(byId)) {
+    const both = ["input", "output"].every((k) => names.some((n) => n.startsWith(`${k}.`)));
+    (both ? complete : incomplete).push(id);
+  }
+  return { files, complete, incomplete };
+}
+
+/** Every item the grader looks for that can be asked offline, in order, each with whether it passes
+ *  and why. `assignments` is the root of the student's assignments repository. The online items
+ *  come with `online`, once they exist. */
+export function check(dir, { assignments, online = false, fetch } = {}) {
+  requireDir(dir);
+  const items = [];
+  const add = (name, ok, detail) => items.push({ name, ok, detail });
+  const submit = readSubmit(assignments);
+
+  if (submit.kind === "negotiated") {
+    const has = assignments && existsSync(join(assignments, TERMS));
+    add("TERMS.md", Boolean(has), has ? `${TERMS} exists.` : `There is no ${TERMS}. A negotiated project commits the agreed terms there.`);
+  } else roundsItems(dir, submit, add);
+
+  const problems = [...submit.problems];
+  if (submit.kind !== null && submit.work === "project/" && submit.kind === "workflow")
+    problems.push("Work: project/ is only for a deployed project. A workflow lives in a public repository, so give its URL.");
+  add("SUBMIT.md", !problems.length, problems.length ? problems.join(" ") : `${SUBMIT} is filled in.`);
+
+  let pushed = `There is no assignments repository to look in. Pass --assignments <repo>.`;
+  if (assignments) {
+    try {
+      pushed = pushState(assignments, "project");
+    } catch {
+      pushed = `${assignments} is not a git repository.`;
+    }
+  }
+  add("assignments pushed", pushed === null, pushed ?? "Everything under project/ in your assignments repository is committed and pushed.");
+
+  return { ok: items.every((i) => i.ok), items };
+}
+
+function roundsItems(dir, submit, add) {
+  const text = readRecord(dir);
+  const p = parse(dir);
+  const baseOk = p.base !== null && commitExists(dir, p.base);
+  add(
+    "base named",
+    baseOk,
+    text === null
+      ? `${RECORD} does not exist.`
+      : p.base === null
+        ? "ROUNDS.md has no Base: line with a commit hash yet."
+        : baseOk
+          ? `Base: ${p.base}.`
+          : `"${p.base}" is not a commit in this repository.`,
+  );
+
+  if (submit.kind === "deployed") add("base in place", true, "checked live");
+  else if (!baseOk) add("base in place", false, "There is no base to look in.");
+  else {
+    const { files, complete, incomplete } = examplesAt(dir, p.base);
+    const diagram = files.some((f) => f.endsWith(".bpmn"));
+    const skill = files.some((f) => /^skills\/[^/]+\/SKILL\.md$/.test(f));
+    const lacks = [!diagram && "a .bpmn diagram", !skill && "a skills/<name>/SKILL.md", complete.length < MIN_EXAMPLES && `at least ${MIN_EXAMPLES} processed inputs`].filter(Boolean);
+    add(
+      "base in place",
+      !lacks.length,
+      `At ${p.base}: ${complete.length} processed input${complete.length === 1 ? "" : "s"}, of at least ${MIN_EXAMPLES}.` +
+        (incomplete.length ? ` Incomplete: ${incomplete.join(", ")}.` : "") +
+        (lacks.length ? ` Missing: ${lacks.join(", ")}.` : ""),
+    );
+  }
+
+  const valid = p.rounds.filter((r) => r.valid);
+  const invalid = p.rounds.filter((r) => !r.valid).map((r) => `round ${r.n}: ${r.reasons[0]}`);
+  add("two rounds", valid.length >= 2, `${valid.length} valid round${valid.length === 1 ? "" : "s"}, of at least 2.` + (invalid.length ? ` Problems: ${invalid.join(" ")}` : ""));
+
+  const empty = [];
+  const unattested = [];
+  for (const r of valid)
+    for (const key of ["new", "why"]) {
+      const part = r.parts[key];
+      if (!part.text) empty.push(`round ${r.n} has no ${key} part`);
+      if (part.attestation !== "fresh") unattested.push(`round ${r.n} ${key} is ${part.attestation}`);
+    }
+  add("own words", !empty.length, empty.length ? `${empty.join("; ")}.` : "Every valid round has both parts.");
+  add("attested", !unattested.length, unattested.length ? `${unattested.join("; ")}.` : "Every part is attested and unchanged since.");
+
+  const state = pushState(dir, ".");
+  add("project pushed", state === null, state ?? "Everything in the project folder is committed and pushed.");
+
+  if (submit.kind !== "deployed") add("README", true, "Not required for a workflow.");
+  else if (!existsSync(join(dir, "README.md"))) add("README", false, "There is no README.md in the project folder.");
+  else {
+    const readme = readFileSync(join(dir, "README.md"), "utf8").toLowerCase();
+    const unfound = valid.map((r) => r.title).filter((t) => !readme.includes(t.toLowerCase()));
+    add("README", true, unfound.length ? `Warning: README.md does not mention ${unfound.map((t) => `"${t}"`).join(", ")}.` : "README.md mentions every round.");
+  }
+}
+
 const ROUND_FLAGS = { title: "title", spec: "spec", plan: "plan", commits: "commits" };
 
 const COMMANDS = {
@@ -270,15 +385,19 @@ const COMMANDS = {
   candidates: (dir) => JSON.stringify(candidates(dir), null, 2),
   attest: (dir, n, key) => attest(dir, n, key),
   "add-round": (dir, ...rest) => String(addRound(dir, flags(rest, ROUND_FLAGS))),
+  check: (dir, ...rest) => {
+    const { assignments, online } = flags(rest, { assignments: "assignments", online: "online" }, ["online"]);
+    return JSON.stringify(check(dir, { assignments, online: online !== undefined }), null, 2);
+  },
   "take-reply": (dir, n, key, ...rest) => takeReply(dir, n, key, flags(rest, { transcript: "transcript" })),
 };
 
-function flags(argv, known) {
+function flags(argv, known, bare = []) {
   const out = {};
   for (let i = 0; i < argv.length; i++) {
     const key = known[argv[i].replace(/^--/, "")];
     if (!argv[i].startsWith("--") || !key) throw new Error(`Unknown option: ${argv[i]}`);
-    out[key] = argv[++i] ?? "";
+    out[key] = bare.includes(key) ? true : (argv[++i] ?? "");
   }
   return out;
 }

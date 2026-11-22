@@ -24,7 +24,7 @@ import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { homedir } from "node:os";
 import { parseRecord, qualifies, setAttestation, setPart, renderEntry, unixLines } from "./lib/record.mjs";
-import { git, commitExists, filesAt, filesChanged, isAfter } from "./lib/git.mjs";
+import { git, commitExists, filesAt, filesChanged, isAfter, pushState } from "./lib/git.mjs";
 import { studentAnswer } from "../../rounds/tools/lib/reply.mjs";
 import { findSession, harnessFor } from "../../feedback/tools/export-session.mjs";
 import { codexCandidates, readCodex } from "../../feedback/tools/lib/codex.mjs";
@@ -129,7 +129,7 @@ export function check(repo) {
   add("own words", !empty.length, empty.length ? `${empty.join("; ")}.` : "Every qualifying entry has both parts.");
   add("attested", !unattested.length, unattested.length ? `${unattested.join("; ")}.` : "Every part is attested and unchanged since.");
 
-  const pushed = pushState(repo);
+  const pushed = pushState(repo, "ps5");
   add("pushed", pushed === null, pushed ?? "Everything under ps5/ is committed and pushed.");
 
   return { ok: items.every((i) => i.ok), items };
@@ -150,22 +150,6 @@ export function commitProblems(repo, e, initial) {
   else if (changed && !kindsOf(files).includes(changed))
     out.push(`entry ${e.n}: its commit, ${c}, does not change the ${changed === "diagram" ? "diagram" : `${changed.slice(6)} skill`}.`);
   return out;
-}
-
-/** Why the grader would not see this work yet, or null when it would.
- *
- *  GRADING READS WHAT IS ON GITHUB. Work that passes every other item but sits uncommitted, or
- *  committed and never pushed, is work the grader never sees. */
-function pushState(repo) {
-  const dirty = git(repo, "status", "--porcelain", "--", "ps5");
-  if (dirty) return `${dirty.split("\n").length} file(s) under ps5/ are not committed yet. Commit them, then push.`;
-  try {
-    git(repo, "rev-parse", "--abbrev-ref", "@{u}");
-  } catch {
-    return "This branch has nowhere to push to yet. Push it with: git push -u origin main";
-  }
-  const ahead = Number(git(repo, "rev-list", "--count", "@{u}..HEAD"));
-  return ahead ? `${ahead} commit${ahead === 1 ? " is" : "s are"} not pushed yet. Run: git push` : null;
 }
 
 /** What a commit changed that the record counts: the diagram, and each skill by name. */
