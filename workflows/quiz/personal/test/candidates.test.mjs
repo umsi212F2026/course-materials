@@ -149,7 +149,7 @@ test("PERSONAL_RULE names the rule", () => {
 });
 
 test("pick is the bake's pick", () => {
-  // Pinned from tools/quiz-bake.mjs in course-private before the move.
+  // Pinned from the bake's original pick, before the move.
   assert.deepEqual(pick(["a", "b", "c", "d", "e"], 3, "mq-11:1:ada:personal:alt"), ["e", "c", "b"]);
   assert.equal(typeof rng("x")(), "number");
   const kept = [..."1234"].map((n) => ({ id: `a${n}`, kind: "alt", prompt: `> 3: a${n}\n4: x`, expected: "e", rubric: "r" }))

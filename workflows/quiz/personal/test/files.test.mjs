@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { mkdtempSync, mkdirSync, writeFileSync, symlinkSync } from "node:fs";
+import { mkdtempSync, mkdirSync, writeFileSync, symlinkSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { listFiles, readRepoFile, MAX_FILES } from "../lib/files.mjs";
@@ -82,9 +82,13 @@ test("readRepoFile returns null for a directory, a missing file, a file used as 
 });
 
 test("readRepoFile refuses a parent segment or an absolute path", () => {
-  const root = tree();
-  writeFileSync(join(root, "..", "files-outside.txt"), "OUT");
+  const parent = mkdtempSync(join(tmpdir(), "files-parent-"));
+  const root = join(parent, "clone");
+  mkdirSync(root);
+  writeFileSync(join(root, "a.md"), "x");
+  writeFileSync(join(parent, "files-outside.txt"), "OUT");
   assert.equal(readRepoFile(root, "../files-outside.txt"), null);
   assert.equal(readRepoFile(root, "app/../a.md"), null);
   assert.equal(readRepoFile(root, join(root, "a.md")), null);
+  rmSync(parent, { recursive: true, force: true });
 });

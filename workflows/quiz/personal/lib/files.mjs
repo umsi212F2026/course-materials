@@ -1,4 +1,3 @@
-//
 // Every file under one folder of a student's clone, as paths relative to the clone.
 //
 // NEVER FOLLOWS A SYMLINK AND SKIPS DEPENDENCY AND ENVIRONMENT FOLDERS (node_modules, .git, Python
