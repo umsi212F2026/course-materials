@@ -277,6 +277,20 @@ test("deployed runs the live commit item and not the report", async () => {
   assert.equal(item(r, "public repository").ok, true);
 });
 
+test("deployed with no API line has no live commit item, even with no card", async () => {
+  const p = deployedProject(null);
+  const a = assignmentsRepo({ submit: submitText({ kind: "deployed", work: "project/" }) });
+  const clean = { ...CARD };
+  delete clean.githubUrl;
+  const withCard = await check(p.dir, { assignments: a, online: true, fetch: fake({ ...prRoutes({ card: clean }), ...siteRoutes }) });
+  assert.deepEqual(withCard.items.slice(-3).map((i) => i.name), ["showcase pull request", "public repository", "project URL answers"]);
+  const starter = "<https://github.com/umsi212F2026/student-showcase/pull/N>";
+  const noPr = assignmentsRepo({ submit: submitText({ kind: "deployed", work: "project/", showcase: starter }) });
+  const bare = await check(p.dir, { assignments: noPr, online: true, fetch: fake({}) });
+  assert.equal(item(bare, "live commit"), undefined);
+  assert.equal(item(bare, "project URL answers").ok, false);
+});
+
 test("negotiated runs only the pull request and project URL items", async () => {
   const empty = emptyRepo();
   write(empty, "README.md", "x\n");

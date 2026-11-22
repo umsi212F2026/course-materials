@@ -196,13 +196,18 @@ export async function reportProblems(url, repoUrl, fetchFn = globalThis.fetch) {
   return out;
 }
 
-/** Why the deployed API is not running this project's HEAD, or null. DEPLOY.md in `dir` names the
- *  API with an `API:` line; without one there is nothing to compare, which is not a problem. */
-export async function liveCommitProblem(dir, fetchFn = globalThis.fetch) {
+/** The API that DEPLOY.md in `dir` names on an `API:` line, without a trailing slash, or null. */
+export function deployApi(dir) {
   const path = join(dir, "DEPLOY.md");
   if (!existsSync(path)) return null;
   const line = unixLines(readFileSync(path, "utf8")).split("\n").find((l) => /^API:/.test(l));
-  const api = line?.slice(4).trim().replace(/\/$/, "");
+  return line?.slice(4).trim().replace(/\/$/, "") || null;
+}
+
+/** Why the deployed API is not running this project's HEAD, or null. Without an API in DEPLOY.md
+ *  there is nothing to compare, which is not a problem. */
+export async function liveCommitProblem(dir, fetchFn = globalThis.fetch) {
+  const api = deployApi(dir);
   if (!api) return null;
   const url = `${api}/api/version`;
   let live;

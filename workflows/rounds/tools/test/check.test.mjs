@@ -90,12 +90,17 @@ test("base in place counts examples at the base, not at HEAD", () => {
   assert.match(item(check(p.dir, { assignments }), "base in place").detail, /10 processed/);
 });
 
-test("base in place for deployed says checked live", () => {
+test("base in place for deployed points to the online check, and fails without a base", () => {
   const { p } = fresh();
   const assignments = assignmentsRepo({ submit: submitText({ kind: "deployed" }) });
   const it = item(check(p.dir, { assignments }), "base in place");
   assert.equal(it.ok, true);
-  assert.equal(it.detail, "checked live");
+  assert.match(it.detail, /not checked here/);
+  assert.match(it.detail, /project URL answers/);
+  assert.doesNotMatch(it.detail, /checked live/);
+  write(p.repo, "ROUNDS.md", "# Rounds\n\nBase: <commit hash>\n");
+  commit(p.repo, "reset");
+  assert.equal(item(check(p.dir, { assignments }), "base in place").ok, false);
 });
 
 test("two rounds fails with one valid round", () => {

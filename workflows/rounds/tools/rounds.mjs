@@ -33,7 +33,7 @@ import { codexCandidates, readCodex } from "../../feedback/tools/lib/codex.mjs";
 import { claudeCandidates, readClaude } from "../../feedback/tools/lib/claude.mjs";
 import { parseRounds, renderRound, setRoundPart, setRoundAttestation, splitCommits } from "./lib/rounds.mjs";
 import { studentAnswer } from "./lib/reply.mjs";
-import { readSubmit, SUBMIT, showcaseEntry, isPublic, answers, reportProblems, liveCommitProblem } from "./lib/submit.mjs";
+import { readSubmit, SUBMIT, showcaseEntry, isPublic, answers, reportProblems, liveCommitProblem, deployApi } from "./lib/submit.mjs";
 
 const RECORD = "ROUNDS.md";
 const PLANS = "docs/superpowers/plans";
@@ -436,9 +436,11 @@ async function onlineItems(dir, submit, add, fetch = globalThis.fetch) {
     }
   }
 
-  if (submit.kind === "deployed") {
+  // Only a project whose DEPLOY.md names an API has a live commit to compare; for any other, the
+  // item is left out rather than passed, so nothing reads as a check of the live site.
+  if (submit.kind === "deployed" && deployApi(dir)) {
     const problem = await liveCommitProblem(dir, fetch);
-    add("live commit", problem === null, problem ?? "The live API runs this project's HEAD, or names no API.");
+    add("live commit", problem === null, problem ?? "The live API runs this project's HEAD.");
   }
 }
 
@@ -458,8 +460,9 @@ function roundsItems(dir, submit, add) {
           : `"${p.base}" is not a commit in this repository.`,
   );
 
-  if (submit.kind === "deployed") add("base in place", true, "checked live");
-  else if (!baseOk) add("base in place", false, "There is no base to look in.");
+  if (!baseOk) add("base in place", false, "There is no base to look in.");
+  else if (submit.kind === "deployed")
+    add("base in place", true, 'A deployed base is not checked here: "project URL answers", in the online check, looks at the live site.');
   else {
     const { files, complete, incomplete } = examplesAt(dir, p.base);
     const diagram = files.some((f) => f.endsWith(".bpmn"));
