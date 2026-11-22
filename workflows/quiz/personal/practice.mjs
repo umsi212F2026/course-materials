@@ -28,7 +28,19 @@ const MATERIAL = { ps5: materialFor };
 
 const NO_CLONE = "no assignments clone was found, so no personal questions could be drafted";
 const noWork = (ps) => `no ${ps.toUpperCase()} work in your last commit, so no personal questions could be drafted`;
-const passed = (k) => `only ${k} of your drafted personal questions passed the check`;
+const UNREAD = "your last commit could not be read, so no personal questions could be drafted";
+const NONE_PASSED = "none of your drafted personal questions passed the check";
+const NO_INJECTION = "none of your drafted prompt-injection questions passed the check";
+const NO_ALT = "none of your drafted another-fix or defend-a-lane questions passed the check";
+
+// Why choosePersonal came up short, by its own rule: a lane fills the alt slot first, and the
+// injection slot only when an alt holds the first.
+function shortReason(kept) {
+  if (!kept.length) return NONE_PASSED;
+  const has = (kind) => kept.some((k) => k.kind === kind);
+  if (!has("injection") && !(has("alt") && has("lane"))) return NO_INJECTION;
+  return NO_ALT;
+}
 
 const git = (dir, ...args) => execFileSync("git", ["-C", dir, ...args], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
 
@@ -97,18 +109,18 @@ export function preparePersonal({ assignments, out, ps }) {
   if (!assignments) return { short: NO_CLONE };
   const build = MATERIAL[ps];
   if (!build) return { short: `no personal questions are drafted for ${ps}` };
+  const head = join(out, "head");
   let sha;
+  // git archive's output goes straight to tar's input, both run without a shell, so no path is
+  // ever parsed as a command. A clone with no commit, or either step failing, is a short draw.
   try {
     sha = git(assignments, "rev-parse", "--verify", "HEAD^{commit}");
+    mkdirSync(head, { recursive: true });
+    const tarball = execFileSync("git", ["-C", assignments, "archive", "HEAD"], { maxBuffer: 1 << 30, stdio: ["ignore", "pipe", "ignore"] });
+    execFileSync("tar", ["-x", "-C", head], { input: tarball, stdio: ["pipe", "ignore", "ignore"] });
   } catch {
-    return { short: noWork(ps), uncommitted: uncommittedIn(assignments, null) };
+    return { short: UNREAD };
   }
-  const head = join(out, "head");
-  mkdirSync(head, { recursive: true });
-  // git archive's output goes straight to tar's input, both run without a shell, so no path is
-  // ever parsed as a command.
-  const tarball = execFileSync("git", ["-C", assignments, "archive", "HEAD"], { maxBuffer: 1 << 30, stdio: ["ignore", "pipe", "ignore"] });
-  execFileSync("tar", ["-x", "-C", head], { input: tarball, stdio: ["pipe", "ignore", "pipe"] });
 
   const m = build(head);
   if (m.missing) return { short: noWork(ps), uncommitted: uncommittedIn(assignments, null) };
@@ -154,5 +166,5 @@ export function resumePersonal({ assignments, out, sha, ps, seed }) {
     kept.push({ id, kind: kindOf(id, ps, UNIQ), prompt: c.prompt, expected: c.expected, rubric: c.rubric });
   });
   const { items, short } = choosePersonal(kept, seed);
-  return { items, dropped, short: short ? passed(items.length) : null };
+  return { items, dropped, short: short ? shortReason(kept) : null };
 }
