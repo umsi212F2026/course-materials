@@ -757,7 +757,9 @@ export function readPoolSources(pool, root) {
     }
     return parts.slice(0, -1).join('/');
   };
-  const sources = new Set(Object.keys(pool.draw ?? {}).flatMap(keyParts).map(sourceOf));
+  // A PERSONAL KEY NAMES NO SOURCE (see personalStratum), so it is left out here, and neither a
+  // missing folder nor "names no source" is reported for it.
+  const sources = new Set(Object.keys(pool.draw ?? {}).flatMap(keyParts).filter((k) => !isPersonalKey(k)).map(sourceOf));
 
   for (const source of sources) {
     if (!source) {
@@ -777,6 +779,26 @@ export function readPoolSources(pool, root) {
 
   return { items, problems, sources: read };
 }
+
+const PERSONAL_PREFIX = 'personal:';
+const isPersonalKey = (key) => key.startsWith(PERSONAL_PREFIX);
+
+/** The personal questions a pool declares, as { ps, take }, or null when it declares none.
+ *
+ *  PERSONAL QUESTIONS ARE A STRATUM THAT NO BANK SUPPLIES. They are follow-ups about one student's
+ *  own problem-set work, so a pool names them with the key `personal:<ps>` and a take, and what
+ *  fills the stratum is decided per student by whoever draws, not read from tasks/. This module
+ *  only recognises the key: the stratum comes back empty, and it is never a source path. The first
+ *  such key wins if a pool has several. */
+export function personalStratum(pool) {
+  for (const [key, value] of Object.entries(pool.draw ?? {})) {
+    if (isPersonalKey(key)) return { ps: key.slice(PERSONAL_PREFIX.length), take: takeOf(value) };
+  }
+  return null;
+}
+
+/** How many questions a pool asks for in all: every draw's take, personal questions included. */
+export const askedOf = (pool) => Object.values(pool.draw ?? {}).reduce((n, v) => n + takeOf(v), 0);
 
 /** The keys a draw key joins with ` | `; a plain key is its own one part. */
 export const keyParts = (key) => key.split(" | ").map((k) => k.trim());
@@ -974,6 +996,14 @@ export function applyPool(bank, pool) {
       const sameScenario = typeof value === 'object' && value !== null && value.sameScenario === true;
       if (!Number.isInteger(take) || take < 1) {
         problems.push(`pool draws ${JSON.stringify(value)} from ${name}; a draw is a count, or { "take": <count>, "sameScenario": true }`);
+        continue;
+      }
+      if (isPersonalKey(name)) {
+        // Only ps5 has personal questions, and always two. The stratum is listed either way, so a
+        // wrong take is reported once here rather than also reading as a missing stratum.
+        const ps = name.slice(PERSONAL_PREFIX.length);
+        if (ps === 'ps5' && take !== 2) problems.push(`${name} takes exactly 2`);
+        strata.push({ name, take, items: [], personal: ps });
         continue;
       }
       const parts = keyParts(name);

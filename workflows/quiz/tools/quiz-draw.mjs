@@ -223,6 +223,11 @@ export function drawPractice(pool, root, { seed, preferUnseen = true } = {}) {
   const items = [];
   const shape = [];
   for (const s of withTopic) {
+    // A personal stratum has no bank items to draw. Whoever fills it adds its items and its shortfall.
+    if (s.personal) {
+      shape.push({ name: s.name, take: s.take, drawn: 0, personal: s.personal });
+      continue;
+    }
     const pickable = s.items.map((it) => twin.get(it)).filter(Boolean);
     // A same-scenario stratum is one scenario's run, chosen and ordered by the shared helper, so
     // the bake and practice agree on what "the same scenario" means. Unseen-first applies to the
@@ -259,6 +264,7 @@ export function drawPractice(pool, root, { seed, preferUnseen = true } = {}) {
   const drawnBy = new Map();
   for (const s of shape) drawnBy.set(s.name, (drawnBy.get(s.name) ?? 0) + s.drawn);
   for (const [name, value] of Object.entries(pool.draw ?? {})) {
+    if (name.startsWith("personal:")) continue;
     const take = takeOf(value);
     const got = drawnBy.get(name) ?? 0;
     if (got < take) problems.push(`${name} drew ${got} of the ${take} asked for`);

@@ -30,7 +30,7 @@ import { resolve, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { drawPractice, loadPool, listPools } from "./quiz-draw.mjs";
 import { collectAnswers, buildQueue, mergeGrades, itemGoals, gradedParts, parsePartKey, partKey, CREDIT_VALUE } from "./lib/grade.mjs";
-import { recordLabel, takeOf } from "./lib/bank.mjs";
+import { recordLabel, askedOf } from "./lib/bank.mjs";
 // THE QUIZ APP'S RENDERER, so a question looks here as it will on the day.
 import { markdown, markdownInline } from "./lib/markdown.mjs";
 // THE LEARN WORKFLOW'S READER, not a second one. What a practice quiz leaves behind is an
@@ -461,7 +461,7 @@ function listing() {
     process.exit(1);
   }
   for (const p of pools) {
-    const take = Object.values(p.draw ?? {}).reduce((n, k) => n + k, 0);
+    const take = askedOf(p);
     console.log(`  --session ${p.session}   the quiz of ${p.date}, ${take} questions   ${p.topic ?? ""}`.trimEnd());
   }
 }
@@ -510,7 +510,7 @@ function main() {
   // SAID IN ONE LINE, BECAUSE ONE LINE IS WHAT GETS PASSED ON. The problems above name each
   // short stratum and are what a person debugging wants; this is the sentence the student has
   // to hear, and the skill quotes it into the message that hands over the URL.
-  const asked = Object.values(pool.draw ?? {}).reduce((n, k) => n + takeOf(k), 0);
+  const asked = askedOf(pool);
   if (asked && items.length < asked) {
     console.error(
       `\nSHORT: this draw has ${items.length} questions, not the ${asked} this quiz asks for.`,
