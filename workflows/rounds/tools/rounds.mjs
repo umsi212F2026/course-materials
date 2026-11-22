@@ -33,7 +33,7 @@ import { codexCandidates, readCodex } from "../../feedback/tools/lib/codex.mjs";
 import { claudeCandidates, readClaude } from "../../feedback/tools/lib/claude.mjs";
 import { parseRounds, renderRound, setRoundPart, setRoundAttestation, splitCommits } from "./lib/rounds.mjs";
 import { studentAnswer } from "./lib/reply.mjs";
-import { readSubmit, SUBMIT } from "./lib/submit.mjs";
+import { readSubmit, SUBMIT, showcaseEntry, isPublic, answers, reportProblems, liveCommitProblem } from "./lib/submit.mjs";
 
 const RECORD = "ROUNDS.md";
 const PLANS = "docs/superpowers/plans";
@@ -288,8 +288,9 @@ function examplesAt(dir, hash) {
 }
 
 /** Every item the grader looks for that can be asked offline, in order, each with whether it passes
- *  and why. `assignments` is the root of the student's assignments repository. The online items
- *  come with `online`, once they exist. */
+ *  and why. `assignments` is the root of the student's assignments repository. With `online` the
+ *  online items follow, and the result is a promise, since they ask the network; `fetch` stands in
+ *  for the global one in tests. */
 export function check(dir, { assignments, online = false, fetch } = {}) {
   requireDir(dir);
   const items = [];
@@ -316,7 +317,59 @@ export function check(dir, { assignments, online = false, fetch } = {}) {
   }
   add("assignments pushed", pushed === null, pushed ?? "Everything under project/ in your assignments repository is committed and pushed.");
 
-  return { ok: items.every((i) => i.ok), items };
+  const result = () => ({ ok: items.every((i) => i.ok), items });
+  if (!online) return result();
+  return onlineItems(dir, submit, add, fetch).then(result);
+}
+
+/** Items 10 to 14, from the showcase pull request and what it points to. A negotiated project gets
+ *  only the pull request and the project URL, since its terms are its own. Never throws. */
+async function onlineItems(dir, submit, add, fetch = globalThis.fetch) {
+  const entry = submit.showcase ? await showcaseEntry(submit.showcase, fetch) : { state: null, card: null, problems: ["SUBMIT.md has no showcase pull request."] };
+  const card = entry.card;
+  const workUrl = submit.work !== null && submit.work !== "project/" ? submit.work : null;
+
+  const faults = [...entry.problems];
+  if (entry.state === "closed") faults.push("The pull request is closed without being merged.");
+  if (card) {
+    if (card.assignment !== "Final Project") faults.push(`The card's assignment is "${card.assignment}", not "Final Project".`);
+    if (workUrl && card.githubUrl !== workUrl) faults.push(`The card's githubUrl, ${card.githubUrl ?? "absent"}, is not ${workUrl}.`);
+    if (!workUrl && card.githubUrl !== undefined) faults.push("The card has a githubUrl, but the work is private (project/).");
+  }
+  const fine = !faults.length && card !== null;
+  add("showcase pull request", fine, fine ? `${entry.state}, adding ${entry.file}.` : faults.join(" ") || "No card was read.");
+
+  const noCard = "no showcase card to read the project URL from";
+  const projectUrl = card?.projectUrl;
+
+  if (submit.kind !== "negotiated") {
+    const repo = submit.kind === "workflow" ? workUrl : card?.githubUrl;
+    if (!repo) add("public repository", submit.kind !== "workflow", submit.kind === "workflow" ? "A workflow names its public repository as Work." : "No repository is given.");
+    else {
+      const pub = await isPublic(repo, fetch);
+      add("public repository", pub, pub ? `${repo} is public.` : `${repo} is not public, or could not be read.`);
+    }
+  }
+
+  if (!projectUrl) add("project URL answers", false, noCard);
+  else {
+    const a = await answers(projectUrl, fetch);
+    add("project URL answers", a.ok, a.ok ? `${projectUrl} answered ${a.status}.` : (a.error ?? `${projectUrl} answered ${a.status}.`));
+  }
+
+  if (submit.kind === "workflow") {
+    if (!projectUrl) add("report", false, noCard);
+    else if (!workUrl) add("report", false, "There is no repository URL in Work to check the report's links against.");
+    else {
+      const problems = await reportProblems(projectUrl, workUrl, fetch);
+      add("report", !problems.length, problems.length ? problems.join(" ") : "The report has its image and pinned links, and all of them answer.");
+    }
+  }
+
+  if (submit.kind === "deployed") {
+    const problem = await liveCommitProblem(dir, fetch);
+    add("live commit", problem === null, problem ?? "The live API runs this project's HEAD, or names no API.");
+  }
 }
 
 function roundsItems(dir, submit, add) {
@@ -387,7 +440,9 @@ const COMMANDS = {
   "add-round": (dir, ...rest) => String(addRound(dir, flags(rest, ROUND_FLAGS))),
   check: (dir, ...rest) => {
     const { assignments, online } = flags(rest, { assignments: "assignments", online: "online" }, ["online"]);
-    return JSON.stringify(check(dir, { assignments, online: online !== undefined }), null, 2);
+    const done = (r) => JSON.stringify(r, null, 2);
+    const r = check(dir, { assignments, online: online !== undefined });
+    return r instanceof Promise ? r.then(done) : done(r);
   },
   "take-reply": (dir, n, key, ...rest) => takeReply(dir, n, key, flags(rest, { transcript: "transcript" })),
 };
@@ -412,7 +467,7 @@ export function main(argv) {
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   try {
-    console.log(main(process.argv.slice(2)));
+    console.log(await main(process.argv.slice(2)));
   } catch (e) {
     console.error(e.message.split("\n")[0]);
     process.exit(1);

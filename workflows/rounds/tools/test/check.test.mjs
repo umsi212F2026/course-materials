@@ -209,12 +209,6 @@ test("negotiated skips the rounds items and needs TERMS.md", () => {
   assert.equal(withTerms.ok, true);
 });
 
-test("online is accepted and adds nothing", () => {
-  const { p, assignments } = fresh();
-  const r = check(p.dir, { assignments, online: true });
-  assert.deepEqual(r.items.map((i) => i.name), NAMES);
-});
-
 test("check without --assignments reports the SUBMIT items failing", () => {
   const { p } = fresh();
   const r = check(p.dir, {});
@@ -241,5 +235,7 @@ test("the CLI prints the items as JSON and exits 0 even when some fail", () => {
   assert.equal(run.status, 0, run.stderr);
   const out = JSON.parse(run.stdout);
   assert.equal(out.ok, false);
-  assert.equal(out.items.length, NAMES.length);
+  assert.deepEqual(out.items.slice(0, NAMES.length).map((i) => i.name), NAMES);
+  assert.equal(item(out, "showcase pull request").ok, false);
+  assert.equal(item(out, "project URL answers").detail, "no showcase card to read the project URL from");
 });
