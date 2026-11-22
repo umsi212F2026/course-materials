@@ -138,8 +138,10 @@ anything:
    else is dropped.
 2. Draft the candidates it asks for and write them where it says.
 3. Run the `--resume` command it printed, with escalated permission and in the foreground, as
-   above: it reads the clone again and opens the page on `127.0.0.1`. From here it prints what a
-   launch prints, the URL and any `SHORT:` line included.
+   above: it checks each draft against the commit by reading their assignments clone with
+   `git`, and opens the page on `127.0.0.1`, so the request covers both. A refused read drops
+   every draft, and the student gets a quiz with no personal questions for no reason they can
+   see. From here it prints what a launch prints, the URL and any `SHORT:` line included.
 
 **One draft, one `--resume`.** A `DROPPED:` line names a draft that failed the check and why. It
 is for you, and it is not a reason to draft again: a draw with fewer personal questions is served
@@ -147,9 +149,9 @@ like any short draw, and its `SHORT:` line says why. Only `NOT SERVED:`, which m
 candidates file itself could not be read, sends you back to fix the file as it says and run
 `--resume` again.
 
-**Volunteer nothing about the questions you drafted.** You know what they ask, which is the one
-thing the page otherwise keeps from you, and the block below tells them so. That is the whole of
-what you say about them unasked.
+**Volunteer nothing about the questions you drafted.** You know what they ask and what a good
+answer says, which is why you volunteer nothing, and the block below tells them that you know.
+That is the whole of what you say about them unasked.
 
 Take the URL from what it printed, and send them this as **the last thing in the turn**, with
 that URL rather than the one below, which is only the usual one:
@@ -162,8 +164,8 @@ that URL rather than the one below, which is only the usual one:
 > back here and tell me when you have pressed Submit.**
 
 **If you drafted personal questions and any were served**, which the listing above the URL shows
-as a `personal:` line with its count, that count goes into this paragraph, and the paragraph goes
-into the block after its first:
+as a line like `2 from personal:ps5`, that count goes into this paragraph as `<k>`, and the
+paragraph goes into the block after its first:
 
 > **I wrote `<k>` of these questions myself, about your own PS5 work, so I know what those ask.**
 > The rest come from the pool.
@@ -181,12 +183,10 @@ rest**, with what the `PROBLEMS` lines above it name as missing:
 > sitting this again would give you the whole quiz.
 
 **Where the `SHORT:` line gives a reason of its own, about personal questions, that reason goes
-in as its second sentence**, said as yours where it says "your drafted", because you drafted
-them:
+in as its second sentence, as printed:**
 
-> **This draw is short: 4 questions, not the 5 this quiz asks for.** None of the
-> prompt-injection questions I drafted about your PS5 work passed the check, so one personal
-> question is missing.
+> **This draw is short: 4 questions, not the 5 this quiz asks for.** None of the drafted
+> prompt-injection questions passed the check.
 
 **A short draw is served rather than refused, and saying so is the whole of your part in it.**
 Practising the rest is worth doing and they are the one who decides. But nobody can count the

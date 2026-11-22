@@ -29,9 +29,9 @@ const MATERIAL = { ps5: materialFor };
 const NO_CLONE = "no assignments clone was found, so no personal questions could be drafted";
 const noWork = (ps) => `no ${ps.toUpperCase()} work in your last commit, so no personal questions could be drafted`;
 const UNREAD = "your last commit could not be read, so no personal questions could be drafted";
-const NONE_PASSED = "none of your drafted personal questions passed the check";
-const NO_INJECTION = "none of your drafted prompt-injection questions passed the check";
-const NO_ALT = "none of your drafted another-fix or defend-a-lane questions passed the check";
+const NONE_PASSED = "none of the drafted personal questions passed the check";
+const NO_INJECTION = "none of the drafted prompt-injection questions passed the check";
+const NO_ALT = "none of the drafted another-fix or defend-a-lane questions passed the check";
 
 // Why choosePersonal came up short, by its own rule: a lane fills the alt slot first, and the
 // injection slot only when an alt holds the first.

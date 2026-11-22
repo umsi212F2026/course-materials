@@ -122,21 +122,21 @@ test("resumePersonal drops a candidate quoting a line not in HEAD, naming the li
   const r = resumePersonal({ assignments: p.repo, out: p.out, sha: p.sha, ps: "ps5", seed: "s" });
   assert.deepEqual(r.dropped, [{ id: "p-ps5-practice-alt-1", reason: `ps5/skills/extract/SKILL.md has no such lines 4 at ${p.sha.slice(0, 7)}` }]);
   assert.deepEqual(r.items.map((i) => i.id), ["p-ps5-practice-injection"]);
-  assert.equal(r.short, "none of your drafted another-fix or defend-a-lane questions passed the check");
+  assert.equal(r.short, "none of the drafted another-fix or defend-a-lane questions passed the check");
 });
 
 test("resumePersonal says which kind fell short, or that none passed", () => {
   const p = prepared();
   const resume = () => resumePersonal({ assignments: p.repo, out: p.out, sha: p.sha, ps: "ps5", seed: "s" });
   writeCandidates(p.out, [cand(p.sha, "p-ps5-practice-alt-1", { evidence: [{ file: "ps5/skills/extract/SKILL.md", lines: "99", sha: p.sha }] })]);
-  assert.deepEqual([resume().items.length, resume().short], [0, "none of your drafted personal questions passed the check"]);
+  assert.deepEqual([resume().items.length, resume().short], [0, "none of the drafted personal questions passed the check"]);
   writeCandidates(p.out, [cand(p.sha, "p-ps5-practice-alt-1"), cand(p.sha, "p-ps5-practice-alt-2")]);
-  assert.deepEqual([resume().items.length, resume().short], [1, "none of your drafted prompt-injection questions passed the check"]);
+  assert.deepEqual([resume().items.length, resume().short], [1, "none of the drafted prompt-injection questions passed the check"]);
   // Lanes alone fill the alt slot, so it is the injection that is missing.
   writeCandidates(p.out, [cand(p.sha, "p-ps5-practice-lane")]);
-  assert.equal(resume().short, "none of your drafted prompt-injection questions passed the check");
+  assert.equal(resume().short, "none of the drafted prompt-injection questions passed the check");
   writeCandidates(p.out, [injection(p.sha)]);
-  assert.deepEqual([resume().items.length, resume().short], [1, "none of your drafted another-fix or defend-a-lane questions passed the check"]);
+  assert.deepEqual([resume().items.length, resume().short], [1, "none of the drafted another-fix or defend-a-lane questions passed the check"]);
   // An alt and a lane cover both slots.
   writeCandidates(p.out, [cand(p.sha, "p-ps5-practice-alt-1"), cand(p.sha, "p-ps5-practice-lane")]);
   assert.equal(resume().short, null);

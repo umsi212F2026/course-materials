@@ -584,7 +584,7 @@ function resume(dir, port) {
   }
   for (const x of r.dropped) console.error(`DROPPED: ${x.id ?? "(no id)"}: ${x.reason}`);
   const items = [...d.items, ...r.items];
-  const short = r.items.length < d.personal.take ? r.short ?? "none of your drafted personal questions passed the check" : null;
+  const short = r.items.length < d.personal.take ? r.short ?? "none of the drafted personal questions passed the check" : null;
   sayShort(items.length, d.asked, short);
   serve({ items, strata: filled(d.strata, r.items.length), images: d.images, source: d.source, out: dir, port, rerun: `--resume ${dir}` });
 }
