@@ -25,6 +25,7 @@ import { pathToFileURL } from "node:url";
 import { homedir } from "node:os";
 import { parseRecord, qualifies, setAttestation, setPart, renderEntry, unixLines } from "./lib/record.mjs";
 import { git, commitExists, filesAt, filesChanged, isAfter } from "./lib/git.mjs";
+import { studentAnswer } from "../../rounds/tools/lib/reply.mjs";
 import { findSession, harnessFor } from "../../feedback/tools/export-session.mjs";
 import { codexCandidates, readCodex } from "../../feedback/tools/lib/codex.mjs";
 import { claudeCandidates, readClaude } from "../../feedback/tools/lib/claude.mjs";
@@ -293,35 +294,6 @@ export function takeReply(repo, n, key, { transcript, home = homedir(), now = ne
   writeFileSync(join(repo, RECORD), next);
   const part = parseRecord(next).entries.find((e) => e.n === Number(n)).parts[key].text;
   return `recorded your words in entry ${n}, ${key}:\n\n${part}`;
-}
-
-/** The student's last message, if it answers a question that asked for their own words.
- *
- *  IT MUST ANSWER THAT QUESTION, OR NOTHING IS COPIED. The last message the reader returns is not
- *  always the reply: a message with an image in it is not typed text and is skipped, which would
- *  leave an older answer, to a different question, as the last one. So the agent's last words
- *  before it must be one of the skills' own-words questions, all of which say "own words".
- *
- *  A REPLY THROUGH CODEX'S QUESTION TOOL ARRIVES WRAPPED, as JSON inside a tag, and Claude Code
- *  marks a picked option as `[answered: ...]`. The student's words are the answer inside. */
-function studentAnswer(entries) {
-  const at = entries.findLastIndex((e) => e.role === "student");
-  if (at < 0) throw new Error("There is no message from you in this session to copy.");
-  const asked = entries.slice(0, at).findLast((e) => e.role === "agent" && e.text.trim());
-  if (!asked || !/own words/i.test(asked.text))
-    throw new Error("Your last message doesn't answer a question asking for your own words, so nothing was copied. Ask the question again.");
-  let words = entries[at].text;
-  const wrapped = /^\s*<send_user_message_question_reply>([\s\S]*)<\/send_user_message_question_reply>\s*$/.exec(words);
-  if (wrapped) {
-    try {
-      words = JSON.parse(wrapped[1]).map((a) => a.answer ?? "").join("\n\n");
-    } catch {
-      throw new Error("Your answer came through the question tool in a form I can't read. Ask the question again as a plain message.");
-    }
-  }
-  words = words.replace(/^\s*\[answered: ([\s\S]*)\]\s*$/, "$1");
-  if (!words.trim()) throw new Error("Your last message is empty, so nothing was copied.");
-  return words;
 }
 
 const pad = (n) => String(n).padStart(2, "0");
