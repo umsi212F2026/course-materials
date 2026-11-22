@@ -4,6 +4,7 @@
   "date": "2026-11-24",
   "draw": {
     "learning-topics/cloud-workflows-2026-11/a-words": 1,
-    "learning-topics/cloud-workflows-2026-11/a-flip-one-fact": { "take": 2, "sameScenario": true }
+    "learning-topics/cloud-workflows-2026-11/a-flip-one-fact": { "take": 2, "sameScenario": true },
+    "personal:ps5": 2
   }
 }
