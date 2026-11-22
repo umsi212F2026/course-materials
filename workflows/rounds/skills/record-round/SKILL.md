@@ -47,7 +47,8 @@ Never edit `ROUNDS.md` yourself. Run every git command as `git -C <dir>`, limite
    say nothing about the record.
 2. **Find the round.** If you were handed a plan, spec and commits, use them. Otherwise, first
    look at `git -C <dir> status`. **If a spec or plan is not committed yet, commit it on its
-   own, before any code**: `git -C <dir> commit -m "<what it plans>" -- <spec> <plan>`. Then
+   own, before any code**: `git -C <dir> add -- <spec> <plan>`, then
+   `git -C <dir> commit -m "<what it plans>" -- <spec> <plan>`. Then
    commit any implementation that is not committed yet, with a message that says what changed.
    Then run `candidates <dir>` and take the newest plan with `recorded: false`, its `spec` and
    its `suggestedCommits`.

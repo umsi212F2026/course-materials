@@ -153,8 +153,10 @@ Do all of this before you say anything more, in the case that applies.
    `INSTRUCTIONS.md`, `ROUNDS.md` and `SUBMIT.md` as they are.
 
 **On Windows, run these through the bash that came with git**, as
-`& "C:\Program Files\Git\bin\bash.exe" -c "<the command>"`, with forward slashes in every path,
-as with the search for secrets above. PowerShell's own `tar`, `cp` and `grep` are not these.
+`& "C:\Program Files\Git\bin\bash.exe" -c "<the command>"`, as with the search for secrets
+above, and write every path in its `/c/Users/...` form, never `C:\...` or `C:/...`: that `tar`
+reads a colon in a path as the name of another machine. PowerShell's own `tar`, `cp` and `grep`
+are not these.
 
 For something new, copy nothing.
 
