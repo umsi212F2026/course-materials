@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { join, dirname, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { execFileSync } from "node:child_process";
-import { readBank, readPoolSources, applyPool, recordLabel, keyParts, takeOf, pickSameScenario, SAME_SCENARIO_NOTE, personalStratum, askedOf } from "../lib/bank.mjs";
+import { readBank, readPoolSources, applyPool, recordLabel, keyParts, takeOf, pickSameScenario, SAME_SCENARIO_NOTE, personalStratum, askedOf, isPersonalKey } from "../lib/bank.mjs";
 import { drawPractice } from "../quiz-draw.mjs";
 
 const REPO = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "..");
@@ -369,9 +369,12 @@ test(`every real pool draws as it did at ${BASELINE}`, async (t) => {
   let compared = 0;
   for (const name of readdirSync(dir).filter((n) => n.endsWith(".pool.json")).sort()) {
     const pool = JSON.parse(readFileSync(join(dir, name), "utf8"));
-    const sources = pool.topic
+    // The baseline predates personal keys and would read one as a bank, so it sees the pool without.
+    const personalKeys = Object.keys(pool.draw ?? {}).filter(isPersonalKey);
+    const plain = { ...pool, draw: pool.draw && Object.fromEntries(Object.entries(pool.draw).filter(([k]) => !isPersonalKey(k))) };
+    const sources = plain.topic
       ? [join("learning-topics", pool.topic)]
-      : Object.keys(pool.draw ?? {}).flatMap(keyParts).map((k) => k.split("/").slice(0, -1).join("/"));
+      : Object.keys(plain.draw ?? {}).flatMap(keyParts).map((k) => k.split("/").slice(0, -1).join("/"));
     const missing = sources.filter((s) => !existsSync(join(ROOT, s)));
     if (missing.length) {
       t.diagnostic(`${name}: skipped, ${missing.join(", ")} not under ${ROOT}`);
@@ -382,9 +385,17 @@ test(`every real pool draws as it did at ${BASELINE}`, async (t) => {
       strata: r.strata.map((s) => [s.name, s.take, s.items.length]),
       problems: r.problems.filter((p) => !p.endsWith(" (framing rule)")),
     });
-    const before = shape(old.applyPool(old.readPoolSources(pool, ROOT), pool));
-    const after = shape(applyPool(readPoolSources(pool, ROOT), pool));
+    const before = shape(old.applyPool(old.readPoolSources(plain, ROOT), plain));
+    const whole = shape(applyPool(readPoolSources(pool, ROOT), pool));
+    // The new library gives the old output plus exactly the personal strata: name, take, no items.
+    const isPersonal = (row) => isPersonalKey(row[0]);
+    const after = { strata: whole.strata.filter((r) => !isPersonal(r)), problems: whole.problems };
     assert.deepEqual(after, before, name);
+    assert.deepEqual(
+      whole.strata.filter(isPersonal),
+      personalKeys.map((k) => [k, takeOf(pool.draw[k]), 0]),
+      name,
+    );
     t.diagnostic(`${name}: same ${JSON.stringify(after.strata)}, ${after.problems.length} problems`);
     compared++;
   }
