@@ -62,8 +62,9 @@ Never edit `ROUNDS.md` yourself. Run every git command as `git -C <dir>`, limite
    When you are not sure, it is none of them. The student decides what to record, and the
    grader judges what counts.
 
-**When `find-rounds` hands you a round**, do everything above, then skip step 1 below: the
-student has already chosen to record it. At the end of step 3 send no block. Commit, then go
+**When `find-rounds` hands you a round**, do everything above, then in step 1 below skip the
+offer question and go straight to `add-round`, refusal handling included: the student has
+already chosen to record it. At the end of step 3 send no block. Commit, then go
 back to `find-rounds`, which says what comes next.
 
 ## What you do

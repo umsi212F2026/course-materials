@@ -94,32 +94,49 @@ If they answer "No, not yet", send this and stop:
 > again to start your final project. Nothing has been created yet.
 
 Choose a short name that says what the project is, in lowercase words joined by hyphens, and
-check that the student has no repository by that name: `gh repo view <login>/<name>` must fail. Then ask:
+check that the student has no repository by that name: `gh repo view <login>/<name>` must
+fail. For an extension, do steps 1 and 2 of "The copy" below first, and list the top-level
+files and folders left in `<tmp>`. Then ask:
 
 - **Title:** "I'll create a **public** repository, `<login>/<name>`, at
   https://github.com/<login>/<name>. Anyone on the internet will be able to see everything you
-  push to it. Is that name OK?"
+  push to it. <For an extension: "It will start with these, copied from your Problem Set <n>
+  folder: <the top-level names in `<tmp>`>, plus `AGENTS.md` and `ROUNDS.md`."> Is that name
+  OK?"
 - **Options:** "No, use a different name", "Yes, create it"
 
-If they answer no, or give another name, check that one the same way and ask again with it.
-**Do not run `gh repo create` until they have answered "Yes, create it" to a name.**
+If they answer "No, use a different name", send this and end the turn:
+
+> What would you like the repository to be called?
+
+When they give a name, or give one as their answer, check it the same way and ask again with
+it. **Do not run `gh repo create` until they have answered "Yes, create it" to a name.**
 
 ## Then set it up
 
 Do all of this before you say anything more, in the case that applies.
 
+**The copy**, for an extension, from the problem set's folder in `assignments`
+(`ps1-data-analysis`, `ps2-web-app`, `ps3`, `ps4` or `ps5`) into `<target>`, the project folder:
+
+1. Make an empty temporary folder, `<tmp>`, outside every repository, and run
+   `git -C <assignments> archive HEAD:<folder> | tar -x -C <tmp>`. It takes committed files
+   only.
+2. Delete from `<tmp>`, at any depth: every `AGENTS.md`, `INSTRUCTIONS.md`, `CHANGES.md`,
+   `REFLECTION.md` and `QUESTIONS.md`; every folder named `rubrics` or `tasks`; and every file
+   named `.env` or `.env.<something>` except `.env.example`. The student's answers and the
+   course's own files stay out of the project.
+3. `cp -Rn <tmp>/. <target>/`, which never replaces a file already there, then delete `<tmp>`.
+
+For something new, copy nothing.
+
 **A new public repository.** From `<parent>`:
 
 1. `gh repo create <name> --public --clone`. The new folder is `<parent>/<name>`.
-2. **For an extension**, copy in the problem set's committed files, from its folder in
-   `assignments` (`ps1-data-analysis`, `ps2-web-app`, `ps3`, `ps4` or `ps5`), to the root of the
-   new repository: `git -C <assignments> archive HEAD:<folder> | tar -x -C <parent>/<name>`.
-   Then delete from the copy its `AGENTS.md`, `INSTRUCTIONS.md` and, for Problem Set 5,
-   `CHANGES.md`, and any file named `.env` or `.env.<something>` other than `.env.example`. For
-   something new, copy nothing.
+2. For an extension, finish the copy into `<parent>/<name>`.
 3. Copy `<assignments>/project/AGENTS.md` and `<assignments>/project/ROUNDS.md` into the root.
 4. `git -C <parent>/<name> add -A`, commit with the message `Start the final project`, then
-   `git branch -M main` and `git push -u origin main`.
+   `git -C <parent>/<name> branch -M main` and `git -C <parent>/<name> push -u origin main`.
 
 **The public repository a Problem Set 3 is already in.** Look in `<parent>` for a folder, other
 than `course-materials`, `learning-topics` and `assignments`, whose `git remote get-url origin`
@@ -142,8 +159,11 @@ rather than replacing it. Commit with the message `Start the final project`, and
 **For either public repository**, add `Final project: <absolute path of the repository>` to
 `~/.codex/AGENTS.md`, on the line after `Assignments:`. Leave the rest of the file as it is.
 
-**Private, in `project/`.** Create nothing: `project/` already has its `AGENTS.md` and
-`ROUNDS.md`, and `~/.codex/AGENTS.md` gets no line.
+**Private, in `project/`.** Create no repository: `project/` already has its `AGENTS.md`,
+`ROUNDS.md`, `INSTRUCTIONS.md`, `SUBMIT.md` and `README.md`, and `~/.codex/AGENTS.md` gets no
+line. For an extension, do the copy into `<assignments>/project`; step 3 keeps those five files
+as they are. Then `git -C <assignments> add project` and commit with the message
+`project: copy Problem Set <n>`.
 
 **In every case**, fill in `Kind:`, `Extends:` and `Work:` in `<assignments>/project/SUBMIT.md`,
 replacing only those three lines' values and leaving `Showcase:` as it is. `Work:` is the
@@ -166,8 +186,10 @@ the others:
 >
 > (Adopted Problem Set 3) It's your Problem Set 3 repository, with `ROUNDS.md` added.
 >
-> (Private, in `project/`) Your code goes in that folder. For an extension, copy your Problem
-> Set <n> work in there first; I can do that for you.
+> (Private, in `project/`, extension) It has your Problem Set <n> work in it, copied from its
+> folder in `assignments`.
+>
+> (Private, in `project/`, something new) Your code goes in that folder.
 >
 > **Next, get your base working and commit it:** <for an extension of Problem Set 1 to 4, "your
 > problem set's work, publicly deployed"; for a Problem Set 5 extension, "your Problem Set 5
