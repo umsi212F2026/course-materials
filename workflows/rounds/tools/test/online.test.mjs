@@ -309,6 +309,15 @@ test("a deployed project whose PR read is rate-limited does not pass public repo
     assert.equal(item(r, name).ok, false, name);
     assert.equal(item(r, name).unresolved, true, name);
   }
+  assert.equal(item(r, "public repository").detail, "no showcase card to read the project URL from");
+});
+
+test("a bare 429 on the card read leaves the showcase and its card-dependent items unresolved", async () => {
+  const r = await run({ ...prRoutes(), ...siteRoutes, [RAW]: { ...reply("", 429), headers: new Headers() } });
+  for (const name of ["showcase pull request", "project URL answers", "report"]) {
+    assert.equal(item(r, name).ok, false, name);
+    assert.equal(item(r, name).unresolved, true, name);
+  }
 });
 
 test("a 404 is a plain failure", async () => {

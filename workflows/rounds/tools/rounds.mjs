@@ -428,7 +428,7 @@ async function onlineItems(dir, submit, add, fetchFn = globalThis.fetch) {
 
   if (submit.kind !== "negotiated") {
     const repo = submit.kind === "workflow" ? workUrl : card?.githubUrl;
-    if (!repo && cardUnresolved && submit.kind !== "workflow") add("public repository", false, "No repository is given.", true);
+    if (!repo && cardUnresolved && submit.kind !== "workflow") add("public repository", false, noCard, true);
     else if (!repo) add("public repository", submit.kind !== "workflow", submit.kind === "workflow" ? "A workflow names its public repository as Work." : "No repository is given.");
     else {
       try {

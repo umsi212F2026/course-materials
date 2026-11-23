@@ -57,7 +57,8 @@ const GITHUB_HOSTS = ["api.github.com", "github.com", "raw.githubusercontent.com
 
 /** Wraps `fetchFn` to notice trouble that is the network's or GitHub's, not the student's: a call
  *  that throws at a GitHub host, a throw whose error is marked `unresolved`, GitHub's rate limit,
- *  or a GitHub server error. `take()` reports whether any call since the last `take()` met such
+ *  any 429 from a GitHub host (a throttled raw or web read carries no rate-limit header), or a
+ *  GitHub server error. `take()` reports whether any call since the last `take()` met such
  *  trouble, and clears the flag. The wrapper sits below `get`, which replaces a thrown error with a
  *  new one that carries none of the original's properties. A student's own site timing out is not
  *  counted, since that is the student's to fix. */
@@ -80,7 +81,7 @@ export function trackTransient(fetchFn) {
         throw e;
       }
       const limited = (res.status === 403 || res.status === 429) && res.headers?.get?.("x-ratelimit-remaining") === "0";
-      if (limited || (isGithub(url) && res.status >= 500)) hit = true;
+      if (limited || (isGithub(url) && (res.status === 429 || res.status >= 500))) hit = true;
       return res;
     },
     take() {
