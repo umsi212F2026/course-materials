@@ -265,6 +265,44 @@ test("a timeout reads as not answering, with the URL in the detail", async () =>
   assert.match(it.detail, /did not answer/);
 });
 
+const run = (routes) => check(passingProject().dir, { assignments: assignmentsRepo(), online: true, fetch: fake(routes) });
+const rateLimitedReply = { status: 403, headers: { get: (h) => (h === "x-ratelimit-remaining" ? "0" : null) } };
+
+test("rate-limited showcase read is unresolved", async () => {
+  const it = item(await run({ ...prRoutes(), ...siteRoutes, [API]: rateLimitedReply }), "showcase pull request");
+  assert.equal(it.ok, false);
+  assert.equal(it.unresolved, true);
+});
+
+test("GitHub API timeout is unresolved", async () => {
+  const it = item(await run({ ...prRoutes(), ...siteRoutes, "https://api.github.com/repos/me/proj": timeout() }), "public repository");
+  assert.equal(it.ok, false);
+  assert.equal(it.unresolved, true);
+});
+
+test("student site timeout is not unresolved", async () => {
+  const it = item(await run({ ...prRoutes(), ...siteRoutes, [SITE]: timeout() }), "project URL answers");
+  assert.equal(it.ok, false);
+  assert.equal("unresolved" in it, false);
+});
+
+test("an error marked unresolved by the caller's fetch is unresolved", async () => {
+  const it = item(await run({ ...prRoutes(), ...siteRoutes, [SITE]: Object.assign(new Error("down"), { unresolved: true }) }), "project URL answers");
+  assert.equal(it.ok, false);
+  assert.equal(it.unresolved, true);
+});
+
+test("a 404 is a plain failure", async () => {
+  const it = item(await run(siteRoutes), "showcase pull request");
+  assert.equal(it.ok, false);
+  assert.equal("unresolved" in it, false);
+});
+
+test("passing items carry no unresolved key", async () => {
+  const r = await run({ ...prRoutes(), ...siteRoutes });
+  assert.equal(r.items.some((i) => "unresolved" in i), false);
+});
+
 test("deployed runs the live commit item and not the report", async () => {
   const p = deployedProject("API: https://api.example.com");
   const a = assignmentsRepo({ submit: submitText({ kind: "deployed", work: "project/" }) });

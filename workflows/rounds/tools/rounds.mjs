@@ -39,7 +39,7 @@ import { claudeCandidates, readClaude } from "../../feedback/tools/lib/claude.mj
 import { parseRounds, renderRound, setRoundPart, setRoundAttestation, splitCommits } from "./lib/rounds.mjs";
 import { studentAnswer } from "./lib/reply.mjs";
 import { startProjectMessage, reportMessage, candidatesMessage, cannotLookMessage, checkLabel } from "./lib/say.mjs";
-import { readSubmit, SUBMIT, showcaseEntry, isPublic, answers, reportProblems, liveCommitProblem, deployApi } from "./lib/submit.mjs";
+import { readSubmit, SUBMIT, trackTransient, showcaseEntry, isPublic, answers, reportProblems, liveCommitProblem, deployApi } from "./lib/submit.mjs";
 
 const RECORD = "ROUNDS.md";
 const PLANS = "docs/superpowers/plans";
@@ -366,7 +366,9 @@ function examplesAt(dir, hash) {
 export function check(dir, { assignments, online = false, fetch } = {}) {
   requireDir(dir);
   const items = [];
-  const add = (name, ok, detail) => items.push({ name, ok, detail });
+  // `unresolved` marks an online failure that is the network's or GitHub's, not the student's; it is
+  // present only on a failing item.
+  const add = (name, ok, detail, unresolved) => items.push({ name, ok, detail, ...(!ok && unresolved ? { unresolved: true } : {}) });
   const submit = readSubmit(assignments);
 
   if (submit.kind === "negotiated") {
@@ -396,7 +398,13 @@ export function check(dir, { assignments, online = false, fetch } = {}) {
 
 /** Items 10 to 14, from the showcase pull request and what it points to. A negotiated project gets
  *  only the pull request and the project URL, since its terms are its own. Never throws. */
-async function onlineItems(dir, submit, add, fetch = globalThis.fetch) {
+async function onlineItems(dir, submit, add, fetchFn = globalThis.fetch) {
+  // Each item's requests are followed by its `add`, which reads and clears the flag, so a flag
+  // always belongs to the one item whose requests raised it.
+  const tracker = trackTransient(fetchFn);
+  const fetch = tracker.fetch;
+  const take = tracker.take;
+  take();
   const entry = submit.showcase ? await showcaseEntry(submit.showcase, fetch) : { state: null, card: null, problems: ["SUBMIT.md has no showcase pull request."] };
   const card = entry.card;
   const workUrl = submit.work !== null && submit.work !== "project/" ? submit.work : null;
@@ -409,7 +417,7 @@ async function onlineItems(dir, submit, add, fetch = globalThis.fetch) {
     if (!workUrl && card.githubUrl !== undefined) faults.push("The card has a githubUrl, but the work is private (project/).");
   }
   const fine = !faults.length && card !== null;
-  add("showcase pull request", fine, fine ? `${entry.state}, adding ${entry.file}.` : faults.join(" ") || "No card was read.");
+  add("showcase pull request", fine, fine ? `${entry.state}, adding ${entry.file}.` : faults.join(" ") || "No card was read.", take());
 
   const noCard = "no showcase card to read the project URL from";
   const projectUrl = card?.projectUrl;
@@ -420,9 +428,9 @@ async function onlineItems(dir, submit, add, fetch = globalThis.fetch) {
     else {
       try {
         const pub = await isPublic(repo, fetch);
-        add("public repository", pub, pub ? `${repo} is public.` : `${repo} is not public, or could not be read.`);
+        add("public repository", pub, pub ? `${repo} is public.` : `${repo} is not public, or could not be read.`, take());
       } catch (e) {
-        add("public repository", false, e.message);
+        add("public repository", false, e.message, take());
       }
     }
   }
@@ -430,7 +438,7 @@ async function onlineItems(dir, submit, add, fetch = globalThis.fetch) {
   if (!projectUrl) add("project URL answers", false, noCard);
   else {
     const a = await answers(projectUrl, fetch);
-    add("project URL answers", a.ok, a.ok ? `${projectUrl} answered ${a.status}.` : (a.error ?? `${projectUrl} answered ${a.status}.`));
+    add("project URL answers", a.ok, a.ok ? `${projectUrl} answered ${a.status}.` : (a.error ?? `${projectUrl} answered ${a.status}.`), take());
   }
 
   if (submit.kind === "workflow") {
@@ -438,7 +446,7 @@ async function onlineItems(dir, submit, add, fetch = globalThis.fetch) {
     else if (!workUrl) add("report", false, "There is no repository URL in Work to check the report's links against.");
     else {
       const problems = await reportProblems(projectUrl, workUrl, fetch);
-      add("report", !problems.length, problems.length ? problems.join(" ") : "The report has its image and pinned links, and all of them answer.");
+      add("report", !problems.length, problems.length ? problems.join(" ") : "The report has its image and pinned links, and all of them answer.", take());
     }
   }
 
@@ -446,7 +454,7 @@ async function onlineItems(dir, submit, add, fetch = globalThis.fetch) {
   // item is left out rather than passed, so nothing reads as a check of the live site.
   if (submit.kind === "deployed" && deployApi(dir)) {
     const problem = await liveCommitProblem(dir, fetch);
-    add("live commit", problem === null, problem ?? "The live API runs this project's HEAD.");
+    add("live commit", problem === null, problem ?? "The live API runs this project's HEAD.", take());
   }
 }
 

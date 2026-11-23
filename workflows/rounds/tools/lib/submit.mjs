@@ -53,12 +53,51 @@ const API = "https://api.github.com";
 const TIMEOUT_MS = 60000;
 const HEADERS = { "User-Agent": "si212-rounds-check", Accept: "application/vnd.github+json" };
 
+const GITHUB_HOSTS = ["api.github.com", "github.com", "raw.githubusercontent.com"];
+
+/** Wraps `fetchFn` to notice trouble that is the network's or GitHub's, not the student's: a call
+ *  that throws at a GitHub host, a throw whose error is marked `unresolved`, GitHub's rate limit,
+ *  or a GitHub server error. `take()` reports whether any call since the last `take()` met such
+ *  trouble, and clears the flag. The wrapper sits below `get`, which replaces a thrown error with a
+ *  new one that carries none of the original's properties. A student's own site timing out is not
+ *  counted, since that is the student's to fix. */
+export function trackTransient(fetchFn) {
+  let hit = false;
+  const isGithub = (url) => {
+    try {
+      return GITHUB_HOSTS.includes(new URL(String(url?.url ?? url)).hostname);
+    } catch {
+      return false;
+    }
+  };
+  return {
+    async fetch(url, opts) {
+      let res;
+      try {
+        res = await fetchFn(url, opts);
+      } catch (e) {
+        if (isGithub(url) || e?.unresolved === true) hit = true;
+        throw e;
+      }
+      const limited = (res.status === 403 || res.status === 429) && res.headers?.get?.("x-ratelimit-remaining") === "0";
+      if (limited || (isGithub(url) && res.status >= 500)) hit = true;
+      return res;
+    },
+    take() {
+      const was = hit;
+      hit = false;
+      return was;
+    },
+  };
+}
+
 /** A request with the timeout and the header GitHub requires. Throws on a network failure, with
  *  the URL in the message so the caller can report it, and on GitHub's rate limit, with an error
  *  marked `rateLimited` that says when to try again.
  *
- *  THE CHECKS STAY UNSIGNED, so GitHub allows each address 60 requests an hour. A classroom sharing one
- *  address can use them up, and the student needs to hear that, not a bare 403. */
+ *  THE STUDENT'S CHECKS ARE UNSIGNED, so GitHub allows each address 60 requests an hour. A classroom
+ *  sharing one address can use them up, and the student needs to hear that, not a bare 403. A caller
+ *  such as the grader may pass a signed `fetch`. */
 async function get(url, fetchFn) {
   let res;
   try {
