@@ -417,14 +417,19 @@ async function onlineItems(dir, submit, add, fetchFn = globalThis.fetch) {
     if (!workUrl && card.githubUrl !== undefined) faults.push("The card has a githubUrl, but the work is private (project/).");
   }
   const fine = !faults.length && card !== null;
-  add("showcase pull request", fine, fine ? `${entry.state}, adding ${entry.file}.` : faults.join(" ") || "No card was read.", take());
+  const showcaseTrouble = take();
+  add("showcase pull request", fine, fine ? `${entry.state}, adding ${entry.file}.` : faults.join(" ") || "No card was read.", showcaseTrouble);
+  // When the pull request could not be read for the network's or GitHub's reasons, every item that
+  // needs the card inherits that, so none of them reads as the student's fault.
+  const cardUnresolved = card === null && showcaseTrouble;
 
   const noCard = "no showcase card to read the project URL from";
   const projectUrl = card?.projectUrl;
 
   if (submit.kind !== "negotiated") {
     const repo = submit.kind === "workflow" ? workUrl : card?.githubUrl;
-    if (!repo) add("public repository", submit.kind !== "workflow", submit.kind === "workflow" ? "A workflow names its public repository as Work." : "No repository is given.");
+    if (!repo && cardUnresolved && submit.kind !== "workflow") add("public repository", false, "No repository is given.", true);
+    else if (!repo) add("public repository", submit.kind !== "workflow", submit.kind === "workflow" ? "A workflow names its public repository as Work." : "No repository is given.");
     else {
       try {
         const pub = await isPublic(repo, fetch);
@@ -435,14 +440,14 @@ async function onlineItems(dir, submit, add, fetchFn = globalThis.fetch) {
     }
   }
 
-  if (!projectUrl) add("project URL answers", false, noCard);
+  if (!projectUrl) add("project URL answers", false, noCard, cardUnresolved);
   else {
     const a = await answers(projectUrl, fetch);
     add("project URL answers", a.ok, a.ok ? `${projectUrl} answered ${a.status}.` : (a.error ?? `${projectUrl} answered ${a.status}.`), take());
   }
 
   if (submit.kind === "workflow") {
-    if (!projectUrl) add("report", false, noCard);
+    if (!projectUrl) add("report", false, noCard, cardUnresolved);
     else if (!workUrl) add("report", false, "There is no repository URL in Work to check the report's links against.");
     else {
       const problems = await reportProblems(projectUrl, workUrl, fetch);

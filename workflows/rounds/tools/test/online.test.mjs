@@ -292,6 +292,25 @@ test("an error marked unresolved by the caller's fetch is unresolved", async () 
   assert.equal(it.unresolved, true);
 });
 
+test("a workflow whose PR read is rate-limited has its card-dependent items unresolved", async () => {
+  const r = await run({ ...prRoutes(), ...siteRoutes, [API]: rateLimitedReply });
+  assert.equal(item(r, "project URL answers").unresolved, true);
+  assert.equal(item(r, "report").unresolved, true);
+  assert.equal(item(r, "project URL answers").detail, "no showcase card to read the project URL from");
+  assert.equal(item(r, "public repository").ok, true);
+  assert.equal("unresolved" in item(r, "public repository"), false);
+});
+
+test("a deployed project whose PR read is rate-limited does not pass public repository by default", async () => {
+  const p = deployedProject(null);
+  const a = assignmentsRepo({ submit: submitText({ kind: "deployed", work: "project/" }) });
+  const r = await check(p.dir, { assignments: a, online: true, fetch: fake({ ...prRoutes(), ...siteRoutes, [API]: rateLimitedReply }) });
+  for (const name of ["public repository", "project URL answers"]) {
+    assert.equal(item(r, name).ok, false, name);
+    assert.equal(item(r, name).unresolved, true, name);
+  }
+});
+
 test("a 404 is a plain failure", async () => {
   const it = item(await run(siteRoutes), "showcase pull request");
   assert.equal(it.ok, false);
